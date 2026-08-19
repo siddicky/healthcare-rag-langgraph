@@ -18,6 +18,7 @@ from .tasks import (
     clarify_query, decompose_query, retrieve_documents, evaluate_retrieval,
     generate_answer, validate_answer
 )
+from ..services.models import decompose_only_complex, max_subqueries
 
 # Use TYPE_CHECKING to avoid circular import issues if Orchestrator needs types from here
 if TYPE_CHECKING:
@@ -55,19 +56,61 @@ class TaskHandler:
             logger.info("  Clarification resulted in no change.")
 
     async def handle_decompose_result(self, decomp_obj: DecomposedQuery, branch: ProcessingBranch):
-        """Handle the result of a decompose_query task."""
+        """Handle the result of a decompose_query task.
+
+        Decomposition is gated (F07): only genuinely complex queries that produced at
+        least two sub-queries fan out, and the fan-out is capped at
+        ``HC_RAG_MAX_SUBQUERIES`` branches. When a decomposition does happen it is
+        registered as a *group* on the orchestrator so the sub-branches can later be
+        synthesised back into a single answer to the original query (F06).
+        """
         sub_qs = decomp_obj.decomposed_query or []
-        # Check if decomposition actually happened and produced multiple different questions
-        if sub_qs and (len(sub_qs) > 1 or sub_qs[0] != branch.query):
-            logger.info(f"  Decomposition needed: '{branch.query}' -> {sub_qs}")
-            self.orchestrator_ref._supersede_branch_wrapper(branch.branch_id)
-            for i, q in enumerate(sub_qs):
-                # Create a new branch for each sub-query
-                nb = self.orchestrator_ref._create_branch(q, f"decomposed_{i}", branch.branch_id)
-                # Launch retrieve for the sub-query branch
-                self.orchestrator_ref._launch_task_wrapper(nb, "retrieve", retrieve_documents(self.orchestrator_ref.medical_rag, q))
-        else:
-            logger.info("  Decomposition resulted in no change or only one identical subquery.")
+        complexity_ok = (
+            not decompose_only_complex() or decomp_obj.query_complexity == "complex"
+        )
+
+        if not complexity_ok:
+            logger.info(
+                f"  Skipping decomposition for branch {branch.branch_id}: "
+                f"query_complexity='{decomp_obj.query_complexity}' "
+                f"(HC_RAG_DECOMPOSE_ONLY_COMPLEX is on) despite {len(sub_qs)} sub-quer(y/ies)."
+            )
+            return
+        if len(sub_qs) < 2:
+            logger.info(
+                "  Decomposition resulted in no change or only one subquery; "
+                f"branch {branch.branch_id} keeps answering the original query."
+            )
+            return
+
+        cap = max_subqueries()
+        if len(sub_qs) > cap:
+            logger.warning(
+                f"  Decomposition produced {len(sub_qs)} sub-queries; truncating to "
+                f"HC_RAG_MAX_SUBQUERIES={cap}. Dropped: {sub_qs[cap:]}"
+            )
+            sub_qs = sub_qs[:cap]
+
+        logger.info(f"  Decomposition needed: '{branch.query}' -> {sub_qs}")
+        original_query = branch.query
+        parent_id = branch.branch_id
+        self.orchestrator_ref._supersede_branch_wrapper(parent_id)
+
+        child_ids: list[str] = []
+        for i, q in enumerate(sub_qs):
+            # Create a new branch for each sub-query
+            nb = self.orchestrator_ref._create_branch(q, f"decomposed_{i}", parent_id)
+            child_ids.append(nb.branch_id)
+            # Launch retrieve for the sub-query branch
+            self.orchestrator_ref._launch_task_wrapper(nb, "retrieve", retrieve_documents(self.orchestrator_ref.medical_rag, q))
+
+        # Register the group. Harmless when synthesis is disabled: the orchestrator's
+        # synthesis check short-circuits and the children answer individually as before.
+        self.orchestrator_ref.decomposition_groups[parent_id] = {
+            "original_query": original_query,
+            "children": child_ids,
+            "synthesized": False,
+        }
 
     async def handle_retrieve_result(self, results: QueryResultList, branch: ProcessingBranch):
         """Handle the result of a retrieve_documents task."""
@@ -79,12 +122,18 @@ class TaskHandler:
         if results and results.results:
              # Launch evaluation task
              self.orchestrator_ref._launch_task_wrapper(
-                 branch, 
-                 "evaluate", 
+                 branch,
+                 "evaluate",
                  evaluate_retrieval(self.orchestrator_ref.medical_rag, branch.query, results)
              )
         else:
             logger.info(f"  Skipping evaluation for branch {branch.branch_id} due to no retrieval results.")
+            if self.orchestrator_ref._is_synthesis_child(branch):
+                # Nothing else to do for this sub-branch: it contributes no documents and
+                # the synthesis check will treat it as 'done' (no pending tasks).
+                logger.info(
+                    f"  Sub-branch {branch.branch_id} contributes no documents to synthesis."
+                )
             
 
     async def handle_evaluate_result(self, merged: QueryResultList, branch: ProcessingBranch):
@@ -93,7 +142,17 @@ class TaskHandler:
         original_count = sum(len(r.docs) for r in branch.retrieved_results.results) if branch.retrieved_results and branch.retrieved_results.results else 0
         logger.info(f"  Evaluation completed for branch {branch.branch_id}. Merged docs: {merged_count} (original: {original_count})")
         branch.merged_results = merged # Store potentially augmented results
-        
+
+        if self.orchestrator_ref._is_synthesis_child(branch):
+            # Sub-branches of a decomposition stop after retrieve+evaluate; their documents
+            # are unioned into one "synthesized" branch that answers the original query
+            # exactly once (F06 — a single sub-answer used to be returned to the user;
+            # F07 — every sub-branch used to pay answer+validate).
+            logger.info(
+                f"  Sub-branch {branch.branch_id} ready for synthesis; not launching answer."
+            )
+            return
+
         # Check if the summary is ready before launching the answer task
         if self.orchestrator_ref.summary_result is not None:
             logger.info(f"  Summary ready, launching answer task for branch {branch.branch_id}")

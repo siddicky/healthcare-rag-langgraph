@@ -13,7 +13,7 @@ from dataclasses import dataclass
 from ..pipeline.medical_rag import MedicalRAG
 from ..models.answers import AnswerGenerationResult, CitedAnswerResult, RelevantHistoryContext
 from ..models.queries import ClarifiedQuery, DecomposedQuery
-from ..models.retrieval import QueryResultList
+from ..models.retrieval import QueryResult, QueryResultList
 from ..models.misc import ConversationEntry, FollowUpQuestions
 
 from .branch import ProcessingBranch, BranchStatus
@@ -27,6 +27,8 @@ from .scheduler import (
 )
 from .monitor import QueryMonitor # Optional: For progress reporting
 from .handlers import TaskHandler # Import the new handler class
+from ..services.tracing import rag_stage
+from ..services.models import synthesis_enabled
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -52,6 +54,9 @@ class RefactoredOrchestrator:
         self.summary_task: Optional[asyncio.Task] = None
         self.user_id: Optional[str] = None
         self.query_monitor: Optional[QueryMonitor] = None # Optional monitoring hook
+        # Decomposition bookkeeping: parent_branch_id -> {"original_query", "children", "synthesized"}
+        self.decomposition_groups: Dict[str, Dict[str, Any]] = {}
+        self.synthesis_branch_ids: set[str] = set()
         
         # Instantiate the TaskHandler
         self.task_handler_instance = TaskHandler(self)
@@ -68,6 +73,7 @@ class RefactoredOrchestrator:
 
     # --- Core Orchestration Methods ---
 
+    @rag_stage("healthcare_rag.process_query")
     async def process_query(
         self, user_query: str, user_id: str, monitor: Optional[QueryMonitor] = None
     ) -> Tuple[Optional[str], Optional[List[str]]]:
@@ -79,6 +85,8 @@ class RefactoredOrchestrator:
         self.summary_result = None
         self.summary_task = None
         self.final_answer_source_branch_id = None
+        self.decomposition_groups = {}
+        self.synthesis_branch_ids = set()
 
         processed_history = self.medical_rag.conversation_history.get_history(user_id)
         logger.info(
@@ -136,6 +144,10 @@ class RefactoredOrchestrator:
     async def _process_tasks_until_completion(self):
         """Main loop to wait for and process tasks."""
         while True:
+            # A decomposition group may have become complete after the last batch; the
+            # synthesis branch it creates must exist before we evaluate the exit condition.
+            self._check_decomposition_groups()
+
             # Use scheduler helper to get tasks from active branches
             current_active_branch_tasks = get_active_branch_tasks(self.active_tasks, self.branches)
             
@@ -207,6 +219,9 @@ class RefactoredOrchestrator:
                  # This might happen if a task completed after its branch was superseded
                  logger.warning(f"Ignoring task result: Task {task} no longer in active_tasks.")
 
+        # Fan sub-branches of a completed decomposition back into one synthesis branch.
+        self._check_decomposition_groups()
+
         # If the summary finished in this batch, check if any branches are ready for answers
         if summary_finished:
             self._trigger_answers_with_summary()
@@ -253,6 +268,135 @@ class RefactoredOrchestrator:
         self._launch_task_wrapper(branch, "retrieve", retrieve_documents(self.medical_rag, query))
 
 
+    # --- Decomposition synthesis (finding F06/F07) ---
+
+    def _is_synthesis_child(self, branch: ProcessingBranch) -> bool:
+        """True when ``branch`` is a sub-query branch that feeds a synthesis branch.
+
+        Such branches stop after retrieve+evaluate: they never generate or validate an
+        answer of their own, which is both the correctness fix (the user gets one answer
+        to the *original* question, not to one sub-question) and the cost fix (validation
+        is the most expensive stage and used to run once per sub-branch).
+        """
+        if not synthesis_enabled():
+            return False
+        if not branch.branch_type.startswith("decomposed_"):
+            return False
+        group = self.decomposition_groups.get(branch.parent_id or "")
+        return group is not None and branch.branch_id in group["children"]
+
+    @staticmethod
+    def _branch_is_done(branch: ProcessingBranch) -> bool:
+        """A sub-branch is done when it has no pending tasks or is no longer active."""
+        return branch.status != BranchStatus.ACTIVE or not branch.tasks
+
+    def _check_decomposition_groups(self) -> None:
+        """Synthesise every decomposition group whose sub-branches have all finished."""
+        if not synthesis_enabled() or not self.decomposition_groups:
+            return
+
+        for parent_id, group in list(self.decomposition_groups.items()):
+            if group["synthesized"]:
+                continue
+            children = [
+                self.branches[cid] for cid in group["children"] if cid in self.branches
+            ]
+            if not children or not all(self._branch_is_done(c) for c in children):
+                continue
+            self._synthesize_group(parent_id, group, children)
+
+    def _synthesize_group(
+        self, parent_id: str, group: Dict[str, Any], children: List[ProcessingBranch]
+    ) -> None:
+        """Merge the sub-branches' documents into one branch answering the original query."""
+        group["synthesized"] = True
+        original_query = group["original_query"]
+
+        # Retire the sub-branches (cancels any stray task that outlived the group).
+        for child in children:
+            if child.status == BranchStatus.ACTIVE:
+                self._supersede_branch_wrapper(child.branch_id)
+
+        # Union of the parent's own retrieval (if it had landed before the decomposition
+        # superseded it) plus every sub-branch's post-evaluation documents.
+        sources: List[Optional[QueryResultList]] = []
+        parent = self.branches.get(parent_id)
+        if parent is not None:
+            sources.append(parent.merged_results or parent.retrieved_results)
+        for child in children:
+            sources.append(child.merged_results or child.retrieved_results)
+
+        union = self._union_results(sources, original_query)
+        doc_count = sum(len(r.docs) for r in union.results)
+        logger.info(
+            f"SYNTHESIS: merging {len(children)} sub-branches of {parent_id} into one "
+            f"branch for '{original_query}' ({doc_count} unique docs)."
+        )
+
+        synth = self._create_branch(original_query, "synthesized", parent_id)
+        self.synthesis_branch_ids.add(synth.branch_id)
+        synth.retrieved_results = union
+        synth.merged_results = union
+
+        if doc_count == 0:
+            logger.warning(
+                f"!!! Synthesis branch {synth.branch_id} has no documents "
+                f"(all {len(children)} sub-branches came back empty). Marking as FAILED. !!!"
+            )
+            synth.status = BranchStatus.FAILED
+            return
+
+        summary = self.summary_result
+        if summary is None and self.summary_task is None:
+            # The summary task already finished without a usable result; nothing will call
+            # _trigger_answers_with_summary again, so answer with an empty context instead
+            # of leaving the synthesis branch stranded.
+            logger.warning(
+                "Summary unavailable for synthesis branch; generating answer without history context."
+            )
+            summary = RelevantHistoryContext(
+                explanation="", required_context=False, relevant_snippets=""
+            )
+
+        if summary is not None:
+            self._launch_task_wrapper(
+                synth,
+                "answer",
+                generate_answer(self.medical_rag, union, original_query, summary),
+            )
+        else:
+            logger.info(
+                f"Summary not ready, delaying answer task for synthesis branch {synth.branch_id}"
+            )
+
+    @staticmethod
+    def _union_results(
+        result_lists: List[Optional[QueryResultList]], query: str
+    ) -> QueryResultList:
+        """Union several QueryResultLists, de-duplicating by ``doc_id`` (first wins).
+
+        Documents stay grouped per source; the merged ``QueryResult.query`` is the
+        original user query, since the synthesis branch answers that question.
+        """
+        seen_doc_ids: set[str] = set()
+        by_source: Dict[str, QueryResult] = {}
+        source_order: List[str] = []
+
+        for result_list in result_lists:
+            if result_list is None or not result_list.results:
+                continue
+            for qr in result_list.results:
+                for doc in qr.docs or []:
+                    if doc.doc_id in seen_doc_ids:
+                        continue
+                    seen_doc_ids.add(doc.doc_id)
+                    if qr.source not in by_source:
+                        by_source[qr.source] = QueryResult(source=qr.source, query=query, docs=[])
+                        source_order.append(qr.source)
+                    by_source[qr.source].docs.append(doc)
+
+        return QueryResultList(results=[by_source[s] for s in source_order])
+
     # --- Summary and Answer Selection ---
     
     def _trigger_answers_with_summary(self):
@@ -268,11 +412,17 @@ class RefactoredOrchestrator:
             # Check conditions: Active branch, has results, answer not started/done, validation not started/done
             if (
                 b.status == BranchStatus.ACTIVE
+                and not self._is_synthesis_child(b)
                 and b.merged_results is not None
                 and "answer" not in b.tasks
                 and not b.raw_answer
                 and "validate" not in b.tasks
                 and not b.validated_answer_str
+                # Retrieval/evaluation still running: handle_evaluate_result launches the
+                # answer itself once the merged results are final. Without this guard a
+                # branch can start two answer (and two validate) tasks for one query.
+                and "retrieve" not in b.tasks
+                and "evaluate" not in b.tasks
             ):
                 logger.info(f"Triggering answer task for branch {b.branch_id} with summary.")
                 self._launch_task_wrapper(
@@ -290,14 +440,16 @@ class RefactoredOrchestrator:
     @dataclass(frozen=True)
     class BranchTraits:
         """Binary traits that capture how a branch refined the original query."""
+        synthesized: bool # Answers the original query from the union of sub-branch docs
         clarified: bool
         decomposed: bool
         gap_filled: bool # Indicates if evaluation added results
 
-        def to_priority_tuple(self) -> tuple[int, int, int]:
+        def to_priority_tuple(self) -> tuple[int, int, int, int]:
             """Convert traits to a tuple suitable for lexicographic comparison."""
             # Higher number means higher priority
             return (
+                int(self.synthesized),
                 int(self.clarified),
                 int(self.decomposed),
                 int(self.gap_filled),
@@ -313,6 +465,8 @@ class RefactoredOrchestrator:
         )
         # Check if this branch was created by decomposition
         decomposed = branch.branch_type.startswith("decomposed")
+        # Check if this branch synthesises a whole decomposition group
+        synthesized = branch.branch_id in self.synthesis_branch_ids
         
         # Check if the number of results increased after evaluation (gap filling)
         # Need careful checks for None values
@@ -322,7 +476,7 @@ class RefactoredOrchestrator:
              retrieved_count = sum(len(r.docs) for r in branch.retrieved_results.results if r.docs) if branch.retrieved_results.results else 0
              gap_filled = merged_count > retrieved_count
              
-        return self.BranchTraits(clarified, decomposed, gap_filled)
+        return self.BranchTraits(synthesized, clarified, decomposed, gap_filled)
     # -----------------------------------------------------
 
     def _select_best_answer(self) -> Optional[str]:
@@ -342,7 +496,7 @@ class RefactoredOrchestrator:
 
         # Compute traits and find the branch with the highest priority traits
         best_branch = None
-        highest_priority = (-1, -1, -1) # Lower than any possible trait tuple
+        highest_priority = (-1, -1, -1, -1) # Lower than any possible trait tuple
 
         for branch in completed_branches_with_answers:
             traits = self._compute_branch_traits(branch)

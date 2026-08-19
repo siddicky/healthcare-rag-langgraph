@@ -133,15 +133,24 @@ def get_active_branch_tasks(
         active_tasks: Dictionary mapping tasks to branch IDs
         branches: Dictionary of all branches
         
+    A task stays in ``active_tasks`` only until its result has been processed, so a
+    task that is already ``done()`` still has to be returned here: dropping it would
+    let the orchestrator's loop exit before its result was ever handled (this happens
+    whenever a task finishes inside the loop's 10 ms sleep).
+
     Returns:
-        List of tasks belonging to active branches
+        List of tasks belonging to active branches whose results are still unprocessed
     """
+    # NOTE: do NOT filter on `task.done()`. A task that finished before the
+    # orchestrator loop got back to `asyncio.wait` is still in `active_tasks`
+    # until its result has been processed; dropping it here made the loop exit
+    # early and silently lose the result (seen with instant pass-through stages,
+    # but possible for any fast task).
     return [
         task
         for task, branch_id in active_tasks.items()
         if branch_id in branches
         and branches[branch_id].status == branches[branch_id].status.ACTIVE
-        and not task.done()
     ]
 
 def supersede_branch(

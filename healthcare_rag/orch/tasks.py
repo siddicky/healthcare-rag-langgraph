@@ -13,6 +13,7 @@ from ..models.answers import CitedAnswerResult, AnswerGenerationResult, Relevant
 from ..models.misc import ConversationEntry, FollowUpQuestions
 from ..pipeline.medical_rag import MedicalRAG
 from ..services.tracing import rag_stage, query_result_list_to_documents
+from ..services.models import stage_enabled
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -32,6 +33,8 @@ async def clarify_query(
     Returns:
         A ClarifiedQuery object with the clarified query
     """
+    if not stage_enabled("clarify"):
+        return ClarifiedQuery(original_query=query, ambiguity_level="clear and specific", clarified_query=query)
     return await rag.preprocessor.clarify_query_async(
         user_query=query, conversation_context=context
     )
@@ -48,6 +51,8 @@ async def decompose_query(rag: MedicalRAG, query: str) -> DecomposedQuery:
     Returns:
         A DecomposedQuery object with the decomposed subqueries
     """
+    if not stage_enabled("decompose"):
+        return DecomposedQuery(original_query=query, query_complexity="simple", decomposed_query=[query])
     return await rag.preprocessor.decompose_query_async(query)
 
 @rag_stage("retrieve_documents", run_type="retriever", process_outputs=query_result_list_to_documents)
@@ -79,6 +84,8 @@ async def evaluate_retrieval(
     Returns:
         A potentially augmented QueryResultList
     """
+    if not stage_enabled("evaluate"):
+        return results
     return await rag.evaluator.evaluate_retrieval(
         original_query=query,
         clarified_query=query,
@@ -141,6 +148,9 @@ async def validate_answer(
     Returns:
         A tuple of (structured_answer, validated_text)
     """
+    if not stage_enabled("validate"):
+        # Ablation: skip structuring/citation validation and pass the raw answer through.
+        return None, generation_result.plain_answer
     return await rag.validator.structure_and_validate_async(
         plain_answer=generation_result.plain_answer,
         retrieval_results=generation_result.retrieval_results,
@@ -164,6 +174,8 @@ async def generate_follow_ups(
     Returns:
         A FollowUpQuestions object
     """
+    if not stage_enabled("followups"):
+        return FollowUpQuestions(questions=[])
     return await rag.follow_up_generator.generate_follow_up_questions(
         query=query,
         answer=answer,
