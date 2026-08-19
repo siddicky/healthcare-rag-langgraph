@@ -239,9 +239,9 @@ class GraphEngine:
 
 
 async def build_engine(env_var: str = "HC_RAG_ENGINE") -> Engine:
-    """Build the selected engine; legacy remains the default until Todo 12."""
-    if os.getenv(env_var, "legacy").strip().lower() == "graph":
-        engine = GraphEngine()
-        return await engine.__aenter__()
-    module = import_module("evals.engines")
-    return await module.LegacyEngine.create()
+    """Build the selected engine; the LangGraph engine is the default (todo 12)."""
+    if os.getenv(env_var, "graph").strip().lower() == "legacy":
+        module = import_module("evals.engines")
+        return await module.LegacyEngine.create()
+    engine = GraphEngine()
+    return await engine.__aenter__()
