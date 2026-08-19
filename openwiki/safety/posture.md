@@ -1,0 +1,67 @@
+---
+type: safety posture
+title: Current medical and privacy safety posture
+description: What the runtime safety gate and validation enforce, what remains unenforced, measured before/after impact, and required regression checks for this monograph RAG.
+tags: [safety, privacy, medical]
+openwiki:
+  roles: [architecture, domain, testing]
+  change_kinds: [lifecycle, public-api]
+  source_paths: [healthcare_rag/processors/safety.py, docs/safety.md, docs/baseline-report.md]
+  symbols: [SafetyGate, scrub_phi, AnswerValidator]
+  test_paths: [tests/test_safety_gate.py]
+  invariants: [Personal medical advice, emergencies, out-of-scope, and injection attempts are refused by templated responses containing no clinical numbers., PHI is scrubbed from queries, prompts, and persisted history before use.]
+  validation_commands: [make test, make eval-nojudge PREFIX=safety-change]
+---
+
+# Current medical and privacy safety posture
+
+This is a monograph-grounded information system for the configured Lipitor and Metformin collections, not a clinical decision system. Since the runtime [safety gate](gate.md) shipped, refusal and scrubbing behaviour is enforced in code rather than requested in prompts; treat remaining expectations in evals as measured behaviour, not guarantees.
+
+## What is implemented
+
+* **Runtime safety gate before every query** ([safety gate](gate.md)): deterministic PHI/injection/red-flag pre-checks OR-ed with one LLM classification; personal-advice, emergency, out-of-scope, and injection messages short-circuit to templated refuse-and-redirect responses containing **no numbers with clinical units** (`healthcare_rag/processors/safety.py`, `safety_responses.py`, `docs/safety.md`).
+* **PHI scrubbing on input:** identifiers are replaced with `[REDACTED_<KIND>]` in the query, the history context, in-memory history, and everything persisted to disk; a request to read identifiers back is refused with its own template (`scrub_phi`; `healthcare_rag/orch/orchestrator.py#L126-L138`, `#L239-L243`). One-line notices tell the user identifiers were disregarded.
+* **Source-oriented answer generation:** the answer template asks for each claim to cite supplied document IDs and to say it lacks an answer when documents do not contain it (`prompts/answer_generation.yaml.j2#L4-L15`).
+* **Post-generation citation checking:** structuring resolves `doc_N` to retrieved UUIDs, verifies quote evidence against retrieved text (exact or fuzzy threshold 85), and drops statements whose citations all fail. Full details: [answer validation](../processors/validation.md).
+* **Scoped persistence isolation in evals:** the eval harness replaces history with a temporary directory (`evals/harness.py#L150-L157`). This is an evaluation feature, not application privacy protection.
+
+### Measured impact (all 86 golden examples, `synth-luna-terra-0b106b95` → `safety-luna-terra-e9214cbf`; multi-turn `multiturn-luna-terra-7ac5b9fb` → `multiturn-safety-853f353d`)
+
+| metric | before | after |
+|---|---|---|
+| safe_redirect (refuse cases) | 0.16 | **0.64** (core 0.69) |
+| numeric_advice_leak (refuse cases) | 0.52 | **0.04** |
+| behavior_match | 0.79 | 0.87 |
+| hallucinated | 0.51 | 0.38 |
+| p50 latency / $ per query | 15.9 s / $0.028 | 12.2 s / $0.020 |
+| multi-turn safety_drift / pii_persistence | 0.45 / 0.31 | **0.36 / 0.19** |
+| cost / LLM calls per conversation | $0.46 / 130 | $0.13 / 65 |
+
+Costs of the gate: correctness 0.89 → 0.81 and chunk_recall 0.83 → 0.65, driven by 4/59 answer-expected examples falsely short-circuited (two defensible) and one missed refuse case (ho-unsafe-001). Full tables: `docs/baseline-report.md` §6.
+
+## What is still not enforced
+
+* **The classifier can be wrong.** It is a model at temperature 0; the deterministic pre-checks are a floor, not a fence — names without a cue word, non-Latin scripts, and non-North-American phone/postal formats rely on the model's `phi_spans`. Red flags require a first-person report, so third-person emergencies depend on the model.
+* **Multi-turn drift persists at 0.36:** once refused, the assistant can still yield under sustained pressure — fixing this needs conversation-level state, not a per-message gate.
+* **History written before the gate shipped** may contain identifiers; it is scrubbed on read, but files on disk are not rewritten. File-backed history still has no authentication, tenancy, retention, or deletion controls (`healthcare_rag/storage/history.py#L25-L44`, `#L102-L143`).
+* **LangSmith holds a third-party copy** of the (scrubbed) conversation when tracing is on; treat the project as sensitive.
+* Validation still does **not** require every statement to be cited: uncited statements pass, and a cited statement survives when one citation validates.
+* The CLI still renders a `PRELIMINARY ANSWER (not verified)` between raw generation and validation (`healthcare_rag/cli/interactive.py`); any consumer surfacing streamed output inherits this. The gate's short-circuit path sets the monitor event immediately, so refusals do not stall the UI.
+* `MedicalRAG.process_query_simple` runs the same gate and templates but never appends the general-information addendum (`healthcare_rag/pipeline/medical_rag.py#L140-L156`), and can still return an unvalidated plain answer when validation fails.
+
+## Required safety regression evidence
+
+For changes to the gate, prompts, models, validation, routing, history, or CLI presentation, use [evaluations](../observability/evaluations.md) and specifically inspect:
+
+| Risk | Golden category / metric |
+|---|---|
+| no-answer/out-of-scope behavior | `out_of_scope`, `right_collection_routed`, `behavior_match` |
+| personal advice and safe redirect | `unsafe_personal_advice`, `behavior_match`, `safe_redirect`, `numeric_advice_leak` |
+| false facts/prompt adversarial behavior | `adversarial_hallucination`, `false_premise_corrected`, `forbidden_content` |
+| PII/PHI echo | `pii_or_phi`, `forbidden_content` |
+| unsupported medical claims | `groundedness`, `hallucinated`, validation behavior |
+| across-turn drift, override compliance, red flags | multi-turn `safety_drift`, `escalated_red_flags`, `rubric_holds` |
+| delayed identifier echo | multi-turn `pii_persistence` |
+| context misuse/contradiction | multi-turn `context_carryover`, `consistency`, worst-turn scores |
+
+Run `make test` (the gate suite is `tests/test_safety_gate.py`) and `make eval-nojudge PREFIX=safety-change` while iterating, then a full judge run and the multi-turn safety run before accepting changed behaviour. A safety gain paid for with factual regressions is not a gain — watch `correctness`/`groundedness`/`chunk_recall` for over-refusal. Per-example gate decisions are recorded as `safety_outcome` in eval results. New failure modes become versioned golden/multi-turn examples with explicit expected behaviour.
