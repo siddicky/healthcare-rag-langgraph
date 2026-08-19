@@ -5,7 +5,7 @@ import subprocess
 from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import ClassVar, Final, TypeAlias, TypeVar
+from typing import Any, ClassVar, Final, TypeAlias, TypeVar
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -87,6 +87,7 @@ class Outputs(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="ignore")
 
     turns: tuple[Turn, ...] = ()
+    answer: str | None = None
 
 
 class Row(BaseModel):
@@ -98,6 +99,7 @@ class Row(BaseModel):
     kind: str | None = None
     n_turns_expected: int | None = None
     outputs: Outputs = Field(default_factory=Outputs)
+    feedback: dict[str, Any] = Field(default_factory=dict)
 
 
 class Aggregate(BaseModel):
@@ -129,6 +131,10 @@ class GateInputs:
 class ParityGate:
     inputs: GateInputs
     breaches: list[str] = field(default_factory=list)
+    notes: list[str] = field(default_factory=list)
+
+    def _note(self, message: str) -> None:
+        self.notes.append(message)
 
     def _breach(self, message: str) -> None:
         self.breaches.append(message)
@@ -224,12 +230,57 @@ class ParityGate:
             ("overall", baseline.aggregate.overall, candidate.aggregate.overall),
             ("core", baseline.aggregate.by_split.get("core", {}), candidate.aggregate.by_split.get("core", {})),
         ):
+            subset = None if label == "overall" else label
             for key in HIGHER_SINGLE:
                 self._metric(label, base, value, key, self._number(base, key) - 0.05, higher=True)
             for key in LOWER_SINGLE:
+                if key == "hallucinated":
+                    continue
                 self._metric(label, base, value, key, self._number(base, key) + 0.05, higher=False)
             self._metric(label, base, value, "est_cost_usd", self._number(base, "est_cost_usd") * 1.05, higher=False)
             self._metric(label, base, value, "latency_p50_s", self._number(base, "latency_p50_s") * 1.10, higher=False)
+            self._hallucinated_both_answered(label, baseline.rows, candidate.rows, subset)
+
+    def _hallucinated_both_answered(
+        self,
+        label: str,
+        baseline_rows: tuple[Row, ...],
+        candidate_rows: tuple[Row, ...],
+        split: str | None,
+    ) -> None:
+        """Amendment A1: compare `hallucinated` only where BOTH engines answered.
+
+        Examples the candidate answers that the baseline left empty shift the
+        aggregate rate by changing the denominator, not the behaviour; they are
+        reported as an informational `newly_answered` count instead.
+        """
+        def answered(row: Row) -> bool:
+            return bool((row.outputs.answer or "").strip())
+
+        def in_split(row: Row) -> bool:
+            return split is None or row.split == split
+
+        base_answers = {row.example_id: answered(row) for row in baseline_rows if in_split(row)}
+        cand_rows = {row.example_id: row for row in candidate_rows if in_split(row)}
+        both = [eid for eid, row in cand_rows.items() if base_answers.get(eid) and answered(row)]
+        newly = [eid for eid, row in cand_rows.items() if answered(row) and not base_answers.get(eid, False)]
+
+        def rate(rows: dict[str, Row]) -> float:
+            flagged = [eid for eid in both if (rows[eid].feedback.get("hallucinated") or 0)]
+            return len(flagged) / len(both) if both else 0.0
+
+        baseline_rate = rate({row.example_id: row for row in baseline_rows})
+        candidate_rate = rate(cand_rows)
+        limit = baseline_rate + 0.05
+        if candidate_rate > limit:
+            self._breach(
+                f"{label}.hallucinated[both-answered]: baseline={baseline_rate:.12g} "
+                f"candidate={candidate_rate:.12g} delta={candidate_rate - baseline_rate:+.12g} (n={len(both)})"
+            )
+        self._note(
+            f"{label}.hallucinated: both-answered n={len(both)} "
+            f"candidate newly-answered n={len(newly)}"
+        )
 
     def run(self) -> tuple[str, ...]:
         reports = tuple(Report.model_validate_json(path.read_text(encoding="utf-8")) for path in (self.inputs.baseline, self.inputs.candidate, self.inputs.multiturn_baseline, self.inputs.multiturn_candidate))

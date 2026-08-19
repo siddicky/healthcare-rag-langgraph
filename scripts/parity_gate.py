@@ -29,13 +29,18 @@ def main() -> int:
         code_sha=args.code_sha,
         base_sha=args.base_sha,
     )
-    breaches = ParityGate(inputs).run()
+    gate = ParityGate(inputs)
+    breaches = gate.run()
     if breaches:
         print(f"PARITY GATE FAIL ({len(breaches)} breach(es))")
         for breach in breaches:
             print(f"- {breach}")
+        for note in gate.notes:
+            print(f"note: {note}")
         return 1
     print("PARITY GATE PASS: code seal, provenance, populations, metadata, and metrics match")
+    for note in gate.notes:
+        print(f"note: {note}")
     return 0
 
 

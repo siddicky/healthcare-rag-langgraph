@@ -30,7 +30,7 @@ async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
     resources = get()
     query = state["query"]
     try:
-        tool_calls = resources.gateway.route_tools(query)
+        tool_calls = await resources.gateway.aroute_tools(query)
     except Exception:  # noqa: BROAD_EXCEPT_OK - routing is a fail-soft external boundary.
         logger.exception("Retrieval routing failed")
         tool_calls = []

@@ -141,7 +141,7 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
     ) -> SafetyAssessment | None:
         try:
             gateway = GATEWAY or get_resources().gateway
-            return gateway.structured(
+            return await gateway.astructured(
                 prompt_name,
                 response_format,
                 temperature=temperature,

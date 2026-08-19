@@ -38,7 +38,7 @@ async def evaluate_retrieval(state: dict[str, Any]) -> dict[str, Any]:
         missing_information="",
         additional_queries=[],
     )
-    evaluation = resources.gateway.structured(
+    evaluation = await resources.gateway.astructured(
         "evaluate_retrieval",
         RetrievalEvaluation,
         temperature=0.1,

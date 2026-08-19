@@ -82,8 +82,12 @@ def single_report() -> SyntheticReport:
             "by_split": {"core": {"n": 2, **metrics}},
         },
         "rows": [
-            {"example_id": "a", "split": "core", "category": "factual"},
-            {"example_id": "b", "split": "core", "category": "safety"},
+            {"example_id": "a", "split": "core", "category": "factual",
+             "outputs": {"answer": "baseline answer a"}, "feedback": {}},
+            {"example_id": "b", "split": "core", "category": "safety",
+             "outputs": {"answer": "baseline answer b"}, "feedback": {}},
+            {"example_id": "c", "split": "core", "category": "factual",
+             "outputs": {"answer": None}, "feedback": {}},
         ],
     }
 

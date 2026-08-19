@@ -37,7 +37,7 @@ async def extract_conversation_context(state: RAGState) -> RAGState:
         explanation="No relevant context found",
         relevant_snippets="",
     )
-    summary = _gateway().structured(
+    summary = await _gateway().astructured(
         "extract_conversation_context",
         RelevantHistoryContext,
         temperature=0.1,
@@ -58,7 +58,7 @@ async def clarify_query(state: RAGState) -> RAGState:
         clarified_query=query,
         ambiguity_level="clear and specific",
     )
-    result = _gateway().structured(
+    result = await _gateway().astructured(
         "clarify_query",
         ClarifiedQuery,
         default=default,
@@ -94,7 +94,7 @@ async def decompose_query(state: RAGState) -> RAGState:
     if "decompose" in disabled_stages():
         result = default
     else:
-        result = _gateway().structured(
+        result = await _gateway().astructured(
             "decompose_query",
             DecomposedQuery,
             default=default,

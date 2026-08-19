@@ -77,7 +77,7 @@ class LangChainLLMGateway:
             self._prompts = registry
         return registry.format_messages(stage, **variables)
 
-    def structured(
+    async def astructured(
         self,
         stage: str,
         model_type: type[ModelT],
@@ -98,7 +98,7 @@ class LangChainLLMGateway:
                 method="json_schema",
                 strict=self.settings.structured_strict or None,
             )
-            result = runnable.invoke(messages)
+            result = await runnable.ainvoke(messages)
             if isinstance(result, model_type):
                 return result
             return default
@@ -106,7 +106,7 @@ class LangChainLLMGateway:
             logger.exception("Graph structured LLM stage failed: %s", stage)
             return default
 
-    def complete(
+    async def acomplete(
         self,
         stage: str,
         *,
@@ -117,13 +117,13 @@ class LangChainLLMGateway:
         """Render and invoke one fail-soft plain-text stage."""
         try:
             messages = self._messages(stage, variables)
-            response = self.chat_model("default", temperature).invoke(messages)
+            response = await self.chat_model("default", temperature).ainvoke(messages)
             return str(response.content)
-        except Exception:  # noqa: BROAD_EXCEPT_OK - required fail-soft LLM boundary.
+        except Exception:  # noqa: BROADEXCEPT_OK - required fail-soft LLM boundary.
             logger.exception("Graph completion LLM stage failed: %s", stage)
             return default
 
-    def route_tools(self, query: str) -> list[ToolCall]:
+    async def aroute_tools(self, query: str) -> list[ToolCall]:
         """Route a query using the retrieval tools introduced in todo 5."""
         retrieval = import_module("healthcare_rag.processors.retrieval")
         build_routing_tools = getattr(retrieval, "build_routing_tools", None)
@@ -134,5 +134,5 @@ class LangChainLLMGateway:
         if not isinstance(tools, list):
             message = "build_routing_tools must return a list of LangChain tools"
             raise TypeError(message)
-        response = self.chat_model("default").bind_tools(tools).invoke(query)
+        response = await self.chat_model("default").bind_tools(tools).ainvoke(query)
         return response.tool_calls

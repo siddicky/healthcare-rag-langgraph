@@ -108,6 +108,50 @@ def test_negative_drill_fails(
     assert reason in result.stdout
 
 
+def test_hallucinated_on_newly_answered_examples_does_not_breach(
+    sealed_reports: tuple[Path, SyntheticReport, SyntheticReport],
+) -> None:
+    """Amendment A1: hallucinated=1 confined to candidate-newly-answered rows is
+    informational (aggregate untouched, both-answered rate unchanged) — gate must PASS."""
+    repo, _, _ = sealed_reports
+    candidate = json.loads((repo / CANDIDATE).read_text(encoding="utf-8"))
+    for row in candidate["rows"]:
+        if row["split"] != "core":
+            continue
+        outputs = row.setdefault("outputs", {})
+        if row["example_id"] == "c":
+            outputs["answer"] = "newly answered by the graph"
+            row["feedback"] = {"hallucinated": 1}
+        elif not outputs.get("answer"):
+            outputs["answer"] = "candidate answer"
+    write_json(repo / CANDIDATE, candidate)
+    result = _run_gate(repo)
+    print(result.stdout)
+    assert result.returncode == 0, result.stdout + result.stderr
+    assert "newly-answered" in result.stdout
+
+
+def test_hallucinated_on_both_answered_examples_breaches(
+    sealed_reports: tuple[Path, SyntheticReport, SyntheticReport],
+) -> None:
+    """Amendment A1: hallucinated=1 on a BOTH-answered example must still breach."""
+    repo, _, _ = sealed_reports
+    candidate = json.loads((repo / CANDIDATE).read_text(encoding="utf-8"))
+    flagged = 0
+    for row in candidate["rows"]:
+        if row["split"] == "core" and flagged < 2:
+            outputs = row.setdefault("outputs", {})
+            if not outputs.get("answer"):
+                outputs["answer"] = "an answer"
+            row.setdefault("feedback", {})["hallucinated"] = 1
+            flagged += 1
+    write_json(repo / CANDIDATE, candidate)
+    result = _run_gate(repo)
+    print(result.stdout)
+    assert result.returncode == 1
+    assert "hallucinated[both-answered]" in result.stdout
+
+
 def test_scripted_turn_truncation_fails(
     sealed_reports: tuple[Path, SyntheticReport, SyntheticReport],
 ) -> None:

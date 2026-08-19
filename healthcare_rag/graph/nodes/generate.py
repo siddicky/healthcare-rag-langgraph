@@ -32,7 +32,7 @@ async def generate_answer(state: dict[str, Any]) -> dict[str, Any]:
     formatted_docs, prompt_id_map = format_documents_for_prompt(merged)
     summary = state.get("summary") or {}
     conversation_context = str(summary.get("relevant_snippets") or "")
-    plain_answer = get().gateway.complete(
+    plain_answer = await get().gateway.acomplete(
         "generate_answer",
         temperature=0.1,
         conversation_context=conversation_context,
@@ -67,7 +67,7 @@ async def validate_answer(state: dict[str, Any]) -> dict[str, Any]:
         **prompt_args: str,
     ) -> CitedAnswerResult | None:
         del prompt_name
-        return resources.gateway.structured(
+        return await resources.gateway.astructured(
             "validate_answer",
             response_format,
             temperature=temperature,
@@ -107,7 +107,7 @@ async def generate_follow_ups(state: dict[str, Any]) -> dict[str, Any]:
         )
         default = FollowUpQuestions(questions=[])
         try:
-            response = resources.gateway.structured(
+            response = await resources.gateway.astructured(
                 "generate_follow_ups",
                 FollowUpQuestions,
                 temperature=0.3,

@@ -22,7 +22,7 @@ class FakeGateway(LangChainLLMGateway):
     route_error: Exception | None = None
     calls: list[dict[str, Any]] = field(default_factory=list)
 
-    def structured(
+    async def astructured(
         self,
         stage: str,
         model_type: type[Any],
@@ -42,7 +42,7 @@ class FakeGateway(LangChainLLMGateway):
         )
         return self.structured_results.get(stage, default)
 
-    def complete(
+    async def acomplete(
         self,
         stage: str,
         *,
@@ -60,7 +60,7 @@ class FakeGateway(LangChainLLMGateway):
         )
         return self.completion_results.get(stage, default)
 
-    def route_tools(self, query: str) -> list[ToolCall]:
+    async def aroute_tools(self, query: str) -> list[ToolCall]:
         self.calls.append({"method": "route_tools", "query": query})
         if self.route_error is not None:
             raise self.route_error
@@ -73,7 +73,7 @@ class FakeLLMGateway(LangChainLLMGateway):
         self.scripts = {stage: deque(values) for stage, values in scripts.items()}
         self.calls: dict[str, list[dict[str, Any]]] = defaultdict(list)
 
-    def structured(
+    async def astructured(
         self,
         stage: str,
         model_type: type[Any],
