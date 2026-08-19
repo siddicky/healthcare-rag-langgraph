@@ -17,7 +17,8 @@ import os
 import tempfile
 import time
 import uuid
-from typing import Any, Optional
+from collections.abc import Awaitable, Callable
+from typing import TYPE_CHECKING, Any, Optional
 
 from dotenv import load_dotenv
 
@@ -27,7 +28,10 @@ from healthcare_rag.orch.orchestrator import RefactoredOrchestrator
 from healthcare_rag.pipeline.medical_rag import MedicalRAG
 from healthcare_rag.storage.history import ConversationHistory
 
-from .pricing import estimate_cost_usd
+if TYPE_CHECKING:
+    from healthcare_rag.graph.engine import Engine
+
+from .usage import LLMCallUsage, summarize_usage
 
 load_dotenv()
 
@@ -38,29 +42,11 @@ logger = logging.getLogger("evals")
 # Token / cost accounting                                                      #
 # --------------------------------------------------------------------------- #
 
-@dataclasses.dataclass
-class LLMCallUsage:
-    model: str
-    prompt_tokens: int
-    completion_tokens: int
-    cached_prompt_tokens: int
-    latency_s: float
-    kind: str  # "create" | "parse"
-
-    @property
-    def total_tokens(self) -> int:
-        return self.prompt_tokens + self.completion_tokens
-
-    @property
-    def cost_usd(self) -> Optional[float]:
-        return estimate_cost_usd(
-            self.model, self.prompt_tokens, self.completion_tokens, self.cached_prompt_tokens
-        )
-
-
 # A per-example collector list, propagated to child asyncio tasks via contextvars
 # (asyncio.create_task copies the current context, and the *list object* is shared).
-_usage_sink: contextvars.ContextVar[Optional[list]] = contextvars.ContextVar("usage_sink", default=None)
+_usage_sink: contextvars.ContextVar[Optional[list[LLMCallUsage]]] = contextvars.ContextVar(
+    "usage_sink", default=None
+)
 
 
 def _record_usage(response: Any, model_hint: str, kind: str, latency_s: float) -> None:
@@ -121,28 +107,6 @@ def instrument_openai_client(client: Any) -> Any:
     return client
 
 
-def summarize_usage(calls: list[LLMCallUsage]) -> dict[str, Any]:
-    by_model: dict[str, dict[str, Any]] = {}
-    for c in calls:
-        m = by_model.setdefault(
-            c.model, {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0, "cost_usd": 0.0}
-        )
-        m["calls"] += 1
-        m["prompt_tokens"] += c.prompt_tokens
-        m["completion_tokens"] += c.completion_tokens
-        m["cost_usd"] += c.cost_usd or 0.0
-    total_cost = sum(v["cost_usd"] for v in by_model.values())
-    return {
-        "llm_calls": len(calls),
-        "prompt_tokens": sum(c.prompt_tokens for c in calls),
-        "completion_tokens": sum(c.completion_tokens for c in calls),
-        "total_tokens": sum(c.total_tokens for c in calls),
-        "cached_prompt_tokens": sum(c.cached_prompt_tokens for c in calls),
-        "est_cost_usd": round(total_cost, 6),
-        "by_model": {k: {**v, "cost_usd": round(v["cost_usd"], 6)} for k, v in by_model.items()},
-    }
-
-
 # --------------------------------------------------------------------------- #
 # RAG construction                                                             #
 # --------------------------------------------------------------------------- #
@@ -157,7 +121,9 @@ async def build_rag(history_dir: Optional[str] = None) -> MedicalRAG:
     return rag
 
 
-def _extract_contexts(orch: RefactoredOrchestrator) -> tuple[list[dict], Optional[str], dict]:
+def _extract_contexts(
+    orch: RefactoredOrchestrator,
+) -> tuple[list[dict[str, Any]], Optional[str], dict[str, Any]]:
     """Pull retrieved docs + raw answer from the branch that produced the final
     answer (falling back to the most recent branch with results)."""
     branch = None
@@ -167,7 +133,7 @@ def _extract_contexts(orch: RefactoredOrchestrator) -> tuple[list[dict], Optiona
         candidates = [b for b in orch.branches.values() if b.merged_results is not None]
         branch = candidates[-1] if candidates else None
 
-    contexts: list[dict] = []
+    contexts: list[dict[str, Any]] = []
     raw_answer = None
     if branch is not None:
         results = branch.merged_results or branch.retrieved_results
@@ -198,18 +164,16 @@ def _extract_contexts(orch: RefactoredOrchestrator) -> tuple[list[dict], Optiona
     return contexts, raw_answer, branch_info
 
 
-async def run_one(rag: MedicalRAG, question: str, history: Optional[list[dict]] = None) -> dict:
-    """Run one question through the real orchestrator and return a rich result dict."""
-    user_id = f"eval_{uuid.uuid4().hex[:10]}"
-
-    # Seed multi-turn history (ambiguous follow-up cases) into the isolated store.
-    for turn in history or []:
-        rag.conversation_history.add_entry(user_id, turn["question"], turn["answer"])
-
+async def _run_legacy_turn(
+    rag: MedicalRAG,
+    user_id: str,
+    question: str,
+    monitor: QueryMonitor | None = None,
+) -> tuple[dict[str, Any], bool]:
+    """Capture one legacy orchestrator turn behind the engine adapter."""
     sink: list[LLMCallUsage] = []
     token = _usage_sink.set(sink)
-
-    monitor = QueryMonitor()
+    monitor = monitor or QueryMonitor()
     orch = RefactoredOrchestrator(rag)
 
     t0 = time.perf_counter()
@@ -239,7 +203,7 @@ async def run_one(rag: MedicalRAG, question: str, history: Optional[list[dict]] 
     # short_circuited, ...). None when the gate is disabled (HC_RAG_SAFETY_GATE=false).
     safety = getattr(orch, "safety_outcome", None)
 
-    return {
+    result = {
         "answer": answer,
         "answered": bool(answer),
         "raw_answer": raw_answer,
@@ -258,12 +222,35 @@ async def run_one(rag: MedicalRAG, question: str, history: Optional[list[dict]] 
         "error": error,
         **branch_info,
     }
+    return result, bool(getattr(orch.summary_result, "required_context", False))
 
 
-def make_target(rag: MedicalRAG):
+async def run_one(
+    engine: Engine,
+    question: str,
+    history: Optional[list[dict[str, Any]]] = None,
+) -> dict[str, Any]:
+    """Run one question through either engine with the legacy result contract."""
+    user_id = f"eval_{uuid.uuid4().hex[:10]}"
+    await engine.seed_history(
+        user_id,
+        [
+            {
+                "user_query": turn["question"],
+                "answer": turn["answer"],
+            }
+            for turn in history or []
+        ],
+    )
+    return await engine.run_turn(user_id, question)
+
+
+def make_target(
+    engine: Engine,
+) -> Callable[[dict[str, Any]], Awaitable[dict[str, Any]]]:
     """Return the async target callable expected by ``langsmith.aevaluate``."""
 
-    async def target(inputs: dict) -> dict:
-        return await run_one(rag, inputs["question"], inputs.get("history") or [])
+    async def target(inputs: dict[str, Any]) -> dict[str, Any]:
+        return await run_one(engine, inputs["question"], inputs.get("history") or [])
 
     return target

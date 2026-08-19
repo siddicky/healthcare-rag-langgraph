@@ -43,7 +43,7 @@ async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
 
         @traceable(name="retrieve_documents", run_type="retriever")
         async def traced_search() -> QueryResultList:
-            return await search(resources.weaviate, collection_name, routed_query)
+            return await search(await resources.weaviate(), collection_name, routed_query)
 
         for attempt in range(3):
             try:

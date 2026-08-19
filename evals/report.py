@@ -32,6 +32,8 @@ STAGE_NAMES = {
     "generate_answer",
     "validate_answer",
     "generate_follow_ups",
+    "safety_gate",
+    "answer_addendum",
 }
 
 # Metrics where a "rate" (mean of 0/1) is the natural aggregate.

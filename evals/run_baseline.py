@@ -35,10 +35,12 @@ from langsmith import Client, aevaluate
 
 from .dataset import DEFAULT_DATASET_NAME, load_golden, sync_dataset
 from .evaluators import ALL_EVALUATORS, DETERMINISTIC_EVALUATORS, JUDGE_MODEL, judge_usage_summary
-from .harness import build_rag, make_target
+from .engines import build_engine
+from .harness import make_target
 from .pricing import PRICING_AS_OF
 from healthcare_rag.services.models import disabled_stages, default_reasoning_effort
 from .report import fetch_langsmith_stats, write_report
+from .seal_clean import GitStatusError, check_clean
 
 load_dotenv()
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -66,7 +68,7 @@ def _chunk_hashes() -> dict[str, str]:
     return out
 
 
-def _parse_gates(specs: list[str]) -> dict[str, tuple[str, float]]:
+def _parse_gates(specs: list[tuple[str, str]]) -> dict[str, tuple[str, float]]:
     """--fail-under safe_redirect=0.8  /  --fail-over hallucinated=0.2 → {key: (op, threshold)}"""
     gates = {}
     for spec, op in specs:
@@ -77,9 +79,9 @@ def _parse_gates(specs: list[str]) -> dict[str, tuple[str, float]]:
 
 def _git_dirty() -> bool:
     try:
-        return bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip())
-    except Exception:
-        return False
+        return not check_clean()
+    except GitStatusError:
+        return True
 
 
 async def main() -> int:
@@ -137,15 +139,13 @@ async def main() -> int:
         return 1
     print(f"running {len(examples)} examples, concurrency={args.concurrency}, judges={'off' if args.no_judges else JUDGE_MODEL}")
 
-    rag = await build_rag()
-    target = make_target(rag)
+    engine = await build_engine()
+    target = make_target(engine)
     evaluators = DETERMINISTIC_EVALUATORS if args.no_judges else ALL_EVALUATORS
 
     metadata = {
         "git_sha": _git_sha(),
         "git_dirty": _git_dirty(),
-        "llm_model": rag.generator.llm_model,
-        "validator_model": rag.validator.llm_model,
         "judge_model": None if args.no_judges else JUDGE_MODEL,
         "reasoning_effort": default_reasoning_effort(),
         "disabled_stages": sorted(disabled_stages()) or None,
@@ -155,6 +155,7 @@ async def main() -> int:
         "split": args.split,
         "categories": args.category,
         "chunk_file_hashes": _chunk_hashes(),
+        **engine.describe(),
     }
 
     try:
@@ -170,13 +171,13 @@ async def main() -> int:
             client=client,
         )
         experiment_name = results.experiment_name
-        rows: list[dict] = []
+        rows: list[dict[str, Any]] = []
         async for r in results:
             ex = r["example"]
             run = r["run"]
             md = ex.metadata or {}
             feedback = {}
-            for er in r["evaluation_results"]["results"]:
+            for er in r["evaluation_results"].get("results", []):
                 feedback[er.key] = er.score
             outputs = run.outputs or {}
             rows.append(
@@ -194,10 +195,7 @@ async def main() -> int:
                 }
             )
     finally:
-        try:
-            await rag.weaviate_client.close()
-        except Exception:
-            pass
+        await engine.aclose()
 
     # Experiment URL
     try:

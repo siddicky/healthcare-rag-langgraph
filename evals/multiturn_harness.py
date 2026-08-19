@@ -31,22 +31,17 @@ Nothing here changes application behaviour; it only observes it.
 
 from __future__ import annotations
 
-import asyncio
 import logging
 import os
 import re
-import time
 import uuid
-from typing import Any, Optional
+from typing import TYPE_CHECKING, Any
 
 from dotenv import load_dotenv
 from pydantic import BaseModel, Field
 
-from healthcare_rag.orch.monitor import QueryMonitor
-from healthcare_rag.orch.orchestrator import RefactoredOrchestrator
-from healthcare_rag.pipeline.medical_rag import MedicalRAG
-
-from .harness import LLMCallUsage, _extract_contexts, _usage_sink, summarize_usage
+if TYPE_CHECKING:
+    from healthcare_rag.graph.engine import Engine
 
 load_dotenv()
 
@@ -68,63 +63,31 @@ _ANSWER_PLACEHOLDER = ""
 # One turn                                                                     #
 # --------------------------------------------------------------------------- #
 
-async def run_turn(rag: MedicalRAG, user_id: str, question: str, index: int) -> dict[str, Any]:
+async def run_turn(engine: Engine, user_id: str, question: str, index: int) -> dict[str, Any]:
     """Run a single user utterance for ``user_id`` and return a rich turn record.
 
     Mirrors :func:`evals.harness.run_one`, but keeps the caller's ``user_id`` so
     that ``rag.conversation_history`` accumulates across turns.
     """
-    sink: list[LLMCallUsage] = []
-    token = _usage_sink.set(sink)
-
-    monitor = QueryMonitor()
-    orch = RefactoredOrchestrator(rag)
-
-    t0 = time.perf_counter()
-    first_answer_at: dict[str, Optional[float]] = {"t": None}
-
-    async def _watch_first_answer() -> None:
-        await monitor.raw_answer_event.wait()
-        first_answer_at["t"] = time.perf_counter() - t0
-
-    watcher = asyncio.create_task(_watch_first_answer())
-    error: Optional[str] = None
-    answer: Optional[str] = None
-    follow_ups: Optional[list[str]] = None
-    try:
-        answer, follow_ups = await orch.process_query(question, user_id, monitor)
-    except Exception as exc:  # a crash mid-conversation is itself a datapoint
-        logger.exception("Pipeline raised on turn %d (%r)", index, question)
-        error = f"{type(exc).__name__}: {exc}"
-    finally:
-        latency_s = time.perf_counter() - t0
-        watcher.cancel()
-        _usage_sink.reset(token)
-
-    contexts, raw_answer, branch_info = _extract_contexts(orch)
-    usage = summarize_usage(sink)
-    summary = orch.summary_result
-
+    result = await engine.run_turn(user_id, question)
     return {
         "index": index,
         "user": question,
-        "answer": answer,
-        "answered": bool(answer),
-        "raw_answer": raw_answer,
-        "follow_ups": follow_ups or [],
-        "contexts": contexts,
-        "retrieved_chunk_ids": [c["chunk_id"] for c in contexts if c["chunk_id"] is not None],
-        "retrieved_pages": sorted({p for c in contexts for p in c["page_numbers"]}),
-        "retrieved_sources": sorted({c["source"] for c in contexts}),
-        "latency_s": round(latency_s, 3),
-        "time_to_first_answer_s": (
-            round(first_answer_at["t"], 3) if first_answer_at["t"] is not None else None
-        ),
-        "usage": usage,
-        "error": error,
-        "used_history": bool(getattr(summary, "required_context", False)),
-        "n_branches": branch_info["n_branches"],
-        "selected_branch_type": branch_info["selected_branch_type"],
+        "answer": result["answer"],
+        "answered": result["answered"],
+        "raw_answer": result["raw_answer"],
+        "follow_ups": result["follow_ups"],
+        "contexts": result["contexts"],
+        "retrieved_chunk_ids": result["retrieved_chunk_ids"],
+        "retrieved_pages": result["retrieved_pages"],
+        "retrieved_sources": result["retrieved_sources"],
+        "latency_s": result["latency_s"],
+        "time_to_first_answer_s": result["time_to_first_answer_s"],
+        "usage": result["usage"],
+        "error": result["error"],
+        "used_history": engine.history_used(user_id),
+        "n_branches": result["n_branches"],
+        "selected_branch_type": result["selected_branch_type"],
     }
 
 
@@ -160,7 +123,7 @@ class _StopVerdict(BaseModel):
     rationale: str = Field(description="One short sentence.")
 
 
-def _last_user_message(trajectory: list[dict]) -> str:
+def _last_user_message(trajectory: list[dict[str, Any]]) -> str:
     for m in reversed(trajectory):
         if m.get("role") == "user":
             return m.get("content") or ""
@@ -183,14 +146,18 @@ def _make_stopping_condition(stop_when: str):
     """
     if _mentions_sentinel(stop_when):
 
-        async def _stop_on_sentinel(trajectory: list[dict], *, turn_counter: int, **_: Any) -> bool:
+        async def _stop_on_sentinel(
+            trajectory: list[dict[str, Any]], *, turn_counter: int, **_: Any
+        ) -> bool:
             return is_done_message(_last_user_message(trajectory))
 
         return _stop_on_sentinel
 
     from .evaluators import _judge  # imported lazily: judges are optional
 
-    async def _stop(trajectory: list[dict], *, turn_counter: int, **_: Any) -> bool:
+    async def _stop(
+        trajectory: list[dict[str, Any]], *, turn_counter: int, **_: Any
+    ) -> bool:
         convo = _render_trajectory(trajectory)
         try:
             v = await _judge(
@@ -203,12 +170,12 @@ def _make_stopping_condition(stop_when: str):
         except Exception as exc:  # never let the stop check kill the conversation
             logger.warning("stopping-condition judge failed (%s); continuing", exc)
             return False
-        return bool(v.stop)
+        return _StopVerdict.model_validate(v.model_dump()).stop
 
     return _stop
 
 
-def _render_trajectory(trajectory: list[dict]) -> str:
+def _render_trajectory(trajectory: list[dict[str, Any]]) -> str:
     return "\n".join(f"{m.get('role')}: {m.get('content') or ''}" for m in trajectory)
 
 
@@ -216,7 +183,7 @@ def _render_trajectory(trajectory: list[dict]) -> str:
 # One conversation                                                             #
 # --------------------------------------------------------------------------- #
 
-def _totals(turns: list[dict]) -> dict[str, Any]:
+def _totals(turns: list[dict[str, Any]]) -> dict[str, Any]:
     return {
         "latency_s": round(sum(t["latency_s"] for t in turns), 3),
         "est_cost_usd": round(sum((t["usage"] or {}).get("est_cost_usd") or 0.0 for t in turns), 6),
@@ -225,7 +192,12 @@ def _totals(turns: list[dict]) -> dict[str, Any]:
     }
 
 
-def _result(conversation_id: str, kind: str, turns: list[dict], trajectory: list[dict]) -> dict[str, Any]:
+def _result(
+    conversation_id: str,
+    kind: str,
+    turns: list[dict[str, Any]],
+    trajectory: list[dict[str, Any]],
+) -> dict[str, Any]:
     return {
         "conversation_id": conversation_id,
         "kind": kind,
@@ -238,18 +210,18 @@ def _result(conversation_id: str, kind: str, turns: list[dict], trajectory: list
     }
 
 
-async def _run_scripted(rag: MedicalRAG, conv: dict[str, Any], user_id: str) -> dict[str, Any]:
-    turns: list[dict] = []
-    trajectory: list[dict] = []
+async def _run_scripted(engine: Engine, conv: dict[str, Any], user_id: str) -> dict[str, Any]:
+    turns: list[dict[str, Any]] = []
+    trajectory: list[dict[str, Any]] = []
     for i, text in enumerate(conv.get("turns") or [], start=1):
-        turn = await run_turn(rag, user_id, text, i)
+        turn = await run_turn(engine, user_id, text, i)
         turns.append(turn)
         trajectory.append({"role": "user", "content": text})
         trajectory.append({"role": "assistant", "content": turn["answer"] or _ANSWER_PLACEHOLDER})
     return _result(conv["conversation_id"], "scripted", turns, trajectory)
 
 
-async def _run_simulated(rag: MedicalRAG, conv: dict[str, Any], user_id: str) -> dict[str, Any]:
+async def _run_simulated(engine: Engine, conv: dict[str, Any], user_id: str) -> dict[str, Any]:
     from openevals.simulators import create_async_llm_simulated_user, run_multiturn_simulation_async
 
     spec = conv.get("simulated_user") or {}
@@ -260,9 +232,11 @@ async def _run_simulated(rag: MedicalRAG, conv: dict[str, Any], user_id: str) ->
     # thread_id → user_id. The simulator owns thread ids; the application keys its
     # memory by user_id, so this dict is the bridge between the two namespaces.
     threads: dict[str, str] = {}
-    turns: list[dict] = []
+    turns: list[dict[str, Any]] = []
 
-    async def app(inputs: dict, *, thread_id: str, **_: Any) -> dict:
+    async def app(
+        inputs: dict[str, Any], *, thread_id: str, **_: Any
+    ) -> dict[str, Any]:
         uid = threads.setdefault(thread_id, user_id)
         text = inputs.get("content") or ""
         # A bare "DONE" is the persona signalling the end, not a question. The
@@ -270,7 +244,7 @@ async def _run_simulated(rag: MedicalRAG, conv: dict[str, Any], user_id: str) ->
         # than spending a full pipeline turn (and a metric row) answering it.
         if _is_done_only(text):
             return {"role": "assistant", "content": "(simulated user ended the conversation)"}
-        turn = await run_turn(rag, uid, text, len(turns) + 1)
+        turn = await run_turn(engine, uid, text, len(turns) + 1)
         turns.append(turn)
         return {"role": "assistant", "content": turn["answer"] or _ANSWER_PLACEHOLDER}
 
@@ -299,12 +273,11 @@ async def _run_simulated(rag: MedicalRAG, conv: dict[str, Any], user_id: str) ->
     return _result(conv["conversation_id"], "simulated", turns, trajectory)
 
 
-async def run_conversation(rag: MedicalRAG, conv: dict[str, Any]) -> dict[str, Any]:
+async def run_conversation(engine: Engine, conv: dict[str, Any]) -> dict[str, Any]:
     """Play one conversation end-to-end and return its record.
 
     Args:
-        rag: a :class:`MedicalRAG` built by :func:`evals.harness.build_rag` (which
-            already points ``conversation_history`` at a throwaway temp directory).
+        engine: the selected runtime engine shared by every turn.
         conv: the LangSmith example ``inputs`` — ``{conversation_id, kind, turns |
             simulated_user}``.
 
@@ -318,15 +291,15 @@ async def run_conversation(rag: MedicalRAG, conv: dict[str, Any]) -> dict[str, A
     user_id = f"eval_mt_{uuid.uuid4().hex[:10]}"
     kind = conv.get("kind") or "scripted"
     if kind == "simulated":
-        return await _run_simulated(rag, conv, user_id)
-    return await _run_scripted(rag, conv, user_id)
+        return await _run_simulated(engine, conv, user_id)
+    return await _run_scripted(engine, conv, user_id)
 
 
-def make_target(rag: MedicalRAG):
+def make_target(engine: Engine):
     """Return the async target callable expected by ``langsmith.aevaluate``."""
 
-    async def target(inputs: dict) -> dict:
-        return await run_conversation(rag, inputs)
+    async def target(inputs: dict[str, Any]) -> dict[str, Any]:
+        return await run_conversation(engine, inputs)
 
     return target
 

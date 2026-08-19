@@ -31,6 +31,7 @@ class GraphSettings:
     weaviate_http_port: int = 8080
     weaviate_grpc_port: int = 50051
     openai_api_key: str = ""
+    collection_names: tuple[str, ...] = ("Lipitor", "Metformin")
 
     _TRUTHY: ClassVar[frozenset[str]] = frozenset({"1", "true", "yes", "on"})
     _FALSY: ClassVar[frozenset[str]] = frozenset({"0", "false", "no", "off"})

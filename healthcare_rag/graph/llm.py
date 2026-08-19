@@ -130,7 +130,7 @@ class LangChainLLMGateway:
         if not callable(build_routing_tools):
             message = "Routing tools are unavailable; build_routing_tools lands in todo 5"
             raise NotImplementedError(message)
-        tools = build_routing_tools()
+        tools = build_routing_tools(list(self.settings.collection_names))
         if not isinstance(tools, list):
             message = "build_routing_tools must return a list of LangChain tools"
             raise TypeError(message)

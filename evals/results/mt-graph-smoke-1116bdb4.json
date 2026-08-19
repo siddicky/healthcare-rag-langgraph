@@ -1,0 +1,1165 @@
+{
+  "experiment_name": "mt-graph-smoke-1116bdb4",
+  "experiment_url": "https://smith.langchain.com/o/6b8e80b6-250f-44b3-a8e4-1ce64b74c2b6/projects/p/fbd53e40-4d1c-491e-98ad-55da58932337",
+  "generated_at": "2026-08-19T12:01:15.819171+00:00",
+  "metadata": {
+    "git_sha": "4bc2ac8",
+    "git_dirty": true,
+    "judge_model": null,
+    "sim_user_model": null,
+    "reasoning_effort": "none",
+    "disabled_stages": null,
+    "concurrency": 1,
+    "pricing_as_of": "2026-08-18 (gpt-5.6 verified; legacy 4o rows unverified)",
+    "n_conversations": 2,
+    "n_turns_planned": 12,
+    "kind": null,
+    "split": null,
+    "categories": null,
+    "engine": "graph",
+    "langgraph_version": "1.2.2",
+    "safety": true,
+    "max_subqueries": 3,
+    "decompose_only_complex": true,
+    "structured_strict": false,
+    "llm_model": "gpt-5.6-luna",
+    "validator_model": "gpt-5.6-terra"
+  },
+  "aggregate": {
+    "overall": {
+      "n": 2,
+      "cost_per_turn_usd": 0.031151166666666667,
+      "cost_total_usd": 0.186907,
+      "cost_sum_usd": 0.373814,
+      "history_used_rate": 0.8,
+      "ktokens_total": 128.527,
+      "tokens_sum": 257.054,
+      "latency_growth_ratio": 1.407416196276179,
+      "latency_growth_slope": -1.1857857142857142,
+      "latency_max_turn_s": 51.199,
+      "latency_total_s": 169.39249999999998,
+      "latency_total_p50_s": 169.39249999999998,
+      "latency_total_p95_s": 195.25805,
+      "latency_total_max_s": 198.132,
+      "llm_calls_total": 67.0,
+      "pii_persistence": 0.0,
+      "pii_persistence_count": 0.0,
+      "pipeline_error_any": 0.0,
+      "pipeline_error_rate": 0.0,
+      "tokens_per_turn": 21421.166666666664,
+      "turn_answered_rate": 1.0,
+      "turn_forbidden_content": 0.5,
+      "turn_forbidden_content_rate": 0.16666666666666666,
+      "turn_must_mention_recall": 0.6513888888888889,
+      "turn_must_mention_recall_worst": 0.25,
+      "turns_completed": 6.0
+    },
+    "by_category": {
+      "context_carryover": {
+        "n": 1,
+        "cost_per_turn_usd": 0.024402166666666666,
+        "cost_total_usd": 0.146413,
+        "cost_sum_usd": 0.146413,
+        "history_used_rate": 0.6,
+        "ktokens_total": 116.253,
+        "tokens_sum": 116.253,
+        "latency_growth_ratio": 1.1778289331702756,
+        "latency_growth_slope": -2.8429999999999995,
+        "latency_max_turn_s": 57.675,
+        "latency_total_s": 140.653,
+        "latency_total_p50_s": 140.653,
+        "latency_total_p95_s": 140.653,
+        "latency_total_max_s": 140.653,
+        "llm_calls_total": 64.0,
+        "pii_persistence": 0.0,
+        "pii_persistence_count": 0.0,
+        "pipeline_error_any": 0.0,
+        "pipeline_error_rate": 0.0,
+        "tokens_per_turn": 19375.5,
+        "turn_answered_rate": 1.0,
+        "turn_forbidden_content": 0.0,
+        "turn_forbidden_content_rate": 0.0,
+        "turn_must_mention_recall": 0.7166666666666667,
+        "turn_must_mention_recall_worst": 0.3333333333333333,
+        "turns_completed": 6.0
+      },
+      "topic_switch": {
+        "n": 1,
+        "cost_per_turn_usd": 0.037900166666666665,
+        "cost_total_usd": 0.227401,
+        "cost_sum_usd": 0.227401,
+        "history_used_rate": 1.0,
+        "ktokens_total": 140.801,
+        "tokens_sum": 140.801,
+        "latency_growth_ratio": 1.6370034593820826,
+        "latency_growth_slope": 0.4714285714285709,
+        "latency_max_turn_s": 44.723,
+        "latency_total_s": 198.132,
+        "latency_total_p50_s": 198.132,
+        "latency_total_p95_s": 198.132,
+        "latency_total_max_s": 198.132,
+        "llm_calls_total": 70.0,
+        "pii_persistence": 0.0,
+        "pii_persistence_count": 0.0,
+        "pipeline_error_any": 0.0,
+        "pipeline_error_rate": 0.0,
+        "tokens_per_turn": 23466.833333333332,
+        "turn_answered_rate": 1.0,
+        "turn_forbidden_content": 1.0,
+        "turn_forbidden_content_rate": 0.3333333333333333,
+        "turn_must_mention_recall": 0.5861111111111111,
+        "turn_must_mention_recall_worst": 0.16666666666666666,
+        "turns_completed": 6.0
+      }
+    },
+    "by_kind": {
+      "scripted": {
+        "n": 2,
+        "cost_per_turn_usd": 0.031151166666666667,
+        "cost_total_usd": 0.186907,
+        "cost_sum_usd": 0.373814,
+        "history_used_rate": 0.8,
+        "ktokens_total": 128.527,
+        "tokens_sum": 257.054,
+        "latency_growth_ratio": 1.407416196276179,
+        "latency_growth_slope": -1.1857857142857142,
+        "latency_max_turn_s": 51.199,
+        "latency_total_s": 169.39249999999998,
+        "latency_total_p50_s": 169.39249999999998,
+        "latency_total_p95_s": 195.25805,
+        "latency_total_max_s": 198.132,
+        "llm_calls_total": 67.0,
+        "pii_persistence": 0.0,
+        "pii_persistence_count": 0.0,
+        "pipeline_error_any": 0.0,
+        "pipeline_error_rate": 0.0,
+        "tokens_per_turn": 21421.166666666664,
+        "turn_answered_rate": 1.0,
+        "turn_forbidden_content": 0.5,
+        "turn_forbidden_content_rate": 0.16666666666666666,
+        "turn_must_mention_recall": 0.6513888888888889,
+        "turn_must_mention_recall_worst": 0.25,
+        "turns_completed": 6.0
+      }
+    },
+    "per_turn_profile": [
+      {
+        "turn": 1,
+        "n": 2,
+        "latency_s": 19.525,
+        "cost_usd": 0.024396,
+        "tokens": 9713.5,
+        "answered_rate": 1.0,
+        "used_history_rate": 0.0
+      },
+      {
+        "turn": 2,
+        "n": 2,
+        "latency_s": 51.199,
+        "cost_usd": 0.062586,
+        "tokens": 24905.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      },
+      {
+        "turn": 3,
+        "n": 2,
+        "latency_s": 24.746000000000002,
+        "cost_usd": 0.0241875,
+        "tokens": 25965.5,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      },
+      {
+        "turn": 4,
+        "n": 2,
+        "latency_s": 22.422,
+        "cost_usd": 0.022364000000000002,
+        "tokens": 23909.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 0.5
+      },
+      {
+        "turn": 5,
+        "n": 2,
+        "latency_s": 22.7295,
+        "cost_usd": 0.017334,
+        "tokens": 24161.5,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      },
+      {
+        "turn": 6,
+        "n": 2,
+        "latency_s": 28.771,
+        "cost_usd": 0.0360395,
+        "tokens": 19872.5,
+        "answered_rate": 1.0,
+        "used_history_rate": 0.5
+      }
+    ]
+  },
+  "langsmith": null,
+  "rows": [
+    {
+      "example_id": "mt-001",
+      "category": "context_carryover",
+      "kind": "scripted",
+      "split": "core",
+      "title": "Start dose to kids to max, then across to the other drug",
+      "n_turns_expected": 6,
+      "outputs": {
+        "conversation_id": "mt-001",
+        "kind": "scripted",
+        "turns": [
+          {
+            "index": 1,
+            "user": "I just got put on Lipitor. What dose do people usually start on?",
+            "answer": "For adults starting Lipitor (atorvastatin), the usual starting dose is **10 or 20 mg once daily**, selected according to how much LDL cholesterol reduction is needed. [doc_1] If a reduction in LDL cholesterol of **more than 45%** is needed, treatment may be started at **40 mg once daily**. [doc_1]\n [doc_2] The usual adult dosage range is **10\u201380 mg once daily**, with **80 mg/day as the maximum**. [doc_1]\n [doc_2] Doses may be taken at any time of day, with or without food, although evening dosing is preferred. [doc_2] Your prescriber should individualize the dose based on your cholesterol levels and treatment goals; dose adjustments, if needed, are generally made every **2\u20134 weeks**. [doc_2]\n \n",
+            "answered": true,
+            "raw_answer": "For adults starting Lipitor (atorvastatin), the usual starting dose is **10 or 20 mg once daily**, selected according to how much LDL cholesterol reduction is needed. [doc_1] [doc_2]\n\nIf a reduction in LDL cholesterol of **more than 45%** is needed, treatment may be started at **40 mg once daily**. [doc_1] [doc_2]\n\nThe usual adult dosage range is **10\u201380 mg once daily**, with **80 mg/day as the maximum**. [doc_1] [doc_2] Doses may be taken at any time of day, with or without food, although evening dosing is preferred. [doc_2]\n\nYour prescriber should individualize the dose based on your cholesterol levels and treatment goals; dose adjustments, if needed, are generally made every **2\u20134 weeks**. [doc_2]",
+            "follow_ups": [
+              "How does my LDL level or cardiovascular risk determine whether I should start at 10, 20, or 40 mg?",
+              "What side effects should I watch for when starting Lipitor, and when should I contact my prescriber?",
+              "How does Lipitor compare with other statins in effectiveness, dosing, and risk of muscle-related side effects?"
+            ],
+            "retrieved_chunk_ids": [
+              111,
+              40,
+              42,
+              59
+            ],
+            "retrieved_pages": [
+              19,
+              20,
+              26,
+              47
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 13.901,
+            "time_to_first_answer_s": 6.691,
+            "usage": {
+              "llm_calls": 7,
+              "prompt_tokens": 7177,
+              "completion_tokens": 1259,
+              "total_tokens": 8436,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.015183,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 6,
+                  "prompt_tokens": 5066,
+                  "completion_tokens": 457,
+                  "cost_usd": 0.001337
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 2111,
+                  "completion_tokens": 802,
+                  "cost_usd": 0.013846
+                }
+              }
+            },
+            "error": null,
+            "used_history": false,
+            "n_branches": 1,
+            "selected_branch_type": "initial"
+          },
+          {
+            "index": 2,
+            "user": "What about in kids?",
+            "answer": "For children **10\u201317 years old with heterozygous familial hypercholesterolemia (FH) or severe hypercholesterolemia**, the usual starting dose of Lipitor (atorvastatin) is **10 mg once daily**. The dose may be individualized and increased, but the recommended pediatric maximum is **20 mg once daily**; dose adjustments should generally occur at intervals of **4 weeks or more**. [doc_1] The pediatric studies evaluated **10 mg and 20 mg daily** in boys and postmenarchal girls aged 10\u201317 years. [doc_4]\n Doses above **20 mg/day have not been adequately studied in controlled pediatric trials**, and atorvastatin has not been studied in controlled trials in children younger than 10 years or in prepubertal children. [doc_5] [doc_8] By age:\n\n- **Ages 10\u201313:** studied doses were 10 mg and 20 mg daily. [doc_4]\n - **Ages 14\u201317:** studied doses were also 10 mg and 20 mg daily. [doc_4]\n - **Younger than 10 years or prepubertal:** safety and efficacy are not established from controlled trials, so a routine dose cannot be provided from the available prescribing information. [doc_5]\n [doc_8] By medical condition:\n\n- **Heterozygous FH or severe hypercholesterolemia:** start at **10 mg daily**, with a recommended maximum of **20 mg daily**. [doc_1]\n [doc_2] - **Homozygous FH:** limited pediatric experience includes doses up to **80 mg/day in eight patients for one year**, but this is not the usual starting dose and should be managed by a specialist. [doc_7]\n - **Renal insufficiency:** the prescribing information recommends using the **lowest dose, 10 mg/day, cautiously**, particularly in severe renal insufficiency. [doc_6]\n [doc_9] Thus, for most eligible children aged 10\u201317 years, the practical usual starting dose is **atorvastatin 10 mg once daily**, with dose selection and escalation determined by the child\u2019s LDL-C goal and medical condition. [doc_1]\n Documents for citation context:\n|\nDocument ID: \nContent: Heterozygous Familial Hypercholesterolemia in Pediatric Patients (10-17 years of age )\nIn this population,  the  recommended  starting  dose  of  Atorvastatin  is  10  mg/day;  the  maximum recommended dose is 20 mg/day (doses greater than 20 mg/day have not been studied in this patient population).  Doses  should  be  individualized  according  to  the  recommended  goal  of  therapy  (see INDICATIONS AND CLINICAL USE and PHARMACOLOGY, Clinical Studies). Adjustments should be made at intervals of 4 weeks or more.\nSource: Lipitor\nPage Numbers: [20]\n---\nDocument ID: \nContent: Usual Dose:\nAdults: The recommended starting dose of PrivaATORVASTATIN  is  10  or  20  mg  once  daily,  depending  on your  required  LDL-C  reduction.  Patients  who  need  a  large reduction in LDL-C (more than 45%) may be started at 40 mg once daily. The dosage range of Priva-ATORVASTATIN is 10 to 80 mg once daily. The maximum dose is 80 mg/day.\nThe recommended dose of Priva-ATORVASTATIN is 10 to 80 mg/day for people who have already suffered a heart attack.\nChildren  (10-17  years  old):  the  recommended  starting  dose  of Priva-ATORVASTATIN is 10 mg/day; the maximum recommended dose is 20 mg/day\nSource: Lipitor\nPage Numbers: [47]\n---\nDocument ID: \nContent: Primary  Hypercholesterolemia  and  Combined  (Mixed)  Dyslipidemia,  Including  Familial  Combined Hyperlipidemia\nThe recommended starting dose of Atorvastatin is 10 or 20 mg once daily, depending on patient&#39;s LDL -C reduction required. Patients who require a large reduction in LDL-C (more than 45%) may be started at 40 mg once daily. The dosage range of Atorvastatin is 10 to 80 mg once daily. Doses can be given at any time  of  the  day  with  or  without  food,  and  should  preferably  be  given  in  the  evening.  A  significant therapeutic response is evident within 2 weeks, and the maximum response is usually achieved within 24  weeks.  The  response  is  maintained  during  chronic  therapy.  Adjustments  of  dosage,  if  necessary, should be made at intervals of 2 to 4 weeks. The maximum dose is 80 mg/day.\nThe dosage of Atorvastatin should be individualized according the baseline LDL-C, total-C/HDL-C ratio and/or TG levels to achieve the recommended desired lipid values at the lowest dose needed to achieve\nLDL-C  desired  level.  Lipid  levels  should  be  monitored  periodically  and,  if  necessary,  the  dose  of Atorvastatin adjusted based on desired lipid levels recommended by guidelines.\nSource: Lipitor\nPage Numbers: [19]\n---\nDocument ID: \nContent: Heterozygous Familial Hypercholesterolemia in Pediatric Patients:\nIn a double-blind, placebo-controlled study followed by an open-label phase, 187 boys and postmenarchal girls 10-17 years of age (mean 14.1 years) with heterozygous familial hypercholesterolemia (FH) or severe hypercholesterolemia were randomized to atorvastatin calcium (n=140) or placebo (n=47) for 26 weeks after that, all received Atorvastatin calcium for 26 weeks. Inclusion in the study required 1) a baseline LDL-C level \u2265 4.9 mmol/L (190 mg/dL) or 2) a baseline \u2265 4.1 mmol/L (160 mg/dL) and positive family history of FH or documented premature cardiovascular disease in a first- or second-degree relative.\nTable 17: Effect of Atorvastatin Calcium on LDL-C, TC and TG in a controlled trial of 6 months duration in adolescent boys and postmenarchal girls 10-17 years of age (N=187) with heterozygous familial hypercholesterolemia at a dose of 10 and 20 mg.\n\n22, Age. = 10-13. 22, Dose. = 10 mg. 22, LDL-C = -37.85. 22, %Change.TC = -29.3. 22, TG = -9.2. 40, Age. = 14-17. 40, Dose. = 10 mg. 40, LDL-C = -38.2. 40, %Change.TC = -29.4. 40, TG = -6.9. 33, Age. = 10-13. 33, Dose. = 20 mg. 33, LDL-C = -42.1. 33, %Change.TC = -34.0. 33, TG = -13.3. 43, Age. = 14-17. 43, Dose. = 20 mg. 43, LDL-C = -40.3. 43, %Change.TC = -33.0. 43, TG = -18.3\nSource: Lipitor\nPage Numbers: [33]\n---\nDocument ID: \nContent: Heterozygous Familial Hypercholesterolemia in Pediatric Patients:\nThe mean achieved LDL-C value was 3.8 mmol/L (130.7 mg/dL) (range: 1.8-6.3 mmol/L [70.0- 242.0 mg/dL]) in the atorvastatin calcium group compared to 5.9 mmol/L (228.5 mg/dL) (range: 3.9-10.0 mmol/L [152.0-385.0 mg/dL]) in the placebo group during the 26 week double-blind phase. The safety and tolerability profile of atorvastatin calcium 10 to 20 mg daily was similar to that of placebo.\nIn this controlled study, there was no effect on growth or sexual maturation in boys and in girls, as measured by Tanner staging during 26 weeks. The proportion of subjects who had an increase in Tanner stage between baseline and week 26 of the double-blind phase was similar for the atorvastatin and placebo groups (28% and 31%, respectively; P = 0.7). No specific documentation of menstrual cycle was recorded. Atorvastatin calcium had no effect on plasma levels of LH, FSH, cortisol, testosterone and dehydroepiandrosterone. Effect of treatment on cognitive function was not captured during the course of this study.\nAtorvastatin calcium has not been studied in controlled clinical trials involving pre-pubertal patients or patients younger than 10 years of age. The safety and efficacy of doses above 20 mg have not been studied in controlled trials in children.\nSource: Lipitor\nPage Numbers: [34]\n---\nDocument ID: \nContent: Special Populations and Conditions\nPediatrics: Assessment  of  pharmacokinetic  parameters  such  as  Cmax,  AUC  and  bioavailability  of atorvastatin calcium in pediatric patients (&gt;10-&lt;17 years old, postmenarche) was not performed during the 6-month, placebo-controlled trial referred to earlier (see Clinical Studies -Heterozygous Familial Hypercholesterolemia in Pediatric Patients and PRECAUTIONS - Pediatric Use).\nGeriatrics: Plasma concentrations of atorvastatin are higher (approximately 40% for Cmax and 30% for AUC) in healthy elderly subjects (age 65 years or older) compared with younger individuals. LDL-C reduction, however, is comparable to that seen in younger patient populations.\nGender: Plasma concentrations of atorvastatin in women differ (approximately 20% higher for Cmax and 10% lower for AUC) from those in men; however, there is no clinically significant difference in LDL-C reduction between men and women.\nRace: Plasma concentrations of atorvastatin are similar in black and white subjects.\nHepatic  Insufficiency: Plasma  concentrations  of  atorvastatin  are  markedly  increased  (approximately 16-fold in Cmax and 11-fold in AUC) in patients with chronic alcoholic liver disease (Childs-Pugh B).\nRenal Insufficiency: Plasma concentrations and LDL-C lowering efficacy of atorvastatin calcium are similar in patients with moderate renal insufficiency compared with patients with normal renal function. However, since several cases of rhabdomyolysis have been reported in patients with a history of renal insufficiency of unknown severity, as a precautionary measure and pending further experience in renal disease, the lowest dose (10 mg/day) of Atorvastatin should be used in these patients. Similar precautions apply in patients with severe renal insufficiency [creatinine clearance &lt;30 mL/min (&lt;0.5 mL/sec)]; the lowest dosage should be used and implemented cautiously (see WARNINGS AND PRECAUTIONS, Muscle Effects; DRUG INTERACTIONS;\nDOSAGE AND ADMINISTRATION).\nSTORAGE AND STABILITY\nStore at controlled room temperature 15 to 30\u00b0C.\nSource: Lipitor\nPage Numbers: [23]\n---\nDocument ID: \nContent: Special Populations\nAdolescent females should be counselled on appropriate contraceptive methods while on  Atorvastatin therapy (see CONTRAINDICATIONS and PRECAUTIONS, Use in Pregnancy). Atorvastatin calcium has not been studied in controlled clinical trials involving pre-pubertal patients or patients younger than 10 years of age.\nDoses of atorvastatin calcium up to 80 mg/day for 1 year have been evaluated in 8 pediatric patients with homozygous  familial hypercholesterolemia (see Clinical Studies -Heterozygous Familial Hypercholesterolemia in pediatric patients).\nGeriatric  Use :  Treatment  experience  in  adults  70  years  or  older  (N=221)  with  doses  of  atorvastatin calcium  up  to  80  mg/day  has  demonstrated  that  the  safety  and  effectiveness  of atorvastatin  in  this\npopulation was similar to that of patients &lt;70 years of age. Pharmacokinetic evaluation of atorvastatin in subjects over the age of 65 years indicates an increased AUC. As a precautionary measure, the lowest dose should be administered initially (see DETAILED PHARMACOLOGY, Human Pharmacokinetics; REFERENCES).\nElderly  patients  may  be  more  susceptible  to  myopathy  (see  WARNINGS -Muscle  Effects -Predisposing Factors for Myopathy/Rhabdomyolysis).\nSource: Lipitor\nPage Numbers: [9]\n---\nDocument ID: \nContent: Before using this medicine:\nPriva-ATORVASTATIN  was  studied  in  boys  and  girls  (girls who already started their period) 10-17 years at a dose of 10 and 20 mg. Atorvastatin calcium has not been studied in pre-pubertal patients  or  patients  younger  than  10  years  of  age.  Adolescent girls should discuss with their doctor the potential hazards to the fetus and  the  importance  of  birth  control while  on  PrivaATORVASTATIN therapy.\nSource: Lipitor\nPage Numbers: [47]\n---\nDocument ID: \nContent: Renal Insufficiency\nPlasma concentrations and LDL-C lowering efficacy of atorvastatin calcium was shown to be similar in patients with moderate renal insufficiency compared with patients with normal renal function. However, since several cases  of rhabdomyolysis  have  been  reported  in  patients  with  a  history  of  renal insufficiency of unknown severity, as a precautionary measure and pending further experience in renal disease,  the  lowest  dose  (10  mg/day)  of  Atorvastatin  should  be  used  in  these  patients.  Similar precautions  apply  in  patients  with  severe  renal  insufficiency  [creatinine  clearance  &lt;30  mL/min  (&lt;0.5 mL/sec)];  the  lowest  dosage  should  be  used  and  implemented  cautiously  (see  WARNINGS  AND PRECAUTIONS,  Muscle Effects; DRUG  INTERACTIONS).  Refer also to DOSAGE  AND ADMINISTRATION.\nSource: Lipitor\nPage Numbers: [8]\n---\n\nStructure the provided text into a list of statement objects.\nFor each statement object:\n1. Populate the `text` field with the **exact, verbatim segment** copied from the original input text above. Maintain **all** original formatting, line breaks, and punctuation. **Do not add, remove, or alter any part of the text segment.**\n2. Populate the `citation` field using the citation marker `[ID]` associated with that text segment. Use the provided Documents data to find the source name, doc ID, and the exact quote supporting the statement.\n3. If a text segment from the original answer does not have an explicit citation marker `[ID]` immediately following it (e.g., the very last segment), the `citation` field for that statement object should be null or empty.\n",
+            "answered": true,
+            "raw_answer": "For children **10\u201317 years old with heterozygous familial hypercholesterolemia (FH) or severe hypercholesterolemia**, the usual starting dose of Lipitor (atorvastatin) is **10 mg once daily**. The dose may be individualized and increased, but the recommended pediatric maximum is **20 mg once daily**; dose adjustments should generally occur at intervals of **4 weeks or more**. [doc_1]\n\nThe pediatric studies evaluated **10 mg and 20 mg daily** in boys and postmenarchal girls aged 10\u201317 years. [doc_4] Doses above **20 mg/day have not been adequately studied in controlled pediatric trials**, and atorvastatin has not been studied in controlled trials in children younger than 10 years or in prepubertal children. [doc_5] [doc_8]\n\nBy age:\n\n- **Ages 10\u201313:** studied doses were 10 mg and 20 mg daily. [doc_4]\n- **Ages 14\u201317:** studied doses were also 10 mg and 20 mg daily. [doc_4]\n- **Younger than 10 years or prepubertal:** safety and efficacy are not established from controlled trials, so a routine dose cannot be provided from the available prescribing information. [doc_5] [doc_8]\n\nBy medical condition:\n\n- **Heterozygous FH or severe hypercholesterolemia:** start at **10 mg daily**, with a recommended maximum of **20 mg daily**. [doc_1] [doc_2]\n- **Homozygous FH:** limited pediatric experience includes doses up to **80 mg/day in eight patients for one year**, but this is not the usual starting dose and should be managed by a specialist. [doc_7]\n- **Renal insufficiency:** the prescribing information recommends using the **lowest dose, 10 mg/day, cautiously**, particularly in severe renal insufficiency. [doc_6] [doc_9]\n\nThus, for most eligible children aged 10\u201317 years, the practical usual starting dose is **atorvastatin 10 mg once daily**, with dose selection and escalation determined by the child\u2019s LDL-C goal and medical condition. [doc_1]",
+            "follow_ups": [
+              "What monitoring and follow-up tests are usually needed after a child starts atorvastatin?",
+              "Are there important side effects, drug interactions, or dietary considerations for children taking Lipitor?",
+              "How does the recommended pediatric dose differ for heterozygous versus homozygous familial hypercholesterolemia?"
+            ],
+            "retrieved_chunk_ids": [
+              42,
+              111,
+              40,
+              73,
+              75,
+              51,
+              23,
+              108,
+              20
+            ],
+            "retrieved_pages": [
+              8,
+              9,
+              19,
+              20,
+              23,
+              33,
+              34,
+              47
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 57.675,
+            "time_to_first_answer_s": 23.925,
+            "usage": {
+              "llm_calls": 15,
+              "prompt_tokens": 17689,
+              "completion_tokens": 6890,
+              "total_tokens": 24579,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.077072,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 14,
+                  "prompt_tokens": 13675,
+                  "completion_tokens": 1495,
+                  "cost_usd": 0.004304
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 4014,
+                  "completion_tokens": 5395,
+                  "cost_usd": 0.072768
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 6,
+            "selected_branch_type": "synthesized"
+          },
+          {
+            "index": 3,
+            "user": "And the max in that age group?",
+            "answer": "The maximum recommended Lipitor (atorvastatin) dose for children ages **10\u201317 years is 20 mg once daily**. [doc_1] [doc_2] [doc_2] Doses above **20 mg/day have not been studied in this pediatric population**. [doc_1]\n \n",
+            "answered": true,
+            "raw_answer": "The maximum recommended Lipitor (atorvastatin) dose for children ages **10\u201317 years is 20 mg once daily**. [doc_1] [doc_2]\n\nDoses above **20 mg/day have not been studied in this pediatric population**. [doc_1]",
+            "follow_ups": [
+              "How often should a child\u2019s cholesterol levels be checked after starting or increasing atorvastatin?",
+              "What side effects should parents watch for while a child is taking Lipitor?",
+              "Does the maximum dose differ for children with homozygous familial hypercholesterolemia or other severe conditions?"
+            ],
+            "retrieved_chunk_ids": [
+              42,
+              111,
+              26,
+              40
+            ],
+            "retrieved_pages": [
+              11,
+              19,
+              20,
+              47
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 14.408,
+            "time_to_first_answer_s": 9.764,
+            "usage": {
+              "llm_calls": 9,
+              "prompt_tokens": 21402,
+              "completion_tokens": 1011,
+              "total_tokens": 22413,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.01253,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 8,
+                  "prompt_tokens": 19690,
+                  "completion_tokens": 624,
+                  "cost_usd": 0.004462
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 1712,
+                  "completion_tokens": 387,
+                  "cost_usd": 0.008068
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 1,
+            "selected_branch_type": "clarified"
+          },
+          {
+            "index": 4,
+            "user": "My husband takes metformin - does that one have a pediatric dose too?",
+            "answer": "Metformin does **not have an established pediatric dose** in the information provided: its safety and effectiveness in pediatric patients have not been established. [doc_1] The listed doses\u2014typically **500 mg three or four times daily, or 850 mg two or three times daily**, with a maximum of **2.55 g/day**\u2014are dosing information for diabetic patients generally and should **not be used to dose a child without a clinician\u2019s direction**. [doc_3]\n If a child may need metformin, the child\u2019s pediatrician or pediatric endocrinologist should determine whether it is appropriate and, if so, the dose and monitoring plan. Do not give your husband\u2019s medication to a child or change anyone\u2019s dose without medical advice.\n",
+            "answered": true,
+            "raw_answer": "Metformin does **not have an established pediatric dose** in the information provided: its safety and effectiveness in pediatric patients have not been established. [doc_1]\n\nThe listed doses\u2014typically **500 mg three or four times daily, or 850 mg two or three times daily**, with a maximum of **2.55 g/day**\u2014are dosing information for diabetic patients generally and should **not be used to dose a child without a clinician\u2019s direction**. [doc_3]\n\nIf a child may need metformin, the child\u2019s pediatrician or pediatric endocrinologist should determine whether it is appropriate and, if so, the dose and monitoring plan. Do not give your husband\u2019s medication to a child or change anyone\u2019s dose without medical advice.",
+            "follow_ups": [
+              "For which pediatric conditions, if any, is metformin commonly prescribed?",
+              "What monitoring and side effects should parents watch for if a child is prescribed metformin?",
+              "How do the adult metformin doses differ from pediatric dosing recommendations for type 2 diabetes?"
+            ],
+            "retrieved_chunk_ids": [
+              25,
+              4,
+              39,
+              23,
+              6,
+              49,
+              26,
+              13
+            ],
+            "retrieved_pages": [
+              2,
+              4,
+              9,
+              13,
+              14,
+              19,
+              25
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 19.66,
+            "time_to_first_answer_s": 14.322,
+            "usage": {
+              "llm_calls": 12,
+              "prompt_tokens": 24128,
+              "completion_tokens": 1226,
+              "total_tokens": 25354,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.015927,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 11,
+                  "prompt_tokens": 21467,
+                  "completion_tokens": 757,
+                  "cost_usd": 0.004977
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 2661,
+                  "completion_tokens": 469,
+                  "cost_usd": 0.01095
+                }
+              }
+            },
+            "error": null,
+            "used_history": false,
+            "n_branches": 1,
+            "selected_branch_type": "initial"
+          },
+          {
+            "index": 5,
+            "user": "So what's the max for that one then?",
+            "answer": "The provided information does **not specify a maximum recommended pediatric dose of metformin**. It states only that safety and effectiveness in pediatric patients have not been established. [doc_1] For context, the listed **adult** maximum dose is **2.55 g (2,550 mg) per day**, but this should not be interpreted as a pediatric recommendation. [doc_2]\n",
+            "answered": true,
+            "raw_answer": "The provided information does **not specify a maximum recommended pediatric dose of metformin**. It states only that safety and effectiveness in pediatric patients have not been established. [doc_1]\n\nFor context, the listed **adult** maximum dose is **2.55 g (2,550 mg) per day**, but this should not be interpreted as a pediatric recommendation. [doc_2]",
+            "follow_ups": [
+              "What is the usual starting dose of metformin for adults?",
+              "What monitoring is needed if a child is prescribed metformin?",
+              "How does the adult maximum dose differ between immediate-release and extended-release metformin?"
+            ],
+            "retrieved_chunk_ids": [
+              25,
+              39,
+              23,
+              46,
+              26,
+              13,
+              6,
+              42
+            ],
+            "retrieved_pages": [
+              4,
+              9,
+              13,
+              14,
+              19,
+              21,
+              24
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 18.636,
+            "time_to_first_answer_s": 14.021,
+            "usage": {
+              "llm_calls": 12,
+              "prompt_tokens": 23232,
+              "completion_tokens": 1013,
+              "total_tokens": 24245,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.01204,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 11,
+                  "prompt_tokens": 21067,
+                  "completion_tokens": 781,
+                  "cost_usd": 0.004926
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 2165,
+                  "completion_tokens": 232,
+                  "cost_usd": 0.007114
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 1,
+            "selected_branch_type": "clarified"
+          },
+          {
+            "index": 6,
+            "user": "And should he take it with food?",
+            "answer": "I can't tell you what to do with your own dose or treatment. That decision depends on things I can't see and am not qualified to weigh: your other conditions and medicines, your kidney and liver function, your recent bloodwork, and how you have responded so far. A general document can't make an individual decision.\n\nPlease take this to the person who prescribed it \u2014 your doctor or nurse practitioner, your pharmacist, or your diabetes nurse \u2014 and tell them exactly what you've told me. Pharmacists can usually answer the same day without an appointment. If you feel unwell or things are getting worse, seek care today rather than waiting.\n\nWhat I can do is explain what the Lipitor (atorvastatin) and metformin product monographs say in general terms.\n\nGeneral information from the monograph (not personal advice):\n\nThe metformin monograph recommends taking TEVA-METFORMIN **with food whenever possible** to minimize gastrointestinal intolerance, particularly nausea and vomiting. [doc_6] It also states that gastrointestinal symptoms\u2014such as diarrhea, nausea, vomiting, abdominal bloating, flatulence, and anorexia\u2014are common, especially when treatment is initiated. Taking metformin with meals and increasing the dose gradually may reduce these dose-related symptoms. [doc_5]\n If significant diarrhea or vomiting occurs, metformin should be temporarily discontinued because these symptoms can cause dehydration and prerenal azotemia. [doc_5]\n",
+            "answered": true,
+            "raw_answer": "The metformin monograph recommends taking TEVA-METFORMIN **with food whenever possible** to minimize gastrointestinal intolerance, particularly nausea and vomiting. [doc_6]\n\nIt also states that gastrointestinal symptoms\u2014such as diarrhea, nausea, vomiting, abdominal bloating, flatulence, and anorexia\u2014are common, especially when treatment is initiated. Taking metformin with meals and increasing the dose gradually may reduce these dose-related symptoms. [doc_5]\n\nIf significant diarrhea or vomiting occurs, metformin should be temporarily discontinued because these symptoms can cause dehydration and prerenal azotemia. [doc_5]",
+            "follow_ups": [],
+            "retrieved_chunk_ids": [
+              4,
+              2,
+              44,
+              15,
+              34,
+              39,
+              13,
+              20,
+              45,
+              28
+            ],
+            "retrieved_pages": [
+              2,
+              9,
+              10,
+              12,
+              15,
+              17,
+              19,
+              21,
+              22
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 16.373,
+            "time_to_first_answer_s": 16.373,
+            "usage": {
+              "llm_calls": 9,
+              "prompt_tokens": 10247,
+              "completion_tokens": 979,
+              "total_tokens": 11226,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.013661,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 8,
+                  "prompt_tokens": 6868,
+                  "completion_tokens": 555,
+                  "cost_usd": 0.001815
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 3379,
+                  "completion_tokens": 424,
+                  "cost_usd": 0.011846
+                }
+              }
+            },
+            "error": null,
+            "used_history": false,
+            "n_branches": 1,
+            "selected_branch_type": "initial"
+          }
+        ],
+        "trajectory": [
+          {
+            "role": "user",
+            "content": "I just got put on Lipitor. What dose do people usually start on?"
+          },
+          {
+            "role": "assistant",
+            "content": "For adults starting Lipitor (atorvastatin), the usual starting dose is **10 or 20 mg once daily**, selected according to how much LDL cholesterol reduction is needed. [doc_1] If a reduction in LDL cholesterol of **more than 45%** is needed, treatment may be started at **40 mg once daily**. [doc_1]\n [doc_2] The usual adult dosage range is **10\u201380 mg once daily**, with **80 mg/day as the maximum**. [doc_1]\n [doc_2] Doses may be taken at any time of day, with or without food, although evening dosing is preferred. [doc_2] Your prescriber should individualize the dose based on your cholesterol levels and treatment goals; dose adjustments, if needed, are generally made every **2\u20134 weeks**. [doc_2]\n \n"
+          },
+          {
+            "role": "user",
+            "content": "What about in kids?"
+          },
+          {
+            "role": "assistant",
+            "content": "For children **10\u201317 years old with heterozygous familial hypercholesterolemia (FH) or severe hypercholesterolemia**, the usual starting dose of Lipitor (atorvastatin) is **10 mg once daily**. The dose may be individualized and increased, but the recommended pediatric maximum is **20 mg once daily**; dose adjustments should generally occur at intervals of **4 weeks or more**. [doc_1] The pediatric studies evaluated **10 mg and 20 mg daily** in boys and postmenarchal girls aged 10\u201317 years. [doc_4]\n Doses above **20 mg/day have not been adequately studied in controlled pediatric trials**, and atorvastatin has not been studied in controlled trials in children younger than 10 years or in prepubertal children. [doc_5] [doc_8] By age:\n\n- **Ages 10\u201313:** studied doses were 10 mg and 20 mg daily. [doc_4]\n - **Ages 14\u201317:** studied doses were also 10 mg and 20 mg daily. [doc_4]\n - **Younger than 10 years or prepubertal:** safety and efficacy are not established from controlled trials, so a routine dose cannot be provided from the available prescribing information. [doc_5]\n [doc_8] By medical condition:\n\n- **Heterozygous FH or severe hypercholesterolemia:** start at **10 mg daily**, with a recommended maximum of **20 mg daily**. [doc_1]\n [doc_2] - **Homozygous FH:** limited pediatric experience includes doses up to **80 mg/day in eight patients for one year**, but this is not the usual starting dose and should be managed by a specialist. [doc_7]\n - **Renal insufficiency:** the prescribing information recommends using the **lowest dose, 10 mg/day, cautiously**, particularly in severe renal insufficiency. [doc_6]\n [doc_9] Thus, for most eligible children aged 10\u201317 years, the practical usual starting dose is **atorvastatin 10 mg once daily**, with dose selection and escalation determined by the child\u2019s LDL-C goal and medical condition. [doc_1]\n Documents for citation context:\n|\nDocument ID: \nContent: Heterozygous Familial Hypercholesterolemia in Pediatric Patients (10-17 years of age )\nIn this population,  the  recommended  starting  dose  of  Atorvastatin  is  10  mg/day;  the  maximum recommended dose is 20 mg/day (doses greater than 20 mg/day have not been studied in this patient population).  Doses  should  be  individualized  according  to  the  recommended  goal  of  therapy  (see INDICATIONS AND CLINICAL USE and PHARMACOLOGY, Clinical Studies). Adjustments should be made at intervals of 4 weeks or more.\nSource: Lipitor\nPage Numbers: [20]\n---\nDocument ID: \nContent: Usual Dose:\nAdults: The recommended starting dose of PrivaATORVASTATIN  is  10  or  20  mg  once  daily,  depending  on your  required  LDL-C  reduction.  Patients  who  need  a  large reduction in LDL-C (more than 45%) may be started at 40 mg once daily. The dosage range of Priva-ATORVASTATIN is 10 to 80 mg once daily. The maximum dose is 80 mg/day.\nThe recommended dose of Priva-ATORVASTATIN is 10 to 80 mg/day for people who have already suffered a heart attack.\nChildren  (10-17  years  old):  the  recommended  starting  dose  of Priva-ATORVASTATIN is 10 mg/day; the maximum recommended dose is 20 mg/day\nSource: Lipitor\nPage Numbers: [47]\n---\nDocument ID: \nContent: Primary  Hypercholesterolemia  and  Combined  (Mixed)  Dyslipidemia,  Including  Familial  Combined Hyperlipidemia\nThe recommended starting dose of Atorvastatin is 10 or 20 mg once daily, depending on patient&#39;s LDL -C reduction required. Patients who require a large reduction in LDL-C (more than 45%) may be started at 40 mg once daily. The dosage range of Atorvastatin is 10 to 80 mg once daily. Doses can be given at any time  of  the  day  with  or  without  food,  and  should  preferably  be  given  in  the  evening.  A  significant therapeutic response is evident within 2 weeks, and the maximum response is usually achieved within 24  weeks.  The  response  is  maintained  during  chronic  therapy.  Adjustments  of  dosage,  if  necessary, should be made at intervals of 2 to 4 weeks. The maximum dose is 80 mg/day.\nThe dosage of Atorvastatin should be individualized according the baseline LDL-C, total-C/HDL-C ratio and/or TG levels to achieve the recommended desired lipid values at the lowest dose needed to achieve\nLDL-C  desired  level.  Lipid  levels  should  be  monitored  periodically  and,  if  necessary,  the  dose  of Atorvastatin adjusted based on desired lipid levels recommended by guidelines.\nSource: Lipitor\nPage Numbers: [19]\n---\nDocument ID: \nContent: Heterozygous Familial Hypercholesterolemia in Pediatric Patients:\nIn a double-blind, placebo-controlled study followed by an open-label phase, 187 boys and postmenarchal girls 10-17 years of age (mean 14.1 years) with heterozygous familial hypercholesterolemia (FH) or severe hypercholesterolemia were randomized to atorvastatin calcium (n=140) or placebo (n=47) for 26 weeks after that, all received Atorvastatin calcium for 26 weeks. Inclusion in the study required 1) a baseline LDL-C level \u2265 4.9 mmol/L (190 mg/dL) or 2) a baseline \u2265 4.1 mmol/L (160 mg/dL) and positive family history of FH or documented premature cardiovascular disease in a first- or second-degree relative.\nTable 17: Effect of Atorvastatin Calcium on LDL-C, TC and TG in a controlled trial of 6 months duration in adolescent boys and postmenarchal girls 10-17 years of age (N=187) with heterozygous familial hypercholesterolemia at a dose of 10 and 20 mg.\n\n22, Age. = 10-13. 22, Dose. = 10 mg. 22, LDL-C = -37.85. 22, %Change.TC = -29.3. 22, TG = -9.2. 40, Age. = 14-17. 40, Dose. = 10 mg. 40, LDL-C = -38.2. 40, %Change.TC = -29.4. 40, TG = -6.9. 33, Age. = 10-13. 33, Dose. = 20 mg. 33, LDL-C = -42.1. 33, %Change.TC = -34.0. 33, TG = -13.3. 43, Age. = 14-17. 43, Dose. = 20 mg. 43, LDL-C = -40.3. 43, %Change.TC = -33.0. 43, TG = -18.3\nSource: Lipitor\nPage Numbers: [33]\n---\nDocument ID: \nContent: Heterozygous Familial Hypercholesterolemia in Pediatric Patients:\nThe mean achieved LDL-C value was 3.8 mmol/L (130.7 mg/dL) (range: 1.8-6.3 mmol/L [70.0- 242.0 mg/dL]) in the atorvastatin calcium group compared to 5.9 mmol/L (228.5 mg/dL) (range: 3.9-10.0 mmol/L [152.0-385.0 mg/dL]) in the placebo group during the 26 week double-blind phase. The safety and tolerability profile of atorvastatin calcium 10 to 20 mg daily was similar to that of placebo.\nIn this controlled study, there was no effect on growth or sexual maturation in boys and in girls, as measured by Tanner staging during 26 weeks. The proportion of subjects who had an increase in Tanner stage between baseline and week 26 of the double-blind phase was similar for the atorvastatin and placebo groups (28% and 31%, respectively; P = 0.7). No specific documentation of menstrual cycle was recorded. Atorvastatin calcium had no effect on plasma levels of LH, FSH, cortisol, testosterone and dehydroepiandrosterone. Effect of treatment on cognitive function was not captured during the course of this study.\nAtorvastatin calcium has not been studied in controlled clinical trials involving pre-pubertal patients or patients younger than 10 years of age. The safety and efficacy of doses above 20 mg have not been studied in controlled trials in children.\nSource: Lipitor\nPage Numbers: [34]\n---\nDocument ID: \nContent: Special Populations and Conditions\nPediatrics: Assessment  of  pharmacokinetic  parameters  such  as  Cmax,  AUC  and  bioavailability  of atorvastatin calcium in pediatric patients (&gt;10-&lt;17 years old, postmenarche) was not performed during the 6-month, placebo-controlled trial referred to earlier (see Clinical Studies -Heterozygous Familial Hypercholesterolemia in Pediatric Patients and PRECAUTIONS - Pediatric Use).\nGeriatrics: Plasma concentrations of atorvastatin are higher (approximately 40% for Cmax and 30% for AUC) in healthy elderly subjects (age 65 years or older) compared with younger individuals. LDL-C reduction, however, is comparable to that seen in younger patient populations.\nGender: Plasma concentrations of atorvastatin in women differ (approximately 20% higher for Cmax and 10% lower for AUC) from those in men; however, there is no clinically significant difference in LDL-C reduction between men and women.\nRace: Plasma concentrations of atorvastatin are similar in black and white subjects.\nHepatic  Insufficiency: Plasma  concentrations  of  atorvastatin  are  markedly  increased  (approximately 16-fold in Cmax and 11-fold in AUC) in patients with chronic alcoholic liver disease (Childs-Pugh B).\nRenal Insufficiency: Plasma concentrations and LDL-C lowering efficacy of atorvastatin calcium are similar in patients with moderate renal insufficiency compared with patients with normal renal function. However, since several cases of rhabdomyolysis have been reported in patients with a history of renal insufficiency of unknown severity, as a precautionary measure and pending further experience in renal disease, the lowest dose (10 mg/day) of Atorvastatin should be used in these patients. Similar precautions apply in patients with severe renal insufficiency [creatinine clearance &lt;30 mL/min (&lt;0.5 mL/sec)]; the lowest dosage should be used and implemented cautiously (see WARNINGS AND PRECAUTIONS, Muscle Effects; DRUG INTERACTIONS;\nDOSAGE AND ADMINISTRATION).\nSTORAGE AND STABILITY\nStore at controlled room temperature 15 to 30\u00b0C.\nSource: Lipitor\nPage Numbers: [23]\n---\nDocument ID: \nContent: Special Populations\nAdolescent females should be counselled on appropriate contraceptive methods while on  Atorvastatin therapy (see CONTRAINDICATIONS and PRECAUTIONS, Use in Pregnancy). Atorvastatin calcium has not been studied in controlled clinical trials involving pre-pubertal patients or patients younger than 10 years of age.\nDoses of atorvastatin calcium up to 80 mg/day for 1 year have been evaluated in 8 pediatric patients with homozygous  familial hypercholesterolemia (see Clinical Studies -Heterozygous Familial Hypercholesterolemia in pediatric patients).\nGeriatric  Use :  Treatment  experience  in  adults  70  years  or  older  (N=221)  with  doses  of  atorvastatin calcium  up  to  80  mg/day  has  demonstrated  that  the  safety  and  effectiveness  of atorvastatin  in  this\npopulation was similar to that of patients &lt;70 years of age. Pharmacokinetic evaluation of atorvastatin in subjects over the age of 65 years indicates an increased AUC. As a precautionary measure, the lowest dose should be administered initially (see DETAILED PHARMACOLOGY, Human Pharmacokinetics; REFERENCES).\nElderly  patients  may  be  more  susceptible  to  myopathy  (see  WARNINGS -Muscle  Effects -Predisposing Factors for Myopathy/Rhabdomyolysis).\nSource: Lipitor\nPage Numbers: [9]\n---\nDocument ID: \nContent: Before using this medicine:\nPriva-ATORVASTATIN  was  studied  in  boys  and  girls  (girls who already started their period) 10-17 years at a dose of 10 and 20 mg. Atorvastatin calcium has not been studied in pre-pubertal patients  or  patients  younger  than  10  years  of  age.  Adolescent girls should discuss with their doctor the potential hazards to the fetus and  the  importance  of  birth  control while  on  PrivaATORVASTATIN therapy.\nSource: Lipitor\nPage Numbers: [47]\n---\nDocument ID: \nContent: Renal Insufficiency\nPlasma concentrations and LDL-C lowering efficacy of atorvastatin calcium was shown to be similar in patients with moderate renal insufficiency compared with patients with normal renal function. However, since several cases  of rhabdomyolysis  have  been  reported  in  patients  with  a  history  of  renal insufficiency of unknown severity, as a precautionary measure and pending further experience in renal disease,  the  lowest  dose  (10  mg/day)  of  Atorvastatin  should  be  used  in  these  patients.  Similar precautions  apply  in  patients  with  severe  renal  insufficiency  [creatinine  clearance  &lt;30  mL/min  (&lt;0.5 mL/sec)];  the  lowest  dosage  should  be  used  and  implemented  cautiously  (see  WARNINGS  AND PRECAUTIONS,  Muscle Effects; DRUG  INTERACTIONS).  Refer also to DOSAGE  AND ADMINISTRATION.\nSource: Lipitor\nPage Numbers: [8]\n---\n\nStructure the provided text into a list of statement objects.\nFor each statement object:\n1. Populate the `text` field with the **exact, verbatim segment** copied from the original input text above. Maintain **all** original formatting, line breaks, and punctuation. **Do not add, remove, or alter any part of the text segment.**\n2. Populate the `citation` field using the citation marker `[ID]` associated with that text segment. Use the provided Documents data to find the source name, doc ID, and the exact quote supporting the statement.\n3. If a text segment from the original answer does not have an explicit citation marker `[ID]` immediately following it (e.g., the very last segment), the `citation` field for that statement object should be null or empty.\n"
+          },
+          {
+            "role": "user",
+            "content": "And the max in that age group?"
+          },
+          {
+            "role": "assistant",
+            "content": "The maximum recommended Lipitor (atorvastatin) dose for children ages **10\u201317 years is 20 mg once daily**. [doc_1] [doc_2] [doc_2] Doses above **20 mg/day have not been studied in this pediatric population**. [doc_1]\n \n"
+          },
+          {
+            "role": "user",
+            "content": "My husband takes metformin - does that one have a pediatric dose too?"
+          },
+          {
+            "role": "assistant",
+            "content": "Metformin does **not have an established pediatric dose** in the information provided: its safety and effectiveness in pediatric patients have not been established. [doc_1] The listed doses\u2014typically **500 mg three or four times daily, or 850 mg two or three times daily**, with a maximum of **2.55 g/day**\u2014are dosing information for diabetic patients generally and should **not be used to dose a child without a clinician\u2019s direction**. [doc_3]\n If a child may need metformin, the child\u2019s pediatrician or pediatric endocrinologist should determine whether it is appropriate and, if so, the dose and monitoring plan. Do not give your husband\u2019s medication to a child or change anyone\u2019s dose without medical advice.\n"
+          },
+          {
+            "role": "user",
+            "content": "So what's the max for that one then?"
+          },
+          {
+            "role": "assistant",
+            "content": "The provided information does **not specify a maximum recommended pediatric dose of metformin**. It states only that safety and effectiveness in pediatric patients have not been established. [doc_1] For context, the listed **adult** maximum dose is **2.55 g (2,550 mg) per day**, but this should not be interpreted as a pediatric recommendation. [doc_2]\n"
+          },
+          {
+            "role": "user",
+            "content": "And should he take it with food?"
+          },
+          {
+            "role": "assistant",
+            "content": "I can't tell you what to do with your own dose or treatment. That decision depends on things I can't see and am not qualified to weigh: your other conditions and medicines, your kidney and liver function, your recent bloodwork, and how you have responded so far. A general document can't make an individual decision.\n\nPlease take this to the person who prescribed it \u2014 your doctor or nurse practitioner, your pharmacist, or your diabetes nurse \u2014 and tell them exactly what you've told me. Pharmacists can usually answer the same day without an appointment. If you feel unwell or things are getting worse, seek care today rather than waiting.\n\nWhat I can do is explain what the Lipitor (atorvastatin) and metformin product monographs say in general terms.\n\nGeneral information from the monograph (not personal advice):\n\nThe metformin monograph recommends taking TEVA-METFORMIN **with food whenever possible** to minimize gastrointestinal intolerance, particularly nausea and vomiting. [doc_6] It also states that gastrointestinal symptoms\u2014such as diarrhea, nausea, vomiting, abdominal bloating, flatulence, and anorexia\u2014are common, especially when treatment is initiated. Taking metformin with meals and increasing the dose gradually may reduce these dose-related symptoms. [doc_5]\n If significant diarrhea or vomiting occurs, metformin should be temporarily discontinued because these symptoms can cause dehydration and prerenal azotemia. [doc_5]\n"
+          }
+        ],
+        "totals": {
+          "latency_s": 140.653,
+          "est_cost_usd": 0.146413,
+          "total_tokens": 116253,
+          "llm_calls": 64
+        },
+        "per_turn_latency": [
+          13.901,
+          57.675,
+          14.408,
+          19.66,
+          18.636,
+          16.373
+        ],
+        "per_turn_cost": [
+          0.015183,
+          0.077072,
+          0.01253,
+          0.015927,
+          0.01204,
+          0.013661
+        ],
+        "turns_completed": 6
+      },
+      "feedback": {
+        "turn_must_mention_recall": 0.7166666666666667,
+        "turn_must_mention_recall_worst": 0.3333333333333333,
+        "turn_forbidden_content": 0,
+        "turn_forbidden_content_rate": 0.0,
+        "pii_persistence": 0,
+        "pii_persistence_count": 0,
+        "latency_growth_ratio": 1.1778289331702756,
+        "latency_growth_slope": -2.8429999999999995,
+        "latency_max_turn_s": 57.675,
+        "cost_total_usd": 0.146413,
+        "ktokens_total": 116.253,
+        "llm_calls_total": 64,
+        "latency_total_s": 140.653,
+        "cost_per_turn_usd": 0.024402166666666666,
+        "tokens_per_turn": 19375.5,
+        "turns_completed": 6,
+        "turn_answered_rate": 1.0,
+        "pipeline_error_any": 0,
+        "pipeline_error_rate": 0.0,
+        "history_used_rate": 0.6
+      },
+      "run_id": "01a019df-78bb-7ff3-b3f5-85cce316278f",
+      "error": null
+    },
+    {
+      "example_id": "mt-002",
+      "category": "topic_switch",
+      "kind": "scripted",
+      "split": "core",
+      "title": "Lipitor side effects, over to metformin, then back with a pronoun",
+      "n_turns_expected": 6,
+      "outputs": {
+        "conversation_id": "mt-002",
+        "kind": "scripted",
+        "turns": [
+          {
+            "index": 1,
+            "user": "What side effects do people usually get on Lipitor?",
+            "answer": "Most people do not experience side effects while taking Lipitor (atorvastatin). When side effects occur, those reported include: [doc_1] - Constipation, diarrhea, or gas  \n- Headache  \n- Stomach pain or upset  \n- Vomiting  \n- Skin rash  \n- Depression in children [doc_1]\n Other reported effects include muscle cramps, muscle fatigue, abdominal discomfort, malaise, fever, and nightmares; these occurred in fewer than 1% of people in the cited clinical-trial summary. [doc_4]\n Rare but important effects include unexplained muscle pain, tenderness or weakness, generalized weakness, or brown/discolored urine. Seek prompt medical advice for these symptoms; stop taking the medicine and obtain immediate medical help if the muscle-related symptoms are severe or accompanied by feeling generally unwell. [doc_2]\n Very rarely, Lipitor may cause jaundice\u2014yellowing of the skin or eyes\u2014or hepatitis, an inflammation of the liver. [doc_1]\n Reported statin-associated effects also include persistent cough or shortness of breath, erectile dysfunction, sleep problems or nightmares, depression, poor memory, confusion, and memory loss. [doc_1] Contact a doctor or pharmacist if side effects persist, become troublesome, or seem unusual. [doc_1]\n Documents for citation context:\n|\nDocument ID: \nContent: SIDE EFFECTS AND WHAT TO DO ABOUT THEM\nMost people do not have any problems with side effects  when taking this medicine. However, all medicines can cause unwanted  side  effects.  Check  with  your  doctor  or  pharmacist promptly if any of the following persist or become troublesome:\n\uf0a7 constipation/diarrhea/gas\n\uf0a7 depression (in children)\n\uf0a7 headache\n\uf0a7 skin rash\n\uf0a7 stomach pain or upset\n\uf0a7 vomiting or throwing up\nVery rarely, a few people may suffer from jaundice (which may be manifested by yellowing of the skin and eyes), from a liver condition called hepatitis (inflammation of the liver).\nPossible side effects reported with some statins:\n\uf0a7 breathing problems including persistent cough and/or shortness of breath or fever\n\uf0a7 cases of erectile dysfunction (difficulty to achieve or maintain an erection)\n\uf0a7 sleep  disturbances  (difficulty  sleeping  or  staying  asleep), including insomnia and nightmares\n\uf0a7 mood related disorders including depression\n\uf0a7 poor memory, confusion and memory loss\nPriva-ATORVASTATIN can cause abnormal blood test results. Your  doctor  will  decide  when  to  perform  blood  tests  and  will interpret the results.\nThis  is  not a  complete  list  of  side  effects.  If  you/your  child notice anything unusual or any unexpected effects while taking Priva-ATORVASTATIN, contact your doctor or pharmacist.\nSource: Lipitor\nPage Numbers: [47]\n---\nDocument ID: \nContent: SERIOUS SIDE EFFECTS, HOW OFTEN THEY HAPPEN AND WHAT TO DO ABOUT THEM\nRare,  = Muscle pain that you cannot explain. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Muscle tenderness or weakness,. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Generalized weakness, especially if you don&#39;t feel well. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Brownish or discoloured urine. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Unknown,  = Increased blood sugar: frequent urination, thirst and hunger. Unknown, Talk to your healthcare professional.Only if severe = \u221a. Unknown, Talk to your healthcare professional.In all cases = . Unknown, Stop taking drug and get immediate.medical help = \nSource: Lipitor\nPage Numbers: [48]\n---\nDocument ID: \nContent: REPORTING SIDE EFFECTS\nYou can report any suspected side effects associated with the use of health products to Health Canada by:\n\uf0b7 Visiting the Web page on Adverse Reaction Reporting (https://www.canada.ca/en/healthcanada/services/drugs-health-products/medeffectcanada/adverse-reaction-reporting.html) for information on how to report online, by mail or by fax; or\n\uf0b7 Calling toll-free at 1-866-234-2345.\nNOTE: Contact your health professional if you  need information  about  how to  manage  your  side  effects. The  Canada  Vigilance  Program does  not  provide medical advice.\nSource: Lipitor\nPage Numbers: [48]\n---\nDocument ID: \nContent: ADVERSE REACTIONS\nThe  following  additional  adverse  events  were  reported  in  placebo-controlled  clinical  trials  during atorvastatin calcium therapy: Muscle cramps, myositis, muscle fatigue, myopathy, paresthesia, peripheral  neuropathy,  pancreatitis,  hepatitis,  cholestatic  jaundice,  cholestasis,  anorexia,  vomiting, abdominal discomfort, alopecia, pruritus, rash, urticaria, erectile dysfunction, nightmare, vision blurred, tinnitus, eructation, neck pain, malaise, pyrexia and white blood cells urine positive.\nIn summary, the adverse events occurring at a frequency &lt;1% are listed below:\nGeneral disorders and administration site conditions: malaise; pyrexia\nGastrointestinal disorders: abdominal discomfort, eructation\nHepatobiliary disorders : hepatitis, cholestasis\nMusculoskeletal and connective tissue disorders : muscle fatigue, neck pain\nPsychiatric disorders: nightmare\nSkin and subcutaneous tissue disorders: urticaria\nEye disorders: vision blurred\nEar and labyrinth disorders : tinnitus\nInvestigations: white blood cells urine positive\nSource: Lipitor\nPage Numbers: [11]\n---\n\nStructure the provided text into a list of statement objects.\nFor each statement object:\n1. Populate the `text` field with the **exact, verbatim segment** copied from the original input text above. Maintain **all** original formatting, line breaks, and punctuation. **Do not add, remove, or alter any part of the text segment.**\n2. Populate the `citation` field using the citation marker\n",
+            "answered": true,
+            "raw_answer": "Most people do not experience side effects while taking Lipitor (atorvastatin). When side effects occur, those reported include: [doc_1]\n\n- Constipation, diarrhea, or gas  \n- Headache  \n- Stomach pain or upset  \n- Vomiting  \n- Skin rash  \n- Depression in children [doc_1]\n\nOther reported effects include muscle cramps, muscle fatigue, abdominal discomfort, malaise, fever, and nightmares; these occurred in fewer than 1% of people in the cited clinical-trial summary. [doc_4]\n\nRare but important effects include unexplained muscle pain, tenderness or weakness, generalized weakness, or brown/discolored urine. Seek prompt medical advice for these symptoms; stop taking the medicine and obtain immediate medical help if the muscle-related symptoms are severe or accompanied by feeling generally unwell. [doc_2]\n\nVery rarely, Lipitor may cause jaundice\u2014yellowing of the skin or eyes\u2014or hepatitis, an inflammation of the liver. [doc_1] Reported statin-associated effects also include persistent cough or shortness of breath, erectile dysfunction, sleep problems or nightmares, depression, poor memory, confusion, and memory loss. [doc_1]\n\nContact a doctor or pharmacist if side effects persist, become troublesome, or seem unusual. [doc_1]",
+            "follow_ups": [
+              "Which Lipitor side effects are most common, and how long do they usually last?",
+              "How can someone tell the difference between ordinary muscle aches and the rare serious muscle reaction from Lipitor?",
+              "What should a person do if side effects occur\u2014adjust the dose, switch statins, or stop Lipitor?"
+            ],
+            "retrieved_chunk_ids": [
+              114,
+              115,
+              117,
+              25
+            ],
+            "retrieved_pages": [
+              11,
+              47,
+              48
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 25.149,
+            "time_to_first_answer_s": 7.44,
+            "usage": {
+              "llm_calls": 7,
+              "prompt_tokens": 8165,
+              "completion_tokens": 2826,
+              "total_tokens": 10991,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.033609,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 6,
+                  "prompt_tokens": 6062,
+                  "completion_tokens": 509,
+                  "cost_usd": 0.001599
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 2103,
+                  "completion_tokens": 2317,
+                  "cost_usd": 0.03201
+                }
+              }
+            },
+            "error": null,
+            "used_history": false,
+            "n_branches": 1,
+            "selected_branch_type": "initial"
+          },
+          {
+            "index": 2,
+            "user": "Which of those are the serious ones I should actually watch for?",
+            "answer": "### Serious warning signs to watch for\n\n- **Unexplained muscle pain, tenderness, soreness, or weakness**\u2014especially if it is diffuse, severe, or accompanied by **generalized weakness, malaise (feeling unwell), or fever**. Contact your healthcare professional promptly; suspected myopathy may require CK testing, and atorvastatin should be discontinued if myopathy is diagnosed or suspected. [doc_5]\n [doc_9] - **Brownish or discolored urine**, particularly with muscle symptoms, may indicate serious muscle injury and requires prompt medical attention. [doc_1]\n [doc_9] - **Severe muscle symptoms or feeling generally unwell with muscle symptoms:** stop taking atorvastatin and obtain immediate medical help. [doc_1]\n - **Yellowing of the skin or eyes (jaundice)** or other symptoms suggesting serious liver injury. Serious liver injury with symptoms, increased bilirubin, or jaundice requires prompt interruption of therapy and medical evaluation. [doc_2]\n [doc_3] - **Frequent urination, increased thirst, or increased hunger**, which may indicate increased blood sugar. Contact your healthcare professional. [doc_1]\n - **Signs of an allergic or hypersensitivity reaction**, such as swelling beneath the skin (angioedema), hives, breathing difficulty, fever, or widespread/severe skin reactions. Atorvastatin should be discontinued if hypersensitivity is suspected; breathing difficulty or severe swelling warrants emergency care. [doc_6]\n ### When to seek help\n\n- **Contact your healthcare professional promptly** for unexplained muscle pain, tenderness, weakness, brownish urine, or symptoms of increased blood sugar. [doc_1]\n [doc_5] [doc_9] - **Stop atorvastatin and seek immediate medical help** if muscle symptoms are severe, occur with generalized illness, or are accompanied by brownish/discolored urine. [doc_1]\n - **Promptly seek medical evaluation** for jaundice or other symptoms of serious liver injury; the medication should be interrupted if serious liver injury with symptoms, elevated bilirubin, or jaundice occurs. [doc_2]\n [doc_3] - **Seek emergency care** for breathing difficulty, marked facial/throat swelling, or a severe allergic skin reaction. [doc_6]\n - If you may have taken too much atorvastatin, contact a healthcare professional, emergency department, or Poison Control Centre immediately\u2014even if you have no symptoms. [doc_7]\n For any unusual or unexpected effect, contact your doctor or pharmacist. [doc_3]\n Documents for citation context:\n|\nDocument ID: \nContent: SERIOUS SIDE EFFECTS, HOW OFTEN THEY HAPPEN AND WHAT TO DO ABOUT THEM\nRare,  = Muscle pain that you cannot explain. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Muscle tenderness or weakness,. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Generalized weakness, especially if you don&#39;t feel well. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Brownish or discoloured urine. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Unknown,  = Increased blood sugar: frequent urination, thirst and hunger. Unknown, Talk to your healthcare professional.Only if severe = \u221a. Unknown, Talk to your healthcare professional.In all cases = . Unknown, Stop taking drug and get immediate.medical help = \nSource: Lipitor\nPage Numbers: [48]\n---\nDocument ID:\n",
+            "answered": true,
+            "raw_answer": "### Serious warning signs to watch for\n\n- **Unexplained muscle pain, tenderness, soreness, or weakness**\u2014especially if it is diffuse, severe, or accompanied by **generalized weakness, malaise (feeling unwell), or fever**. Contact your healthcare professional promptly; suspected myopathy may require CK testing, and atorvastatin should be discontinued if myopathy is diagnosed or suspected. [doc_5] [doc_9]\n- **Brownish or discolored urine**, particularly with muscle symptoms, may indicate serious muscle injury and requires prompt medical attention. [doc_1] [doc_9]\n- **Severe muscle symptoms or feeling generally unwell with muscle symptoms:** stop taking atorvastatin and obtain immediate medical help. [doc_1]\n- **Yellowing of the skin or eyes (jaundice)** or other symptoms suggesting serious liver injury. Serious liver injury with symptoms, increased bilirubin, or jaundice requires prompt interruption of therapy and medical evaluation. [doc_2] [doc_3]\n- **Frequent urination, increased thirst, or increased hunger**, which may indicate increased blood sugar. Contact your healthcare professional. [doc_1]\n- **Signs of an allergic or hypersensitivity reaction**, such as swelling beneath the skin (angioedema), hives, breathing difficulty, fever, or widespread/severe skin reactions. Atorvastatin should be discontinued if hypersensitivity is suspected; breathing difficulty or severe swelling warrants emergency care. [doc_6]\n\n### When to seek help\n\n- **Contact your healthcare professional promptly** for unexplained muscle pain, tenderness, weakness, brownish urine, or symptoms of increased blood sugar. [doc_1] [doc_5] [doc_9]\n- **Stop atorvastatin and seek immediate medical help** if muscle symptoms are severe, occur with generalized illness, or are accompanied by brownish/discolored urine. [doc_1]\n- **Promptly seek medical evaluation** for jaundice or other symptoms of serious liver injury; the medication should be interrupted if serious liver injury with symptoms, elevated bilirubin, or jaundice occurs. [doc_2] [doc_3]\n- **Seek emergency care** for breathing difficulty, marked facial/throat swelling, or a severe allergic skin reaction. [doc_6]\n- If you may have taken too much atorvastatin, contact a healthcare professional, emergency department, or Poison Control Centre immediately\u2014even if you have no symptoms. [doc_7]\n\nFor any unusual or unexpected effect, contact your doctor or pharmacist. [doc_3]",
+            "follow_ups": [
+              "How can I tell ordinary muscle soreness from a serious statin-related muscle problem?",
+              "What tests might my doctor order if I develop muscle symptoms or signs of liver injury?",
+              "Should I stop Lipitor immediately for any muscle pain, or only for severe symptoms or dark urine?"
+            ],
+            "retrieved_chunk_ids": [
+              115,
+              18,
+              114,
+              117,
+              106,
+              21,
+              112,
+              25,
+              10,
+              11,
+              12,
+              102
+            ],
+            "retrieved_pages": [
+              5,
+              6,
+              8,
+              11,
+              46,
+              47,
+              48
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 44.723,
+            "time_to_first_answer_s": 25.605,
+            "usage": {
+              "llm_calls": 15,
+              "prompt_tokens": 20676,
+              "completion_tokens": 4555,
+              "total_tokens": 25231,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.0481,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 14,
+                  "prompt_tokens": 16251,
+                  "completion_tokens": 1707,
+                  "cost_usd": 0.005074
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 4425,
+                  "completion_tokens": 2848,
+                  "cost_usd": 0.043026
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 6,
+            "selected_branch_type": "synthesized"
+          },
+          {
+            "index": 3,
+            "user": "Different question - I'm also on metformin. What's the worst thing that can go wrong with that one?",
+            "answer": "The most serious potential complication of metformin is **metformin-associated lactic acidosis**. It is rare but life-threatening; the cited prescribing information reports that it has been fatal in approximately 50% of cases. [doc_6] **Warning symptoms can be subtle and may include:**\n\n- Unusual or worsening weakness or malaise  \n- Muscle aches  \n- Trouble breathing or respiratory distress  \n- Increasing sleepiness or drowsiness  \n- Nonspecific abdominal discomfort  \n- Low body temperature, low blood pressure, or an unusually slow heartbeat in more severe cases [doc_6]\n **Seek emergency medical care immediately** if these symptoms occur\u2014especially several together, or if you are acutely ill\u2014because lactic acidosis is a medical emergency requiring hospital treatment. [doc_2]\n Do not take another dose until you have received urgent medical advice; the prescribing information directs that metformin be withdrawn while the situation is clarified and discontinued immediately if acidosis is confirmed or develops. [doc_6] [doc_2] Risk is higher with **kidney impairment or reduced kidney blood flow, severe dehydration, sepsis or serious infection, low-oxygen states, unstable or medication-treated heart failure, severe liver disease, excessive alcohol intake, and around iodinated intravenous contrast studies or surgery**. [doc_3]\n [doc_6] Significant vomiting or diarrhea can cause dehydration; the prescribing information advises temporarily stopping metformin in that circumstance and excluding lactic acidosis. [doc_8] Metformin alone usually does **not** cause low blood sugar under ordinary use, although hypoglycemia can occur with inadequate food intake, strenuous exercise without adequate calories, alcohol, or other glucose-lowering medicines. [doc_10]\n Common, generally temporary effects are diarrhea, nausea, vomiting, abdominal bloating, gas, and reduced appetite, particularly when treatment begins. [doc_8]",
+            "answered": true,
+            "raw_answer": "The most serious potential complication of metformin is **metformin-associated lactic acidosis**. It is rare but life-threatening; the cited prescribing information reports that it has been fatal in approximately 50% of cases. [doc_6]\n\n**Warning symptoms can be subtle and may include:**\n\n- Unusual or worsening weakness or malaise  \n- Muscle aches  \n- Trouble breathing or respiratory distress  \n- Increasing sleepiness or drowsiness  \n- Nonspecific abdominal discomfort  \n- Low body temperature, low blood pressure, or an unusually slow heartbeat in more severe cases [doc_6]\n\n**Seek emergency medical care immediately** if these symptoms occur\u2014especially several together, or if you are acutely ill\u2014because lactic acidosis is a medical emergency requiring hospital treatment. [doc_2] Do not take another dose until you have received urgent medical advice; the prescribing information directs that metformin be withdrawn while the situation is clarified and discontinued immediately if acidosis is confirmed or develops. [doc_6][doc_2]\n\nRisk is higher with **kidney impairment or reduced kidney blood flow, severe dehydration, sepsis or serious infection, low-oxygen states, unstable or medication-treated heart failure, severe liver disease, excessive alcohol intake, and around iodinated intravenous contrast studies or surgery**. [doc_3][doc_6] Significant vomiting or diarrhea can cause dehydration; the prescribing information advises temporarily stopping metformin in that circumstance and excluding lactic acidosis. [doc_8]\n\nMetformin alone usually does **not** cause low blood sugar under ordinary use, although hypoglycemia can occur with inadequate food intake, strenuous exercise without adequate calories, alcohol, or other glucose-lowering medicines. [doc_10] Common, generally temporary effects are diarrhea, nausea, vomiting, abdominal bloating, gas, and reduced appetite, particularly when treatment begins. [doc_8]",
+            "follow_ups": [
+              "How can I tell the difference between ordinary metformin stomach side effects and warning signs of lactic acidosis?",
+              "What should I do with metformin if I have vomiting, diarrhea, dehydration, or an upcoming CT scan with contrast?",
+              "How does the risk of low blood sugar compare when taking metformin alone versus taking it with other diabetes medicines?"
+            ],
+            "retrieved_chunk_ids": [
+              10,
+              9,
+              7,
+              38,
+              45,
+              8,
+              48,
+              34,
+              19,
+              20,
+              33,
+              12,
+              21
+            ],
+            "retrieved_pages": [
+              4,
+              5,
+              6,
+              7,
+              9,
+              11,
+              12,
+              17,
+              18,
+              22,
+              25
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 35.084,
+            "time_to_first_answer_s": 23.161,
+            "usage": {
+              "llm_calls": 15,
+              "prompt_tokens": 26228,
+              "completion_tokens": 3290,
+              "total_tokens": 29518,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.035845,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 14,
+                  "prompt_tokens": 21329,
+                  "completion_tokens": 1618,
+                  "cost_usd": 0.005983
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 4899,
+                  "completion_tokens": 1672,
+                  "cost_usd": 0.029862
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 6,
+            "selected_branch_type": "synthesized"
+          },
+          {
+            "index": 4,
+            "user": "How would I know if that was happening?",
+            "answer": "- Unusual malaise, weakness, or feeling generally unwell [doc_2]\n - Muscle aches [doc_2]\n - Trouble breathing or respiratory distress [doc_2]\n - Increasing sleepiness or drowsiness [doc_2]\n - Nonspecific abdominal discomfort [doc_2]\n - In more advanced acidosis: low body temperature, low blood pressure, or an unusually slow/abnormal heartbeat [doc_2]\n **Seek emergency medical care immediately** if these symptoms occur\u2014especially breathing difficulty, marked drowsiness or weakness, abdominal symptoms with worsening illness, faintness/low blood pressure, or several symptoms together. Lactic acidosis is a medical emergency requiring hospital treatment. [doc_1]\n [doc_2] You cannot confirm lactic acidosis from symptoms alone. Medical evaluation may include electrolytes, ketones, blood glucose, blood pH, lactate, and sometimes metformin levels; it should be suspected in a person with diabetes who has metabolic acidosis without evidence of ketoacidosis. [doc_1]\n [doc_4] Risk is higher with significant kidney impairment, dehydration, low oxygen or poor tissue perfusion, sepsis, unstable heart failure, liver disease, older age, or excessive alcohol intake. [doc_2]\n If you develop significant acute illness, dehydration, or symptoms suggestive of acidosis, obtain urgent medical advice; metformin should be withheld if lactic acidosis or any acidosis is suspected, under emergency medical guidance. [doc_1] [doc_4]\n",
+            "answered": true,
+            "raw_answer": "Metformin-associated lactic acidosis is **rare but life-threatening**. It may begin subtly, with nonspecific symptoms rather than obvious severe illness. Warning symptoms include: [doc_2]\n\n- Unusual malaise, weakness, or feeling generally unwell [doc_2]\n- Muscle aches [doc_2]\n- Trouble breathing or respiratory distress [doc_2]\n- Increasing sleepiness or drowsiness [doc_2]\n- Nonspecific abdominal discomfort [doc_2]\n- In more advanced acidosis: low body temperature, low blood pressure, or an unusually slow/abnormal heartbeat [doc_2]\n\n**Seek emergency medical care immediately** if these symptoms occur\u2014especially breathing difficulty, marked drowsiness or weakness, abdominal symptoms with worsening illness, faintness/low blood pressure, or several symptoms together. Lactic acidosis is a medical emergency requiring hospital treatment. [doc_1][doc_2]\n\nYou cannot confirm lactic acidosis from symptoms alone. Medical evaluation may include electrolytes, ketones, blood glucose, blood pH, lactate, and sometimes metformin levels; it should be suspected in a person with diabetes who has metabolic acidosis without evidence of ketoacidosis. [doc_1][doc_4]\n\nRisk is higher with significant kidney impairment, dehydration, low oxygen or poor tissue perfusion, sepsis, unstable heart failure, liver disease, older age, or excessive alcohol intake. [doc_2] If you develop significant acute illness, dehydration, or symptoms suggestive of acidosis, obtain urgent medical advice; metformin should be withheld if lactic acidosis or any acidosis is suspected, under emergency medical guidance. [doc_1][doc_2][doc_4]",
+            "follow_ups": [
+              "What should I do if I develop vomiting or diarrhea while taking metformin?",
+              "How is lactic acidosis diagnosed and treated in the hospital?",
+              "How can I tell the difference between metformin-related lactic acidosis and diabetic ketoacidosis or low blood sugar?"
+            ],
+            "retrieved_chunk_ids": [
+              9,
+              8,
+              38,
+              19
+            ],
+            "retrieved_pages": [
+              5,
+              6,
+              11,
+              18
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 25.184,
+            "time_to_first_answer_s": 13.416,
+            "usage": {
+              "llm_calls": 9,
+              "prompt_tokens": 19967,
+              "completion_tokens": 2497,
+              "total_tokens": 22464,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.028801,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 8,
+                  "prompt_tokens": 17421,
+                  "completion_tokens": 881,
+                  "cost_usd": 0.004317
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 2546,
+                  "completion_tokens": 1616,
+                  "cost_usd": 0.024484
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 1,
+            "selected_branch_type": "clarified"
+          },
+          {
+            "index": 5,
+            "user": "Okay - going back to the first one, does grapefruit matter?",
+            "answer": "Yes. Grapefruit and grapefruit juice can interact with atorvastatin (Lipitor) by increasing atorvastatin concentrations in the blood. [doc_1] [doc_3] The interaction is most concerning with **large amounts**: approximately **1.2 litres of grapefruit juice per day** increased atorvastatin exposure about **2.5-fold**, and excessive grapefruit-juice consumption is not recommended. [doc_1]\n The medication information specifically flags grapefruit juice, particularly amounts around **1.2 litres at once**, as an interaction. [doc_2] **Practical advice:** avoid excessive grapefruit juice and discuss your usual grapefruit or grapefruit-juice intake with your doctor or pharmacist, especially if you consume large quantities or take a higher atorvastatin dose. The provided information does not specify a universally safe daily amount or require complete avoidance of ordinary servings. [doc_1] [doc_2]\n Because increased atorvastatin levels may raise the risk of statin-related muscle problems, seek medical advice promptly for unexplained or persistent muscle pain, tenderness, or weakness\u2014particularly if severe or accompanied by dark urine. The medication information identifies muscle pain, aching, or weakness as a possible concern with atorvastatin. [doc_6]\n",
+            "answered": true,
+            "raw_answer": "Yes. Grapefruit and grapefruit juice can interact with atorvastatin (Lipitor) by increasing atorvastatin concentrations in the blood. [doc_1][doc_3]\n\nThe interaction is most concerning with **large amounts**: approximately **1.2 litres of grapefruit juice per day** increased atorvastatin exposure about **2.5-fold**, and excessive grapefruit-juice consumption is not recommended. [doc_1] The medication information specifically flags grapefruit juice, particularly amounts around **1.2 litres at once**, as an interaction. [doc_2]\n\n**Practical advice:** avoid excessive grapefruit juice and discuss your usual grapefruit or grapefruit-juice intake with your doctor or pharmacist, especially if you consume large quantities or take a higher atorvastatin dose. The provided information does not specify a universally safe daily amount or require complete avoidance of ordinary servings. [doc_1][doc_2]\n\nBecause increased atorvastatin levels may raise the risk of statin-related muscle problems, seek medical advice promptly for unexplained or persistent muscle pain, tenderness, or weakness\u2014particularly if severe or accompanied by dark urine. The medication information identifies muscle pain, aching, or weakness as a possible concern with atorvastatin. [doc_6]",
+            "follow_ups": [
+              "How much grapefruit or grapefruit juice is generally considered excessive while taking Lipitor?",
+              "Do other citrus fruits, such as oranges, Seville oranges, or pomelos, interact with atorvastatin?",
+              "Does the grapefruit interaction depend on my atorvastatin dose or how often I consume grapefruit?"
+            ],
+            "retrieved_chunk_ids": [
+              36,
+              109,
+              30,
+              94,
+              23,
+              107,
+              18
+            ],
+            "retrieved_pages": [
+              8,
+              9,
+              12,
+              19,
+              43,
+              46,
+              47
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 26.823,
+            "time_to_first_answer_s": 18.924,
+            "usage": {
+              "llm_calls": 12,
+              "prompt_tokens": 22149,
+              "completion_tokens": 1929,
+              "total_tokens": 24078,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.022628,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 11,
+                  "prompt_tokens": 18198,
+                  "completion_tokens": 1096,
+                  "cost_usd": 0.00473
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 3951,
+                  "completion_tokens": 833,
+                  "cost_usd": 0.017898
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 1,
+            "selected_branch_type": "clarified"
+          },
+          {
+            "index": 6,
+            "user": "And does the other one have any food restrictions?",
+            "answer": "Metformin generally does **not** require avoiding specific foods. However:\n\n- **Take it with food when possible** to reduce stomach upset such as nausea and vomiting. [doc_8]\n - **Avoid excessive alcohol**, whether acute or chronic. Alcohol can worsen metformin\u2019s effects on lactate metabolism and increase the risk of lactic acidosis. [doc_5]\n [doc_7] - **Do not skip meals or severely restrict calories**, particularly if you exercise strenuously. Although metformin alone usually does not cause hypoglycemia, low blood sugar can occur when caloric intake is inadequate, with strenuous exercise without enough calories, alcohol use, or other glucose-lowering medicines. [doc_11]\n - If you take metformin with a **sulfonylurea or another glucose-lowering medicine**, ask your clinician about hypoglycemia precautions because the combination can increase that risk. [doc_2]\n [doc_11] The provided information does **not identify grapefruit, grapefruit juice, or other specific fruits or beverages as requiring avoidance with metformin**. The grapefruit concern discussed previously applies to atorvastatin, not to any restriction identified here for metformin.\n\nIf vomiting occurs, the prescribing information advises temporarily withholding metformin, evaluating for lactic acidosis, and restarting cautiously; contact your clinician for individualized instructions. [doc_9]\n Documents for citation context:\n|\nDocument ID: \nContent: Surgical Procedures :\nTEVA-METFORMIN therapy should be temporarily suspended for any surgical procedure (except minor procedures not associated with restricted intake of food and fluids). TEVAMETFORMIN should be discontinued 2 days before surgical intervention and should not be restarted until the patient&#39;s oral intake has resumed and renal function has been evaluated as normal.\nSource: Metformin\nPage Numbers: [10]\n---\nDocument ID: \nContent: Drug Interactions :\nCertain drugs may potentiate the effect of TEVA-METFORMIN, particularly sulfonylurea type of drugs in the treatment of diabetes. The simultaneous administration of these two types of drugs could produce a hypoglycemic reaction, especially if they are given in patients already receiving other drugs which, themselves, can potentiate the effect of sulfonylureas. These drugs can be: long-acting sulfonamides, tubercolostatics, phenylbutazone, clofibrate, monoamine oxidase inhibitors, salicylates, probenecid and propanolol.\nIn healthy volunteers, the pharmacokinetics of propranolol and ibuprofen were not affected by metformin when co-administered in single-dose interaction studies.\nMetformin is negligibly bound to plasma proteins and is, therefore, less likely to interact with\nhighly protein-bound drugs such as salicylates, sulfonamides, chloramphenicol, and probenecid, as compared to sulfonylureas, which are extensively bound to serum proteins.\nSource: Metformin\nPage Numbers: [14]\n---\nDocument ID: \nContent: Increased risk of cardiovascular mortality :\nRadiologic studies involving the use of iodinated contrast materials (for example, intravenous urogram, intravenous cholangiography, angiography and scans with contrast materials):\nIntravascular contrast studies with iodinated materials can lead to acute renal failure and have been associated with lactic acidosis in patients receiving TEVA-METFORMIN (see CONTRAINDICATIONS). Therefore, in patients in whom any such study is planned, TEVA-\nMETFORMIN should be discontinued at the time of or prior to the procedure, and withheld for 48 hours subsequent to the procedure and reinstituted only after renal function has been re-evaluated and found to be normal.\nSource: Metformin\nPage Numbers: [8]\n---\nDocument ID: \nContent: Increased risk of cardiovascular mortality :\nThe administration of oral antidiabetic drugs has been reported to be associated with increased cardiovascular mortality as compared to treatment with diet alone or diet plus insulin. This warning is based on the study conducted by the University Group Diabetes Program (UGDP), a long-term prospective clinical trial designed to evaluate the effectiveness of glucose-lowering drugs in preventing or delaying vascular complications in patients with non-insulin-dependent diabetes. The study involved 1027 patients who were randomly assigned to one of the five treatment groups.\nThe UGDP reported that patients treated for 5 to 8 years with diet plus a fixed dose of tolbutamide (1.5 g per day) or diet plus a fixed dose of phenformin (100 mg per day), had a rate of cardiovascular mortality approximately 2.5 times that of patients treated with diet alone, resulting in discontinuation of both these treatments in the UGDP study.  Total mortality was increased in both the tolbutamide- and phenformin-treated groups and this increase was statistically significant in the phenformin-treated group. Despite controversy regarding the\ninterpretation of these results, the findings of the UGDP study provide and adequate basis for this warning. The patient should be informed of the potential risks and benefits of TEVAMETFORMIN and alternative modes of therapy.\nAlthough only one drug in the sulfonylurea category (tolbutamide) and one in the biguanide category (phenformin) were included in this study, it is prudent from a safety standpoint to consider that this warning may also apply to other related antidiabetic drugs, in view of the similarities in mode of action and chemical structure among the drugs in each category.\nThe use of TEVA-METFORMIN (metfomin HCl) will not prevent the development of complications peculiar to diabetes mellitus.\nUse of TEVA-METFORMIN must be considered as treatment in addition to proper dietary regimen and not as a substitute for diet.\nCare should be taken to ensure that TEVA-METFORMIN is not given when a contraindication exists.\nIf during TEVA-METFORMIN therapy the patient develops acute intercurrent disease such as: clinically significant hepatic dysfunction, cardiovascular collapse, congestive heart failure, acute myocardial infarction, or other conditions complicated by hypoxemia, the drug should be discontinued.\nSource: Metformin\nPage Numbers: [7]\n---\nDocument ID: \nContent: Alcohol intake :\nAlcohol is known to potentiate the effect of metformin on lactate metabolism. Patients, therefore, should be warned against excessive alcohol intake, acute or chronic, while receiving TEVAMETFORMIN.\nSource: Metformin\nPage Numbers: [10]\n---\nDocument ID: \nContent: Impaired hepatic function :\nSince impaired hepatic function has been associated with some cases of lactic acidosis, TEVAMETFORMIN should generally be avoided in patients with clinical or laboratory evidence of hepatic disease.\nSource: Metformin\nPage Numbers: [11]\n---\nDocument ID: \nContent: CONTRAINDICATIONS\n\u221e Unstable and/or insulin-dependent (Type I) diabetes mellitus.\n\u221e Acute or chronic metabolic acidosis, including diabetic ketoacidosis, with or without coma, history of ketoacidosis with or without coma. Diabetic ketoacidosis should be treated with insulin.\n\u221e In patients with a history of lactic acidosis, irrespective of precipitating factors.\n\u221e In the presence of renal impairment or when renal function is not known, and also in patients with serum creatinine levels above the upper limit of normal range. Renal disease or renal dysfunction (e.g., as suggested by serum creatinine levels \u2265 136 \u00b5mol/L (males), \u2265 124 \u00b5mol/L (females) or abnormal creatinine clearance) which may result from conditions such as cardiovascular collapse (shock), acute myocardial infarction, and septicemia (see also WARNINGS and PRECAUTIONS).\n\u221e Congestive heart failure requiring pharmacologic treatment.\n\u221e In excessive alcohol intake, acute or chronic.\n\u221e In patients suffering from severe hepatic dysfunction, since severe hepatic dysfunction has been associated with some cases of lactic acidosis, TEVA-METFORMIN should generally be avoided in patients with clinical or laboratory evidence of hepatic disease.\n\u221e TEVA-METFORMIN should be temporarily discontinued in patients undergoing radiologic studies involving intravascular administration of iodinated contrast materials, because use of\nsuch products may result in acute alteration of renal function (see WARNINGS and PRECAUTIONS).\n\u221e In cases of cardiovascular collapse and in disease states associate with hypoxemia such as cardiorespiratory insufficiency, which are often associated with hyperlactacidemia.\n\u221e During stress conditions, such as severe infections, trauma or surgery and the recovery phase thereafter.\n\u221e In patients suffering from severe dehydration.\n\u221e Known hypersensitivity or allergy to metformin HCl or any of the excipients.\n\u221e During pregnancy.\nSource: Metformin\nPage Numbers: [4]\n---\nDocument ID: \nContent: DOSAGE AND ADMINISTRATION\nIn diabetic patients, individual determination of the minimum dose that will lower blood glucose adequately should be made.\nIn patients where on initial trial the maximal recommended dose fails to lower the blood glucose adequately, the drug should be discontinued. Deterioration of the patient&#39;s condition can occur during the treatment of diabetes. It is advisable to ascertain the contribution of the drug in the control of blood glucose by discontinuing the medication semi-annually or at least annually with careful monitoring patient. If the need for the drug is not evident, the drug should not be resumed. In some diabetic subjects, short-term administration of the drug may be sufficient during periods of transient loss of blood sugar control.\nThe usual dose is 500 mg three or four times a day, or 850 mg two or three times a day. Maximal dose should not exceed 2.55 g a day. To minimize gastric intolerance such as nausea and vomiting TEVA-METFORMIN (metformin HCl) should be taken with food whenever possible.\nProper Name:\nChemical Name:\nStructural Formula:\nMolecular Formula:\nMolecular Weight:\nPhysical Form:\nSolubility:\nMelting Point:\nSource: Metformin\nPage Numbers: [19]\n---\nDocument ID: \nContent: Patient Selection and Follow-up :\nCareful selection of patients is important. It is imperative that there be rigid attention to diet and careful adjustment of dosage. When TEVA-METFORMIN (metformin HCl) is combined with a sulfonylurea, instruct the patient on hypoglycemic reactions and their control. Regular through follow-up examinations are necessary (see WARNINGS).\nIf vomiting occurs, withdraw drug temporarily, exclude lactic acidosis, then resume dosage cautiously (see ADVERSE REACTIONS).\nParticular attention should be paid to short range and long range complications which are peculiar to diabetes. Periodic cardiovascular, ophthalmic, hematological, hepatic and renal assessments are advisable (see WARNINGS).\nSource: Metformin\nPage Numbers: [9]\n---\nDocument ID: \nContent: Geriatric Use :\nControlled clinical studies of metformin HCl did not include sufficient numbers of elderly patients to determine whether they respond differently from younger patients, although other reported clinical experience has not identified differences in responses between the elderly and function, it should only be used in patients with normal renal function (see younger patients. TEVA-METFORMIN is known to be substantially excreted by the kidney and because the risk of serious adverse reactions to the drug is greater in patients with impaired renal CONTRAINDICATIONS and WARNINGS). Because aging is associated with reduced renal function, TEVA-METFORMIN should be used with caution as age increases. Care should be taken in dose selection and should be based on careful and regular monitoring or renal function. Generally, elderly patients should not be titrated to the maximum dose of TEVA-METFORMIN.\nSource: Metformin\nPage Numbers: [14, 14]\n---\nDocument ID: \nContent: Hypoglycemia :\nHypoglycemia does not occur in patients receiving TEVA-METFORMIN alone under usual circumstances of use, but could occur when caloric intake is deficient, when strenuous exercise is not compensated by caloric supplementation, or during concomitant use with other glucose lowering agents (such as sulfonylureas) or ethanol.\nElderly, debilitated or malnourished patients, and those with adrenal or pituitary insufficiency or alcohol intoxication are particularly susceptible to hypoglycemic effects. Hypoglycemia may be difficult to recognize in the elderly, and in people who are taking beta-adrenergic blocking drugs.\nSource: Metformin\nPage Numbers: [12]\n---\nDocument ID: \nContent: Pregnancy and lactation :\nSafety in pregnant women has not been established. Metformin was not teratogenic in rats and rabbits at doses up to 600 mg/kg/day, or about two times the maximum recommended human daily dose on a body surface area basis. Determination of fetal concentrations demonstrated a partial placental barrier to metformin. Because animal reproduction studies are not always predictive of human response, any decision to use this drug should be balanced against the benefits and risks.\nBecause recent information suggests that abnormal blood glucose levels during pregnancy are associated with a higher incidence of congenital abnormalities, there is a consensus among experts that insulin be used during pregnancy to maintain blood glucose levels as close to normal as possible.\nSource: Metformin\nPage Numbers: [13]\n---\nDocument ID: \nContent: 2. Human Toxicity\nIn man, no adverse effect has been reported on liver or kidney function, the hematopoietic   system or on the blood vessels.\nThe reported incidence of lactic acidosis in patients receiving metformin hydrochloride is very low (approximately 0.03 cases /1000 patients/year with approximately 0.015 fatal cases/1000 patients/year).\nThe consecutive administration of both phenformin and metformin to the same patient has allowed for the demonstration of a fundamental difference between these two biguanides in   relation to lactacidemia. In some instances, patients developed hyperlactacidemia with phenformin when the same patients were presenting normal lactic acid levels while being treated with metformin. In other instances, hyperlactacidemia observed during a treatment   with phenformin did regress when metformin was substituted  for phenformin. Metformin may increase lactacidemia but to a degree that is clinically less significant than the elevation seen after phenformin.\nSource: Metformin\nPage Numbers: [25]\n---\n\nStructure the provided text into a list of statement objects.\nFor each statement object:\n1. Populate the `text` field with the **exact, verbatim segment** copied from the original input text above. Maintain **all** original formatting, line breaks, and punctuation. **Do not add, remove, or alter any part of the text segment.**\n2. Populate the `citation` field using the citation marker `[ID]` associated with that text segment. Use the provided Documents data to find the source name, doc ID, and the exact quote supporting the statement.\n3. If a text segment from the original answer does not have an explicit citation marker `[ID]` immediately following it (e.g., the very last segment), the `citation` field for that statement object should be null or empty.\n",
+            "answered": true,
+            "raw_answer": "Metformin generally does **not** require avoiding specific foods. However:\n\n- **Take it with food when possible** to reduce stomach upset such as nausea and vomiting. [doc_8]\n- **Avoid excessive alcohol**, whether acute or chronic. Alcohol can worsen metformin\u2019s effects on lactate metabolism and increase the risk of lactic acidosis. [doc_5][doc_7]\n- **Do not skip meals or severely restrict calories**, particularly if you exercise strenuously. Although metformin alone usually does not cause hypoglycemia, low blood sugar can occur when caloric intake is inadequate, with strenuous exercise without enough calories, alcohol use, or other glucose-lowering medicines. [doc_11]\n- If you take metformin with a **sulfonylurea or another glucose-lowering medicine**, ask your clinician about hypoglycemia precautions because the combination can increase that risk. [doc_2][doc_11]\n\nThe provided information does **not identify grapefruit, grapefruit juice, or other specific fruits or beverages as requiring avoidance with metformin**. The grapefruit concern discussed previously applies to atorvastatin, not to any restriction identified here for metformin.\n\nIf vomiting occurs, the prescribing information advises temporarily withholding metformin, evaluating for lactic acidosis, and restarting cautiously; contact your clinician for individualized instructions. [doc_9]",
+            "follow_ups": [
+              "How much alcohol is considered \u201cexcessive\u201d while taking metformin?",
+              "What should I do if I have vomiting or diarrhea while taking metformin?",
+              "How do food restrictions with metformin compare with those for atorvastatin?"
+            ],
+            "retrieved_chunk_ids": [
+              15,
+              27,
+              11,
+              10,
+              16,
+              17,
+              7,
+              39,
+              12,
+              26,
+              20,
+              23,
+              48
+            ],
+            "retrieved_pages": [
+              4,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              19,
+              25
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 41.169,
+            "time_to_first_answer_s": 16.766,
+            "usage": {
+              "llm_calls": 12,
+              "prompt_tokens": 23493,
+              "completion_tokens": 5026,
+              "total_tokens": 28519,
+              "cached_prompt_tokens": 1248,
+              "est_cost_usd": 0.058418,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 11,
+                  "prompt_tokens": 19729,
+                  "completion_tokens": 1217,
+                  "cost_usd": 0.005182
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 3764,
+                  "completion_tokens": 3809,
+                  "cost_usd": 0.053236
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 1,
+            "selected_branch_type": "clarified"
+          }
+        ],
+        "trajectory": [
+          {
+            "role": "user",
+            "content": "What side effects do people usually get on Lipitor?"
+          },
+          {
+            "role": "assistant",
+            "content": "Most people do not experience side effects while taking Lipitor (atorvastatin). When side effects occur, those reported include: [doc_1] - Constipation, diarrhea, or gas  \n- Headache  \n- Stomach pain or upset  \n- Vomiting  \n- Skin rash  \n- Depression in children [doc_1]\n Other reported effects include muscle cramps, muscle fatigue, abdominal discomfort, malaise, fever, and nightmares; these occurred in fewer than 1% of people in the cited clinical-trial summary. [doc_4]\n Rare but important effects include unexplained muscle pain, tenderness or weakness, generalized weakness, or brown/discolored urine. Seek prompt medical advice for these symptoms; stop taking the medicine and obtain immediate medical help if the muscle-related symptoms are severe or accompanied by feeling generally unwell. [doc_2]\n Very rarely, Lipitor may cause jaundice\u2014yellowing of the skin or eyes\u2014or hepatitis, an inflammation of the liver. [doc_1]\n Reported statin-associated effects also include persistent cough or shortness of breath, erectile dysfunction, sleep problems or nightmares, depression, poor memory, confusion, and memory loss. [doc_1] Contact a doctor or pharmacist if side effects persist, become troublesome, or seem unusual. [doc_1]\n Documents for citation context:\n|\nDocument ID: \nContent: SIDE EFFECTS AND WHAT TO DO ABOUT THEM\nMost people do not have any problems with side effects  when taking this medicine. However, all medicines can cause unwanted  side  effects.  Check  with  your  doctor  or  pharmacist promptly if any of the following persist or become troublesome:\n\uf0a7 constipation/diarrhea/gas\n\uf0a7 depression (in children)\n\uf0a7 headache\n\uf0a7 skin rash\n\uf0a7 stomach pain or upset\n\uf0a7 vomiting or throwing up\nVery rarely, a few people may suffer from jaundice (which may be manifested by yellowing of the skin and eyes), from a liver condition called hepatitis (inflammation of the liver).\nPossible side effects reported with some statins:\n\uf0a7 breathing problems including persistent cough and/or shortness of breath or fever\n\uf0a7 cases of erectile dysfunction (difficulty to achieve or maintain an erection)\n\uf0a7 sleep  disturbances  (difficulty  sleeping  or  staying  asleep), including insomnia and nightmares\n\uf0a7 mood related disorders including depression\n\uf0a7 poor memory, confusion and memory loss\nPriva-ATORVASTATIN can cause abnormal blood test results. Your  doctor  will  decide  when  to  perform  blood  tests  and  will interpret the results.\nThis  is  not a  complete  list  of  side  effects.  If  you/your  child notice anything unusual or any unexpected effects while taking Priva-ATORVASTATIN, contact your doctor or pharmacist.\nSource: Lipitor\nPage Numbers: [47]\n---\nDocument ID: \nContent: SERIOUS SIDE EFFECTS, HOW OFTEN THEY HAPPEN AND WHAT TO DO ABOUT THEM\nRare,  = Muscle pain that you cannot explain. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Muscle tenderness or weakness,. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Generalized weakness, especially if you don&#39;t feel well. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Brownish or discoloured urine. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Unknown,  = Increased blood sugar: frequent urination, thirst and hunger. Unknown, Talk to your healthcare professional.Only if severe = \u221a. Unknown, Talk to your healthcare professional.In all cases = . Unknown, Stop taking drug and get immediate.medical help = \nSource: Lipitor\nPage Numbers: [48]\n---\nDocument ID: \nContent: REPORTING SIDE EFFECTS\nYou can report any suspected side effects associated with the use of health products to Health Canada by:\n\uf0b7 Visiting the Web page on Adverse Reaction Reporting (https://www.canada.ca/en/healthcanada/services/drugs-health-products/medeffectcanada/adverse-reaction-reporting.html) for information on how to report online, by mail or by fax; or\n\uf0b7 Calling toll-free at 1-866-234-2345.\nNOTE: Contact your health professional if you  need information  about  how to  manage  your  side  effects. The  Canada  Vigilance  Program does  not  provide medical advice.\nSource: Lipitor\nPage Numbers: [48]\n---\nDocument ID: \nContent: ADVERSE REACTIONS\nThe  following  additional  adverse  events  were  reported  in  placebo-controlled  clinical  trials  during atorvastatin calcium therapy: Muscle cramps, myositis, muscle fatigue, myopathy, paresthesia, peripheral  neuropathy,  pancreatitis,  hepatitis,  cholestatic  jaundice,  cholestasis,  anorexia,  vomiting, abdominal discomfort, alopecia, pruritus, rash, urticaria, erectile dysfunction, nightmare, vision blurred, tinnitus, eructation, neck pain, malaise, pyrexia and white blood cells urine positive.\nIn summary, the adverse events occurring at a frequency &lt;1% are listed below:\nGeneral disorders and administration site conditions: malaise; pyrexia\nGastrointestinal disorders: abdominal discomfort, eructation\nHepatobiliary disorders : hepatitis, cholestasis\nMusculoskeletal and connective tissue disorders : muscle fatigue, neck pain\nPsychiatric disorders: nightmare\nSkin and subcutaneous tissue disorders: urticaria\nEye disorders: vision blurred\nEar and labyrinth disorders : tinnitus\nInvestigations: white blood cells urine positive\nSource: Lipitor\nPage Numbers: [11]\n---\n\nStructure the provided text into a list of statement objects.\nFor each statement object:\n1. Populate the `text` field with the **exact, verbatim segment** copied from the original input text above. Maintain **all** original formatting, line breaks, and punctuation. **Do not add, remove, or alter any part of the text segment.**\n2. Populate the `citation` field using the citation marker\n"
+          },
+          {
+            "role": "user",
+            "content": "Which of those are the serious ones I should actually watch for?"
+          },
+          {
+            "role": "assistant",
+            "content": "### Serious warning signs to watch for\n\n- **Unexplained muscle pain, tenderness, soreness, or weakness**\u2014especially if it is diffuse, severe, or accompanied by **generalized weakness, malaise (feeling unwell), or fever**. Contact your healthcare professional promptly; suspected myopathy may require CK testing, and atorvastatin should be discontinued if myopathy is diagnosed or suspected. [doc_5]\n [doc_9] - **Brownish or discolored urine**, particularly with muscle symptoms, may indicate serious muscle injury and requires prompt medical attention. [doc_1]\n [doc_9] - **Severe muscle symptoms or feeling generally unwell with muscle symptoms:** stop taking atorvastatin and obtain immediate medical help. [doc_1]\n - **Yellowing of the skin or eyes (jaundice)** or other symptoms suggesting serious liver injury. Serious liver injury with symptoms, increased bilirubin, or jaundice requires prompt interruption of therapy and medical evaluation. [doc_2]\n [doc_3] - **Frequent urination, increased thirst, or increased hunger**, which may indicate increased blood sugar. Contact your healthcare professional. [doc_1]\n - **Signs of an allergic or hypersensitivity reaction**, such as swelling beneath the skin (angioedema), hives, breathing difficulty, fever, or widespread/severe skin reactions. Atorvastatin should be discontinued if hypersensitivity is suspected; breathing difficulty or severe swelling warrants emergency care. [doc_6]\n ### When to seek help\n\n- **Contact your healthcare professional promptly** for unexplained muscle pain, tenderness, weakness, brownish urine, or symptoms of increased blood sugar. [doc_1]\n [doc_5] [doc_9] - **Stop atorvastatin and seek immediate medical help** if muscle symptoms are severe, occur with generalized illness, or are accompanied by brownish/discolored urine. [doc_1]\n - **Promptly seek medical evaluation** for jaundice or other symptoms of serious liver injury; the medication should be interrupted if serious liver injury with symptoms, elevated bilirubin, or jaundice occurs. [doc_2]\n [doc_3] - **Seek emergency care** for breathing difficulty, marked facial/throat swelling, or a severe allergic skin reaction. [doc_6]\n - If you may have taken too much atorvastatin, contact a healthcare professional, emergency department, or Poison Control Centre immediately\u2014even if you have no symptoms. [doc_7]\n For any unusual or unexpected effect, contact your doctor or pharmacist. [doc_3]\n Documents for citation context:\n|\nDocument ID: \nContent: SERIOUS SIDE EFFECTS, HOW OFTEN THEY HAPPEN AND WHAT TO DO ABOUT THEM\nRare,  = Muscle pain that you cannot explain. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Muscle tenderness or weakness,. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Generalized weakness, especially if you don&#39;t feel well. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Rare,  = Brownish or discoloured urine. Rare, Talk to your healthcare professional.Only if severe = . Rare, Talk to your healthcare professional.In all cases = \u221a. Rare, Stop taking drug and get immediate.medical help = . Unknown,  = Increased blood sugar: frequent urination, thirst and hunger. Unknown, Talk to your healthcare professional.Only if severe = \u221a. Unknown, Talk to your healthcare professional.In all cases = . Unknown, Stop taking drug and get immediate.medical help = \nSource: Lipitor\nPage Numbers: [48]\n---\nDocument ID:\n"
+          },
+          {
+            "role": "user",
+            "content": "Different question - I'm also on metformin. What's the worst thing that can go wrong with that one?"
+          },
+          {
+            "role": "assistant",
+            "content": "The most serious potential complication of metformin is **metformin-associated lactic acidosis**. It is rare but life-threatening; the cited prescribing information reports that it has been fatal in approximately 50% of cases. [doc_6] **Warning symptoms can be subtle and may include:**\n\n- Unusual or worsening weakness or malaise  \n- Muscle aches  \n- Trouble breathing or respiratory distress  \n- Increasing sleepiness or drowsiness  \n- Nonspecific abdominal discomfort  \n- Low body temperature, low blood pressure, or an unusually slow heartbeat in more severe cases [doc_6]\n **Seek emergency medical care immediately** if these symptoms occur\u2014especially several together, or if you are acutely ill\u2014because lactic acidosis is a medical emergency requiring hospital treatment. [doc_2]\n Do not take another dose until you have received urgent medical advice; the prescribing information directs that metformin be withdrawn while the situation is clarified and discontinued immediately if acidosis is confirmed or develops. [doc_6] [doc_2] Risk is higher with **kidney impairment or reduced kidney blood flow, severe dehydration, sepsis or serious infection, low-oxygen states, unstable or medication-treated heart failure, severe liver disease, excessive alcohol intake, and around iodinated intravenous contrast studies or surgery**. [doc_3]\n [doc_6] Significant vomiting or diarrhea can cause dehydration; the prescribing information advises temporarily stopping metformin in that circumstance and excluding lactic acidosis. [doc_8] Metformin alone usually does **not** cause low blood sugar under ordinary use, although hypoglycemia can occur with inadequate food intake, strenuous exercise without adequate calories, alcohol, or other glucose-lowering medicines. [doc_10]\n Common, generally temporary effects are diarrhea, nausea, vomiting, abdominal bloating, gas, and reduced appetite, particularly when treatment begins. [doc_8]"
+          },
+          {
+            "role": "user",
+            "content": "How would I know if that was happening?"
+          },
+          {
+            "role": "assistant",
+            "content": "- Unusual malaise, weakness, or feeling generally unwell [doc_2]\n - Muscle aches [doc_2]\n - Trouble breathing or respiratory distress [doc_2]\n - Increasing sleepiness or drowsiness [doc_2]\n - Nonspecific abdominal discomfort [doc_2]\n - In more advanced acidosis: low body temperature, low blood pressure, or an unusually slow/abnormal heartbeat [doc_2]\n **Seek emergency medical care immediately** if these symptoms occur\u2014especially breathing difficulty, marked drowsiness or weakness, abdominal symptoms with worsening illness, faintness/low blood pressure, or several symptoms together. Lactic acidosis is a medical emergency requiring hospital treatment. [doc_1]\n [doc_2] You cannot confirm lactic acidosis from symptoms alone. Medical evaluation may include electrolytes, ketones, blood glucose, blood pH, lactate, and sometimes metformin levels; it should be suspected in a person with diabetes who has metabolic acidosis without evidence of ketoacidosis. [doc_1]\n [doc_4] Risk is higher with significant kidney impairment, dehydration, low oxygen or poor tissue perfusion, sepsis, unstable heart failure, liver disease, older age, or excessive alcohol intake. [doc_2]\n If you develop significant acute illness, dehydration, or symptoms suggestive of acidosis, obtain urgent medical advice; metformin should be withheld if lactic acidosis or any acidosis is suspected, under emergency medical guidance. [doc_1] [doc_4]\n"
+          },
+          {
+            "role": "user",
+            "content": "Okay - going back to the first one, does grapefruit matter?"
+          },
+          {
+            "role": "assistant",
+            "content": "Yes. Grapefruit and grapefruit juice can interact with atorvastatin (Lipitor) by increasing atorvastatin concentrations in the blood. [doc_1] [doc_3] The interaction is most concerning with **large amounts**: approximately **1.2 litres of grapefruit juice per day** increased atorvastatin exposure about **2.5-fold**, and excessive grapefruit-juice consumption is not recommended. [doc_1]\n The medication information specifically flags grapefruit juice, particularly amounts around **1.2 litres at once**, as an interaction. [doc_2] **Practical advice:** avoid excessive grapefruit juice and discuss your usual grapefruit or grapefruit-juice intake with your doctor or pharmacist, especially if you consume large quantities or take a higher atorvastatin dose. The provided information does not specify a universally safe daily amount or require complete avoidance of ordinary servings. [doc_1] [doc_2]\n Because increased atorvastatin levels may raise the risk of statin-related muscle problems, seek medical advice promptly for unexplained or persistent muscle pain, tenderness, or weakness\u2014particularly if severe or accompanied by dark urine. The medication information identifies muscle pain, aching, or weakness as a possible concern with atorvastatin. [doc_6]\n"
+          },
+          {
+            "role": "user",
+            "content": "And does the other one have any food restrictions?"
+          },
+          {
+            "role": "assistant",
+            "content": "Metformin generally does **not** require avoiding specific foods. However:\n\n- **Take it with food when possible** to reduce stomach upset such as nausea and vomiting. [doc_8]\n - **Avoid excessive alcohol**, whether acute or chronic. Alcohol can worsen metformin\u2019s effects on lactate metabolism and increase the risk of lactic acidosis. [doc_5]\n [doc_7] - **Do not skip meals or severely restrict calories**, particularly if you exercise strenuously. Although metformin alone usually does not cause hypoglycemia, low blood sugar can occur when caloric intake is inadequate, with strenuous exercise without enough calories, alcohol use, or other glucose-lowering medicines. [doc_11]\n - If you take metformin with a **sulfonylurea or another glucose-lowering medicine**, ask your clinician about hypoglycemia precautions because the combination can increase that risk. [doc_2]\n [doc_11] The provided information does **not identify grapefruit, grapefruit juice, or other specific fruits or beverages as requiring avoidance with metformin**. The grapefruit concern discussed previously applies to atorvastatin, not to any restriction identified here for metformin.\n\nIf vomiting occurs, the prescribing information advises temporarily withholding metformin, evaluating for lactic acidosis, and restarting cautiously; contact your clinician for individualized instructions. [doc_9]\n Documents for citation context:\n|\nDocument ID: \nContent: Surgical Procedures :\nTEVA-METFORMIN therapy should be temporarily suspended for any surgical procedure (except minor procedures not associated with restricted intake of food and fluids). TEVAMETFORMIN should be discontinued 2 days before surgical intervention and should not be restarted until the patient&#39;s oral intake has resumed and renal function has been evaluated as normal.\nSource: Metformin\nPage Numbers: [10]\n---\nDocument ID: \nContent: Drug Interactions :\nCertain drugs may potentiate the effect of TEVA-METFORMIN, particularly sulfonylurea type of drugs in the treatment of diabetes. The simultaneous administration of these two types of drugs could produce a hypoglycemic reaction, especially if they are given in patients already receiving other drugs which, themselves, can potentiate the effect of sulfonylureas. These drugs can be: long-acting sulfonamides, tubercolostatics, phenylbutazone, clofibrate, monoamine oxidase inhibitors, salicylates, probenecid and propanolol.\nIn healthy volunteers, the pharmacokinetics of propranolol and ibuprofen were not affected by metformin when co-administered in single-dose interaction studies.\nMetformin is negligibly bound to plasma proteins and is, therefore, less likely to interact with\nhighly protein-bound drugs such as salicylates, sulfonamides, chloramphenicol, and probenecid, as compared to sulfonylureas, which are extensively bound to serum proteins.\nSource: Metformin\nPage Numbers: [14]\n---\nDocument ID: \nContent: Increased risk of cardiovascular mortality :\nRadiologic studies involving the use of iodinated contrast materials (for example, intravenous urogram, intravenous cholangiography, angiography and scans with contrast materials):\nIntravascular contrast studies with iodinated materials can lead to acute renal failure and have been associated with lactic acidosis in patients receiving TEVA-METFORMIN (see CONTRAINDICATIONS). Therefore, in patients in whom any such study is planned, TEVA-\nMETFORMIN should be discontinued at the time of or prior to the procedure, and withheld for 48 hours subsequent to the procedure and reinstituted only after renal function has been re-evaluated and found to be normal.\nSource: Metformin\nPage Numbers: [8]\n---\nDocument ID: \nContent: Increased risk of cardiovascular mortality :\nThe administration of oral antidiabetic drugs has been reported to be associated with increased cardiovascular mortality as compared to treatment with diet alone or diet plus insulin. This warning is based on the study conducted by the University Group Diabetes Program (UGDP), a long-term prospective clinical trial designed to evaluate the effectiveness of glucose-lowering drugs in preventing or delaying vascular complications in patients with non-insulin-dependent diabetes. The study involved 1027 patients who were randomly assigned to one of the five treatment groups.\nThe UGDP reported that patients treated for 5 to 8 years with diet plus a fixed dose of tolbutamide (1.5 g per day) or diet plus a fixed dose of phenformin (100 mg per day), had a rate of cardiovascular mortality approximately 2.5 times that of patients treated with diet alone, resulting in discontinuation of both these treatments in the UGDP study.  Total mortality was increased in both the tolbutamide- and phenformin-treated groups and this increase was statistically significant in the phenformin-treated group. Despite controversy regarding the\ninterpretation of these results, the findings of the UGDP study provide and adequate basis for this warning. The patient should be informed of the potential risks and benefits of TEVAMETFORMIN and alternative modes of therapy.\nAlthough only one drug in the sulfonylurea category (tolbutamide) and one in the biguanide category (phenformin) were included in this study, it is prudent from a safety standpoint to consider that this warning may also apply to other related antidiabetic drugs, in view of the similarities in mode of action and chemical structure among the drugs in each category.\nThe use of TEVA-METFORMIN (metfomin HCl) will not prevent the development of complications peculiar to diabetes mellitus.\nUse of TEVA-METFORMIN must be considered as treatment in addition to proper dietary regimen and not as a substitute for diet.\nCare should be taken to ensure that TEVA-METFORMIN is not given when a contraindication exists.\nIf during TEVA-METFORMIN therapy the patient develops acute intercurrent disease such as: clinically significant hepatic dysfunction, cardiovascular collapse, congestive heart failure, acute myocardial infarction, or other conditions complicated by hypoxemia, the drug should be discontinued.\nSource: Metformin\nPage Numbers: [7]\n---\nDocument ID: \nContent: Alcohol intake :\nAlcohol is known to potentiate the effect of metformin on lactate metabolism. Patients, therefore, should be warned against excessive alcohol intake, acute or chronic, while receiving TEVAMETFORMIN.\nSource: Metformin\nPage Numbers: [10]\n---\nDocument ID: \nContent: Impaired hepatic function :\nSince impaired hepatic function has been associated with some cases of lactic acidosis, TEVAMETFORMIN should generally be avoided in patients with clinical or laboratory evidence of hepatic disease.\nSource: Metformin\nPage Numbers: [11]\n---\nDocument ID: \nContent: CONTRAINDICATIONS\n\u221e Unstable and/or insulin-dependent (Type I) diabetes mellitus.\n\u221e Acute or chronic metabolic acidosis, including diabetic ketoacidosis, with or without coma, history of ketoacidosis with or without coma. Diabetic ketoacidosis should be treated with insulin.\n\u221e In patients with a history of lactic acidosis, irrespective of precipitating factors.\n\u221e In the presence of renal impairment or when renal function is not known, and also in patients with serum creatinine levels above the upper limit of normal range. Renal disease or renal dysfunction (e.g., as suggested by serum creatinine levels \u2265 136 \u00b5mol/L (males), \u2265 124 \u00b5mol/L (females) or abnormal creatinine clearance) which may result from conditions such as cardiovascular collapse (shock), acute myocardial infarction, and septicemia (see also WARNINGS and PRECAUTIONS).\n\u221e Congestive heart failure requiring pharmacologic treatment.\n\u221e In excessive alcohol intake, acute or chronic.\n\u221e In patients suffering from severe hepatic dysfunction, since severe hepatic dysfunction has been associated with some cases of lactic acidosis, TEVA-METFORMIN should generally be avoided in patients with clinical or laboratory evidence of hepatic disease.\n\u221e TEVA-METFORMIN should be temporarily discontinued in patients undergoing radiologic studies involving intravascular administration of iodinated contrast materials, because use of\nsuch products may result in acute alteration of renal function (see WARNINGS and PRECAUTIONS).\n\u221e In cases of cardiovascular collapse and in disease states associate with hypoxemia such as cardiorespiratory insufficiency, which are often associated with hyperlactacidemia.\n\u221e During stress conditions, such as severe infections, trauma or surgery and the recovery phase thereafter.\n\u221e In patients suffering from severe dehydration.\n\u221e Known hypersensitivity or allergy to metformin HCl or any of the excipients.\n\u221e During pregnancy.\nSource: Metformin\nPage Numbers: [4]\n---\nDocument ID: \nContent: DOSAGE AND ADMINISTRATION\nIn diabetic patients, individual determination of the minimum dose that will lower blood glucose adequately should be made.\nIn patients where on initial trial the maximal recommended dose fails to lower the blood glucose adequately, the drug should be discontinued. Deterioration of the patient&#39;s condition can occur during the treatment of diabetes. It is advisable to ascertain the contribution of the drug in the control of blood glucose by discontinuing the medication semi-annually or at least annually with careful monitoring patient. If the need for the drug is not evident, the drug should not be resumed. In some diabetic subjects, short-term administration of the drug may be sufficient during periods of transient loss of blood sugar control.\nThe usual dose is 500 mg three or four times a day, or 850 mg two or three times a day. Maximal dose should not exceed 2.55 g a day. To minimize gastric intolerance such as nausea and vomiting TEVA-METFORMIN (metformin HCl) should be taken with food whenever possible.\nProper Name:\nChemical Name:\nStructural Formula:\nMolecular Formula:\nMolecular Weight:\nPhysical Form:\nSolubility:\nMelting Point:\nSource: Metformin\nPage Numbers: [19]\n---\nDocument ID: \nContent: Patient Selection and Follow-up :\nCareful selection of patients is important. It is imperative that there be rigid attention to diet and careful adjustment of dosage. When TEVA-METFORMIN (metformin HCl) is combined with a sulfonylurea, instruct the patient on hypoglycemic reactions and their control. Regular through follow-up examinations are necessary (see WARNINGS).\nIf vomiting occurs, withdraw drug temporarily, exclude lactic acidosis, then resume dosage cautiously (see ADVERSE REACTIONS).\nParticular attention should be paid to short range and long range complications which are peculiar to diabetes. Periodic cardiovascular, ophthalmic, hematological, hepatic and renal assessments are advisable (see WARNINGS).\nSource: Metformin\nPage Numbers: [9]\n---\nDocument ID: \nContent: Geriatric Use :\nControlled clinical studies of metformin HCl did not include sufficient numbers of elderly patients to determine whether they respond differently from younger patients, although other reported clinical experience has not identified differences in responses between the elderly and function, it should only be used in patients with normal renal function (see younger patients. TEVA-METFORMIN is known to be substantially excreted by the kidney and because the risk of serious adverse reactions to the drug is greater in patients with impaired renal CONTRAINDICATIONS and WARNINGS). Because aging is associated with reduced renal function, TEVA-METFORMIN should be used with caution as age increases. Care should be taken in dose selection and should be based on careful and regular monitoring or renal function. Generally, elderly patients should not be titrated to the maximum dose of TEVA-METFORMIN.\nSource: Metformin\nPage Numbers: [14, 14]\n---\nDocument ID: \nContent: Hypoglycemia :\nHypoglycemia does not occur in patients receiving TEVA-METFORMIN alone under usual circumstances of use, but could occur when caloric intake is deficient, when strenuous exercise is not compensated by caloric supplementation, or during concomitant use with other glucose lowering agents (such as sulfonylureas) or ethanol.\nElderly, debilitated or malnourished patients, and those with adrenal or pituitary insufficiency or alcohol intoxication are particularly susceptible to hypoglycemic effects. Hypoglycemia may be difficult to recognize in the elderly, and in people who are taking beta-adrenergic blocking drugs.\nSource: Metformin\nPage Numbers: [12]\n---\nDocument ID: \nContent: Pregnancy and lactation :\nSafety in pregnant women has not been established. Metformin was not teratogenic in rats and rabbits at doses up to 600 mg/kg/day, or about two times the maximum recommended human daily dose on a body surface area basis. Determination of fetal concentrations demonstrated a partial placental barrier to metformin. Because animal reproduction studies are not always predictive of human response, any decision to use this drug should be balanced against the benefits and risks.\nBecause recent information suggests that abnormal blood glucose levels during pregnancy are associated with a higher incidence of congenital abnormalities, there is a consensus among experts that insulin be used during pregnancy to maintain blood glucose levels as close to normal as possible.\nSource: Metformin\nPage Numbers: [13]\n---\nDocument ID: \nContent: 2. Human Toxicity\nIn man, no adverse effect has been reported on liver or kidney function, the hematopoietic   system or on the blood vessels.\nThe reported incidence of lactic acidosis in patients receiving metformin hydrochloride is very low (approximately 0.03 cases /1000 patients/year with approximately 0.015 fatal cases/1000 patients/year).\nThe consecutive administration of both phenformin and metformin to the same patient has allowed for the demonstration of a fundamental difference between these two biguanides in   relation to lactacidemia. In some instances, patients developed hyperlactacidemia with phenformin when the same patients were presenting normal lactic acid levels while being treated with metformin. In other instances, hyperlactacidemia observed during a treatment   with phenformin did regress when metformin was substituted  for phenformin. Metformin may increase lactacidemia but to a degree that is clinically less significant than the elevation seen after phenformin.\nSource: Metformin\nPage Numbers: [25]\n---\n\nStructure the provided text into a list of statement objects.\nFor each statement object:\n1. Populate the `text` field with the **exact, verbatim segment** copied from the original input text above. Maintain **all** original formatting, line breaks, and punctuation. **Do not add, remove, or alter any part of the text segment.**\n2. Populate the `citation` field using the citation marker `[ID]` associated with that text segment. Use the provided Documents data to find the source name, doc ID, and the exact quote supporting the statement.\n3. If a text segment from the original answer does not have an explicit citation marker `[ID]` immediately following it (e.g., the very last segment), the `citation` field for that statement object should be null or empty.\n"
+          }
+        ],
+        "totals": {
+          "latency_s": 198.132,
+          "est_cost_usd": 0.227401,
+          "total_tokens": 140801,
+          "llm_calls": 70
+        },
+        "per_turn_latency": [
+          25.149,
+          44.723,
+          35.084,
+          25.184,
+          26.823,
+          41.169
+        ],
+        "per_turn_cost": [
+          0.033609,
+          0.0481,
+          0.035845,
+          0.028801,
+          0.022628,
+          0.058418
+        ],
+        "turns_completed": 6
+      },
+      "feedback": {
+        "turn_must_mention_recall": 0.5861111111111111,
+        "turn_must_mention_recall_worst": 0.16666666666666666,
+        "turn_forbidden_content": 1,
+        "turn_forbidden_content_rate": 0.3333333333333333,
+        "pii_persistence": 0,
+        "pii_persistence_count": 0,
+        "latency_growth_ratio": 1.6370034593820826,
+        "latency_growth_slope": 0.4714285714285709,
+        "latency_max_turn_s": 44.723,
+        "cost_total_usd": 0.227401,
+        "ktokens_total": 140.801,
+        "llm_calls_total": 70,
+        "latency_total_s": 198.132,
+        "cost_per_turn_usd": 0.037900166666666665,
+        "tokens_per_turn": 23466.833333333332,
+        "turns_completed": 6,
+        "turn_answered_rate": 1.0,
+        "pipeline_error_any": 0,
+        "pipeline_error_rate": 0.0,
+        "history_used_rate": 1.0
+      },
+      "run_id": "01a019e1-9e4d-71d3-988f-da1e3ce06561",
+      "error": null
+    }
+  ]
+}

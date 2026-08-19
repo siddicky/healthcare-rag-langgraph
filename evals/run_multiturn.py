@@ -39,14 +39,15 @@ from langsmith import Client, aevaluate
 
 from healthcare_rag.services.models import default_reasoning_effort, disabled_stages
 
+from .engines import build_engine
 from .evaluators import JUDGE_MODEL
-from .harness import build_rag
 from .multiturn_dataset import DEFAULT_DATASET_NAME, MULTITURN_PATH, sync_dataset
 from .multiturn_evaluators import ALL_EVALUATORS, DETERMINISTIC_EVALUATORS
 from .multiturn_harness import SIM_USER_MODEL, make_target
 from .multiturn_report import write_report
 from .pricing import PRICING_AS_OF
 from .report import fetch_langsmith_stats
+from .seal_clean import GitStatusError, check_clean
 
 load_dotenv()
 warnings.filterwarnings("ignore", category=DeprecationWarning)
@@ -65,9 +66,9 @@ def _git_sha() -> str:
 
 def _git_dirty() -> bool:
     try:
-        return bool(subprocess.check_output(["git", "status", "--porcelain"], text=True).strip())
-    except Exception:
-        return False
+        return not check_clean()
+    except GitStatusError:
+        return True
 
 
 def _build_parser() -> argparse.ArgumentParser:
@@ -139,16 +140,14 @@ async def main() -> int:
     print(f"running {len(examples)} conversations (~{n_turns_total} turns), "
           f"concurrency={args.concurrency}, judges={'off' if args.no_judges else JUDGE_MODEL}")
 
-    rag = await build_rag()
-    target = make_target(rag)
+    engine = await build_engine()
+    target = make_target(engine)
     evaluators = DETERMINISTIC_EVALUATORS if args.no_judges else ALL_EVALUATORS
 
     has_simulated = any((e.metadata or {}).get("kind") == "simulated" for e in examples)
     metadata = {
         "git_sha": _git_sha(),
         "git_dirty": _git_dirty(),
-        "llm_model": rag.generator.llm_model,
-        "validator_model": rag.validator.llm_model,
         "judge_model": None if args.no_judges else JUDGE_MODEL,
         "sim_user_model": SIM_USER_MODEL if has_simulated else None,
         "reasoning_effort": default_reasoning_effort(),
@@ -160,6 +159,7 @@ async def main() -> int:
         "kind": args.kind,
         "split": args.split,
         "categories": args.category,
+        **engine.describe(),
     }
 
     try:
@@ -175,11 +175,14 @@ async def main() -> int:
             client=client,
         )
         experiment_name = results.experiment_name
-        rows: list[dict] = []
+        rows: list[dict[str, Any]] = []
         async for r in results:
             ex, run = r["example"], r["run"]
             md = ex.metadata or {}
-            feedback = {er.key: er.score for er in r["evaluation_results"]["results"]}
+            feedback = {
+                er.key: er.score
+                for er in r["evaluation_results"].get("results", [])
+            }
             outputs = run.outputs or {}
             rows.append(
                 {
@@ -196,10 +199,7 @@ async def main() -> int:
                 }
             )
     finally:
-        try:
-            await rag.weaviate_client.close()
-        except Exception:
-            pass
+        await engine.aclose()
 
     try:
         experiment_url = client.read_project(project_name=experiment_name).url
@@ -219,7 +219,7 @@ async def main() -> int:
     return 0
 
 
-def _slim(outputs: dict) -> dict:
+def _slim(outputs: dict[str, Any]) -> dict[str, Any]:
     """Drop the retrieved chunk *text* from the local report payload.
 
     Contexts are several KB per turn and a conversation has many turns; the chunk

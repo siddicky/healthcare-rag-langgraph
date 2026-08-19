@@ -5,9 +5,7 @@ from typing import List, Optional, Tuple, Dict, Any
 import sys
 import time
 
-from ..config import setup_medical_rag
-from ..pipeline.medical_rag import MedicalRAG
-from ..orch.orchestrator import RefactoredOrchestrator
+from ..graph.engine import Engine, build_engine
 from ..orch.monitor import QueryMonitor
 from ..processors.safety import scrub_phi
 
@@ -23,7 +21,7 @@ logging.getLogger("MedicalRAG").setLevel(logging.WARNING)
 logger = logging.getLogger("MedicalRAG")
 
 async def process_query_with_orchestrator(
-    rag_instance: MedicalRAG, 
+    engine: Engine,
     query: str, 
     user_id: str, 
     monitor: QueryMonitor
@@ -32,16 +30,15 @@ async def process_query_with_orchestrator(
     Process a query using the RAG orchestrator and update the monitor with progress.
     
     Args:
-        rag_instance: The MedicalRAG instance to use
+        engine: The selected runtime engine
         query: The user's query
         user_id: The user ID for conversation history
         monitor: The QueryMonitor to update with results
     """
-    orchestrator = RefactoredOrchestrator(rag_instance)
-    answer, follow_ups = await orchestrator.process_query(query, user_id, monitor)
-    
-    monitor.final_answer = answer
-    monitor.follow_up_questions = follow_ups
+    result = await engine.process_query(query, user_id, monitor)
+
+    monitor.final_answer = result["answer"]
+    monitor.follow_up_questions = result["follow_ups"]
     monitor.final_answer_event.set()
 
 def print_banner():
@@ -61,7 +58,7 @@ async def interactive_main():
     print_banner()
     print("Initializing Medical RAG System...")
     try:
-        medical_rag_instance = await setup_medical_rag()
+        engine = await build_engine()
         print("✓ Medical RAG System Initialized Successfully")
     except Exception as e:
         print(f"✗ Error initializing system: {e}")
@@ -94,7 +91,7 @@ async def interactive_main():
             # Process query and show status
             status_task = asyncio.create_task(monitor.display_progress())
             process_task = asyncio.create_task(
-                process_query_with_orchestrator(medical_rag_instance, user_query, session_id, monitor)
+                process_query_with_orchestrator(engine, user_query, session_id, monitor)
             )
             
             # Wait for processing to complete
@@ -156,9 +153,9 @@ async def interactive_main():
         print("\n\nSession interrupted by user. Shutting down...")
     finally:
         print("\nClosing connection...")
-        if 'medical_rag_instance' in locals():
+        if 'engine' in locals():
             try:
-                await medical_rag_instance.weaviate_client.close()
+                await engine.aclose()
                 print("✓ Connection closed successfully.")
                 print("Thank you for using Medical RAG Assistant!")
             except Exception as e:
@@ -174,4 +171,4 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main() 
+    main()
