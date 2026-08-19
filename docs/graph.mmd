@@ -1,0 +1,42 @@
+---
+config:
+  flowchart:
+    curve: linear
+---
+graph TD;
+	__start__([<p>__start__</p>]):::first
+	safety_gate(safety_gate)
+	answer_addendum(answer_addendum)
+	finalize(finalize)
+	clarify_query(clarify_query)
+	extract_conversation_context(extract_conversation_context)
+	decompose_query(decompose_query)
+	retrieve_documents(retrieve_documents)
+	merge_retrievals(merge_retrievals)
+	evaluate_retrieval(evaluate_retrieval)
+	generate_answer(generate_answer)
+	validate_answer(validate_answer)
+	generate_follow_ups(generate_follow_ups)
+	__end__([<p>__end__</p>]):::last
+	__start__ --> safety_gate;
+	answer_addendum --> finalize;
+	clarify_query --> decompose_query;
+	decompose_query -.-> retrieve_documents;
+	evaluate_retrieval -.-> generate_answer;
+	evaluate_retrieval -.-> retrieve_documents;
+	extract_conversation_context --> decompose_query;
+	generate_answer --> validate_answer;
+	generate_follow_ups --> finalize;
+	merge_retrievals -.-> evaluate_retrieval;
+	merge_retrievals -.-> generate_answer;
+	retrieve_documents --> merge_retrievals;
+	safety_gate -.-> answer_addendum;
+	safety_gate -.-> clarify_query;
+	safety_gate -.-> extract_conversation_context;
+	safety_gate -.-> finalize;
+	validate_answer -.-> finalize;
+	validate_answer -.-> generate_follow_ups;
+	finalize --> __end__;
+	classDef default fill:#f2f0ff,line-height:1.2
+	classDef first fill-opacity:0
+	classDef last fill:#bfb6fc

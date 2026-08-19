@@ -1,0 +1,8 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "healthcare_rag": "./healthcare_rag/graph/__init__.py:graph"
+  },
+  "env": ".env",
+  "python_version": "3.12"
+}

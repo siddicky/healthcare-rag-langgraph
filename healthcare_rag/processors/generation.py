@@ -4,7 +4,6 @@ from uuid import uuid4
 
 from ..models.retrieval import QueryResultList
 from ..models.answers import AnswerGenerationResult
-from ..graph.state import load_results
 from .base import BaseProcessor, log_timing
 from ..services.models import sampling_params
 
@@ -14,7 +13,12 @@ logger = logging.getLogger("MedicalRAG")
 def format_documents_for_prompt(
     results: QueryResultList | dict[str, Any],
 ) -> tuple[str, dict[str, str]]:
-    retrieval_results = load_results(results) if isinstance(results, dict) else results
+    if isinstance(results, dict):
+        from ..graph.state import load_results
+
+        retrieval_results = load_results(results)
+    else:
+        retrieval_results = results
     doc_context = ""
     prompt_id_to_original_id_map: dict[str, str] = {}
     doc_index = 0
