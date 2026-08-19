@@ -100,7 +100,7 @@ packaging==24.2
 pandas==2.2.3
 pathspec==0.12.1
 peft==0.15.2
-pillow==11.2.1
+pillow==12.3.0
 platformdirs==4.3.7
 pluggy==1.5.0
 portalocker==2.10.1
