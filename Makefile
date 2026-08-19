@@ -2,7 +2,7 @@
 PY := .venv/bin/python
 UV := uv
 
-.PHONY: journey help venv weaviate ingest run test test-judges calibrate eval-smoke eval eval-nojudge \
+.PHONY: journey help venv weaviate ingest run dev test test-judges calibrate eval-smoke eval eval-nojudge \
         eval-multiturn eval-multiturn-smoke dataset-sync dataset-sync-multiturn wiki-init wiki-update
 
 help:
@@ -23,6 +23,9 @@ ingest: ## (Re)ingest checked-in chunks into Weaviate (needs OPENAI_API_KEY in .
 
 run: ## Interactive CLI
 	$(PY) -m healthcare_rag
+
+dev: ## Start the local LangGraph Agent Server
+	.venv/bin/langgraph dev
 
 test: ## Offline tests (evaluator calibration, deterministic subset)
 	$(PY) -m pytest -q
