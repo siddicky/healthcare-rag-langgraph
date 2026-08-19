@@ -1,0 +1,1 @@
+{"title": "correctness_grade", "type": "object", "properties": {"ls_correctness": {"type": "number", "description": "0.0–1.0 correctness vs reference"}, "comment": {"type": "string"}}, "required": ["ls_correctness", "comment"]}

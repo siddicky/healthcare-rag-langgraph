@@ -1,0 +1,7 @@
+{
+  "question": "inputs.question",
+  "answer": "outputs.answer",
+  "contexts": "outputs.contexts",
+  "reference": "reference.reference_answer",
+  "expected_behavior": "reference.expected_behavior"
+}
