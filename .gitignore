@@ -18,3 +18,7 @@ openwiki/.last-update.json
 # planning/evidence state (never fake working-tree dirtiness)
 .omo/
 .claude/
+# agent/tool runtime state (never fake working-tree dirtiness)
+.agents/
+.codex/
+.playwright-mcp/
