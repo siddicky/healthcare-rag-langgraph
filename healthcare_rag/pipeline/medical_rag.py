@@ -7,6 +7,8 @@ from weaviate.client import WeaviateAsyncClient
 
 from ..models.misc import ConversationEntry
 from ..services.llm import LLMParserService
+from ..services.tracing import wrap_openai_client
+from ..services.models import default_llm_model, default_validator_model
 from ..processors import (
     PromptManager,
     QueryPreprocessor,
@@ -35,10 +37,12 @@ class MedicalRAG:
         self,
         weaviate_client: WeaviateAsyncClient,
         collection_names: List[str],
-        llm_model: str = "gpt-4o-mini",
+        llm_model: Optional[str] = None,
+        validator_model: Optional[str] = None,
         parser_service: Optional[LLMParserService] = None,
         conversation_history_dir: str = "data/conversations",
         prompts_dir: str = "prompts",
+        openai_client: Optional[openai.AsyncOpenAI] = None,
     ):
         """
         Initialize the Medical RAG system with a simplified configuration.
@@ -46,13 +50,23 @@ class MedicalRAG:
         Args:
             weaviate_client: The Weaviate async client
             collection_names: Names of collections in Weaviate to query
-            llm_model: Single model name used for all LLM components
+            llm_model: Model used for all LLM components except validation
+                (default: HC_RAG_LLM_MODEL env or services.models.DEFAULT_LLM_MODEL)
+            validator_model: Model used for answer structuring/validation
+                (default: HC_RAG_VALIDATOR_MODEL env or services.models.DEFAULT_VALIDATOR_MODEL)
             parser_service: Service for making parsed LLM calls
             conversation_history_dir: Directory to store conversation histories
             prompts_dir: Directory containing Jinja templates for prompts
+            openai_client: Optional pre-built AsyncOpenAI client (e.g. for tests/evals).
+                When LANGSMITH_TRACING=true the client is wrapped for tracing.
         """
+        llm_model = llm_model or default_llm_model()
+        validator_model = validator_model or default_validator_model()
+        self.llm_model = llm_model
+        self.validator_model = validator_model
+
         # Set up shared resources
-        self.async_client = openai.AsyncOpenAI()
+        self.async_client = wrap_openai_client(openai_client or openai.AsyncOpenAI())
         self.prompt_manager = PromptManager(prompts_dir)
         self.parser_service = parser_service or LLMParserService(self.async_client)
 
@@ -77,7 +91,7 @@ class MedicalRAG:
 
         # Create validator args with a different model
         validator_args = common_args.copy()
-        validator_args["llm_model"] = "gpt-4o"  # Using a more capable model for validation
+        validator_args["llm_model"] = validator_model  # More capable model for validation
 
         # Initialize processing components
         self.generator = AnswerGenerator(**common_args)

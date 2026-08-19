@@ -12,10 +12,12 @@ from ..models.retrieval import QueryResultList
 from ..models.answers import CitedAnswerResult, AnswerGenerationResult, RelevantHistoryContext
 from ..models.misc import ConversationEntry, FollowUpQuestions
 from ..pipeline.medical_rag import MedicalRAG
+from ..services.tracing import rag_stage, query_result_list_to_documents
 
 logger = logging.getLogger("MedicalRAG")
 
 # Task wrappers that call through to MedicalRAG components
+@rag_stage("clarify_query")
 async def clarify_query(
     rag: MedicalRAG, query: str, context: str = ""
 ) -> ClarifiedQuery:
@@ -34,6 +36,7 @@ async def clarify_query(
         user_query=query, conversation_context=context
     )
 
+@rag_stage("decompose_query")
 async def decompose_query(rag: MedicalRAG, query: str) -> DecomposedQuery:
     """
     Decompose a complex query into simpler subqueries.
@@ -47,6 +50,7 @@ async def decompose_query(rag: MedicalRAG, query: str) -> DecomposedQuery:
     """
     return await rag.preprocessor.decompose_query_async(query)
 
+@rag_stage("retrieve_documents", run_type="retriever", process_outputs=query_result_list_to_documents)
 async def retrieve_documents(rag: MedicalRAG, query: str) -> QueryResultList:
     """
     Retrieve documents relevant to the query.
@@ -60,6 +64,7 @@ async def retrieve_documents(rag: MedicalRAG, query: str) -> QueryResultList:
     """
     return await rag.router.route_query_async(query)
 
+@rag_stage("evaluate_retrieval", process_outputs=query_result_list_to_documents)
 async def evaluate_retrieval(
     rag: MedicalRAG, query: str, results: QueryResultList
 ) -> QueryResultList:
@@ -81,6 +86,7 @@ async def evaluate_retrieval(
         router=rag.router,
     )
 
+@rag_stage("extract_conversation_context")
 async def extract_conversation_context(
     rag: MedicalRAG, query: str, history: List[ConversationEntry]
 ) -> RelevantHistoryContext:
@@ -99,6 +105,7 @@ async def extract_conversation_context(
         query=query, conversation_history=history
     )
 
+@rag_stage("generate_answer")
 async def generate_answer(
     rag: MedicalRAG, results: QueryResultList, query: str, summary: RelevantHistoryContext
 ) -> AnswerGenerationResult:
@@ -120,6 +127,7 @@ async def generate_answer(
         conversation_context=summary.relevant_snippets or "",
     )
 
+@rag_stage("validate_answer")
 async def validate_answer(
     rag: MedicalRAG, generation_result: AnswerGenerationResult
 ) -> Tuple[Optional[CitedAnswerResult], Optional[str]]:
@@ -140,6 +148,7 @@ async def validate_answer(
         prompt_id_map=generation_result.prompt_id_map,
     )
 
+@rag_stage("generate_follow_ups")
 async def generate_follow_ups(
     rag: MedicalRAG, query: str, answer: str, history: List[ConversationEntry]
 ) -> FollowUpQuestions:
