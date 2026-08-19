@@ -143,7 +143,7 @@ scipy==1.15.2
 semchunk==2.2.2
 sentence-transformers==4.1.0
 sentencepiece==0.2.0
-setuptools==79.0.1
+setuptools==83.0.0
 shapely==2.1.0
 shellingham==1.5.4
 six==1.17.0
