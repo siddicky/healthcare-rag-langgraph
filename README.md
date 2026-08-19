@@ -1,5 +1,5 @@
 # Hybrid RAG Agent with Answer Validation
-[![Python Version](https://img.shields.io/badge/Python-3.9+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/timpowellgit/healthcare-rag)](https://github.com/timpowellgit/healthcare-rag/commits)
+[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/timpowellgit/healthcare-rag)](https://github.com/timpowellgit/healthcare-rag/commits)
 
 This project implements a sophisticated Retrieval-Augmented Generation (RAG) system designed to answer questions grounded in healthcare product monographs (e.g., Lipitor, Metformin). It tackles the challenge of providing accurate, grounded answers quickly, even for complex or ambiguous queries, by employing an **asynchronous orchestration strategy with speculative execution**.
 
@@ -92,7 +92,7 @@ The following diagram illustrates a simplified, *conceptual* linear flow, highli
 
 This project utilizes the following core technologies:
 
-*   [![Python](https://img.shields.io/badge/Python-3.9+-blue?logo=python&logoColor=white)](https://www.python.org/) - Core programming language.
+*   [![Python](https://img.shields.io/badge/Python-3.11+-blue?logo=python&logoColor=white)](https://www.python.org/) - Core programming language.
 *   [![Weaviate](https://img.shields.io/badge/Weaviate-Vector_Database-green?logo=weaviate&logoColor=white)](https://weaviate.io/) - Vector database for hybrid search.
 *   [![OpenAI](https://img.shields.io/badge/OpenAI-LLMs_&_Embeddings-412991?logo=openai&logoColor=white)](https://openai.com/) - Language models for generation, embeddings, and function calling.
 *   [![Docker](https://img.shields.io/badge/Docker-Containerization-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) - Used via Docker Compose for running Weaviate.
@@ -192,59 +192,36 @@ The system utilizes OpenAI's function calling capability to route the query to t
 
 ## Setup & Execution
 
-Follow these steps to set up the environment and run the agent.
+**Requirements:** Python **3.11+** (the code uses `typing.Self`), [uv](https://docs.astral.sh/uv/), Docker (for Weaviate), an OpenAI API key. A LangSmith API key is optional but recommended (tracing + evals).
 
-**1. Requirements:**
-*   Python 3.9+
-*   Docker & Docker Compose (for Weaviate)
-*   **Set up Environment Variables:** Create a file named `.env` in the project root by copying the template file `.env.example`. Edit the `.env` file to add your actual `OPENAI_APIKEY`. The `.env` file is ignored by Git and should contain your secrets.
-    ```bash
-    cp .env.example .env
-    # Now edit .env to add your key
-    ```
-    *(The application will automatically load variables from the `.env` file if it exists. You only need to uncomment and set the `WEAVIATE_...` variables in `.env` if your local Weaviate instance deviates from the standard `127.0.0.1:8080 / 50051` setup).*
-*   Install Python dependencies from the populated `requirements.txt`:
-    ```bash
-    source .venv/bin/activate # Activate your virtual environment first!
-    pip install -r requirements.txt
-    ```
-
-**2. Start Weaviate:**
-Use Docker Compose to start the Weaviate vector database service defined in `docker-compose.yml`. This needs to be running before data ingestion.
 ```bash
-docker compose up -d
+cp .env.example .env            # fill in OPENAI_API_KEY (+ LANGSMITH_API_KEY, LANGSMITH_TRACING=true)
+make venv                       # uv venv (Python 3.12) + editable install of the app, evals and dev deps
+make weaviate                   # docker compose up + wait for /v1/.well-known/ready
+make ingest                     # load data/chunks_*.json into the Lipitor / Metformin collections
+make run                        # interactive CLI  (python -m healthcare_rag)
 ```
 
-**3. Data Preparation:**
+> `requirements.txt` is the original frozen environment and its pins are mutually incompatible
+> (`grpcio` vs `grpcio-tools`); dependencies now live in `pyproject.toml`. Re-chunking the PDFs
+> (`healthcare_rag/processors/pdf_chunker.py`) needs the optional `ingest` extra (docling).
 
-This involves chunking the source PDFs and ingesting the chunks into the running Weaviate instance.
+**Configuration** — see `.env.example`. Model selection is centralised in
+`healthcare_rag/services/models.py` (`HC_RAG_LLM_MODEL`, `HC_RAG_VALIDATOR_MODEL`,
+`HC_RAG_REASONING_EFFORT`; defaults `gpt-5.6-luna` / `gpt-5.6-terra`).
+`HC_RAG_DISABLE_STAGES` short-circuits pipeline stages for ablation experiments.
 
-*   **a) Chunking PDFs:** Process the source PDF documents using `healthcare_rag/processors/pdf_chunker.py`. This script leverages the `docling` library to parse the PDFs, perform hybrid chunking, apply custom post-processing (sentence/table merging), and save the results as JSON files in the `data/` directory (e.g., `data/chunks_lipitor.json`).
-    ```bash
-    # Process Lipitor document
-    python healthcare_rag/processors/pdf_chunker.py --source docs/lipitor.pdf
+**Observability** — set `LANGSMITH_TRACING=true` and every query is traced to LangSmith as a
+tree of named stages (clarify / decompose / retrieve / evaluate / answer / validate / follow-ups)
+with per-call token usage and cost. See `healthcare_rag/services/tracing.py`.
 
-    # Process Metformin document
-    python healthcare_rag/processors/pdf_chunker.py --source docs/metformin.pdf
-    ```
+**Evals** — `make eval PREFIX=<change>` runs the golden question set (`evals/golden_dataset.json`)
+through the real pipeline as a LangSmith experiment and writes `evals/results/<experiment>.md`
+(correctness, groundedness, safety behaviour, retrieval recall, latency p50/p95, cost per stage).
+`make eval-multiturn` does the same for multi-turn conversations. Details in `evals/README.md`.
 
-*   **b) Ingesting into Weaviate:** Load the generated JSON chunks into Weaviate using `healthcare_rag/storage/vector_store.py`. This script connects to Weaviate (which must be running from Step 2), creates the `Lipitor` and `Metformin` collections with the required schema (including OpenAI vectorizer), and imports the chunk data in batches.
-    ```bash
-    # Ensure Weaviate is running (Step 2)
-    # Ensure OPENAI_APIKEY is set in your .env file
-
-    # To ingest both documents into their respective collections:
-    python healthcare_rag/storage/vector_store.py --collection Lipitor data/chunks_lipitor.json --collection Metformin data/chunks_metformin.json
-
-    # Optional: Use --delete-all to clear *all* existing Weaviate collections before ingesting
-    # python healthcare_rag/storage/vector_store.py --delete-all --collection Lipitor data/chunks_lipitor.json --collection Metformin data/chunks_metformin.json
-    ```
-
-**4. Run Agent (Interactive CLI):**
-Execute the main application package to start the interactive command-line interface.
-```bash
-python -m healthcare_rag
-```
+**Docs for humans and agents** — `AGENTS.md` (conventions), `openwiki/` (generated repo wiki,
+`make wiki-update` to refresh).
 
 ---
 

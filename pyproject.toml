@@ -1,0 +1,48 @@
+[project]
+name = "healthcare-rag"
+version = "0.2.0"
+description = "Hybrid RAG agent with answer validation over healthcare product monographs (Lipitor, Metformin)"
+readme = "README.md"
+requires-python = ">=3.11"          # models/answers.py uses typing.Self
+dependencies = [
+    "openai>=1.76,<2",
+    "weaviate-client>=4.14,<5",
+    "Jinja2>=3.1",
+    "PyYAML>=6",
+    "pydantic>=2.11,<3",
+    "python-dotenv>=1.1",
+    "fuzzywuzzy>=0.18",
+    "python-Levenshtein>=0.25",      # makes fuzzywuzzy fast & silences its warning
+]
+
+[project.optional-dependencies]
+# LangSmith tracing + the evals/ harness
+evals = [
+    "langsmith>=0.4",
+    "tiktoken>=0.9",
+    # multi-turn simulator (evals/multiturn_harness.py). Pulls in langchain-openai,
+    # which must resolve against openai<2 — see evals/README.md "Multi-turn evals".
+    "openevals>=0.2",
+]
+# Only needed to re-chunk the PDFs (data/chunks_*.json are checked in)
+ingest = [
+    "docling>=2.30",
+    "transformers>=4.51",
+]
+dev = [
+    "pytest>=8",
+    "pytest-asyncio>=0.26",
+    "rich>=14",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["healthcare_rag*", "evals*"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths = ["tests"]
+addopts = "-m 'not judge'"   # judge tests are opt-in: pytest -m judge

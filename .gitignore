@@ -10,3 +10,8 @@ scratch/
 *.log
 
 zzscratches/
+# eval run logs and local watch logs
+evals/results/*.log
+evals/results/trace-watch-*.jsonl
+# openwiki scratch
+openwiki/.last-update.json
