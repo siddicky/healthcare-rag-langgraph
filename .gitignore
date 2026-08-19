@@ -15,3 +15,6 @@ evals/results/*.log
 evals/results/trace-watch-*.jsonl
 # openwiki scratch
 openwiki/.last-update.json
+# planning/evidence state (never fake working-tree dirtiness)
+.omo/
+.claude/

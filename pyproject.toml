@@ -13,6 +13,9 @@ dependencies = [
     "python-dotenv>=1.1",
     "fuzzywuzzy>=0.18",
     "python-Levenshtein>=0.25",      # makes fuzzywuzzy fast & silences its warning
+    "langgraph>=1.2,<2",
+    "langchain-core>=1.5,<2",
+    "langchain-openai>=1.1.9,<2",
 ]
 
 [project.optional-dependencies]
@@ -33,6 +36,12 @@ dev = [
     "pytest>=8",
     "pytest-asyncio>=0.26",
     "rich>=14",
+    "langgraph-cli[inmem]>=0.4.31,<0.5",
+    "langgraph-sdk>=0.3,<0.4",
+]
+# SQLite checkpointer for durable per-thread history (`langgraph dev` / engine)
+graph-sqlite = [
+    "langgraph-checkpoint-sqlite>=3,<4",
 ]
 
 [build-system]
