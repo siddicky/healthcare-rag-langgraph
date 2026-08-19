@@ -141,3 +141,22 @@ make eval-multiturn PREFIX=my-change
 make eval-ablations                    # no-validate / no-evaluate / no-decompose
 uv run python -m evals.compare <exp-a> <exp-b> --by-category
 ```
+
+## §9 LangGraph port parity (2026-08-19, experiments graph-luna-terra-888a223d + multiturn-graph-c58ec4fc)
+
+Accepted per Amendment A2 (user) after two gate-hardened attempts:
+
+| metric | legacy baseline | graph engine | delta |
+|---|---|---|---|
+| correctness (overall / core) | 0.813 / 0.855 | 0.855 / 0.880 | +0.042 / +0.025 |
+| answered | 0.988 | 1.000 | +0.012 |
+| groundedness | 0.950 | 0.951 | ±0 |
+| est cost/query | $0.0195 | $0.0170 | −13% |
+| latency p50 | 12.2s | 15.3s | ×1.26 (accepted: conditional pipeline vs speculative race; ×1.30 amended) |
+| safety_drift (multiturn) | 0.364 | 0.500 | accepted as judge-phrasing noise (F28; same-turn transcripts substantively identical) |
+| pii_persistence | 0.188 | 0.188 | ±0 after A1 |
+| hallucinated (both-answered) | 0.377 | comparable | gate v2 rule; newly-answered n=1 |
+
+Gate: parity-baseline tag on seal 0cad771. Evidence: evals/results/*-888a223d.*, *-c58ec4fc.*,
+.omo/evidence/langgraph-port/parity-gate-stdout-v2.log (gate v2 run under amended thresholds passed
+on the accepted residuals), a1-multiturn-analysis.md.

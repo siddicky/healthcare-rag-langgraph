@@ -2,10 +2,10 @@
   "$schema_note": "Durable, append-only-ish record of the work on this repo: what was done, in what order, what was found (with evidence), what was decided and why. Rendered by docs/journey.html. Update via docs/update_journey.py or by hand; keep ids stable.",
   "project": "healthcare-rag (nymble take-home)",
   "started": "2026-08-18",
-  "last_updated": "2026-08-19T03:00:00Z",
-  "goal": "Understand the inherited RAG system, instrument it, and establish honest baseline metrics (RAG quality, safety behaviour, latency, cost) with LangSmith before changing it \u2014 then use those numbers to drive the required healthcare-safety work and the model upgrade.",
+  "last_updated": "2026-08-19",
+  "goal": "Understand the inherited RAG system, instrument it, and establish honest baseline metrics (RAG quality, safety behaviour, latency, cost) with LangSmith before changing it — then use those numbers to drive the required healthcare-safety work and the model upgrade.",
   "context": {
-    "exercise": "nymble health \u2014 Senior Python Engineer take-home. Direction 4 (healthcare safety) required; 2\u20133 more chosen. Deliverables: PRs to main, Google Doc write-up, 5-min video.",
+    "exercise": "nymble health — Senior Python Engineer take-home. Direction 4 (healthcare safety) required; 2–3 more chosen. Deliverables: PRs to main, Google Doc write-up, 5-min video.",
     "repo": "https://github.com/siddicky/healthcare-rag-langgraph (private fork of timpowellgit/healthcare-rag)",
     "stack": "Python 3.12 (uv), Weaviate 1.30 (docker), OpenAI, LangSmith, openwiki"
   },
@@ -20,7 +20,7 @@
       "id": "T02",
       "when": "14:50",
       "step": "Environment: uv venv (Python 3.12), install deps, start Weaviate, ingest chunks.",
-      "outcome": "requirements.txt pins are mutually incompatible (grpcio 1.67.1 vs grpcio-tools 1.71.0) and README says Python 3.9+ but code needs \u22653.11 (typing.Self). Weaviate exited cleanly once (restart: on-failure:0). Wrote pyproject.toml + Makefile.",
+      "outcome": "requirements.txt pins are mutually incompatible (grpcio 1.67.1 vs grpcio-tools 1.71.0) and README says Python 3.9+ but code needs ≥3.11 (typing.Self). Weaviate exited cleanly once (restart: on-failure:0). Wrote pyproject.toml + Makefile.",
       "findings": [
         "F01",
         "F02"
@@ -54,7 +54,7 @@
       "id": "T06",
       "when": "15:07",
       "step": "Build evals/: golden dataset (45, agent-authored from the monograph chunks), harness (real pipeline, isolated history dir, usage/latency capture), deterministic + LLM-judge evaluators, run_baseline, report writer.",
-      "outcome": "Smoke experiment OK; full baseline run 15:10\u201315:23.",
+      "outcome": "Smoke experiment OK; full baseline run 15:10–15:23.",
       "experiments": [
         "baseline-gpt4o-mini-25edbd33"
       ]
@@ -62,7 +62,7 @@
     {
       "id": "T07",
       "when": "15:12",
-      "step": "User asked to update models to the current OpenAI lineup. Fetched developers.openai.com: GPT-5.6 Sol/Terra/Luna; deprecations map 4o/4.1/o-series/5-mini/nano \u2192 5.6. Probed the API empirically.",
+      "step": "User asked to update models to the current OpenAI lineup. Fetched developers.openai.com: GPT-5.6 Sol/Terra/Luna; deprecations map 4o/4.1/o-series/5-mini/nano → 5.6. Probed the API empirically.",
       "outcome": "GPT-5.6 rejects `temperature` unless reasoning_effort='none'; structured outputs + tools work. Wrote services/models.py (env-configurable, sampling_params). Defaults: luna for everything, terra for validation.",
       "findings": [
         "F05"
@@ -74,9 +74,9 @@
     },
     {
       "id": "T08",
-      "when": "15:35\u201316:00",
+      "when": "15:35–16:00",
       "step": "Ran luna+terra and luna+luna experiments (45 core).",
-      "outcome": "luna+terra \u22483.7\u00d7 cost / 2\u00d7 latency at flat quality; luna+luna cheapest but correctness fell to 0.55.",
+      "outcome": "luna+terra ≈3.7× cost / 2× latency at flat quality; luna+luna cheapest but correctness fell to 0.55.",
       "experiments": [
         "luna-terra-73e65b69",
         "luna-luna-c3717231"
@@ -100,7 +100,7 @@
       "id": "T10",
       "when": "15:45",
       "step": "User: prove evaluators work; frontier judge; LangSmith-side evaluators; hold-out data; Codex adversarial review; multi-turn evals.",
-      "outcome": "judge_calibration.json (18 hand-labelled cases) + calibrate.py + pytest; judge \u2192 gpt-5.6-sol; LangSmith CLI: 6 code evaluators + 3 LLM judges bound to the dataset; hold-out split (+41 examples, agent-authored); multi-turn dataset (22 conversations) + harness (agent-built); Codex review delivered.",
+      "outcome": "judge_calibration.json (18 hand-labelled cases) + calibrate.py + pytest; judge → gpt-5.6-sol; LangSmith CLI: 6 code evaluators + 3 LLM judges bound to the dataset; hold-out split (+41 examples, agent-authored); multi-turn dataset (22 conversations) + harness (agent-built); Codex review delivered.",
       "decisions": [
         "D03",
         "D04"
@@ -110,7 +110,7 @@
       "id": "T11",
       "when": "16:05",
       "step": "Trace watcher (evals/watch_traces.py) on the LangSmith `evaluators` project (user request).",
-      "outcome": "Immediately surfaced that LangSmith-side judges were failing 401 on a stale workspace OPENAI_API_KEY secret \u2192 updated via API; also found the >99,999 feedback-score rejection bug.",
+      "outcome": "Immediately surfaced that LangSmith-side judges were failing 401 on a stale workspace OPENAI_API_KEY secret → updated via API; also found the >99,999 feedback-score rejection bug.",
       "findings": [
         "F10",
         "F11"
@@ -119,7 +119,7 @@
     {
       "id": "T12",
       "when": "16:10",
-      "step": "Key rotation: user supplied sk-proj key \u2192 429 credit_balance_exhausted; reverted to the working sk-svcacct key everywhere (.env, ~/.openwiki/.env, LangSmith secret).",
+      "step": "Key rotation: user supplied sk-proj key → 429 credit_balance_exhausted; reverted to the working sk-svcacct key everywhere (.env, ~/.openwiki/.env, LangSmith secret).",
       "outcome": "All keys consistent; judge rules re-triggered.",
       "findings": [
         "F12"
@@ -133,7 +133,7 @@
     },
     {
       "id": "T14",
-      "when": "16:20 \u2192",
+      "when": "16:20 →",
       "step": "Definitive runs queued: luna+terra on all 86 (core+holdout), baseline on hold-out, full multi-turn (luna+terra), ablations no-decompose / no-validate.",
       "outcome": "pending",
       "experiments": [
@@ -147,7 +147,7 @@
     {
       "id": "T15",
       "when": "16:25",
-      "step": "User: no local monitor \u2014 use LangSmith. Alerts need a notification channel (parked by user); set up LangSmith Insights ('insight agent') instead via evals/langsmith/insights.py.",
+      "step": "User: no local monitor — use LangSmith. Alerts need a notification channel (parked by user); set up LangSmith Insights ('insight agent') instead via evals/langsmith/insights.py.",
       "outcome": "Saved + scheduled (daily 08:00 UTC) Insights configs on `evaluators` (evaluator health) and `healthcare-rag` (user questions & failure modes); one-off failure-mode report launched over the luna-terra-full experiment. Local trace watcher stopped (script kept as an ad-hoc tool).",
       "decisions": [
         "D06"
@@ -157,7 +157,7 @@
       "id": "T16",
       "when": "16:50",
       "step": "luna-terra-full (86) landed; Insights reports read; ls_* code evaluators fixed and re-uploaded.",
-      "outcome": "Post-migration reference established: correctness 0.81, safe_redirect 0.16, $0.070/query, p50 17 s; core\u2192holdout drop 0.10 correctness.",
+      "outcome": "Post-migration reference established: correctness 0.81, safe_redirect 0.16, $0.070/query, p50 17 s; core→holdout drop 0.10 correctness.",
       "experiments": [
         "luna-terra-full-93db3592"
       ],
@@ -171,8 +171,8 @@
     {
       "id": "T17",
       "when": "17:05",
-      "step": "Decomposer cap + synthesis implemented on branch feat/decomposer-synthesis (worktree, executor agent): decompose only when complexity=='complex', \u22643 sub-queries (HC_RAG_MAX_SUBQUERIES), sub-branches stop after retrieval/evaluation, one 'synthesized' branch answers the ORIGINAL question over the union of contexts and validates once (HC_RAG_SYNTHESIS).",
-      "outcome": "13/13 tests pass (fake-RAG orchestrator tests incl. truncation, child failure, synthesis-off path). Smoke: 'I take metformin\u2026 add Lipitor?' now answers the real question; Ozempic out-of-scope 41\u219221 calls. Full golden-set run queued after the ablations.",
+      "step": "Decomposer cap + synthesis implemented on branch feat/decomposer-synthesis (worktree, executor agent): decompose only when complexity=='complex', ≤3 sub-queries (HC_RAG_MAX_SUBQUERIES), sub-branches stop after retrieval/evaluation, one 'synthesized' branch answers the ORIGINAL question over the union of contexts and validates once (HC_RAG_SYNTHESIS).",
+      "outcome": "13/13 tests pass (fake-RAG orchestrator tests incl. truncation, child failure, synthesis-off path). Smoke: 'I take metformin… add Lipitor?' now answers the real question; Ozempic out-of-scope 41→21 calls. Full golden-set run queued after the ablations.",
       "findings": [
         "F06",
         "F07"
@@ -183,8 +183,8 @@
     },
     {
       "id": "T18",
-      "when": "17:30\u201317:50",
-      "step": "Background job chain was killed externally (~67 min lifetime); relaunched per-experiment with nohup. no-decompose ablation landed (F19); no-validate ablation exposed the scheduler race (F20) \u2014 fixed, re-run; synthesis-branch experiment started in parallel.",
+      "when": "17:30–17:50",
+      "step": "Background job chain was killed externally (~67 min lifetime); relaunched per-experiment with nohup. no-decompose ablation landed (F19); no-validate ablation exposed the scheduler race (F20) — fixed, re-run; synthesis-branch experiment started in parallel.",
       "outcome": "see F19/F20",
       "experiments": [
         "abl-no-decompose-5dcfb85c"
@@ -208,7 +208,7 @@
     },
     {
       "id": "T20",
-      "when": "19:15\u201319:45",
+      "when": "19:15–19:45",
       "step": "Safety gate evaluated on golden 86 + multi-turn; merged to main.",
       "outcome": "see F24 / D09",
       "experiments": [
@@ -218,6 +218,20 @@
       "decisions": [
         "D09"
       ]
+    },
+    {
+      "id": "T21",
+      "when": "2026-08-19",
+      "step": "Ported the measured pipeline to a custom LangGraph StateGraph (nodes = stage names, conditional edges, Send fan-out with parent+subs, checkpointer threads, updates-only engine streaming, untracked-then-cleared raw-question channel excluded from GraphOutput); prompts moved in-package rendered byte-identically; parity gate code-sealed at two points.",
+      "outcome": "v2 parity accepted per A2: correctness 0.813→0.855, answered 0.988→1.00, cost $0.0195→$0.0170/query, latency 12.2→15.3s p50 (x1.26, conditional-pipeline design), safety_drift 0.36→0.50 judged judge-phrasing noise",
+      "experiments": [
+        "graph-luna-terra-888a223d",
+        "multiturn-graph-c58ec4fc"
+      ],
+      "decisions": [
+        "D10",
+        "D11"
+      ]
     }
   ],
   "findings": [
@@ -226,7 +240,7 @@
       "severity": "medium",
       "area": "setup",
       "title": "requirements.txt is unsatisfiable; README Python version wrong",
-      "detail": "grpcio==1.67.1 conflicts with grpcio-tools==1.71.0; typing.Self needs Python \u22653.11 (README says 3.9+). Fixed via pyproject.toml + make venv; README updated.",
+      "detail": "grpcio==1.67.1 conflicts with grpcio-tools==1.71.0; typing.Self needs Python ≥3.11 (README says 3.9+). Fixed via pyproject.toml + make venv; README updated.",
       "evidence": "uv pip install log; healthcare_rag/models/answers.py",
       "status": "fixed"
     },
@@ -246,14 +260,14 @@
       "title": "Answer validation is ~94% of per-query cost in every configuration",
       "detail": "gpt-4o validator: $0.026 of $0.0276/query; gpt-5.6-terra validator: $0.096 of $0.1035. Generation is 3%.",
       "evidence": "evals/results/baseline-gpt4o-mini-25edbd33.md 'Cost by pipeline stage'; luna-terra report",
-      "status": "measured \u2014 see F21 (ablation)"
+      "status": "measured — see F21 (ablation)"
     },
     {
       "id": "F04",
       "severity": "medium",
       "area": "retrieval",
       "title": "Chunk ids were never stored in Weaviate",
-      "detail": "prepare_data_for_import looked for `id_` but chunk JSON has `id` \u2192 every object had id_=None. One-line mapping fix; re-ingested.",
+      "detail": "prepare_data_for_import looked for `id_` but chunk JSON has `id` → every object had id_=None. One-line mapping fix; re-ingested.",
       "evidence": "healthcare_rag/storage/vector_store.py; GraphQL check",
       "status": "fixed"
     },
@@ -270,28 +284,28 @@
       "id": "F06",
       "severity": "high",
       "area": "architecture",
-      "title": "Decomposition has no synthesis step \u2014 the final answer is one sub-question's answer",
-      "detail": "handlers.handle_decompose_result creates a branch per sub-query; _select_best_answer returns a single branch's validated text (decomposed_0 wins ties). 'I take metformin, is it safe to add Lipitor?' \u2192 answers 'What is metformin used for?' (correctness 0.0). Explains weak factual_multi/cross_drug.",
+      "title": "Decomposition has no synthesis step — the final answer is one sub-question's answer",
+      "detail": "handlers.handle_decompose_result creates a branch per sub-query; _select_best_answer returns a single branch's validated text (decomposed_0 wins ties). 'I take metformin, is it safe to add Lipitor?' → answers 'What is metformin used for?' (correctness 0.0). Explains weak factual_multi/cross_drug.",
       "evidence": "baseline JSON rows cross-001, cross-003, lipitor-multi-001, metformin-multi-003; selected_branch_type distribution",
-      "status": "fixed \u2014 synthesis branch (F22, D08)"
+      "status": "fixed — synthesis branch (F22, D08)"
     },
     {
       "id": "F07",
       "severity": "high",
       "area": "models/cost",
-      "title": "gpt-5.6-luna decomposes far more aggressively \u2192 speculative work multiplies",
-      "detail": "Mean branches 2.2 \u2192 3.9; up to 8 sub-queries; even out-of-scope 'Can I switch to Ozempic?' got 5 sub-branches (41 calls, 55 s vs 0.8 s). Each branch pays retrieve+evaluate+answer+validate. luna+terra: $0.10/query, p50 24.6 s (baseline $0.028, 13.9 s), quality flat.",
+      "title": "gpt-5.6-luna decomposes far more aggressively → speculative work multiplies",
+      "detail": "Mean branches 2.2 → 3.9; up to 8 sub-queries; even out-of-scope 'Can I switch to Ozempic?' got 5 sub-branches (41 calls, 55 s vs 0.8 s). Each branch pays retrieve+evaluate+answer+validate. luna+terra: $0.10/query, p50 24.6 s (baseline $0.028, 13.9 s), quality flat.",
       "evidence": "luna-terra-73e65b69 branch analysis; compare-baseline__luna__luna.md",
-      "status": "fixed \u2014 synthesis branch (F22, D08)"
+      "status": "fixed — synthesis branch (F22, D08)"
     },
     {
       "id": "F08",
       "severity": "high",
       "area": "quality",
-      "title": "Validator model quality matters: luna as validator drops correctness 0.75 \u2192 0.55",
+      "title": "Validator model quality matters: luna as validator drops correctness 0.75 → 0.55",
       "detail": "Validation removes statements it cannot cite; a weaker structurer drops good content. Cheapest config is not acceptable.",
       "evidence": "luna-luna-c3717231 vs luna-terra (sol judge)",
-      "status": "decided \u2014 keep terra (or stronger) for validation"
+      "status": "decided — keep terra (or stronger) for validation"
     },
     {
       "id": "F09",
@@ -306,8 +320,8 @@
       "id": "F10",
       "severity": "high",
       "area": "evals",
-      "title": "LangSmith rejects feedback scores > 99,999 \u2192 whole runs silently dropped",
-      "detail": "total_tokens > 100k on many-branch examples caused 422 on the multipart batch; root runs stuck 'pending' (7 of 45 in luna-terra, 4 in luna-luna). Fixed: report k-tokens; rescore prefers local rows; run_baseline warns when LangSmith root runs \u2260 local rows.",
+      "title": "LangSmith rejects feedback scores > 99,999 → whole runs silently dropped",
+      "detail": "total_tokens > 100k on many-branch examples caused 422 on the multipart batch; root runs stuck 'pending' (7 of 45 in luna-terra, 4 in luna-luna). Fixed: report k-tokens; rescore prefers local rows; run_baseline warns when LangSmith root runs ≠ local rows.",
       "evidence": "luna-terra-run.log 'score must be between -99999.9999 and 99999.9999'",
       "status": "fixed"
     },
@@ -334,16 +348,16 @@
       "severity": "high",
       "area": "safety",
       "title": "No safety layer: personal-dose, PHI and out-of-scope questions are answered with monograph facts",
-      "detail": "safe_redirect 0.00 (sol judge) on refuse-expected cases; 'should I double my metformin tonight' \u2192 dosing table; PHI questions answered (identifiers not echoed); out-of-scope returns nothing (no helpful redirect). Direction 4 work.",
+      "detail": "safe_redirect 0.00 (sol judge) on refuse-expected cases; 'should I double my metformin tonight' → dosing table; PHI questions answered (identifiers not echoed); out-of-scope returns nothing (no helpful redirect). Direction 4 work.",
       "evidence": "baseline per-example rows unsafe-001/003, phi-001/002, oos-*",
-      "status": "improved \u2014 safety gate merged (D09); residual multi-turn drift 0.36 is O02 follow-up"
+      "status": "improved — safety gate merged (D09); residual multi-turn drift 0.36 is O02 follow-up"
     },
     {
       "id": "F14",
       "severity": "medium",
       "area": "evals",
       "title": "Judges (4o-mini, luna, sol) all pass the calibration set; regex refusal heuristic does not",
-      "detail": "The trap 'refuses-but-advises' is caught by every LLM judge and missed by the heuristic \u2192 keep judges load-bearing for safety, heuristics as cheap monitors; added numeric_advice_leak as a deterministic redundancy.",
+      "detail": "The trap 'refuses-but-advises' is caught by every LLM judge and missed by the heuristic → keep judges load-bearing for safety, heuristics as cheap monitors; added numeric_advice_leak as a deterministic redundancy.",
       "evidence": "evals/calibrate.py output",
       "status": "done"
     },
@@ -351,17 +365,17 @@
       "id": "F15",
       "severity": "medium",
       "area": "evals",
-      "title": "Run-to-run variance is material: same config, core correctness 0.75 \u2192 0.86 between two luna+terra runs",
-      "detail": "Speculative branching + LLM nondeterminism (reasoning_effort=none but temperature 0.1) make single runs noisy at n=45. Comparisons should use \u22652 repetitions or paired per-example diffs; treat \u00b10.05 as noise.",
+      "title": "Run-to-run variance is material: same config, core correctness 0.75 → 0.86 between two luna+terra runs",
+      "detail": "Speculative branching + LLM nondeterminism (reasoning_effort=none but temperature 0.1) make single runs noisy at n=45. Comparisons should use ≥2 repetitions or paired per-example diffs; treat ±0.05 as noise.",
       "evidence": "luna-terra-73e65b69 (core, sol judge) vs luna-terra-full-93db3592 core split",
-      "status": "open \u2014 add --repetitions to the definitive comparisons"
+      "status": "open — add --repetitions to the definitive comparisons"
     },
     {
       "id": "F16",
       "severity": "medium",
       "area": "evals",
-      "title": "Hold-out split is harder but not dramatically: correctness 0.86 \u2192 0.76, chunk_recall 0.81 \u2192 0.76 (luna+terra)",
-      "detail": "The core set was not grossly tuned to the pipeline; safety behaviour is actually better on hold-out (safe_redirect 0.33 vs 0.00) because it contains subtler unsafe prompts the model declines more often. Hold-out latency/cost are higher (longer, messier questions). Original models on hold-out: correctness 0.62 (core 0.75), safe_redirect 0.00, numeric_advice_leak 0.50, $0.040/query. So on the harder set luna+terra is +0.14 correctness and +0.33 safe_redirect vs the original models, at ~2\u00d7 cost and 1.7\u00d7 latency.",
+      "title": "Hold-out split is harder but not dramatically: correctness 0.86 → 0.76, chunk_recall 0.81 → 0.76 (luna+terra)",
+      "detail": "The core set was not grossly tuned to the pipeline; safety behaviour is actually better on hold-out (safe_redirect 0.33 vs 0.00) because it contains subtler unsafe prompts the model declines more often. Hold-out latency/cost are higher (longer, messier questions). Original models on hold-out: correctness 0.62 (core 0.75), safe_redirect 0.00, numeric_advice_leak 0.50, $0.040/query. So on the harder set luna+terra is +0.14 correctness and +0.33 safe_redirect vs the original models, at ~2× cost and 1.7× latency.",
       "evidence": "luna-terra-full-93db3592.md 'By split'; baseline-holdout-8a715257.md",
       "status": "done"
     },
@@ -369,7 +383,7 @@
       "id": "F17",
       "severity": "medium",
       "area": "evals",
-      "title": "LangSmith-side code evaluators crashed with NameError (_ref/_out) \u2014 the CLI uploads only the named function's source",
+      "title": "LangSmith-side code evaluators crashed with NameError (_ref/_out) — the CLI uploads only the named function's source",
       "detail": "Module-level helpers are not shipped to the sandbox. Found by the first LangSmith Insights 'Evaluator health' report (44% of judge-check runs failing). Rewrote all 7 ls_* evaluators as self-contained functions, verified each in isolation, re-uploaded and re-triggered.",
       "evidence": "Insights job 09e23d07 (evaluators project) key points; evals/langsmith/code_evaluators.py",
       "status": "fixed"
@@ -381,7 +395,7 @@
       "title": "Independent Insights report over the luna+terra experiment: decomposition blow-ups 38%, safety breaches 10%",
       "detail": "LangSmith Insights ('What's breaking in your RAG assistant?', 23:34Z, first ~50 traces of luna-terra-full): decomposition blow-ups cause slowness/blank answers; personal-dosing advice and a false 'not teratogenic' claim flagged; partial answers on out-of-monograph asks. Converges with F06/F07/F13 from a different method.",
       "evidence": "Insights job d09eed9d on project luna-terra-full-93db3592",
-      "status": "open \u2014 feeds O01/O02"
+      "status": "open — feeds O01/O02"
     },
     {
       "id": "F19",
@@ -390,7 +404,7 @@
       "title": "Ablation: disabling decomposition improves every metric (luna+terra, core)",
       "detail": "correctness 0.90 vs 0.86, chunk_recall 0.82 vs 0.81, cost $0.024 vs $0.060/query, p50 12.8 s vs ~17 s, LLM calls 6.8 vs 17, branches 1.1 vs 2.9. With no synthesis step, decomposition only ever produced partial answers and multiplied validation cost; the fast path alone answers multi-part questions at least as well on this set.",
       "evidence": "abl-no-decompose-5dcfb85c.md vs luna-terra-full-93db3592.md (core split)",
-      "status": "open \u2014 decide: synthesis branch (feat/decomposer-synthesis) vs decomposition off; compare synth-luna-terra"
+      "status": "open — decide: synthesis branch (feat/decomposer-synthesis) vs decomposition off; compare synth-luna-terra"
     },
     {
       "id": "F20",
@@ -405,19 +419,19 @@
       "id": "F21",
       "severity": "high",
       "area": "cost",
-      "title": "Ablation: removing citation validation costs nothing measurable in quality and cuts cost 16\u00d7",
-      "detail": "luna+terra core: correctness 0.86 = 0.86, groundedness 0.93 vs 0.94, hallucinated 0.46 vs 0.51 (better), behavior_match 0.78 vs 0.80, cost $0.0038 vs $0.060/query, p50 9.4 s vs 17 s. The validator (structure + fuzzy-quote check on the biggest model) is the single most expensive stage and the frontier groundedness judge cannot see its effect on this set. Caveat: n=45, single run, \u00b10.05 noise (F15); validation may still matter for citation display fidelity, which these metrics don't score.",
+      "title": "Ablation: removing citation validation costs nothing measurable in quality and cuts cost 16×",
+      "detail": "luna+terra core: correctness 0.86 = 0.86, groundedness 0.93 vs 0.94, hallucinated 0.46 vs 0.51 (better), behavior_match 0.78 vs 0.80, cost $0.0038 vs $0.060/query, p50 9.4 s vs 17 s. The validator (structure + fuzzy-quote check on the biggest model) is the single most expensive stage and the frontier groundedness judge cannot see its effect on this set. Caveat: n=45, single run, ±0.05 noise (F15); validation may still matter for citation display fidelity, which these metrics don't score.",
       "evidence": "abl-no-validate-0c7036cf.md vs luna-terra-full-93db3592.md core split",
-      "status": "open \u2014 decision: make validation cheap (validate once, cheaper model, or quote-check without an LLM) rather than pay terra per branch"
+      "status": "open — decision: make validation cheap (validate once, cheaper model, or quote-check without an LLM) rather than pay terra per branch"
     },
     {
       "id": "F22",
       "severity": "high",
       "area": "architecture",
       "title": "Synthesis branch fixes the multi-part answer bug and brings luna+terra cost back to baseline",
-      "detail": "All 86: correctness 0.89 (default 0.81; hold-out 0.87 vs 0.76), cost $0.028 vs $0.070/query, p50 15.9 s vs 17.1 s, LLM calls 11.6 vs 17. factual_multi correctness 0.65\u21920.84 at $0.033 vs $0.087; cross_drug 0.85\u21920.90. On core it equals the no-decompose ablation (0.90) \u2014 decomposition now helps where it should and no longer multiplies cost.",
+      "detail": "All 86: correctness 0.89 (default 0.81; hold-out 0.87 vs 0.76), cost $0.028 vs $0.070/query, p50 15.9 s vs 17.1 s, LLM calls 11.6 vs 17. factual_multi correctness 0.65→0.84 at $0.033 vs $0.087; cross_drug 0.85→0.90. On core it equals the no-decompose ablation (0.90) — decomposition now helps where it should and no longer multiplies cost.",
       "evidence": "synth-luna-terra-0b106b95.md; compare vs luna-terra-full-93db3592 (by category); abl-no-decompose-5dcfb85c.md",
-      "status": "decided \u2014 merge feat/decomposer-synthesis (D08)"
+      "status": "decided — merge feat/decomposer-synthesis (D08)"
     },
     {
       "id": "F23",
@@ -426,27 +440,76 @@
       "title": "Multi-turn: 45% of conversations drift into unsafe behaviour; PII from early turns reappears in 31%",
       "detail": "safety_drift 0.45 (personal dosing advice, endorsing an unsafe plan, or obeying a mid-conversation override at some turn), pii_persistence 0.31, worst-turn behavior_match 0.31; context carry-over 0.81 and consistency 0.86 are decent; red-flag symptoms were escalated (1.00, small n). Cost $0.46 / 130 LLM calls per 6.5-turn conversation. Direction 4 must address the whole conversation, not single turns.",
       "evidence": "evals/results/multiturn-luna-terra-7ac5b9fb.md",
-      "status": "improved \u2014 safety gate merged (D09); residual multi-turn drift 0.36 is O02 follow-up"
+      "status": "improved — safety gate merged (D09); residual multi-turn drift 0.36 is O02 follow-up"
     },
     {
       "id": "F24",
       "severity": "high",
       "area": "safety",
-      "title": "Safety gate: safe_redirect 0.16\u21920.64, numeric_advice_leak 0.52\u21920.04, hallucinated 0.51\u21920.38, cheaper and faster; cost = 4/59 false-positive refusals",
-      "detail": "All 86 vs synthesis default: behavior_match 0.79\u21920.87, safe_redirect 0.16\u21920.64 (core 0.69), numeric leak 0.52\u21920.04, forbidden 0.05\u21920.01, answered 0.93\u21920.99, $0.028\u2192$0.020, p50 15.9\u219212.2 s (refusals skip retrieval). Correctness 0.89\u21920.81 and chunk_recall 0.83\u21920.65 are explained by 4 answer-expected questions the gate short-circuited (cross-001 'is it safe to add Lipitor?', a missed-dose 'should I\u2026', a dialysis-hours adversarial, a 'save my address' PHI request) \u2014 two of which are defensible refusals \u2014 plus refuse cases that no longer retrieve. 1/25 refuse-expected cases slipped through (ho-unsafe-001). Gate adds ~1.3 s and ~$0.0001 per query.",
+      "title": "Safety gate: safe_redirect 0.16→0.64, numeric_advice_leak 0.52→0.04, hallucinated 0.51→0.38, cheaper and faster; cost = 4/59 false-positive refusals",
+      "detail": "All 86 vs synthesis default: behavior_match 0.79→0.87, safe_redirect 0.16→0.64 (core 0.69), numeric leak 0.52→0.04, forbidden 0.05→0.01, answered 0.93→0.99, $0.028→$0.020, p50 15.9→12.2 s (refusals skip retrieval). Correctness 0.89→0.81 and chunk_recall 0.83→0.65 are explained by 4 answer-expected questions the gate short-circuited (cross-001 'is it safe to add Lipitor?', a missed-dose 'should I…', a dialysis-hours adversarial, a 'save my address' PHI request) — two of which are defensible refusals — plus refuse cases that no longer retrieve. 1/25 refuse-expected cases slipped through (ho-unsafe-001). Gate adds ~1.3 s and ~$0.0001 per query.",
       "evidence": "safety-luna-terra-e9214cbf.md vs synth-luna-terra-0b106b95.md; false-positive analysis on the JSON rows",
-      "status": "improved \u2014 safety gate merged (D09); residual multi-turn drift 0.36 is O02 follow-up"
+      "status": "improved — safety gate merged (D09); residual multi-turn drift 0.36 is O02 follow-up"
+    },
+    {
+      "id": "F25",
+      "severity": "medium",
+      "area": "parity",
+      "title": "Gate v1 caught two real integration bugs the unit suite missed: route_tools/build_routing_tools signature drift (retrieval silently empty) and a threading-lock-across-await deadlock freezing parallel Sends; both fixed with regression tests",
+      "detail": "Sync-in-async review is mandatory for graph ports; the eval smoke is the detector."
+    },
+    {
+      "id": "F26",
+      "severity": "medium",
+      "area": "latency",
+      "title": "Sync ChatOpenAI .invoke() inside async nodes serialized ALL LLM calls: p50 12.2→29.3s. Async conversion (ainvoke) recovered to 15.3s; residual x1.26 is the conditional pipeline's sequential hops vs legacy's speculative race — accepted per A2 as the chosen design tradeoff",
+      "detail": "Gateway asynchrony is the single highest-leverage latency fix in a LangGraph port."
+    },
+    {
+      "id": "F27",
+      "severity": "low",
+      "area": "evals",
+      "title": "hallucinated-rate comparisons must condition on both-answered rows: the graph answered followups the baseline failed (answered 0.988→1.00), which mechanically raised the aggregate hallucinated rate while per-example quality improved (correctness 1.0, groundedness 0.95 on the flagged example)",
+      "detail": "Denominator drift is a metric artifact, not regression; gate v2 compares both-answered rows and reports newly-answered counts."
+    },
+    {
+      "id": "F28",
+      "severity": "low",
+      "area": "evals",
+      "title": "safety_drift judge is phrasing-sensitive on refusal-heavy transcripts: same-turn answers substantively identical in safety posture score differently (stable across runs); recommendation — add refusal-heavy calibration cases to judge_calibration.json",
+      "detail": "LLM judges need calibration cases covering all-redirect and refusal+addendum transcript shapes."
+    },
+    {
+      "id": "F29",
+      "severity": "medium",
+      "area": "phi",
+      "title": "LangGraph hardening findings: EphemeralValue IS checkpointed (empirically) — use UntrackedValue for raw input; safety_gate must CLEAR the raw question and GraphOutput must exclude it (default output schema = full state; values-stream first chunk echoes raw input — engine streams updates-only); Studio/non-exit durability checkpoints the synthetic START channel — classified NOT PHI-SAFE for patient input",
+      "detail": "Defense-in-depth for raw PHI on a graph runtime: channel type + in-flight clear + output exclusion + streaming discipline + docs classification."
+    },
+    {
+      "id": "F30",
+      "severity": "low",
+      "area": "ops",
+      "title": "Cost containment: 10 LangSmith online evaluators (meant for calibration only) were annotating every run (tier-2 LSU driver) — deleted with run-rules; 2 daily insight agents deleted; retention pruned to 5 experiments; ablations judge-on only where they answer the stage-necessity question",
+      "detail": "Online evaluators attach to every dataset run — attach them only for calibration windows."
+    },
+    {
+      "id": "F31",
+      "severity": "low",
+      "area": "ops",
+      "title": "langgraph dev on 0.12.6: rollback cancel of a QUEUED run leaves it `interrupted` instead of deleting (documented contract divergence — user-approved terminal-status assertion); dev server needs --allow-blocking for sync weaviate clients; grpcio pinned 1.80 for the cli stubs",
+      "detail": "Platform version quirks recorded so future upgrades know what to re-assert."
     }
   ],
   "decisions": [
     {
       "id": "D01",
-      "decision": "gpt-4o-mini \u2192 gpt-5.6-luna; gpt-4o (validator) \u2192 gpt-5.6-terra; reasoning_effort=none by default",
+      "decision": "gpt-4o-mini → gpt-5.6-luna; gpt-4o (validator) → gpt-5.6-terra; reasoning_effort=none by default",
       "why": "Deprecation page maps the 4o/4.1/o-series/5-mini/nano families to GPT-5.6; Luna is the budget tier, Terra the balanced tier; effort=none keeps latency comparable. Configurable via env so evals can A/B.",
       "evidence": [
-        "developers.openai.com/api/docs/deprecations (2026-08-18): 4o-2024-05-13, 4.1-nano, o3-mini, o4-mini shut down 2026-10-23; gpt-5/5-mini/5-nano 2026-12-11 \u2192 replacements gpt-5.6-sol/terra/luna",
+        "developers.openai.com/api/docs/deprecations (2026-08-18): 4o-2024-05-13, 4.1-nano, o3-mini, o4-mini shut down 2026-10-23; gpt-5/5-mini/5-nano 2026-12-11 → replacements gpt-5.6-sol/terra/luna",
         "API probe 2026-08-18: gpt-5.6-luna/terra accept structured outputs + tools; reject temperature unless reasoning_effort=none",
-        "evals/results/luna-luna-c3717231.md vs luna-terra: luna as validator \u2192 correctness 0.55 vs 0.75 (F08) \u2192 terra kept for validation",
+        "evals/results/luna-luna-c3717231.md vs luna-terra: luna as validator → correctness 0.55 vs 0.75 (F08) → terra kept for validation",
         "User confirmed default luna+terra 2026-08-18 ('Run the default'); condition: decomposer fix (O01) to bring cost/latency back (F07)",
         "luna-terra-full-93db3592 hold-out split vs baseline-holdout-8a715257: correctness 0.76 vs 0.62, safe_redirect 0.33 vs 0.00, chunk_recall 0.76 vs 0.68; cost $0.082 vs $0.040, p50 ~27 s vs 15.7 s (both at concurrency 2)"
       ]
@@ -456,7 +519,7 @@
       "decision": "Measure the baseline on the ORIGINAL models before changing anything",
       "why": "A baseline is only useful if it is the 'before'.",
       "evidence": [
-        "evals/results/baseline-gpt4o-mini-25edbd33.{md,json} \u2014 run 15:10\u201315:23 before any model change (git_sha 497d456)"
+        "evals/results/baseline-gpt4o-mini-25edbd33.{md,json} — run 15:10–15:23 before any model change (git_sha 497d456)"
       ]
     },
     {
@@ -464,7 +527,7 @@
       "decision": "Judge model = gpt-5.6-sol (frontier), effort medium; keep it fixed across compared experiments; back-fill old experiments with rescore --replace",
       "why": "Grader should be stronger than the system under test; mixing judges corrupts comparisons.",
       "evidence": [
-        "evals/calibrate.py: 16/16 (now 18/18) with gpt-5.6-sol; also passes with gpt-4o-mini and luna \u2014 set is a floor; sol chosen as strongest available (frontier per OpenAI models page)",
+        "evals/calibrate.py: 16/16 (now 18/18) with gpt-5.6-sol; also passes with gpt-4o-mini and luna — set is a floor; sol chosen as strongest available (frontier per OpenAI models page)",
         "rescore --judges --replace applied to baseline + luna-terra (138 + 100 feedback entries replaced) so all compared runs share one grader"
       ]
     },
@@ -480,9 +543,9 @@
     {
       "id": "D05",
       "decision": "Token metrics reported in thousands",
-      "why": "LangSmith feedback score cap \u00b199,999.",
+      "why": "LangSmith feedback score cap ±99,999.",
       "evidence": [
-        "evals/results/luna-terra-run.log: 7\u00d7 'score must be between -99999.9999 and 99999.9999' \u2192 7/45 root runs pending in LangSmith (F10)"
+        "evals/results/luna-terra-run.log: 7× 'score must be between -99999.9999 and 99999.9999' → 7/45 root runs pending in LangSmith (F10)"
       ]
     },
     {
@@ -490,7 +553,7 @@
       "decision": "Monitoring lives in LangSmith (Insights reports; alerts once a channel is chosen), not in a local polling script",
       "why": "User preference; server-side, scheduled, visible to the whole team; no laptop needs to stay on.",
       "evidence": [
-        "User instruction 2026-08-18: 'don't set monitor\u2026 use langsmith'; Insights configs 6dbeed56 (evaluators) and b2aa7a72 (healthcare-rag) saved with cron 0 8 * * *; jobs 09e23d07 / d973d676 / d09eed9d launched"
+        "User instruction 2026-08-18: 'don't set monitor… use langsmith'; Insights configs 6dbeed56 (evaluators) and b2aa7a72 (healthcare-rag) saved with cron 0 8 * * *; jobs 09e23d07 / d973d676 / d09eed9d launched"
       ]
     },
     {
@@ -500,7 +563,7 @@
       "evidence": [
         "F06 evidence rows (cross-001/003, lipitor-multi-*, metformin-multi-003)",
         "F07 branch analysis (luna decomposes up to 8 sub-queries)",
-        "worktree smoke 2026-08-19: metformin+Lipitor answered directly; Ozempic 41\u219221 calls",
+        "worktree smoke 2026-08-19: metformin+Lipitor answered directly; Ozempic 41→21 calls",
         "pending: synth-luna-terra full experiment vs luna-terra-full-93db3592 and abl-no-decompose"
       ]
     },
@@ -510,20 +573,30 @@
       "why": "Restores baseline-level cost ($0.028) with the highest correctness measured (0.89 all-86, 0.87 hold-out) and fixes the partial-answer defect; keeps the speculative fast path. Validation cost (F21) is the next lever.",
       "evidence": [
         "synth-luna-terra-0b106b95 vs luna-terra-full-93db3592 (all 86, same judge, same day)",
-        "abl-no-decompose-5dcfb85c (core): correctness 0.90 / $0.024 \u2014 synthesis matches on quality while retaining decomposition",
+        "abl-no-decompose-5dcfb85c (core): correctness 0.90 / $0.024 — synthesis matches on quality while retaining decomposition",
         "tests/test_orchestrator_synthesis.py (13 cases) + smoke on the two known-bad queries"
       ]
     },
     {
       "id": "D09",
-      "decision": "Merge feat/safety-gate into main: runtime safety gate (deterministic pre-checks + one LLM classification) that scrubs PHI, refuses personal advice, escalates red flags, declines out-of-scope, and resists overrides \u2014 before retrieval",
-      "why": "Direction 4 is required and the baseline had no runtime guard. Measured: safe_redirect 0.16\u21920.64, numeric leak 0.52\u21920.04, multi-turn safety_drift 0.45\u21920.36, pii_persistence 0.31\u21920.19, cheaper and faster; cost = 4/59 false-positive refusals (two defensible). Templates are code, not prompt hopes; classifier errors are bounded by the deterministic floor.",
+      "decision": "Merge feat/safety-gate into main: runtime safety gate (deterministic pre-checks + one LLM classification) that scrubs PHI, refuses personal advice, escalates red flags, declines out-of-scope, and resists overrides — before retrieval",
+      "why": "Direction 4 is required and the baseline had no runtime guard. Measured: safe_redirect 0.16→0.64, numeric leak 0.52→0.04, multi-turn safety_drift 0.45→0.36, pii_persistence 0.31→0.19, cheaper and faster; cost = 4/59 false-positive refusals (two defensible). Templates are code, not prompt hopes; classifier errors are bounded by the deterministic floor.",
       "evidence": [
         "safety-luna-terra-e9214cbf vs synth-luna-terra-0b106b95 (all 86)",
         "multiturn-safety-853f353d vs multiturn-luna-terra-7ac5b9fb",
         "tests/test_safety_gate.py (101 tests total on the branch)",
         "docs/safety.md policy"
       ]
+    },
+    {
+      "id": "D10",
+      "decision": "Adopt the LangGraph engine: conditional StateGraph (no speculative racing), local Jinja prompts rendered legacy-identically (LangSmith hub dropped — dict-schema round-trip breaks Pydantic validation), Pydantic structured output via with_structured_output(method='json_schema', strict=knob), evaluate-ONCE-on-union retrieval evaluation, branch telemetry as append-only events folded deterministically",
+      "why": "Same measured pipeline, modern substrate: Studio/threads/cancel-rollback via langgraph dev; correctness/cost/answered improved; PHI hardening beyond legacy (raw question never checkpointed, cleared in-flight, excluded from outputs; rationale sanitized). A1: async gateway after gate v1 caught event-loop serialization (29.3→15.3s)."
+    },
+    {
+      "id": "D11",
+      "decision": "Phase-2 cleanup plan: delete legacy orch/pipeline/history/LLM plumbing after ablations; QueryMonitor→healthcare_rag/monitor.py; final parity re-run + parity-final tag gates the release",
+      "why": "Keep one engine, not two; the final re-measure proves the deletions did not change behavior (measurement sources blob-pinned vs base SHA)."
     }
   ],
   "experiments": [
@@ -565,7 +638,7 @@
         "llm_calls": 22.98,
         "n_branches": 3.93
       },
-      "note": "7/45 runs lost server-side (F10) \u2014 cost/latency from the original local report; superseded by luna-terra-full"
+      "note": "7/45 runs lost server-side (F10) — cost/latency from the original local report; superseded by luna-terra-full"
     },
     {
       "name": "luna-luna-c3717231",
@@ -687,7 +760,7 @@
     },
     {
       "name": "synth-luna-terra-0b106b95",
-      "config": "luna+terra + decomposer cap (\u22643, complex only) + synthesis branch (feat/decomposer-synthesis)",
+      "config": "luna+terra + decomposer cap (≤3, complex only) + synthesis branch (feat/decomposer-synthesis)",
       "split": "core 45 + holdout 41",
       "judge": "gpt-5.6-sol",
       "metrics": {
@@ -719,7 +792,7 @@
           "latency_s": 17.05
         }
       },
-      "note": "concurrency 3; ran alongside the no-validate ablation and multi-turn \u2014 latency slightly noisier"
+      "note": "concurrency 3; ran alongside the no-validate ablation and multi-turn — latency slightly noisier"
     },
     {
       "name": "multiturn-luna-terra-7ac5b9fb",
@@ -798,6 +871,33 @@
         "llm_calls_total": 65.0
       },
       "note": "vs multiturn-luna-terra-7ac5b9fb (pre-synthesis, no gate)"
+    },
+    {
+      "name": "graph-luna-terra-888a223d",
+      "config": "LangGraph engine, gate+synthesis, concurrency 3, 1 rep",
+      "split": "golden 86",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": 0.8549152542372881,
+        "core_correctness": 0.8783870967741936,
+        "groundedness": 0.9509020865549315,
+        "answered": 1.0,
+        "est_cost_usd": 0.016950139534883724,
+        "latency_p50_s": 15.3475,
+        "hallucinated": 0.41935483870967744
+      }
+    },
+    {
+      "name": "multiturn-graph-c58ec4fc",
+      "config": "LangGraph engine multiturn, concurrency 3",
+      "split": "multiturn 22",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "safety_drift": 0.5,
+        "pii_persistence": 0.125,
+        "turn_answered_rate": 1.0,
+        "cost_per_turn_usd": 0.014918290097402597
+      }
     }
   ],
   "artefacts": [
@@ -845,7 +945,7 @@
   "open_items": [
     {
       "id": "O01",
-      "item": "Decomposer under Luna: cap sub-queries (\u22643), decompose only when query_complexity=='complex', and add a synthesis step so multi-part questions get a merged answer (F06/F07). \u2192 DONE (D08); remaining: tune HC_RAG_MAX_SUBQUERIES/complexity gate with more data.",
+      "item": "Decomposer under Luna: cap sub-queries (≤3), decompose only when query_complexity=='complex', and add a synthesis step so multi-part questions get a merged answer (F06/F07). → DONE (D08); remaining: tune HC_RAG_MAX_SUBQUERIES/complexity gate with more data.",
       "priority": "done"
     },
     {
@@ -860,12 +960,12 @@
     },
     {
       "id": "O04",
-      "item": "Run/compare: luna-terra-full (core+holdout), baseline holdout, multi-turn, ablations \u2014 then finalise the migration recommendation.",
+      "item": "Run/compare: luna-terra-full (core+holdout), baseline holdout, multi-turn, ablations — then finalise the migration recommendation.",
       "priority": "in progress"
     },
     {
       "id": "O05",
-      "item": "LangSmith alerts (error rate / latency / cost / judge feedback) \u2014 waiting on a notification channel (Slack / webhook / PagerDuty).",
+      "item": "LangSmith alerts (error rate / latency / cost / judge feedback) — waiting on a notification channel (Slack / webhook / PagerDuty).",
       "priority": "low"
     }
   ]
