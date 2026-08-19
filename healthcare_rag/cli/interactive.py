@@ -9,6 +9,7 @@ from ..config import setup_medical_rag
 from ..pipeline.medical_rag import MedicalRAG
 from ..orch.orchestrator import RefactoredOrchestrator
 from ..orch.monitor import QueryMonitor
+from ..processors.safety import scrub_phi
 
 # Configure logging
 logging.basicConfig(
@@ -105,10 +106,12 @@ async def interactive_main():
                 )
                 
                 if raw_answer_received and monitor.raw_answer:
-                    # Display preliminary answer
+                    # Display preliminary answer. Scrubbed on the way out as a last line of
+                    # defence: the gate already removed identifiers from the query, so an
+                    # echo here would mean something upstream reintroduced them.
                     print("\r\033[K", end="")  # Clear the status line
                     print("\n┌─ PRELIMINARY ANSWER (not verified) ─────────────┐")
-                    print(monitor.raw_answer)
+                    print(scrub_phi(monitor.raw_answer)[0])
                     print("└─────────────────────────────────────────────────┘")
                     print("🔄 Validating and refining answer...")
                     
@@ -132,7 +135,7 @@ async def interactive_main():
                 if monitor.final_answer:
                     print("│ VERIFIED ANSWER:                                     │")
                     print("└─" + "─" * 58 + "┘")
-                    print(monitor.final_answer)
+                    print(scrub_phi(monitor.final_answer)[0])
                 else:
                     print("│ ⚠️  Unable to find a reliable answer to your question. │")
                     print("└─" + "─" * 58 + "┘")
@@ -141,7 +144,7 @@ async def interactive_main():
                 if monitor.follow_up_questions and len(monitor.follow_up_questions) > 0:
                     print("\n📋 Related questions you might want to ask:")
                     for i, q in enumerate(monitor.follow_up_questions, 1):
-                        print(f"   {i}. {q}")
+                        print(f"   {i}. {scrub_phi(q)[0]}")
                 
                 print("─" * 60)
                 

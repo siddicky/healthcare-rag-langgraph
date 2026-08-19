@@ -235,6 +235,9 @@ async def run_one(rag: MedicalRAG, question: str, history: Optional[list[dict]] 
 
     contexts, raw_answer, branch_info = _extract_contexts(orch)
     usage = summarize_usage(sink)
+    # What the runtime safety gate decided about this query (category, contains_phi,
+    # short_circuited, ...). None when the gate is disabled (HC_RAG_SAFETY_GATE=false).
+    safety = getattr(orch, "safety_outcome", None)
 
     return {
         "answer": answer,
@@ -251,6 +254,7 @@ async def run_one(rag: MedicalRAG, question: str, history: Optional[list[dict]] 
         ),
         "usage": usage,
         "per_call_usage": [dataclasses.asdict(c) | {"cost_usd": c.cost_usd} for c in sink],
+        "safety_outcome": safety.model_dump() if safety is not None else None,
         "error": error,
         **branch_info,
     }

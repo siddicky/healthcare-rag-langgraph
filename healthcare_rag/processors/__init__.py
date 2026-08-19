@@ -8,6 +8,7 @@ Each module in this package contains processors responsible for a specific part 
 - generation: Answer generation
 - validation: Citation validation
 - followups: Follow-up question generation
+- safety: Runtime safety gate (PHI scrubbing + policy routing)
 """
 
 from .base import BaseProcessor, PromptManager, log_timing
@@ -16,6 +17,7 @@ from .retrieval import QueryRouter, RetrievalEvaluator
 from .generation import AnswerGenerator
 from .validation import AnswerValidator
 from .followups import FollowUpQuestionsGenerator
+from .safety import SafetyGate, SafetyDecision, scrub_phi
 
 __all__ = [
     # Base classes
@@ -37,4 +39,9 @@ __all__ = [
     
     # Followups
     "FollowUpQuestionsGenerator",
+
+    # Safety
+    "SafetyGate",
+    "SafetyDecision",
+    "scrub_phi",
 ]

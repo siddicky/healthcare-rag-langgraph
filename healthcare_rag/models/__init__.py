@@ -6,6 +6,7 @@ Each module in this package contains Pydantic models related to a specific domai
 - answers: Models for structuring and validating answers
 - retrieval: Models for document retrieval and storage
 - misc: Miscellaneous models used across the system
+- safety: Models for the runtime safety gate
 """
 
 # Import commonly used models for convenience
@@ -19,6 +20,7 @@ from .answers import (
     RelevantHistoryContext
 )
 from .misc import ConversationEntry, FollowUpQuestions
+from .safety import SafetyAssessment, SafetyCategory, SafetyOutcome
 
 __all__ = [
     # Query models
@@ -41,4 +43,9 @@ __all__ = [
     # Misc models
     "ConversationEntry",
     "FollowUpQuestions",
+
+    # Safety models
+    "SafetyAssessment",
+    "SafetyCategory",
+    "SafetyOutcome",
 ]

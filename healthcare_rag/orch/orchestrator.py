@@ -7,6 +7,7 @@ retrieval, generation, validation) using branches and asynchronous tasks.
 
 import asyncio
 import logging
+import time
 from typing import Dict, List, Optional, Tuple, Any, Callable, Coroutine
 from dataclasses import dataclass
 
@@ -15,10 +16,11 @@ from ..models.answers import AnswerGenerationResult, CitedAnswerResult, Relevant
 from ..models.queries import ClarifiedQuery, DecomposedQuery
 from ..models.retrieval import QueryResult, QueryResultList
 from ..models.misc import ConversationEntry, FollowUpQuestions
+from ..models.safety import SafetyOutcome
 
 from .branch import ProcessingBranch, BranchStatus
 from .tasks import (
-    clarify_query, decompose_query, retrieve_documents, evaluate_retrieval,
+    assess_safety, clarify_query, decompose_query, retrieve_documents, evaluate_retrieval,
     extract_conversation_context, generate_answer, validate_answer, generate_follow_ups
 )
 from .scheduler import (
@@ -27,10 +29,23 @@ from .scheduler import (
 )
 from .monitor import QueryMonitor # Optional: For progress reporting
 from .handlers import TaskHandler # Import the new handler class
+from ..processors.safety import SafetyDecision, addendum_is_safe, scrub_phi
 from ..services.tracing import rag_stage
-from ..services.models import synthesis_enabled
+from ..services.models import safety_gate_enabled, synthesis_enabled
 
 logger = logging.getLogger("MedicalRAG")
+
+
+def _redact_query(inputs: Dict[str, Any]) -> Dict[str, Any]:
+    """Trace the scrubbed query, never the raw one — a trace is a copy of the message."""
+    try:
+        return {
+            "user_query": scrub_phi(inputs.get("user_query") or "")[0],
+            "user_id": inputs.get("user_id"),
+        }
+    except Exception:  # tracing must never break the pipeline
+        return {}
+
 
 class RefactoredOrchestrator:
     """
@@ -57,6 +72,12 @@ class RefactoredOrchestrator:
         # Decomposition bookkeeping: parent_branch_id -> {"original_query", "children", "synthesized"}
         self.decomposition_groups: Dict[str, Dict[str, Any]] = {}
         self.synthesis_branch_ids: set[str] = set()
+        # Safety gate (journey F13/F18): what the gate decided about the current query,
+        # exposed for the CLI, the eval harness and LangSmith.
+        self.safety_outcome: Optional[SafetyOutcome] = None
+        # Set on the throw-away orchestrator that answers a de-personalised reformulation:
+        # that text has already been through the gate and must not pay for it twice.
+        self.skip_safety_gate: bool = False
         
         # Instantiate the TaskHandler
         self.task_handler_instance = TaskHandler(self)
@@ -73,7 +94,7 @@ class RefactoredOrchestrator:
 
     # --- Core Orchestration Methods ---
 
-    @rag_stage("healthcare_rag.process_query")
+    @rag_stage("healthcare_rag.process_query", process_inputs=_redact_query)
     async def process_query(
         self, user_query: str, user_id: str, monitor: Optional[QueryMonitor] = None
     ) -> Tuple[Optional[str], Optional[List[str]]]:
@@ -87,6 +108,7 @@ class RefactoredOrchestrator:
         self.final_answer_source_branch_id = None
         self.decomposition_groups = {}
         self.synthesis_branch_ids = set()
+        self.safety_outcome = None
 
         processed_history = self.medical_rag.conversation_history.get_history(user_id)
         logger.info(
@@ -101,14 +123,59 @@ class RefactoredOrchestrator:
         else:
             logger.info("Orchestrator: No history context string for clarification.")
 
+        gate_on = safety_gate_enabled() and not self.skip_safety_gate
+        if gate_on:
+            # History written since the gate shipped is already scrubbed; anything older
+            # (or written by another client) is scrubbed here before it reaches a prompt.
+            history_context_str = scrub_phi(history_context_str)[0]
+            processed_history = [
+                ConversationEntry(
+                    timestamp=e.timestamp,
+                    user_query=scrub_phi(e.user_query)[0],
+                    answer=scrub_phi(e.answer)[0],
+                )
+                for e in processed_history
+            ]
+
+        # --- Safety gate ------------------------------------------------------ #
+        # One classification call before any retrieval or generation: it scrubs personal
+        # identifiers out of the query and, for personal-advice / emergency / out-of-scope
+        # / prompt-injection messages, short-circuits with a templated response instead of
+        # a monograph answer (journey findings F13, F18).
+        query = user_query
+        decision: Optional[SafetyDecision] = None
+        if gate_on:
+            t_gate = time.perf_counter()
+            decision = await assess_safety(self.medical_rag, user_query, history_context_str)
+            gate_latency = time.perf_counter() - t_gate
+            logger.info(
+                f"SAFETY GATE: category={decision.assessment.category} kind={decision.kind} "
+                f"phi={decision.contains_phi} short_circuit={decision.short_circuit} "
+                f"flags={decision.flags} in {gate_latency:.2f}s"
+            )
+            query = decision.scrubbed_query
+            self.safety_outcome = SafetyOutcome(
+                category=decision.assessment.category,
+                contains_phi=decision.contains_phi,
+                short_circuited=decision.short_circuit,
+                response_kind=decision.kind,
+                deterministic_flags=decision.flags,
+                phi_kinds=decision.phi_kinds,
+                llm_calls=decision.llm_calls,
+                gate_latency_s=round(gate_latency, 3),
+                rationale=decision.assessment.rationale,
+            )
+            if decision.short_circuit:
+                return await self._respond_from_policy(decision, monitor)
+
         # Launch summary task (runs in parallel)
         self.summary_task = asyncio.create_task(
-             extract_conversation_context(self.medical_rag, user_query, processed_history)
+             extract_conversation_context(self.medical_rag, query, processed_history)
         )
 
         # Create initial branch and launch starting tasks
-        initial_branch = self._create_branch(user_query, "initial")
-        self._launch_initial_tasks(initial_branch, user_query, history_context_str)
+        initial_branch = self._create_branch(query, "initial")
+        self._launch_initial_tasks(initial_branch, query, history_context_str)
 
         # Run the main processing loop
         await self._process_tasks_until_completion()
@@ -117,17 +184,21 @@ class RefactoredOrchestrator:
         best_answer_str = self._select_best_answer()
         follow_up_questions = None
 
+        if best_answer_str and decision is not None:
+            # One-line notices ("identifiers removed", "instructions unchanged").
+            best_answer_str = decision.prefix_notices(best_answer_str)
+
         if best_answer_str and self.user_id:
             logger.info(f"Orchestrator: Adding result to history for user '{self.user_id}'")
             self.medical_rag.conversation_history.add_entry(
-                self.user_id, user_query, best_answer_str
+                self.user_id, query, best_answer_str
             )
 
             logger.info(f"Orchestrator: Generating follow-up questions for user '{self.user_id}'")
             try:
                 # Use the generate_follow_ups task directly here
                 follow_up_result = await generate_follow_ups(
-                    self.medical_rag, user_query, best_answer_str, processed_history
+                    self.medical_rag, query, best_answer_str, processed_history
                 )
                 follow_up_questions = follow_up_result.questions
             except Exception as e:
@@ -140,6 +211,64 @@ class RefactoredOrchestrator:
             )
 
         return best_answer_str, follow_up_questions
+
+    # --- Safety gate short-circuit ---------------------------------------- #
+
+    async def _respond_from_policy(
+        self, decision: SafetyDecision, monitor: Optional[QueryMonitor]
+    ) -> Tuple[Optional[str], Optional[List[str]]]:
+        """Answer from a safety template instead of the pipeline.
+
+        Follow-up questions are deliberately empty: suggesting "what else would you like
+        to know about your dose?" underneath a refusal undoes the refusal.
+        """
+        addendum: Optional[str] = None
+        if decision.addendum_query:
+            addendum = await self._answer_reformulation(decision.addendum_query)
+            if addendum is not None and not addendum_is_safe(addendum):
+                logger.info(
+                    "SAFETY GATE: dropping the informational addendum — it contains a "
+                    "specific dose/threshold, which must not follow a refusal."
+                )
+                addendum = None
+
+        answer = decision.render(addendum)
+        if self.safety_outcome is not None:
+            self.safety_outcome.addendum_appended = bool(addendum)
+
+        if self.user_id:
+            # The SCRUBBED query is what gets persisted — identifiers never reach disk.
+            self.medical_rag.conversation_history.add_entry(
+                self.user_id, decision.scrubbed_query, answer
+            )
+
+        if monitor is not None:
+            # There is no draft answer to show, but a UI waiting on this event must not
+            # stall until its timeout (the CLI waits up to 30 s for a preliminary answer).
+            monitor.raw_answer_event.set()
+
+        return answer, []
+
+    async def _answer_reformulation(self, reformulation: str) -> Optional[str]:
+        """Run a de-personalised version of a refused question through the normal pipeline.
+
+        Uses a throw-away orchestrator with an empty user id so the reformulation is never
+        written to the user's history and no follow-up questions are generated for it. Its
+        branches are copied back so tracing and the eval harness still see the retrieval.
+        """
+        sub = RefactoredOrchestrator(self.medical_rag)
+        sub.skip_safety_gate = True
+        try:
+            answer, _ = await sub.process_query(reformulation, "", None)
+        except Exception as exc:
+            logger.error(f"Safety addendum pipeline failed: {exc}", exc_info=True)
+            return None
+        finally:
+            self.branches.update(sub.branches)
+            self.synthesis_branch_ids |= sub.synthesis_branch_ids
+            if sub.final_answer_source_branch_id:
+                self.final_answer_source_branch_id = sub.final_answer_source_branch_id
+        return answer
 
     async def _process_tasks_until_completion(self):
         """Main loop to wait for and process tasks."""

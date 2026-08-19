@@ -11,6 +11,8 @@ from ..models.queries import ClarifiedQuery, DecomposedQuery, RetrievalEvaluatio
 from ..models.retrieval import QueryResultList
 from ..models.answers import CitedAnswerResult, AnswerGenerationResult, RelevantHistoryContext
 from ..models.misc import ConversationEntry, FollowUpQuestions
+from ..models.safety import SafetyAssessment
+from ..processors.safety import SafetyDecision, scrub_phi
 from ..pipeline.medical_rag import MedicalRAG
 from ..services.tracing import rag_stage, query_result_list_to_documents
 from ..services.models import stage_enabled
@@ -181,3 +183,64 @@ async def generate_follow_ups(
         answer=answer,
         conversation_history=history,
     ) 
+
+
+# --------------------------------------------------------------------------- #
+# Safety gate (runs before everything else)                                    #
+# --------------------------------------------------------------------------- #
+
+def _safety_inputs(inputs: dict) -> dict:
+    """Trace the *scrubbed* query only — a trace is a copy of the message (journey F13)."""
+    try:
+        return {
+            "query": scrub_phi(inputs.get("query") or "")[0],
+            "has_history_context": bool(inputs.get("history_context")),
+        }
+    except Exception:  # tracing must never break the pipeline
+        return {}
+
+
+def _safety_outputs(decision: SafetyDecision) -> dict:
+    """Trace the decision, not the message."""
+    try:
+        return {
+            "category": decision.assessment.category,
+            "short_circuit": decision.short_circuit,
+            "response_kind": decision.kind,
+            "contains_phi": decision.contains_phi,
+            "phi_kinds": decision.phi_kinds,
+            "deterministic_flags": decision.flags,
+            "has_addendum_query": bool(decision.addendum_query),
+            "llm_calls": decision.llm_calls,
+        }
+    except Exception:
+        return {}
+
+
+@rag_stage("safety_gate", process_inputs=_safety_inputs, process_outputs=_safety_outputs)
+async def assess_safety(
+    rag: MedicalRAG, query: str, history_context: str = ""
+) -> SafetyDecision:
+    """Classify one user message and decide how the application must respond.
+
+    Args:
+        rag: The MedicalRAG instance (uses ``rag.safety_gate``)
+        query: The raw user query, before anything else touches it
+        history_context: Formatted previous-turns context (already scrubbed on write)
+
+    Returns:
+        A SafetyDecision. When ``short_circuit`` is False the caller proceeds with
+        ``decision.scrubbed_query``.
+    """
+    gate = getattr(rag, "safety_gate", None)
+    if gate is None:  # defensive: a RAG built without a gate must not crash the query
+        logger.error("Safety gate unavailable on the RAG instance; passing the query through.")
+        return SafetyDecision(
+            assessment=SafetyAssessment(
+                category="in_scope_informational",
+                rationale="safety gate not configured",
+            ),
+            scrubbed_query=query,
+            llm_calls=0,
+        )
+    return await gate.evaluate(query, history_context)

@@ -8,7 +8,7 @@ from weaviate.client import WeaviateAsyncClient
 from ..models.misc import ConversationEntry
 from ..services.llm import LLMParserService
 from ..services.tracing import wrap_openai_client
-from ..services.models import default_llm_model, default_validator_model
+from ..services.models import default_llm_model, default_validator_model, safety_gate_enabled
 from ..processors import (
     PromptManager,
     QueryPreprocessor,
@@ -18,6 +18,7 @@ from ..processors import (
     AnswerGenerator,
     AnswerValidator,
     FollowUpQuestionsGenerator,
+    SafetyGate,
 )
 from ..processors.preprocessing import QueryPreprocessor as NewQueryPreprocessor
 
@@ -100,6 +101,8 @@ class MedicalRAG:
         self.context_processor = ConversationContextProcessor(**common_args)
         self.follow_up_generator = FollowUpQuestionsGenerator(**common_args)
         self.validator = AnswerValidator(**validator_args)
+        # Runtime safety gate — the first thing to see a user message (journey F13/F18).
+        self.safety_gate = SafetyGate(**common_args)
 
         # Initialize conversation history
         self.conversation_history = ConversationHistory(conversation_history_dir)
@@ -133,6 +136,25 @@ class MedicalRAG:
         Returns:
             A tuple containing the answer string and a list of follow-up questions
         """
+        # --- Safety gate ---------------------------------------------------- #
+        # The linear API gets the same gate as the orchestrator: same categories, same
+        # templates, same PHI scrubbing. The one deliberate difference is that a refusal
+        # here never carries the "general information from the monograph" addendum — that
+        # needs a second pipeline run, which this deliberately-simple path does not do.
+        # See docs/safety.md.
+        decision = None
+        if safety_gate_enabled():
+            decision = await self.safety_gate.evaluate(user_query)
+            logger.info(
+                f"Safety gate: category={decision.assessment.category} "
+                f"phi={decision.contains_phi} short_circuit={decision.short_circuit}"
+            )
+            if decision.short_circuit:
+                answer = decision.render()
+                self.conversation_history.add_entry(user_id, decision.scrubbed_query, answer)
+                return answer, []
+            user_query = decision.scrubbed_query
+
         logger.info(f"Processing query for user '{user_id}': '{user_query}'")
 
         # Get conversation context if needed
@@ -207,7 +229,12 @@ class MedicalRAG:
             conversation_history=history if use_history else None,
         )
 
-        # Save the final (potentially validated) answer to conversation history
+        # Carry the gate's one-line notices (identifiers removed / instructions unchanged).
+        if decision is not None:
+            final_answer = decision.prefix_notices(final_answer)
+
+        # Save the final (potentially validated) answer to conversation history.
+        # user_query is already the scrubbed text when the gate ran.
         self.conversation_history.add_entry(user_id, user_query, final_answer)
 
         return final_answer, follow_ups.questions 
