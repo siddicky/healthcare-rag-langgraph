@@ -10,6 +10,7 @@ from openai.types.chat import ChatCompletionMessageParam
 from pydantic import BaseModel
 
 from ..services.llm import LLMParserService
+from ..services.models import default_llm_model, sampling_params
 
 # Set up logging
 logging.basicConfig(
@@ -78,12 +79,12 @@ class BaseProcessor:
 
     def __init__(
         self,
-        llm_model: str = "gpt-4o-mini",
+        llm_model: Optional[str] = None,
         async_client: Optional[openai.AsyncOpenAI] = None,
         prompt_manager: Optional[PromptManager] = None,
         parser_service: Optional[LLMParserService] = None,
     ):
-        self.llm_model = llm_model
+        self.llm_model = llm_model or default_llm_model()
         self.async_client = async_client
         self.pm = prompt_manager or PromptManager()
         self.parser_service = parser_service
@@ -124,7 +125,7 @@ class BaseProcessor:
         response = await self.async_client.chat.completions.create(
             model=self.llm_model,
             messages=messages,
-            temperature=temperature,
+            **sampling_params(self.llm_model, temperature=temperature),
         )
         if response.choices[0].message.content is None:
             return default_response

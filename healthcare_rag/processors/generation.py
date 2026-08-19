@@ -5,6 +5,7 @@ from uuid import uuid4
 from ..models.retrieval import QueryResultList
 from ..models.answers import AnswerGenerationResult
 from .base import BaseProcessor, log_timing
+from ..services.models import sampling_params
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -182,8 +183,8 @@ class AnswerGenerator(BaseProcessor):
             stream = await self.async_client.chat.completions.create(
                 model=self.llm_model,
                 messages=messages,
-                temperature=0.1,
                 stream=True,
+                **sampling_params(self.llm_model, temperature=0.1),
             )
             
             async for chunk in stream:

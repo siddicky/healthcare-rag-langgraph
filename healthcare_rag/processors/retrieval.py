@@ -7,6 +7,7 @@ from typing import Dict, List, Optional, Union
 from ..models.retrieval import QueryDocument, QueryResult, QueryResultList
 from ..models.queries import RetrievalEvaluation
 from .base import BaseProcessor, log_timing
+from ..services.models import default_llm_model, sampling_params
 from openai.types.chat import ChatCompletionMessageParam, ChatCompletionUserMessageParam
 
 # For type hints
@@ -22,7 +23,7 @@ class QueryRouter:
         self,
         weaviate_client: WeaviateAsyncClient,
         collection_names: List[str],
-        llm_model: str = "gpt-4o-mini",
+        llm_model: Optional[str] = None,
         async_client: Optional[openai.AsyncOpenAI] = None,
     ):
         """
@@ -36,7 +37,7 @@ class QueryRouter:
         """
         self.weaviate_client = weaviate_client
         self.collection_names = collection_names
-        self.llm_model = llm_model
+        self.llm_model = llm_model or default_llm_model()
         self.async_client = async_client
 
         # Build tools dynamically based on available collections
@@ -119,6 +120,7 @@ class QueryRouter:
             messages=messages,
             tools=self.tools,
             tool_choice="auto",
+            **sampling_params(self.llm_model),
         )
         return response.choices[0].message.tool_calls
 

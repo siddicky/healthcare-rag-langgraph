@@ -4,6 +4,8 @@ from pydantic import BaseModel
 import openai
 from openai.types.chat import ChatCompletionMessageParam
 
+from .models import sampling_params
+
 logger = logging.getLogger("MedicalRAG")
 
 # Type definitions
@@ -47,12 +49,10 @@ class LLMParserService:
             params = {
                 "model": model,
                 "messages": messages,
-                "temperature": temperature,
                 "response_format": response_format,
+                # temperature vs reasoning_effort depends on the model family
+                **sampling_params(model, temperature=temperature),
             }
-            if model == "o3-mini":
-                # remove temperature
-                params.pop("temperature")
 
             # The .parse() method directly returns the parsed Pydantic model or None
             response = await self.async_client.beta.chat.completions.parse(**params)

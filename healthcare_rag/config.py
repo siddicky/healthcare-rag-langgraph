@@ -104,8 +104,8 @@ async def setup_medical_rag(
     cols = collection_names or ["Lipitor", "Metformin"]
 
     # Create and return MedicalRAG instance
+    # Model selection lives in healthcare_rag/services/models.py (env-overridable).
     return MedicalRAG(
         weaviate_client=client,
         collection_names=cols,
-        llm_model="gpt-4o-mini",
     ) 
