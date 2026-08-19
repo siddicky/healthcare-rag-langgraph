@@ -1,0 +1,18 @@
+{
+  "stage": "validate_answer",
+  "case": "formatted_documents",
+  "vars": {
+    "answer": "Lipitor's warning is described here [doc_1].",
+    "retrieval_results": "[doc_1]\n    Source: Lipitor monograph\n    Content: First line of evidence.\n        Indented continuation.\n\n[doc_2]\n    Source: Metformin monograph\n    Content: Second line of evidence."
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an AI assistant that **restructures** text into a list of statements with precise citations.\nYour primary task is to parse the user-provided text based on citation markers and reproduce the text segments **exactly verbatim** within a structured list format.\n\nFor each statement or claim in your answer, you must cite the specific document(s) that support it.\n\nYour response must:\n1. List the answer as a series of statements, each being an **exact copy** of a text segment from the input.\n2. Include citation data (source name, doc id, quote) from the provided documents for each statement based on the markers in the original text.\n3. Offer the exact quote from the document(s) that supports each statement.\nFollow these guidelines:\n- Use the document IDs in the format [ID] to cite sources.\n- **Maintain original text formatting, including line breaks, spacing, and punctuation, without any modification.**\n"
+    },
+    {
+      "role": "user",
+      "content": "Text to structure. Segment this text into statements based *only* on the citation markers `[ID]` present in the text.\nThe text segment *before* the first citation marker `[ID]` forms the first statement.\nEach subsequent statement begins immediately *after* a citation marker `[ID]` and ends just *before* the next `[ID]`, or at the very end of the text.\nPreserve the original text **exactly** as provided below:\n|\nLipitor&#39;s warning is described here [doc_1].\n\nDocuments for citation context:\n|\n[doc_1]\n    Source: Lipitor monograph\n    Content: First line of evidence.\n        Indented continuation.\n\n[doc_2]\n    Source: Metformin monograph\n    Content: Second line of evidence.\n\nStructure the provided text into a list of statement objects.\nFor each statement object:\n1. Populate the `text` field with the **exact, verbatim segment** copied from the original input text above. Maintain **all** original formatting, line breaks, and punctuation. **Do not add, remove, or alter any part of the text segment.**\n2. Populate the `citation` field using the citation marker `[ID]` associated with that text segment. Use the provided Documents data to find the source name, doc ID, and the exact quote supporting the statement.\n3. If a text segment from the original answer does not have an explicit citation marker `[ID]` immediately following it (e.g., the very last segment), the `citation` field for that statement object should be null or empty."
+    }
+  ]
+}

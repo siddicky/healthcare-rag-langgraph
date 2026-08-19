@@ -51,6 +51,9 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 include = ["healthcare_rag*", "evals*"]
 
+[tool.setuptools.package-data]
+healthcare_rag = ["prompts/*.yaml.j2"]
+
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]

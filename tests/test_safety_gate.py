@@ -527,7 +527,7 @@ async def test_llm_failure_still_leaves_the_deterministic_floor():
 
 
 def test_the_safety_prompt_renders_to_a_valid_chat_message_list():
-    messages = PromptManager("prompts").messages(
+    messages = PromptManager().messages(
         "safety_gate", user_query="Should I double my dose?", conversation_context=""
     )
     assert [m["role"] for m in messages] == ["system", "user"]

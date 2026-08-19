@@ -22,6 +22,7 @@ logger = logging.getLogger("MedicalRAG")
 
 # Type definitions
 ResponseModel = TypeVar("ResponseModel", bound="BaseModel")
+_PROMPTS_DIR = Path(__file__).parents[1] / "prompts"
 
 # Custom timing decorator for instrumentation
 def log_timing(func):
@@ -52,7 +53,10 @@ class PromptManager:
     and returns a list of OpenAI chat message dicts.
     """
 
-    def __init__(self, templates_dir: str | Path = "prompts"):
+    def __init__(
+        self,
+        templates_dir: str | Path = _PROMPTS_DIR,
+    ):
         self.env = Environment(
             loader=FileSystemLoader(templates_dir),
             autoescape=select_autoescape(enabled_extensions=("j2",)),
@@ -129,4 +133,4 @@ class BaseProcessor:
         )
         if response.choices[0].message.content is None:
             return default_response
-        return response.choices[0].message.content 
+        return response.choices[0].message.content

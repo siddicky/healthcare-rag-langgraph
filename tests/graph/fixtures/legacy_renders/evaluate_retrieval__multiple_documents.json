@@ -1,0 +1,20 @@
+{
+  "stage": "evaluate_retrieval",
+  "case": "multiple_documents",
+  "vars": {
+    "original_query": "Compare the drugs' warnings.",
+    "clarified_query": "Compare Lipitor's and metformin's warnings.",
+    "retrieved_information": "[doc_1]\n    Source: Lipitor monograph\n    Content: First line of evidence.\n        Indented continuation.\n\n[doc_2]\n    Source: Metformin monograph\n    Content: Second line of evidence.",
+    "sources": "Lipitor monograph; Metformin monograph"
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an AI assistant that evaluates if retrieved medical information is sufficient to answer a user's query.\nAnalyze the retrieved information and the query to determine:\n1. If the information fully addresses the query\n2. If there are information gaps that need to be filled\n3. What additional queries would retrieve the missing information\n\nFor example, if a user asks \"How does Lipitor compare to Crestor for elderly patients?\" and the retrieved information \nonly discusses Lipitor's effects on elderly patients, you should indicate:\n- The information is not sufficient\n- Information about Crestor's effects on elderly patients is missing\n- Suggest an additional query like \"How does Crestor affect elderly patients?\"\n\nBe thorough in your analysis and ensure all aspects of the query can be answered.\n"
+    },
+    {
+      "role": "user",
+      "content": "Original Query: \nCompare the drugs&#39; warnings.\n\nClarified Query: \nCompare Lipitor&#39;s and metformin&#39;s warnings.\n\nRetrieved Information:\n|\n[doc_1]\n    Source: Lipitor monograph\n    Content: First line of evidence.\n        Indented continuation.\n\n[doc_2]\n    Source: Metformin monograph\n    Content: Second line of evidence.\n\nSources: Lipitor monograph; Metformin monograph\n\nEvaluate if this information is sufficient to fully answer the query.\nIf not, specify what information is missing and suggest additional queries to retrieve it. "
+    }
+  ]
+}

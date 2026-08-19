@@ -1,5 +1,6 @@
 import logging
 import asyncio
+from pathlib import Path
 from typing import Dict, List, Optional, Tuple, Any
 
 import openai
@@ -27,6 +28,7 @@ from ..processors.validation import AnswerValidator as NewAnswerValidator
 from ..storage.history import ConversationHistory
 
 logger = logging.getLogger("MedicalRAG")
+_PROMPTS_DIR = Path(__file__).parents[1] / "prompts"
 
 class MedicalRAG:
     """
@@ -42,7 +44,7 @@ class MedicalRAG:
         validator_model: Optional[str] = None,
         parser_service: Optional[LLMParserService] = None,
         conversation_history_dir: str = "data/conversations",
-        prompts_dir: str = "prompts",
+        prompts_dir: str | Path = _PROMPTS_DIR,
         openai_client: Optional[openai.AsyncOpenAI] = None,
     ):
         """
@@ -237,4 +239,4 @@ class MedicalRAG:
         # user_query is already the scrubbed text when the gate ran.
         self.conversation_history.add_entry(user_id, user_query, final_answer)
 
-        return final_answer, follow_ups.questions 
+        return final_answer, follow_ups.questions
