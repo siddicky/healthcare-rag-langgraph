@@ -8,13 +8,109 @@ from ..models.retrieval import QueryDocument, QueryResult, QueryResultList
 from ..models.queries import RetrievalEvaluation
 from .base import BaseProcessor, log_timing
 from ..services.models import default_llm_model, sampling_params
-from openai.types.chat import ChatCompletionMessageParam, ChatCompletionUserMessageParam
+from openai.types.chat import (
+    ChatCompletionMessageParam,
+    ChatCompletionToolParam,
+    ChatCompletionUserMessageParam,
+)
 
 # For type hints
 from weaviate.client import WeaviateAsyncClient
 from weaviate.classes.query import MetadataQuery, HybridFusion
 
 logger = logging.getLogger("MedicalRAG")
+
+
+def build_routing_tools(collection_names: list[str]) -> list[ChatCompletionToolParam]:
+    tools: list[ChatCompletionToolParam] = []
+    for collection_name in collection_names:
+        tools.append(
+            {
+                "type": "function",
+                "function": {
+                    "name": f"query_{collection_name.lower()}",
+                    "description": f"Get information about {collection_name} from the Weaviate database",
+                    "parameters": {
+                        "type": "object",
+                        "properties": {
+                            "query": {
+                                "type": "string",
+                                "description": f"The query from the user (verbatim) that should pertain to {collection_name}",
+                            }
+                        },
+                        "required": ["query"],
+                    },
+                },
+            }
+        )
+    return tools
+
+
+def to_query_documents(search_results, collection_name: str) -> list[QueryDocument]:
+    query_docs = []
+    for obj in search_results:
+        content = obj.properties.get("contextualized", "")
+        score = obj.metadata.score if obj.metadata else 1.0
+        doc_id = str(obj.uuid)
+        page_numbers = obj.properties.get("page_numbers", None)
+        metadata = {
+            k: v for k, v in obj.properties.items() if k != "contextualized"
+        }
+        query_docs.append(
+            QueryDocument(
+                content=content,
+                score=score,
+                doc_id=doc_id,
+                metadata=metadata,
+                source_name=collection_name,
+                page_numbers=page_numbers,
+            )
+        )
+    return query_docs
+
+
+async def hybrid_search(
+    weaviate_client: WeaviateAsyncClient, collection_name: str, query: str
+) -> QueryResultList:
+    collection = weaviate_client.collections.get(collection_name)
+    response = await collection.query.hybrid(
+        query=query,
+        query_properties=["contextualized"],
+        limit=4,
+        alpha=0.65,
+        fusion_type=HybridFusion.RELATIVE_SCORE,
+        return_metadata=MetadataQuery(score=True),
+    )
+    query_docs = to_query_documents(response.objects, collection_name)
+    return QueryResultList(
+        results=[QueryResult(source=collection_name, query=query, docs=query_docs)]
+    )
+
+
+def union_results(
+    lists: list[QueryResultList | None] | None,
+) -> QueryResultList:
+    seen_doc_ids: set[str] = set()
+    by_source: dict[str, QueryResult] = {}
+    source_order: list[str] = []
+
+    for result_list in lists or []:
+        if result_list is None or not result_list.results:
+            continue
+        for result in result_list.results:
+            for doc in result.docs or []:
+                if doc.doc_id in seen_doc_ids:
+                    continue
+                seen_doc_ids.add(doc.doc_id)
+                if result.source not in by_source:
+                    by_source[result.source] = QueryResult(
+                        source=result.source, query=result.query, docs=[]
+                    )
+                    source_order.append(result.source)
+                by_source[result.source].docs.append(doc)
+
+    return QueryResultList(results=[by_source[source] for source in source_order])
+
 
 class QueryRouter:
     """Routes queries to appropriate Weaviate collections based on content."""
@@ -40,28 +136,7 @@ class QueryRouter:
         self.llm_model = llm_model or default_llm_model()
         self.async_client = async_client
 
-        # Build tools dynamically based on available collections
-        self.tools = []
-        for collection_name in collection_names:
-            self.tools.append(
-                {
-                    "type": "function",
-                    "function": {
-                        "name": f"query_{collection_name.lower()}",
-                        "description": f"Get information about {collection_name} from the Weaviate database",
-                        "parameters": {
-                            "type": "object",
-                            "properties": {
-                                "query": {
-                                    "type": "string",
-                                    "description": f"The query from the user (verbatim) that should pertain to {collection_name}",
-                                }
-                            },
-                            "required": ["query"],
-                        },
-                    },
-                }
-            )
+        self.tools = build_routing_tools(collection_names)
 
     @log_timing
     async def route_query_async(self, user_query: str) -> QueryResultList:
@@ -144,23 +219,10 @@ class QueryRouter:
 
             logger.info(f"Routing to {collection_name} collection for query: {query}")
 
-            # Get the Weaviate collection
-            collection = self.weaviate_client.collections.get(collection_name)
-
-            # Perform hybrid search
-            response = await collection.query.hybrid(
-                query=query,
-                query_properties=["contextualized"],
-                limit=4,
-                alpha=0.65,
-                fusion_type=HybridFusion.RELATIVE_SCORE,
-                return_metadata=MetadataQuery(score=True),
+            search_result = await hybrid_search(
+                self.weaviate_client, collection_name, query
             )
-
-            # Generate QueryDocument objects from the results
-            query_docs = self._create_query_documents(response.objects, collection_name)
-
-            return QueryResult(source=collection_name, query=query, docs=query_docs)
+            return search_result.results[0]
 
         except Exception as e:
             logger.error(f"Error processing tool call: {e}")
@@ -170,35 +232,7 @@ class QueryRouter:
         self, search_results, collection_name: str
     ) -> List[QueryDocument]:
         """Create QueryDocument objects from Weaviate search results."""
-        query_docs = []
-
-        for obj in search_results:
-            # Extract the document content
-            content = obj.properties.get("contextualized", "")
-
-            # Extract distance (lower is better)
-            score = obj.metadata.score if obj.metadata else 1.0
-
-            # Use Weaviate UUID as document ID
-            doc_id = str(obj.uuid)
-
-            page_numbers = obj.properties.get("page_numbers", None)
-            # Extract any additional metadata
-            metadata = {
-                k: v for k, v in obj.properties.items() if k != "contextualized"
-            }
-
-            query_docs.append(
-                QueryDocument(
-                    content=content,
-                    score=score,
-                    doc_id=doc_id,
-                    metadata=metadata,
-                    source_name=collection_name,
-                    page_numbers=page_numbers,
-                )
-            )
-        return query_docs
+        return to_query_documents(search_results, collection_name)
 
 
 class RetrievalEvaluator(BaseProcessor):
@@ -310,4 +344,4 @@ class RetrievalEvaluator(BaseProcessor):
         final_doc_count = sum(len(r.docs) for r in enhanced_results.results)
         logger.info(f"Evaluation completed, final document count: {final_doc_count}")
 
-        return enhanced_results 
+        return enhanced_results

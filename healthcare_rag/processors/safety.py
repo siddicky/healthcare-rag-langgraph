@@ -37,11 +37,15 @@ from __future__ import annotations
 import html
 import logging
 import re
+import openai
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import List, Optional, Sequence, Tuple
 
 from ..models.safety import SafetyAssessment
-from .base import BaseProcessor, log_timing
+from ..services.llm import LLMParserService
+from ..services.models import default_llm_model
+from .base import PromptManager, log_timing
 from .safety_responses import (
     ADDENDUM_HEADING,
     INJECTION_NOTICE,
@@ -484,7 +488,7 @@ def addendum_allowed(reformulation: Optional[str]) -> bool:
 
 def addendum_is_safe(answer: Optional[str]) -> bool:
     """True when a generated addendum carries no specific dose/threshold/frequency."""
-    return bool(answer and answer.strip()) and not NUMERIC_DOSE.search(answer)
+    return bool(answer and answer.strip()) and not NUMERIC_DOSE.search(answer or "")
 
 
 # --------------------------------------------------------------------------- #
@@ -530,12 +534,56 @@ class SafetyDecision:
 # 7. The gate                                                                  #
 # --------------------------------------------------------------------------- #
 
-class SafetyGate(BaseProcessor):
+SafetyLLMCall = Callable[..., Awaitable[SafetyAssessment | None]]
+
+
+class SafetyGate:
     """Classify a user message and decide how the application must respond.
 
     One LLM call per query (two only when an instruction-override attempt is unpacked),
     at temperature 0 on the default model — see ``prompts/safety_gate.yaml.j2``.
     """
+
+    def __init__(
+        self,
+        gateway: SafetyLLMCall | None = None,
+        temperature: float = 0.0,
+        llm_call: SafetyLLMCall | None = None,
+        *,
+        llm_model: str | None = None,
+        async_client: openai.AsyncOpenAI | None = None,
+        prompt_manager: PromptManager | None = None,
+        parser_service: LLMParserService | None = None,
+    ) -> None:
+        self.gateway: SafetyLLMCall | None = gateway
+        self.temperature: float = temperature
+        self.llm_model: str = llm_model or default_llm_model()
+        self.async_client: openai.AsyncOpenAI | None = async_client
+        self.pm: PromptManager = prompt_manager or PromptManager()
+        self.parser_service: LLMParserService | None = parser_service
+        self._llm_call: SafetyLLMCall = (
+            llm_call or gateway or self._legacy_llm_call
+        )
+
+    async def _legacy_llm_call(
+        self,
+        prompt_name: str,
+        temperature: float,
+        response_format: type[SafetyAssessment],
+        default_response: SafetyAssessment | None = None,
+        **prompt_args: str,
+    ) -> SafetyAssessment | None:
+        messages = self.pm.messages(prompt_name, **prompt_args)
+        if self.parser_service is None:
+            logger.error("LLM parser service is not initialized")
+            return default_response
+        return await self.parser_service.parse_completion(
+            model=self.llm_model,
+            messages=messages,
+            temperature=temperature,
+            response_format=response_format,
+            default_response=default_response,
+        )
 
     async def _llm_assess(self, query: str, history_context: str = "") -> SafetyAssessment:
         """The single structured-output call. Isolated so tests can stub it."""
@@ -547,7 +595,7 @@ class SafetyGate(BaseProcessor):
             rationale="safety-gate LLM call failed; deterministic checks only",
             safe_reformulation=None,
         )
-        result = await self._call_llm(
+        result = await self._llm_call(
             prompt_name="safety_gate",
             temperature=0.0,
             response_format=SafetyAssessment,
