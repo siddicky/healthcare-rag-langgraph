@@ -152,7 +152,7 @@ Accepted per Amendment A2 (user) after two gate-hardened attempts:
 | answered | 0.988 | 1.000 | +0.012 |
 | groundedness | 0.950 | 0.951 | ±0 |
 | est cost/query | $0.0195 | $0.0170 | −13% |
-| latency p50 | 12.2s | 15.3s | ×1.26 (accepted: conditional pipeline vs speculative race; ×1.30 amended) |
+| latency p50 | 12.2s | 15.3s | ×1.26 (accepted: conditional pipeline vs speculative race; ×1.35 amended, see A5) |
 | safety_drift (multiturn) | 0.364 | 0.500 | accepted as judge-phrasing noise (F28; same-turn transcripts substantively identical) |
 | pii_persistence | 0.188 | 0.188 | ±0 after A1 |
 | hallucinated (both-answered) | 0.377 | comparable | gate v2 rule; newly-answered n=1 |
@@ -172,7 +172,7 @@ LangGraph StateGraph only, legacy engine deleted — reproduces the accepted par
 | answered | 0.988 | 1.000 | |
 | pipeline errors | 0 | 0 | |
 | est cost/query | $0.0195 | $0.019 | −3% |
-| latency p50 | 12.2s | 16.4s | within the ×1.30 amended envelope (×1.35) |
+| latency p50 | 12.2s | 16.4s | ×1.34, within the ×1.35 amended envelope (A2 as corrected by A5) |
 | turn_correctness (multiturn) | 0.781 | 0.807 | best graph run |
 | consistency / self_contradiction | 0.789 / 0.318 | 0.818 / 0.227 | best graph run |
 | forbidden_content | 0.062 | 0.000 | |

@@ -680,8 +680,8 @@
       "id": "D14",
       "when": "2026-08-20",
       "amendment": "A5",
-      "decision": "Latency parity threshold confirmed as x1.35 (both splits); the plan's original x1.30 wording was a transcription error of the user-approved A2 decision.",
-      "why": "F1 audit R1: gate commit 399f2ee implements x1.35, approval record says x1.35, and core was already x1.32 at A2 drafting time - x1.30 would have failed its own gate. User chose option A (confirm x1.35) over re-gating."
+      "decision": "Approved A2 latency threshold confirmed as x1.35 (both splits); the plan's x1.30 line was a transcription error, corrected in place. Gate code was always x1.35 (commit 399f2ee); no re-gate required; both parity seals stand (v2 core x1.320, final x1.343/x1.344).",
+      "why": "F1 audit found the plan/gate mismatch outcome-determinative; evidence (gate commit at A2 time, orchestrator approval record, core already x1.32 at drafting) pointed to transcription error; user confirmed option A."
     }
   ],
   "experiments": [
