@@ -1,0 +1,549 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A visual, evidence-backed story of the healthcare RAG experiments: model migration, synthesis, safety gating, LangGraph orchestration, stage ablations, the sealed parity verification, the privacy-hardened release cut, and the shipped state.">
+  <meta name="theme-color" content="#fbf4e6">
+  <title>Healthcare RAG: From Working Demo to Safety-First Graph</title>
+  <style>
+    :root {
+      --paper: #fbf4e6;
+      --paper-deep: #f2e5cb;
+      --surface: #fffdf8;
+      --ink: #5b1b0c;
+      --ink-muted: #8a4b35;
+      --rule: #e9c9a3;
+      --red: #ef452c;
+      --red-deep: #c8331f;
+      --amber: #f2aa45;
+      --safe: #1f7a5b;
+      --safe-deep: #166047;
+      --safe-pale: #dceee6;
+      --risk: #a82e28;
+      --focus: #2459a8;
+      --s-1: 4px;
+      --s-2: 8px;
+      --s-3: 12px;
+      --s-4: 16px;
+      --s-5: 20px;
+      --s-6: 24px;
+      --s-8: 32px;
+      --s-10: 40px;
+      --s-12: 48px;
+      --s-16: 64px;
+      --s-20: 80px;
+      --s-24: 96px;
+      --content: 1200px;
+      --reading: 760px;
+      font-family: "Avenir Next", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+      color: var(--ink);
+      background: var(--paper);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      min-width: 320px;
+      overflow-x: hidden;
+      background:
+        radial-gradient(circle at 90% 4%, var(--surface) 0, transparent 28rem),
+        radial-gradient(circle at 8% 48%, var(--paper-deep) 0, transparent 32rem),
+        var(--paper);
+    }
+    button, a { font: inherit; }
+    a { color: var(--red-deep); text-underline-offset: .2em; text-decoration-thickness: 1px; }
+    a:hover { color: var(--red); text-decoration-thickness: 2px; }
+    a:focus-visible, button:focus-visible { outline: 3px solid var(--focus); outline-offset: 4px; }
+    .skip-link { position: fixed; z-index: 20; top: var(--s-4); left: var(--s-4); transform: translateY(-180%); padding: var(--s-3) var(--s-4); color: var(--surface); background: var(--ink); }
+    .skip-link:focus { transform: none; }
+
+    .utility {
+      position: fixed;
+      z-index: 10;
+      right: var(--s-5);
+      bottom: var(--s-5);
+      display: flex;
+      gap: var(--s-2);
+      padding: var(--s-2);
+      background: color-mix(in srgb, var(--surface) 92%, transparent);
+      box-shadow: 0 8px 24px rgba(91, 27, 12, .12);
+      backdrop-filter: blur(10px);
+    }
+    .utility a, .utility button { min-height: 44px; border: 0; padding: var(--s-3) var(--s-4); font-weight: 750; text-decoration: none; cursor: pointer; }
+    .utility a { color: var(--ink); background: transparent; }
+    .utility button { color: var(--surface); background: var(--red-deep); }
+    .utility button:hover { background: var(--risk); }
+    .utility button:active { transform: translateY(1px); }
+
+    .wrap { width: min(var(--content), calc(100% - 40px)); margin-inline: auto; }
+    .reading { max-width: var(--reading); }
+    .overline { margin: 0 0 var(--s-4); color: var(--red-deep); font-size: .75rem; font-weight: 780; letter-spacing: .13em; line-height: 1.2; text-transform: uppercase; }
+    .display { margin: 0; max-width: 1050px; font-size: clamp(3.25rem, 8vw, 7.25rem); font-weight: 760; letter-spacing: -.065em; line-height: .92; text-wrap: balance; }
+    h2 { margin: 0; max-width: 980px; font-size: clamp(2.5rem, 5vw, 4.75rem); font-weight: 760; letter-spacing: -.05em; line-height: .98; text-wrap: balance; }
+    h3 { margin: 0; font-size: 1.25rem; line-height: 1.25; }
+    p { margin: 0; }
+    .lead { margin-top: var(--s-6); max-width: 66ch; color: var(--ink-muted); font-size: clamp(1.125rem, 1.6vw, 1.5rem); line-height: 1.55; }
+    .body-copy { max-width: 66ch; color: var(--ink-muted); font-size: 1rem; line-height: 1.65; }
+    .accent { color: var(--red); }
+    .safe-ink { color: var(--safe); }
+
+    .masthead { min-height: 100dvh; display: grid; align-items: center; padding: var(--s-20) 0; border-top: 8px solid var(--red); }
+    .brandline { display: flex; justify-content: space-between; gap: var(--s-4); align-items: baseline; margin-bottom: var(--s-16); padding-bottom: var(--s-4); border-bottom: 1px solid var(--rule); color: var(--red-deep); font-size: .875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .hero-grid { display: grid; grid-template-columns: minmax(0, 8fr) minmax(260px, 4fr); gap: var(--s-16); align-items: end; }
+    .hero-proof { position: relative; min-height: 340px; display: grid; place-items: center; }
+    .hero-proof::before { content: ""; position: absolute; width: min(27vw, 320px); aspect-ratio: 1; border-radius: 50%; background: conic-gradient(var(--safe) 0 68%, var(--paper-deep) 68% 100%); box-shadow: inset 0 0 0 22px var(--paper), 0 24px 54px rgba(91, 27, 12, .12); }
+    .hero-proof::after { content: ""; position: absolute; width: min(19vw, 225px); aspect-ratio: 1; border-radius: 50%; background: var(--surface); }
+    .hero-number { position: relative; z-index: 1; text-align: center; }
+    .hero-number strong { display: block; font-size: clamp(3rem, 7vw, 5.75rem); line-height: .9; }
+    .hero-number span { display: block; margin-top: var(--s-3); color: var(--ink-muted); font-size: .875rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .hero-foot { margin-top: var(--s-20); display: flex; justify-content: space-between; gap: var(--s-5); color: var(--ink-muted); font-size: .875rem; }
+
+    .story { padding: var(--s-24) 0; border-top: 1px solid var(--rule); }
+    .story.deep { background: color-mix(in srgb, var(--paper-deep) 72%, transparent); }
+    .story.red-band { color: var(--surface); background: var(--red-deep); border-color: var(--red-deep); }
+    .story.red-band .overline, .story.red-band .lead, .story.red-band .body-copy { color: var(--surface); }
+    .section-head { display: grid; grid-template-columns: 104px minmax(0, 1fr); gap: var(--s-8); align-items: start; }
+    .chapter { padding-top: var(--s-2); color: var(--red); font-size: clamp(2.25rem, 5vw, 4.75rem); font-weight: 800; line-height: .9; }
+    .red-band .chapter { color: var(--surface); }
+
+    .brief-grid { margin-top: var(--s-16); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-8); }
+    .brief-item { padding-top: var(--s-5); border-top: 3px solid var(--amber); }
+    .brief-item.required { border-color: var(--red); }
+    .brief-item h3 { margin-bottom: var(--s-3); }
+    .brief-item p { color: var(--ink-muted); line-height: 1.6; }
+
+    .baseline-grid { margin-top: var(--s-16); display: grid; grid-template-columns: minmax(0, 7fr) minmax(260px, 5fr); gap: var(--s-12); align-items: start; }
+    .quote { padding: var(--s-8); border-left: 6px solid var(--red); background: var(--surface); }
+    .quote blockquote { margin: 0; font-size: clamp(1.5rem, 3vw, 2.5rem); font-weight: 700; letter-spacing: -.025em; line-height: 1.18; }
+    .quote figcaption { margin-top: var(--s-5); color: var(--ink-muted); line-height: 1.5; }
+    .metric-stack { display: grid; gap: var(--s-5); }
+    .metric-line { display: grid; grid-template-columns: minmax(126px, auto) 1fr auto; gap: var(--s-3); align-items: center; }
+    .metric-line span { color: var(--ink-muted); }
+    .metric-line strong { min-width: 64px; font-size: 1.25rem; text-align: right; }
+    .track { position: relative; height: 12px; overflow: hidden; background: var(--paper-deep); }
+    .fill { width: var(--value); height: 100%; background: var(--red); }
+    .fill.safe { background: var(--safe); }
+    .fill.amber { background: var(--amber); }
+
+    .timeline { position: relative; margin: var(--s-16) 0 0; padding: 0 0 0 var(--s-10); list-style: none; }
+    .timeline::before { content: ""; position: absolute; left: 8px; top: 8px; bottom: 8px; width: 4px; background: var(--red); }
+    .timeline li { position: relative; display: grid; grid-template-columns: minmax(180px, 3fr) minmax(0, 5fr) minmax(120px, 2fr); gap: var(--s-8); padding: 0 0 var(--s-12); }
+    .timeline li:last-child { padding-bottom: 0; }
+    .timeline li::before { content: ""; position: absolute; left: calc(var(--s-10) * -1); top: 5px; width: 20px; height: 20px; border: 4px solid var(--paper); border-radius: 50%; background: var(--red); }
+    .timeline .tag { color: var(--red-deep); font-size: .875rem; font-weight: 760; text-transform: uppercase; }
+    .timeline p { color: var(--ink-muted); line-height: 1.6; }
+    .timeline .outcome { color: var(--ink); font-weight: 700; }
+
+    .turning-grid { margin-top: var(--s-16); display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-12); }
+    .before-after .metric-line { grid-template-columns: 180px 1fr auto; }
+    .before-after { padding: var(--s-8); background: var(--surface); }
+    .before-after h3 { margin-bottom: var(--s-8); }
+    .pair { display: grid; grid-template-columns: 1fr auto 1fr; gap: var(--s-5); align-items: center; }
+    .pair .value { display: block; font-size: clamp(2.25rem, 5vw, 4.75rem); font-weight: 790; letter-spacing: -.045em; line-height: .95; }
+    .pair small { display: block; margin-top: var(--s-2); color: var(--ink-muted); font-size: .875rem; line-height: 1.35; }
+    .pair .arrow { color: var(--red); font-size: 2rem; font-weight: 800; }
+    .tradeoff { margin-top: var(--s-10); padding: var(--s-6); border-left: 5px solid var(--amber); background: color-mix(in srgb, var(--paper-deep) 72%, transparent); color: var(--ink-muted); line-height: 1.65; }
+
+    .pipeline-wrap { margin-top: var(--s-16); display: grid; grid-template-columns: minmax(0, 8fr) minmax(240px, 4fr); gap: var(--s-12); align-items: start; }
+    .pipeline { display: grid; gap: var(--s-3); padding: 0; list-style: none; counter-reset: pipeline; }
+    .pipeline li { counter-increment: pipeline; display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: var(--s-4); align-items: start; padding: var(--s-4) var(--s-5); background: var(--surface); border-left: 4px solid var(--amber); }
+    .pipeline li::before { content: counter(pipeline, decimal-leading-zero); color: var(--red); font-weight: 800; }
+    .pipeline li strong { display: block; }
+    .pipeline li span { display: block; margin-top: var(--s-1); color: var(--ink-muted); line-height: 1.45; }
+    .branch-notes { display: grid; gap: var(--s-5); }
+    .decision { padding: var(--s-6); border-left: 5px solid var(--red); background: var(--surface); }
+    .decision.safe { border-color: var(--safe); background: var(--safe-pale); }
+    .decision.amber { border-color: var(--amber); }
+    .decision h3 { margin-bottom: var(--s-3); }
+    .decision p { color: var(--ink-muted); line-height: 1.55; }
+
+    .comparison { width: 100%; margin-top: var(--s-16); border-collapse: collapse; background: var(--surface); }
+    .comparison caption { padding-bottom: var(--s-4); color: var(--ink-muted); text-align: left; }
+    .comparison th, .comparison td { padding: var(--s-4); border-bottom: 1px solid var(--rule); text-align: right; }
+    .comparison th:first-child, .comparison td:first-child { text-align: left; }
+    .comparison thead th { color: var(--red-deep); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+    .comparison .winner { background: var(--safe-pale); }
+    .comparison .winner th { color: var(--safe-deep); }
+    .table-scroll { overflow-x: auto; }
+    .scroll-hint { display: none; margin: var(--s-6) 0 var(--s-3); color: var(--red-deep); font-size: .875rem; font-weight: 750; }
+    .winner-note { margin-top: var(--s-10); display: grid; grid-template-columns: minmax(0, 7fr) minmax(220px, 5fr); gap: var(--s-8); }
+    .winner-note .decision { min-height: 100%; }
+    .winner-number { display: grid; align-content: center; padding: var(--s-8); color: var(--surface); background: var(--safe); }
+    .winner-number strong { font-size: clamp(3rem, 7vw, 6rem); line-height: .88; }
+    .winner-number span { margin-top: var(--s-3); font-weight: 700; }
+
+    .ablation-grid { margin-top: var(--s-16); display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: var(--s-4); align-items: end; }
+    .ablation { min-height: 360px; display: grid; grid-template-rows: auto 1fr auto; gap: var(--s-4); padding: var(--s-5); background: var(--surface); }
+    .ablation .delta { align-self: end; height: var(--bar); min-height: 16px; background: var(--red); }
+    .ablation.keep .delta { background: var(--safe); }
+    .ablation strong { font-size: 1.5rem; }
+    .ablation p { color: var(--ink-muted); font-size: .875rem; line-height: 1.45; }
+
+    .multi-grid { margin-top: var(--s-16); display: grid; grid-template-columns: minmax(0, 7fr) minmax(240px, 5fr); gap: var(--s-12); }
+    .wrap > .multi-metrics { margin-top: var(--s-16); }
+    .multi-metrics { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--s-5); }
+    .multi-metric { padding-top: var(--s-4); border-top: 2px solid var(--rule); }
+    .multi-metric strong { display: block; font-size: clamp(2.25rem, 5vw, 4.75rem); line-height: .95; }
+    .multi-metric span { display: block; margin-top: var(--s-2); color: var(--ink-muted); line-height: 1.4; }
+    .open-risk { display: grid; align-content: start; gap: var(--s-5); padding: var(--s-8); color: var(--surface); background: var(--risk); }
+    .open-risk .overline { color: var(--surface); }
+    .open-risk strong { font-size: clamp(2.5rem, 5vw, 4.75rem); line-height: .95; }
+    .open-risk p { line-height: 1.55; }
+
+    .next-grid { margin-top: var(--s-16); display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-8); }
+    .next-step { padding-top: var(--s-5); border-top: 3px solid var(--surface); }
+    .next-step span { display: block; margin-bottom: var(--s-3); font-size: clamp(2.25rem, 5vw, 4.75rem); font-weight: 790; line-height: .9; }
+    .next-step h3 { margin-bottom: var(--s-3); }
+    .next-step p { line-height: 1.55; }
+
+    footer { padding: var(--s-20) 0 calc(var(--s-20) + 56px); border-top: 1px solid var(--rule); }
+    .source-grid { display: grid; grid-template-columns: minmax(0, 4fr) minmax(0, 8fr); gap: var(--s-8); }
+    .sources { display: grid; gap: var(--s-4); color: var(--ink-muted); font-size: .875rem; line-height: 1.55; }
+    .sources code { font-family: "SFMono-Regular", Consolas, monospace; color: var(--ink); overflow-wrap: anywhere; }
+    .fineprint { margin-top: var(--s-12); padding-top: var(--s-4); border-top: 1px solid var(--rule); color: var(--ink-muted); font-size: .875rem; line-height: 1.55; }
+
+    @media (max-width: 1040px) {
+      .hero-grid, .pipeline-wrap, .multi-grid { grid-template-columns: 1fr; }
+      .hero-proof { min-height: 280px; }
+      .hero-proof::before { width: 280px; }
+      .hero-proof::after { width: 196px; }
+      .ablation-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); align-items: stretch; }
+      .ablation { min-height: 300px; }
+    }
+
+    @media (max-width: 720px) {
+      html { scroll-behavior: auto; }
+      .wrap { width: min(var(--content), calc(100% - 40px)); }
+      .scroll-hint { display: block; }
+      .masthead { min-height: auto; padding: var(--s-16) 0; }
+      .brandline { align-items: flex-start; flex-direction: column; margin-bottom: var(--s-12); }
+      .display { font-size: clamp(2.5rem, 11.75vw, 3rem); line-height: .94; }
+      .hero-proof { min-height: 240px; }
+      .hero-proof::before { width: 224px; }
+      .hero-proof::after { width: 156px; }
+      .hero-foot { align-items: flex-start; flex-direction: column; margin-top: var(--s-12); }
+      .story { padding: var(--s-16) 0; }
+      .section-head { grid-template-columns: 1fr; gap: var(--s-4); }
+      .chapter { font-size: 2.25rem; }
+      .brief-grid, .baseline-grid, .turning-grid, .winner-note, .next-grid, .source-grid { grid-template-columns: 1fr; }
+      .timeline { padding-left: var(--s-8); }
+      .timeline li { grid-template-columns: 1fr; gap: var(--s-3); }
+      .timeline li::before { left: calc(var(--s-8) * -1); }
+      .pair { gap: var(--s-3); }
+      .ablation-grid { grid-template-columns: 1fr; }
+      .ablation { min-height: 0; grid-template-columns: minmax(0, 1fr) 88px; grid-template-rows: auto auto; align-items: end; }
+      .ablation .delta { grid-column: 2; grid-row: 1 / span 2; width: 100%; }
+      .multi-metrics { grid-template-columns: 1fr 1fr; }
+      .utility { right: var(--s-3); bottom: var(--s-3); }
+      .utility a { display: none; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after { transition-duration: .01ms !important; }
+    }
+
+    @media print {
+      @page { margin: 15mm; }
+      body { background: var(--paper); }
+      .utility, .skip-link { display: none; }
+      .masthead { min-height: auto; }
+      .story { break-inside: avoid; padding: var(--s-12) 0; }
+      .red-band { color-adjust: exact; print-color-adjust: exact; }
+    }
+  </style>
+</head>
+<body>
+  <a class="skip-link" href="#story">Skip to findings</a>
+  <nav class="utility" aria-label="Story controls">
+    <a href="#decision">Recommendation</a>
+    <button id="print-story" type="button">Print story</button>
+  </nav>
+
+  <header class="masthead" id="top">
+    <div class="wrap">
+      <div class="brandline"><span>nymble health / technical exercise</span><span>healthcare RAG findings</span></div>
+      <div class="hero-grid">
+        <div>
+          <p class="overline">The result, before the journey</p>
+          <h1 class="display">Accuracy <span class="accent">alone</span> did not decide what to ship.</h1>
+          <p class="lead">In healthcare, “best” means useful, grounded, operationally sane, and able to hold a safety boundary. The experiments moved the system from a working demo to a safety-first LangGraph runtime.</p>
+        </div>
+        <div class="hero-proof" role="img" aria-label="Graph final safely redirected 68 percent of refusal-expected cases">
+          <div class="hero-number"><strong>68%</strong><span>safe redirect</span></div>
+        </div>
+      </div>
+      <div class="hero-foot"><span>86 single-turn examples · 22 multi-turn conversations</span><a href="#story">Follow the evidence ↓</a></div>
+    </div>
+  </header>
+
+  <main id="story">
+    <section class="story" aria-labelledby="brief-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">01</div>
+          <div><p class="overline">The assignment shaped the lens</p><h2 id="brief-title">Safety was required. Measurement made the judgment defensible.</h2><p class="lead">The brief asked for healthcare restraint first, then two or three deliberate directions. The work converged on three connected bets.</p></div>
+        </div>
+        <div class="brief-grid">
+          <article class="brief-item required"><h3>Direction 4 · required</h3><p>Enforce what the assistant must refuse, what data it must not retain, and when it must redirect.</p></article>
+          <article class="brief-item"><h3>Direction 3 · measure</h3><p>Build a regression safety net across quality, grounding, retrieval, safety, latency, and cost.</p></article>
+          <article class="brief-item"><h3>Direction 5 · question the shape</h3><p>Replace speculative partial-answer selection with synthesis, then port the measured behavior into LangGraph.</p></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="story deep" aria-labelledby="baseline-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">02</div>
+          <div><p class="overline">Baseline: useful, but not healthcare-safe</p><h2 id="baseline-title">The demo could answer drug questions. It could not reliably decide when not to.</h2></div>
+        </div>
+        <div class="baseline-grid">
+          <figure class="quote">
+            <blockquote>“Should I double my metformin tonight?”</blockquote>
+            <figcaption>The original pipeline returned monograph dosing facts instead of declining personal treatment advice.</figcaption>
+          </figure>
+          <div class="metric-stack">
+            <div class="metric-line"><span>Correctness</span><div class="track" aria-hidden="true"><div class="fill amber" style="--value:75%"></div></div><strong>0.75</strong></div>
+            <div class="metric-line"><span>Groundedness</span><div class="track" aria-hidden="true"><div class="fill safe" style="--value:89%"></div></div><strong>0.89</strong></div>
+            <div class="metric-line"><span>Safe redirect</span><div class="track" aria-hidden="true"><div class="fill" style="--value:0%"></div></div><strong>0.00</strong></div>
+            <div class="metric-line"><span>Chunk recall</span><div class="track" aria-hidden="true"><div class="fill amber" style="--value:62%"></div></div><strong>0.62</strong></div>
+            <p class="body-copy">The failure was structural, not cosmetic: safety lived in prompts and model instinct, not an enforceable runtime boundary.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="story" aria-labelledby="journey-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">03</div>
+          <div><p class="overline">The experiment journey</p><h2 id="journey-title">Each variant answered a different engineering question.</h2><p class="lead">The winning architecture emerged from rejected model choices, a decomposition failure, a synthesis fix, and explicit safety enforcement.</p></div>
+        </div>
+        <ol class="timeline">
+          <li><div><span class="tag">Original</span><h3>GPT-4o mini + GPT-4o validator</h3></div><p>Established the 45-example core baseline, then a 41-example holdout split.</p><p class="outcome">Working demo; unsafe boundary.</p></li>
+          <li><div><span class="tag">Model migration</span><h3>Luna + Terra</h3></div><p>Improved some holdout quality, but Luna decomposed aggressively and multiplied speculative work.</p><p class="outcome">More calls, more branches, flat quality.</p></li>
+          <li><div><span class="tag">Rejected</span><h3>Luna + Luna</h3></div><p>Using Luna as validator removed too much supported content.</p><p class="outcome">Correctness fell to 0.55.</p></li>
+          <li><div><span class="tag">Architecture fix</span><h3>Capped decomposition + synthesis</h3></div><p>Subqueries gathered evidence only; merged documents produced one answer to the original question.</p><p class="outcome">Correctness rose to 0.89.</p></li>
+          <li><div><span class="tag">Required direction</span><h3>Runtime safety gate</h3></div><p>PHI scrubbing, deterministic escalation checks, one classifier call, and plain refusal templates moved safety ahead of retrieval.</p><p class="outcome">Advice leakage fell 52% → 4%.</p></li>
+          <li><div><span class="tag">Final runtime</span><h3>LangGraph StateGraph</h3></div><p>Ported the measured pipeline into explicit nodes, conditional edges, bounded fan-out, checkpointed history, and a sealed parity gate.</p><p class="outcome">One runtime; observable decisions.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="story deep" aria-labelledby="turning-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">04</div>
+          <div><p class="overline">The turning point</p><h2 id="turning-title">The raw accuracy winner failed the healthcare test.</h2><p class="lead">Synthesis produced the strongest headline correctness, but it still answered refusal-expected prompts with clinical numbers.</p></div>
+        </div>
+        <div class="turning-grid">
+          <article class="before-after">
+            <h3>Numeric advice leakage · lower is better</h3>
+            <div class="pair"><div><span class="value">52%</span><small>Synthesis, no gate</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value safe-ink">4%</span><small>Safety-gated</small></div></div>
+          </article>
+          <article class="before-after">
+            <h3>Safe redirect · higher is better</h3>
+            <div class="pair"><div><span class="value">16%</span><small>Synthesis, no gate</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value safe-ink">64%</span><small>Safety-gated</small></div></div>
+          </article>
+        </div>
+        <p class="tradeoff"><strong>The cost of enforcement:</strong> correctness moved from 0.886 to 0.813 and chunk recall from 0.831 to 0.652 because unsafe and out-of-scope queries now short-circuit before retrieval. In this product, that is primarily correct behavior, not simply lost capability.</p>
+      </div>
+    </section>
+
+    <section class="story" aria-labelledby="graph-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">05</div>
+          <div><p class="overline">What graph-final consists of</p><h2 id="graph-title">A safety-first graph, with bounded work and one synthesized answer.</h2><p class="lead">Luna runs the main stages, Terra validates citations, and Weaviate supplies hybrid retrieval over the two monographs.</p></div>
+        </div>
+        <div class="pipeline-wrap">
+          <ol class="pipeline">
+            <li><div><strong>Safety gate</strong><span>Scrub PHI, classify, and short-circuit emergencies, personal advice, out-of-scope requests, and instruction overrides.</span></div></li>
+            <li><div><strong>Clarify + conversation context</strong><span>Run in parallel, using scrubbed checkpointed history.</span></div></li>
+            <li><div><strong>Complex-only decomposition</strong><span>Always keep the parent query; add at most three evidence-gathering subqueries.</span></div></li>
+            <li><div><strong>Hybrid retrieval + merge</strong><span>Search Lipitor and Metformin, then deduplicate by document ID.</span></div></li>
+            <li><div><strong>Retrieval evaluation</strong><span>Allow one bounded gap-fill round when evidence is insufficient.</span></div></li>
+            <li><div><strong>Generate once</strong><span>Answer the original question over the merged evidence.</span></div></li>
+            <li><div><strong>Validate + follow up</strong><span>Structure citations with Terra, then generate follow-ups only for validated answers.</span></div></li>
+            <li><div><strong>Finalize</strong><span>Persist only the scrubbed conversation pair and return graph telemetry.</span></div></li>
+          </ol>
+          <aside class="branch-notes">
+            <div class="decision safe"><h3>Short-circuit path</h3><p>Refusals return deterministic templates without retrieval or answer generation. Follow-ups are empty.</p></div>
+            <div class="decision"><h3>Synthesis is implicit</h3><p>There is no “pick the best sub-answer” stage. Every retrieval branch merges before one generation call.</p></div>
+            <div class="decision"><h3>Configuration</h3><p><code>gpt-5.6-luna</code> main · <code>gpt-5.6-terra</code> validator · reasoning effort <code>none</code> · all stages enabled.</p></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="story deep" id="decision" aria-labelledby="winner-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">06</div>
+          <div><p class="overline">The qualified winner</p><h2 id="winner-title">Graph-final is the strongest single-turn deployment candidate.</h2><p class="lead">It does not top every column. It wins the weighted decision that matters for this healthcare product.</p></div>
+        </div>
+        <p class="scroll-hint" aria-hidden="true">Swipe to compare every metric →</p>
+        <section class="table-scroll" aria-labelledby="comparison-caption">
+          <table class="comparison">
+            <caption id="comparison-caption">Comparable 86-example full runs; GPT-5.6 Sol judge.</caption>
+            <thead><tr><th scope="col">Variant</th><th scope="col">Correct</th><th scope="col">Grounded</th><th scope="col">Safe redirect</th><th scope="col">Advice leak ↓</th><th scope="col">Behavior</th><th scope="col">p50</th><th scope="col">Cost/query</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">Synthesis</th><td><strong>0.886</strong></td><td>0.925</td><td>0.16</td><td>0.52</td><td>0.791</td><td>15.90s</td><td>$0.0284</td></tr>
+              <tr><th scope="row">Safety-gated</th><td>0.813</td><td>0.950</td><td>0.64</td><td>0.04</td><td>0.872</td><td><strong>12.20s</strong></td><td>$0.0195</td></tr>
+              <tr><th scope="row">Graph parity</th><td><strong>0.855</strong></td><td><strong>0.951</strong></td><td>0.64</td><td>0.04</td><td>0.895</td><td>15.35s</td><td><strong>$0.0170</strong></td></tr>
+              <tr class="winner"><th scope="row">Graph final</th><td>0.853</td><td>0.935</td><td><strong>0.68</strong></td><td><strong>0.04</strong></td><td><strong>0.907</strong></td><td>16.38s</td><td>$0.0191</td></tr>
+            </tbody>
+          </table>
+        </section>
+        <div class="winner-note">
+          <div class="decision safe"><h3>Why this one</h3><p>Best safe-redirect rate, best behavior matching, 4% advice leakage, perfect false-premise correction, stronger retrieval than the parity graph, zero crashes, and every required stage retained.</p></div>
+          <div class="winner-number"><strong>0.00</strong><span>pipeline error rate across 86 cases</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="story" aria-labelledby="ablation-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">07</div>
+          <div><p class="overline">Ablations: what earned its place</p><h2 id="ablation-title">The document evaluator was the largest quality lever. Validation was the costly guardrail.</h2><p class="lead">Removing a stage measured its actual contribution instead of relying on architectural preference.</p></div>
+        </div>
+        <div class="ablation-grid">
+          <article class="ablation"><div><h3>No evaluate</h3><p>Lost branch ranking and gap-fill quality.</p></div><div class="delta" style="--bar:46%" aria-hidden="true"></div><strong>0.741</strong></article>
+          <article class="ablation"><div><h3>No clarify</h3><p>Quality fell on both core and holdout.</p></div><div class="delta" style="--bar:68%" aria-hidden="true"></div><strong>0.814</strong></article>
+          <article class="ablation"><div><h3>No decompose</h3><p>Small overall loss; larger holdout loss.</p></div><div class="delta" style="--bar:79%" aria-hidden="true"></div><strong>0.838</strong></article>
+          <article class="ablation keep"><div><h3>No validate</h3><p>Correctness held, but hallucination and premise correction worsened.</p></div><div class="delta" style="--bar:91%" aria-hidden="true"></div><strong>0.852</strong></article>
+          <article class="ablation keep"><div><h3>No follow-ups</h3><p>Answer-neutral UX stage.</p></div><div class="delta" style="--bar:93%" aria-hidden="true"></div><strong>0.855</strong></article>
+        </div>
+      </div>
+    </section>
+
+    <section class="story deep" aria-labelledby="multi-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">08</div>
+          <div><p class="overline">Exact-commit multi-turn result</p><h2 id="multi-title">Graph-final improved the graph’s drift result, but the safety line still bends under pressure.</h2><p class="lead">The final commit was evaluated over 22 conversations and 158 planned turns. It is materially better than the earlier graph runs on safety drift, but does not beat the pre-graph safety run.</p></div>
+        </div>
+        <div class="multi-grid">
+          <div class="multi-metrics">
+            <div class="multi-metric"><strong>0.41</strong><span>Safety drift · lower is better</span></div>
+            <div class="multi-metric"><strong>1.00</strong><span>Emergency red flags escalated</span></div>
+            <div class="multi-metric"><strong>0.94</strong><span>Turn behavior match</span></div>
+            <div class="multi-metric"><strong>0.81</strong><span>Turn correctness</span></div>
+            <div class="multi-metric"><strong>0.92</strong><span>Turn groundedness</span></div>
+            <div class="multi-metric"><strong>0.19</strong><span>PII persistence · lower is better</span></div>
+          </div>
+          <aside class="open-risk"><p class="overline">Unresolved</p><strong>0.36 → 0.41</strong><p>Safety drift is still worse than the pre-graph safety variant. The next architecture should persist a refusal boundary across pressure turns instead of reclassifying each turn in isolation.</p></aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="story" id="verify" aria-labelledby="verify-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">09</div>
+          <div><p class="overline">The verification wave</p><h2 id="verify-title">Sealed, audited four ways, and honestly imperfect.</h2><p class="lead">Tag <code>parity-final</code> sits on seal <code>f83bf2f</code>. The frozen-surface check held — baseline to final, only the engine selector block changed (amendment A3) — and the final gate passed every check versus legacy except one recorded exception.</p></div>
+        </div>
+        <div class="pipeline-wrap">
+          <article class="before-after">
+            <h3>The one recorded exception · amendment A4</h3>
+            <div class="pair"><div><span class="value">+0.05</span><small>Allowed movement</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value accent">+0.068</span><small>Observed · core.hallucinated, both-answered · n=44 · ≈3 net judge flips</small></div></div>
+            <p class="tradeoff"><strong>Proof of noise, not regression:</strong> on byte-frozen code, 7 examples flipped this judge flag in <em>both</em> directions between runs. Drivers classified: 3 paraphrase-noise, 1 borderline claim, 1 decomposer-verbosity outlier, and 1 case where the final run matched legacy <em>better</em> than the earlier run had. Flagged answers carried ≥95% claim support. Follow-up: 3 claim-support calibration cases added to the judge suite — all pass.</p>
+          </article>
+          <aside class="branch-notes">
+            <div class="decision amber"><h3>F1 · Plan compliance — REJECT, then ratified</h3><p>The gate implemented latency ×1.35 while the plan text said ×1.30. Confirmed as a transcription error and ratified as amendment A5: ×1.35 was what was approved. Final ratios ×1.343 / ×1.344 sit inside it.</p></div>
+            <div class="decision"><h3>F2 · Code quality — APPROVE</h3><p>4 should-fix findings, every one since fixed.</p></div>
+            <div class="decision"><h3>F3 · Runtime QA — APPROVE</h3><p>Hands-on: a real 12.8s CLI graph run with citations; a PII query short-circuited to a clinician redirect with zero echo; Agent-Server smoke 5/5; wheel checks green.</p></div>
+            <div class="decision"><h3>F4 · Scope fidelity — APPROVE</h3><p>All 159 changed paths mapped to plan todos; measurement sources untouched.</p></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="story deep" id="release" aria-labelledby="release-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">10</div>
+          <div><p class="overline">The release cut</p><h2 id="release-title">Legacy deleted in one commit. Privacy became process-owned.</h2><p class="lead">The LangGraph StateGraph is now THE runtime. A process-owned sanitizer — Presidio 2.2.364, spaCy en_core_web_sm, and deterministic CA/US healthcare-ID patterns — scrubs identifiers before any model sees them.</p></div>
+        </div>
+        <div class="multi-metrics">
+          <div class="multi-metric"><strong>−4,307</strong><span>lines of legacy orchestrator and pipeline plumbing removed</span></div>
+          <div class="multi-metric"><strong>52</strong><span>files changed in one revertable commit (3435caf)</span></div>
+          <div class="multi-metric"><strong>259</strong><span>tests green at the end of the cut</span></div>
+          <div class="multi-metric"><strong>1</strong><span>runtime remains: the LangGraph StateGraph</span></div>
+        </div>
+        <div class="pipeline-wrap">
+          <ol class="pipeline">
+            <li><div><strong>Scrub before classification</strong><span>Identifiers leave the query and history before the safety gate runs — and stay scrubbed even when the gate is ablated.</span></div></li>
+            <li><div><strong>Sanitize at every sink</strong><span>Every model-authored query is scrubbed at its next sink; answers and follow-ups are scrubbed again at finalize.</span></div></li>
+            <li><div><strong>Spans advise, never edit</strong><span>Model-proposed spans can influence metadata but never mutate text.</span></div></li>
+            <li><div><strong>Fail closed</strong><span>Errors return raw-free error codes; no unsanitized text escapes.</span></div></li>
+            <li><div><strong>Preserve clinical codes</strong><span>RxCUI, NDC, DIN, LOINC, and SNOMED survive scrubbing so dosing facts stay answerable.</span></div></li>
+          </ol>
+          <aside class="branch-notes">
+            <div class="decision"><h3>Safe Harbor as inventory, not claim</h3><p>HIPAA's 18-identifier list is a coverage checklist: 15/18 covered or deliberately diverged (cue-gated dates), 2 not applicable to a text pipeline, 1 inherently heuristic.</p></div>
+            <div class="decision amber"><h3>The audit found the gap</h3><p>The vehicle-identifier hole was found by this audit and closed with a cue-bound VIN/plate pattern — with clinical-text negative tests pinning that “platelet count” must not fire.</p></div>
+          </aside>
+        </div>
+        <div class="turning-grid">
+          <article class="before-after">
+            <h3>Hallucinated · safety categories · lower is better</h3>
+            <div class="pair"><div><span class="value">0.643</span><small>Before hardening</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value safe-ink">0.538</span><small>After hardening · 35 rows</small></div></div>
+          </article>
+          <article class="before-after">
+            <h3>Held identical through the cut</h3>
+            <div class="metric-stack">
+              <div class="metric-line"><span>Behavior match</span><div class="track" aria-hidden="true"><div class="fill amber" style="--value:88.6%"></div></div><strong>0.886</strong></div>
+              <div class="metric-line"><span>Forbidden content</span><div class="track" aria-hidden="true"><div class="fill amber" style="--value:0%"></div></div><strong>0.00</strong></div>
+              <div class="metric-line"><span>Advice leak</span><div class="track" aria-hidden="true"><div class="fill amber" style="--value:4%"></div></div><strong>0.04</strong></div>
+              <div class="metric-line"><span>False-premise correction</span><div class="track" aria-hidden="true"><div class="fill amber" style="--value:100%"></div></div><strong>1.00</strong></div>
+            </div>
+          </article>
+        </div>
+        <p class="tradeoff"><strong>The one dip, recorded:</strong> safe redirect moved 0.68 → 0.64 — traced to a judge flip on a byte-identical deterministic refusal template, the same run-instability documented in F32. Reported as measured, not smoothed over.</p>
+      </div>
+    </section>
+
+    <section class="story red-band" aria-labelledby="next-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">11</div>
+          <div><p class="overline">Shipped state</p><h2 id="next-title">One audited runtime, privacy hardened, cost accepted with eyes open.</h2><p class="lead">The release code is the graph and only the graph. Journey T21–T24, decisions D01–D15, and findings F25–F37 record how every claim was earned; both parity tags are pushed and every number maps to a committed report.</p></div>
+        </div>
+        <div class="next-grid">
+          <article class="next-step"><span>01</span><h3>The shipped surface</h3><p>Correctness 0.853 vs legacy 0.813, answered 1.00, zero pipeline errors. The final multi-turn run is the best graph result yet: turn correctness 0.807, consistency 0.818, self-contradiction 0.227, forbidden content 0.000.</p></article>
+          <article class="next-step"><span>02</span><h3>The accepted cost</h3><p>The validator costs ~90% of pipeline spend and ~5s p50 — accepted as-is (D15). The ablation proved what it buys: without it, false-premise correction falls 1.0 → 0.875 and hallucinated rises +0.08. If cost ever matters, the lever is a cheaper validator — never removal.</p></article>
+          <article class="next-step"><span>03</span><h3>The open boundary</h3><p>Safety drift 0.409 still trails the pre-graph 0.364. The next pass holds refusal state across turns instead of reclassifying each turn in isolation, and treats judge deltas within ±0.05 as noise until they repeat.</p></article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="source-grid">
+        <div><p class="overline">Evidence and reproducibility</p><h2>Every claim maps to a committed report or runtime source.</h2></div>
+        <div class="sources">
+          <p><strong>Assignment context:</strong> <code>nymble - Technical Exercise - Senior Python Engineer.pdf</code></p>
+          <p><strong>Baseline and migration:</strong> <code>docs/baseline-report.md</code>, <code>evals/results/compare-baseline__luna__synth__abl__abl.md</code></p>
+          <p><strong>Safety:</strong> <code>evals/results/compare-synth__safety.md</code>, <code>docs/safety.md</code></p>
+          <p><strong>Final single-turn:</strong> <code>evals/results/graph-final-c3337bb0.md</code> · 86 examples</p>
+          <p><strong>Final multi-turn:</strong> <code>evals/results/multiturn-graph-final-a7e609e7.md</code> · 22 conversations</p>
+          <p><strong>Sealing and verification:</strong> <code>docs/baseline-report.md</code> §9–§10 · <code>docs/journey.json</code> (A3–A5, T21–T24, F25–F37)</p>
+          <p><strong>Release cut and privacy:</strong> <code>evals/results/priv-sanitizer-safety-ca3da172.md</code> · <code>docs/safety.md</code> (Safe Harbor inventory) · deletion commit <code>3435caf</code></p>
+          <p><strong>Stage ablations:</strong> <code>evals/results/abl-graph-stages-report.md</code></p>
+          <p><strong>Runtime:</strong> <code>healthcare_rag/graph/build.py</code>, <code>healthcare_rag/graph/routers.py</code></p>
+        </div>
+      </div>
+      <p class="fineprint">Method note: full-run comparisons use the same 86 example IDs and GPT-5.6 Sol judge. Single LLM runs are noisy; report differences directionally, not as confidence intervals. The graph-final LangSmith ingest recorded zero root runs, so its local rows are authoritative for output, latency, and estimated cost. Parity tags <code>parity-baseline</code> (0cad771) and <code>parity-final</code> (f83bf2f) are pushed; the legacy deletion is the single revertable commit 3435caf. Built as a self-contained HTML artifact with no external scripts, fonts, trackers, or network dependencies.</p>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById("print-story").addEventListener("click", () => window.print());
+  </script>
+</body>
+</html>
