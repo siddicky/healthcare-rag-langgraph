@@ -40,11 +40,37 @@ HC_RAG_DECOMPOSE_ONLY_COMPLEX
                           when true (default), only decompose when the decomposer labelled
                           the query `query_complexity == "complex"`. Set false to decompose
                           whenever 2+ sub-queries come back.
-HC_RAG_RETRIEVER          which retrieval arm runs: weaviate (default) or pageindex. The
-                          pageindex arm replaces only the per-collection search callable with
-                          a PageIndex tree-search adapter (one LLM call picks tree nodes, the
-                          selected page ranges map back onto the same contextualised chunks);
-                          routing, merge and every downstream stage are unchanged.
+HC_RAG_RETRIEVER          which retrieval arm runs: weaviate (default), pageindex or pinecone.
+                          Each arm replaces only the per-collection search callable; routing,
+                          merge and every downstream stage are unchanged. The pageindex arm is
+                          a tree-search adapter (one LLM call picks tree nodes, the selected
+                          page ranges map back onto the same contextualised chunks); the
+                          pinecone arm is a serverless hybrid index (dense OpenAI embeddings +
+                          Pinecone sparse, convex-scaled) over those same chunks.
+HC_RAG_RERANKER           reranking stage over the retrieved candidates: none (default) or
+                          pinecone (Pinecone Inference, HC_RAG_RERANK_MODEL). When enabled the
+                          search callable fetches HC_RAG_RERANK_CANDIDATES documents per
+                          collection and the reranker keeps HC_RAG_RERANK_TOP_K of them, so
+                          the context handed to generation is the same size as the default arm.
+                          Fail-soft: a rerank error keeps the first top_k documents in the
+                          search's own order.
+HC_RAG_RERANK_CANDIDATES  how many documents each collection search returns when reranking is
+                          on (default: 12). Ignored when HC_RAG_RERANKER=none.
+HC_RAG_RERANK_TOP_K       how many documents survive the reranker, per collection (default: 4
+                          — the un-reranked search limit, so top-k into generation is constant).
+HC_RAG_RERANK_MODEL       Pinecone Inference rerank model (default: bge-reranker-v2-m3).
+HC_RAG_PINECONE_INDEX     serverless index name for the pinecone arm (default: healthcare-rag).
+                          One index, one namespace per collection (lower-cased).
+HC_RAG_PINECONE_SPARSE_MODEL
+                          Pinecone Inference sparse embedding model used for the lexical half
+                          of the hybrid query (default: pinecone-sparse-english-v0).
+HC_RAG_PINECONE_ALPHA     convex-scaling weight on the dense half of the pinecone hybrid query
+                          (default: 0.65, matching the Weaviate arm's alpha). 1.0 = dense only,
+                          0.0 = sparse only.
+HC_RAG_EMBEDDING_MODEL    OpenAI embedding model for the pinecone arm's dense vectors, both at
+                          ingest and at query time (default: text-embedding-3-small, the model
+                          Weaviate's text2vec-openai vectoriser uses).
+PINECONE_API_KEY          required by the pinecone arm and the pinecone reranker (secret; .env).
 HC_RAG_PAGEINDEX_MAX_NODES
                           cap on tree nodes the selection call may keep (default: 4).
 HC_RAG_PAGEINDEX_MAX_CHUNKS
@@ -190,18 +216,19 @@ def refusal_boundary_enabled() -> bool:
 # --------------------------------------------------------------------------- #
 
 DEFAULT_RETRIEVER = "weaviate"
-VALID_RETRIEVERS = ("weaviate", "pageindex")
+VALID_RETRIEVERS = ("weaviate", "pageindex", "pinecone")
 
 DEFAULT_PAGEINDEX_MAX_NODES = 4
 DEFAULT_PAGEINDEX_MAX_CHUNKS = 8
 
 
 def retriever_backend() -> str:
-    """Which retrieval arm the graph uses: ``weaviate`` (default) or ``pageindex``.
+    """Which retrieval arm the graph uses: ``weaviate`` (default), ``pageindex`` or ``pinecone``.
 
-    ``pageindex`` swaps *only* the per-collection search callable for the
-    tree-search adapter in ``healthcare_rag/processors/pageindex_retrieval.py``;
-    routing, merging and every downstream stage are untouched.
+    Each non-default value swaps *only* the per-collection search callable —
+    ``healthcare_rag/processors/pageindex_retrieval.py`` for the tree-search arm,
+    ``healthcare_rag/processors/pinecone_retrieval.py`` for the serverless hybrid
+    arm; routing, merging and every downstream stage are untouched.
     """
     raw = os.getenv("HC_RAG_RETRIEVER")
     if raw is None or not raw.strip():
@@ -235,3 +262,89 @@ def pageindex_max_nodes() -> int:
 def pageindex_max_chunks() -> int:
     """Hard cap on how many chunks the selected page ranges may expand to."""
     return _env_positive_int("HC_RAG_PAGEINDEX_MAX_CHUNKS", DEFAULT_PAGEINDEX_MAX_CHUNKS)
+
+
+# --------------------------------------------------------------------------- #
+# Pinecone retrieval arm + reranking stage                                     #
+# --------------------------------------------------------------------------- #
+
+DEFAULT_RERANKER = "none"
+VALID_RERANKERS = ("none", "pinecone")
+
+DEFAULT_RERANK_CANDIDATES = 12
+DEFAULT_RERANK_TOP_K = 4
+DEFAULT_RERANK_MODEL = "bge-reranker-v2-m3"
+
+DEFAULT_PINECONE_INDEX = "healthcare-rag"
+DEFAULT_PINECONE_SPARSE_MODEL = "pinecone-sparse-english-v0"
+DEFAULT_PINECONE_ALPHA = 0.65
+DEFAULT_EMBEDDING_MODEL = "text-embedding-3-small"
+
+
+def _env_str(name: str, default: str) -> str:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    return raw.strip()
+
+
+def reranker_backend() -> str:
+    """Which reranking stage runs over the retrieved candidates: ``none`` (default) or ``pinecone``.
+
+    The reranker is part of the *retrieval* stage: its cost and latency are
+    charged to retrieval, and it never changes how many documents generation
+    sees (``rerank_top_k`` defaults to the un-reranked search limit).
+    """
+    raw = os.getenv("HC_RAG_RERANKER")
+    if raw is None or not raw.strip():
+        return DEFAULT_RERANKER
+    value = raw.strip().lower()
+    if value not in VALID_RERANKERS:
+        raise ValueError(
+            f"HC_RAG_RERANKER must be one of {sorted(VALID_RERANKERS)}, got {raw!r}"
+        )
+    return value
+
+
+def rerank_candidates() -> int:
+    """How many documents each collection search returns when reranking is on."""
+    return _env_positive_int("HC_RAG_RERANK_CANDIDATES", DEFAULT_RERANK_CANDIDATES)
+
+
+def rerank_top_k() -> int:
+    """How many documents survive the reranker, per collection."""
+    return _env_positive_int("HC_RAG_RERANK_TOP_K", DEFAULT_RERANK_TOP_K)
+
+
+def rerank_model() -> str:
+    """Pinecone Inference rerank model name."""
+    return _env_str("HC_RAG_RERANK_MODEL", DEFAULT_RERANK_MODEL)
+
+
+def pinecone_index_name() -> str:
+    """Name of the serverless Pinecone index backing the ``pinecone`` retrieval arm."""
+    return _env_str("HC_RAG_PINECONE_INDEX", DEFAULT_PINECONE_INDEX)
+
+
+def pinecone_sparse_model() -> str:
+    """Pinecone Inference sparse embedding model for the lexical half of the hybrid query."""
+    return _env_str("HC_RAG_PINECONE_SPARSE_MODEL", DEFAULT_PINECONE_SPARSE_MODEL)
+
+
+def pinecone_alpha() -> float:
+    """Convex-scaling weight on the dense half of the Pinecone hybrid query (0.0-1.0)."""
+    raw = os.getenv("HC_RAG_PINECONE_ALPHA")
+    if raw is None or not raw.strip():
+        return DEFAULT_PINECONE_ALPHA
+    try:
+        value = float(raw.strip())
+    except ValueError:
+        raise ValueError(f"HC_RAG_PINECONE_ALPHA must be a number, got {raw!r}") from None
+    if not 0.0 <= value <= 1.0:
+        raise ValueError(f"HC_RAG_PINECONE_ALPHA must be between 0.0 and 1.0, got {value}")
+    return value
+
+
+def embedding_model() -> str:
+    """OpenAI embedding model used for the Pinecone arm's dense vectors."""
+    return _env_str("HC_RAG_EMBEDDING_MODEL", DEFAULT_EMBEDDING_MODEL)

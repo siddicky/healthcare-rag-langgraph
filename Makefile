@@ -10,6 +10,7 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
 
 .PHONY: journey help venv weaviate ingest run container-build container-ingest container-run \
         dev test test-judges calibrate eval-smoke eval eval-nojudge index-pageindex \
+        ingest-pinecone \
         eval-multiturn eval-multiturn-smoke dataset-sync dataset-sync-multiturn wiki-init wiki-update
 
 help:
@@ -25,6 +26,11 @@ weaviate: ## Start Weaviate (docker compose) and wait until ready
 
 ingest: ## (Re)ingest checked-in chunks into Weaviate (needs OPENAI_API_KEY in .env)
 	$(PY) healthcare_rag/storage/vector_store.py --delete-all \
+		--collection Lipitor data/chunks_lipitor.json \
+		--collection Metformin data/chunks_metformin.json
+
+ingest-pinecone: ## (Re)ingest the checked-in chunks into Pinecone (needs PINECONE_API_KEY + OPENAI_API_KEY)
+	$(PY) healthcare_rag/storage/pinecone_store.py --delete-all \
 		--collection Lipitor data/chunks_lipitor.json \
 		--collection Metformin data/chunks_metformin.json
 

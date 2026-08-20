@@ -58,14 +58,22 @@ def to_query_documents(search_results, collection_name: str) -> list[QueryDocume
     return query_docs
 
 
+DEFAULT_SEARCH_LIMIT = 4
+
+
 async def hybrid_search(
-    weaviate_client: WeaviateAsyncClient, collection_name: str, query: str
+    weaviate_client: WeaviateAsyncClient,
+    collection_name: str,
+    query: str,
+    *,
+    limit: int = DEFAULT_SEARCH_LIMIT,
 ) -> QueryResultList:
+    """Weaviate hybrid search. ``limit`` is only raised when a reranker will trim it back."""
     collection = weaviate_client.collections.get(collection_name)
     response = await collection.query.hybrid(
         query=query,
         query_properties=["contextualized"],
-        limit=4,
+        limit=limit,
         alpha=0.65,
         fusion_type=HybridFusion.RELATIVE_SCORE,
         return_metadata=MetadataQuery(score=True),

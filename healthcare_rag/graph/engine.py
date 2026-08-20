@@ -246,6 +246,9 @@ class GraphEngine:
             "validator_model": self.settings.validator_model,
             "reasoning_effort": self.settings.reasoning_effort,
             "retriever": self.settings.retriever,
+            "reranker": self.settings.reranker,
+            "rerank_candidates": self.settings.rerank_candidates,
+            "rerank_top_k": self.settings.rerank_top_k,
         }
 
     async def aclose(self) -> None:

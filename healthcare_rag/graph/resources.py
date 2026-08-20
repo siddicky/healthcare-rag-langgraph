@@ -2,8 +2,10 @@
 
 from __future__ import annotations
 
+import logging
 from collections.abc import Callable
 from asyncio import Lock as AsyncLock
+from functools import partial
 from threading import Lock
 from typing import TYPE_CHECKING, Any
 
@@ -16,6 +18,8 @@ from healthcare_rag.processors.privacy import PrivacySanitizer
 
 if TYPE_CHECKING:
     from healthcare_rag.graph.llm import PromptRegistry
+
+logger = logging.getLogger("MedicalRAG")
 
 
 class Resources:
@@ -33,6 +37,8 @@ class Resources:
         self.union_results: Callable[..., Any] | None = None
         self.format_documents_for_prompt: Callable[..., Any] | None = None
         self._weaviate: WeaviateAsyncClient | None = None
+        self._pinecone_client: Any | None = None
+        self._pinecone_index: Any | None = None
         self._gateway: LangChainLLMGateway | None = None
         self._privacy: PrivacySanitizer = privacy or PrivacySanitizer()
         self._lock: Lock = Lock()
@@ -78,6 +84,44 @@ class Resources:
                 self._weaviate = client
             return self._weaviate
 
+    async def pinecone_client(self) -> Any:
+        """Construct the (sync) Pinecone client on first use.
+
+        Needed by both the ``pinecone`` retrieval arm and the reranker — the
+        reranker runs on the Weaviate arm too, where no index handle exists, so
+        the client and the index are separate lazy resources.
+
+        The SDK is synchronous and thread-safe; every call site drives it
+        through ``anyio.to_thread``. Missing credentials raise immediately
+        rather than letting an unauthenticated request hang.
+        """
+        async with self._async_lock:
+            if self._pinecone_client is None:
+                from pinecone import Pinecone
+
+                if not self.settings.pinecone_api_key:
+                    message = "PINECONE_API_KEY is not set"
+                    raise ValueError(message)
+                self._pinecone_client = Pinecone(api_key=self.settings.pinecone_api_key)
+            return self._pinecone_client
+
+    async def pinecone(self) -> Any:
+        """Resolve the index handle for the ``pinecone`` retrieval arm.
+
+        ``Pinecone.Index`` resolves the index host over the network, so the
+        lookup runs in a worker thread and is cached like the Weaviate client.
+        """
+        client = await self.pinecone_client()
+        async with self._async_lock:
+            if self._pinecone_index is None:
+                import anyio
+
+                name = self.settings.pinecone_index_name
+                self._pinecone_index = await anyio.to_thread.run_sync(
+                    partial(client.Index, name)
+                )
+            return self._pinecone_index
+
     @property
     def gateway(self) -> LangChainLLMGateway:
         """Construct the shared model gateway on first access."""
@@ -91,11 +135,21 @@ class Resources:
         return self._privacy
 
     async def aclose(self) -> None:
-        """Close the Weaviate client only when this owner constructed and opened it."""
+        """Close the clients this owner constructed and opened, and nothing else."""
         client = self._weaviate
         self._weaviate = None
         if client is not None and client.is_connected():
             await client.close()
+
+        index, pinecone_client = self._pinecone_index, self._pinecone_client
+        self._pinecone_index = self._pinecone_client = None
+        for closeable in (index, pinecone_client):
+            if closeable is None:
+                continue
+            try:
+                closeable.close()
+            except Exception:  # teardown must not mask the real error.
+                logger.debug("PINECONE_CLOSE_FAILED", exc_info=True)
 
 
 _instance: Resources | None = None

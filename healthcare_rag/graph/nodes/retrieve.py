@@ -1,16 +1,21 @@
 from __future__ import annotations
 
+import inspect
 import logging
+from collections.abc import Callable
 from typing import Any, Final
 
 import anyio
 from langsmith.run_helpers import traceable
+from pinecone.exceptions import PineconeException
 from weaviate.exceptions import WeaviateBaseError
 
 from healthcare_rag.graph.resources import get
 from healthcare_rag.graph.state import RetrieveInput, dump_results, load_results
 from healthcare_rag.models.retrieval import QueryResultList
 from healthcare_rag.processors.pageindex_retrieval import pageindex_search
+from healthcare_rag.processors.pinecone_retrieval import pinecone_search
+from healthcare_rag.processors.rerank import rerank_documents
 from healthcare_rag.processors.retrieval import (
     hybrid_search,
     union_results,
@@ -18,6 +23,48 @@ from healthcare_rag.processors.retrieval import (
 from healthcare_rag.processors.safety import scrub_phi
 
 logger = logging.getLogger("MedicalRAG")
+
+# One row per retrieval arm: the name of this module's search callable, and the
+# SDK error class whose transient failures are worth a retry. PageIndex reads
+# cached JSON and opens no client, so it keeps the Weaviate error class purely to
+# leave its behaviour byte-identical to before this arm existed.
+_ARMS: Final[dict[str, tuple[str, type[Exception]]]] = {
+    "weaviate": (hybrid_search.__name__, WeaviateBaseError),
+    "pageindex": (pageindex_search.__name__, WeaviateBaseError),
+    "pinecone": (pinecone_search.__name__, PineconeException),
+}
+
+
+def resolve_arm(backend: str) -> tuple[Callable[..., Any], type[Exception]]:
+    """The search callable and retry error for one arm.
+
+    The callable is looked up by name in this module's namespace rather than
+    captured in ``_ARMS``, so a test that patches ``retrieve.hybrid_search``
+    still swaps the arm out.
+    """
+    try:
+        attribute, retry_error = _ARMS[backend]
+    except KeyError:
+        message = f"Unknown retrieval arm {backend!r}; valid: {sorted(_ARMS)}"
+        raise ValueError(message) from None
+    return globals()[attribute], retry_error
+
+
+def accepts_limit(search: Callable[..., Any]) -> bool:
+    """True when ``search`` can be told how many candidates to fetch.
+
+    An injected ``resources.hybrid_search`` (tests, fixtures) predates the
+    ``limit`` kwarg, so it is only ever passed to callables that declare it.
+    """
+    try:
+        parameters = inspect.signature(search).parameters
+    except (TypeError, ValueError):
+        return False
+    return "limit" in parameters or any(
+        parameter.kind is inspect.Parameter.VAR_KEYWORD
+        for parameter in parameters.values()
+    )
+
 
 RETRIEVAL_KIND_RANK: Final = {
     "initial": 0,
@@ -38,24 +85,56 @@ async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
         tool_calls = []
 
     results: list[QueryResultList | None] = []
-    pageindex = resources.settings.retriever == "pageindex"
+    settings = resources.settings
+    backend = settings.retriever
+    arm_search, retry_error = resolve_arm(backend)
     # An explicit injection always wins; otherwise the knob picks the arm.
-    search = resources.hybrid_search or (pageindex_search if pageindex else hybrid_search)
+    search = resources.hybrid_search or arm_search
+    reranking = settings.reranker != "none"
+    # Reranking is a re-ordering of a wider candidate set, so the search fetches
+    # `rerank_candidates` and the reranker trims back to the usual top-k. With no
+    # reranker the limit is never passed at all: the default path stays untouched.
+    search_kwargs: dict[str, Any] = (
+        {"limit": settings.rerank_candidates}
+        if reranking and accepts_limit(search)
+        else {}
+    )
+
     for tool_call in tool_calls:
         collection_name = tool_call["name"].removeprefix("query_").capitalize()
         routed_query = scrub_phi(str(tool_call["args"].get("query", query)))[0]
 
+        # Loop variables are bound as defaults: the closure is awaited within
+        # this iteration, but binding keeps that guarantee local and explicit.
         @traceable(name="retrieve_documents", run_type="retriever")
-        async def traced_search() -> QueryResultList:
-            # The PageIndex arm reads cached trees/chunks: never open Weaviate for it.
-            client = None if pageindex else await resources.weaviate()
-            return await search(client, collection_name, routed_query)
+        async def traced_search(
+            collection_name: str = collection_name, routed_query: str = routed_query
+        ) -> QueryResultList:
+            # Only the Weaviate/Pinecone arms need a client; PageIndex reads
+            # cached trees and chunks, so nothing is opened for it.
+            if backend == "weaviate":
+                client = await resources.weaviate()
+            elif backend == "pinecone":
+                client = await resources.pinecone()
+            else:
+                client = None
+            found = await search(client, collection_name, routed_query, **search_kwargs)
+            if reranking:
+                # Nested inside the retriever run so the trace shows rerank wall-time.
+                for result in found.results:
+                    result.docs = await rerank_documents(
+                        resources,
+                        result.query or routed_query,
+                        result.docs,
+                        settings.rerank_top_k,
+                    )
+            return found
 
         for attempt in range(3):
             try:
                 results.append(await traced_search())
                 break
-            except WeaviateBaseError:
+            except retry_error:
                 if attempt == 2:
                     logger.error("RETRIEVAL_FAILED")
                     break

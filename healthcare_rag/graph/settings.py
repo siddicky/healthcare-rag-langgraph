@@ -10,9 +10,17 @@ from healthcare_rag.services.models import (
     default_reasoning_effort,
     default_validator_model,
     disabled_stages,
+    embedding_model,
     max_subqueries,
     pageindex_max_chunks,
     pageindex_max_nodes,
+    pinecone_alpha,
+    pinecone_index_name,
+    pinecone_sparse_model,
+    rerank_candidates,
+    rerank_model,
+    rerank_top_k,
+    reranker_backend,
     refusal_boundary_enabled,
     retriever_backend,
     safety_gate_enabled,
@@ -40,6 +48,15 @@ class GraphSettings:
     retriever: str = "weaviate"
     pageindex_max_nodes: int = 4
     pageindex_max_chunks: int = 8
+    reranker: str = "none"
+    rerank_candidates: int = 12
+    rerank_top_k: int = 4
+    rerank_model: str = "bge-reranker-v2-m3"
+    pinecone_index_name: str = "healthcare-rag"
+    pinecone_sparse_model: str = "pinecone-sparse-english-v0"
+    pinecone_api_key: str = ""
+    pinecone_alpha: float = 0.65
+    embedding_model: str = "text-embedding-3-small"
 
     _TRUTHY: ClassVar[frozenset[str]] = frozenset({"1", "true", "yes", "on"})
     _FALSY: ClassVar[frozenset[str]] = frozenset({"0", "false", "no", "off"})
@@ -88,4 +105,13 @@ class GraphSettings:
             retriever=retriever_backend(),
             pageindex_max_nodes=pageindex_max_nodes(),
             pageindex_max_chunks=pageindex_max_chunks(),
+            reranker=reranker_backend(),
+            rerank_candidates=rerank_candidates(),
+            rerank_top_k=rerank_top_k(),
+            rerank_model=rerank_model(),
+            pinecone_index_name=pinecone_index_name(),
+            pinecone_sparse_model=pinecone_sparse_model(),
+            pinecone_api_key=os.getenv("PINECONE_API_KEY", ""),
+            pinecone_alpha=pinecone_alpha(),
+            embedding_model=embedding_model(),
         )
