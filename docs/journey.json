@@ -548,6 +548,13 @@
       "category": "measurement",
       "finding": "Judge strictness characterised via new calibration cases (A4b): (1) a synthesis/generalisation sentence atop supported facts draws a hallucination flag - answers must restate, not summarise, if they want hallucinated=0; (2) modality changes (should->must) count as partial support; (3) one fabricated claim in a 6-claim answer is still caught (hallucinated=1) with groundedness correctly ~10/11 - length does not dilute clear fabrications. These reproduce the A4 gate-noise mechanism in a controlled test.",
       "action": "Three claim-support cases added to evals/judge_calibration.json (long-supported, paraphrase-supported, fabricated-in-long); make test + make test-judges green. Extend whenever a gate flip is root-caused."
+    },
+    {
+      "id": "F35",
+      "severity": "low",
+      "area": "parity",
+      "title": "n_branches is semantically divergent legacy-vs-graph and must not be compared raw: legacy counted every speculative branch it raced (journey legacy runs: 2.2-3.9), the graph folds decomposed sub-branches into one synthesized merge answering the original query (graph runs: ~1.74)",
+      "detail": "Deterministic merge (decomposed_* branches stop after retrieve; documents de-duplicated by doc_id into one synthesized answer) is by design (AGENTS.md). The comparable behavioural metric is used_refined_branch (graph 0.302 vs legacy 0.302 at parity). Any future orchestration-metrics comparison must normalise branch counts or compare fold-adjusted."
     }
   ],
   "decisions": [
