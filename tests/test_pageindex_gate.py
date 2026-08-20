@@ -1,8 +1,11 @@
-"""Pure-function tests for the PageIndex-vs-Weaviate gate. No network, no LLM."""
+"""Pure-function tests for the retriever A/B gate. No network, no LLM."""
 
 from __future__ import annotations
 
+import dataclasses
 import json
+import os
+import subprocess
 from pathlib import Path
 from typing import Any
 
@@ -15,14 +18,20 @@ from evals.pageindex_gate import (
     EXIT_STAGE1_REJECT,
     EXIT_STAGE2_FAIL,
     THRESHOLDS,
+    arm_env,
+    arm_prefix,
     build_outputs,
     build_stage2_gates,
     eligible_items,
     evaluate_stage1,
     evaluate_stage2,
     main,
+    parse_args,
+    parse_arm,
     persist,
     render_report,
+    run_baseline_for_arm,
+    select_candidate,
     stage2_metrics,
 )
 from healthcare_rag.models.retrieval import QueryDocument, QueryResult, QueryResultList
@@ -53,15 +62,22 @@ def _gate(gates: list[dict[str, Any]], name: str) -> dict[str, Any]:
     return next(g for g in gates if g["name"] == name)
 
 
-def _arm(page_recall: float | None, chunk_recall: float | None = 0.8, n: int = 71) -> dict[str, Any]:
+def _arm(
+    page_recall: float | None,
+    chunk_recall: float | None = 0.8,
+    n: int = 71,
+    name: str = "x",
+    latency: float | None = 1.0,
+) -> dict[str, Any]:
     return {
-        "arm": "x",
+        "arm": name,
         "n": n,
         "n_errors": 0,
         "page_recall": page_recall,
         "chunk_recall": chunk_recall,
         "per_split": {"core": {"n": 36, "page_recall": page_recall, "chunk_recall": chunk_recall}},
         "wall_s": 1.0,
+        "mean_latency_s": latency,
         "items": [],
     }
 
@@ -504,3 +520,344 @@ def test_settings_for_arm_selects_the_retriever_without_leaking_env(
     assert settings_for_arm("pageindex").retriever == "pageindex"
     assert settings_for_arm("weaviate").retriever == "weaviate"
     assert "HC_RAG_RETRIEVER" not in __import__("os").environ
+
+
+# --------------------------------------------------------------------------- #
+# arm strings                                                                  #
+# --------------------------------------------------------------------------- #
+
+@pytest.mark.parametrize(
+    ("arm", "expected"),
+    [
+        ("weaviate", ("weaviate", "none")),
+        ("pinecone", ("pinecone", "none")),
+        ("pageindex", ("pageindex", "none")),
+        ("pinecone+rerank", ("pinecone", "pinecone")),
+        ("weaviate+rerank", ("weaviate", "pinecone")),
+        ("  weaviate+rerank  ", ("weaviate", "pinecone")),
+    ],
+)
+def test_parse_arm_maps_the_grammar_to_both_env_knobs(arm: str, expected: tuple[str, str]) -> None:
+    assert parse_arm(arm) == expected
+
+
+@pytest.mark.parametrize("arm", ["foo", "+rerank", "weaviate+foo", "weaviate+", "", "rerank"])
+def test_parse_arm_rejects_anything_outside_the_grammar(arm: str) -> None:
+    with pytest.raises(ValueError, match="invalid arm"):
+        parse_arm(arm)
+
+
+def test_arm_env_and_prefix() -> None:
+    assert arm_env("weaviate") == {"HC_RAG_RETRIEVER": "weaviate", "HC_RAG_RERANKER": "none"}
+    assert arm_env("pinecone+rerank") == {
+        "HC_RAG_RETRIEVER": "pinecone",
+        "HC_RAG_RERANKER": "pinecone",
+    }
+    assert arm_prefix("weaviate+rerank") == "pi-gate-weaviate-rerank"
+    assert arm_prefix("pinecone") == "pi-gate-pinecone"
+
+
+def _fake_settings(monkeypatch: pytest.MonkeyPatch, *, with_reranker: bool) -> list[dict[str, str]]:
+    """Install a fake ``GraphSettings`` and return the list env snapshots land in."""
+    seen: list[dict[str, str]] = []
+
+    if with_reranker:
+
+        @dataclasses.dataclass
+        class Fake:
+            retriever: str = "weaviate"
+            reranker: str = "none"
+
+            @classmethod
+            def from_env(cls) -> Fake:
+                seen.append(
+                    {k: os.environ.get(k, "") for k in ("HC_RAG_RETRIEVER", "HC_RAG_RERANKER")}
+                )
+                return cls(
+                    retriever=os.environ.get("HC_RAG_RETRIEVER", "weaviate"),
+                    reranker=os.environ.get("HC_RAG_RERANKER", "none"),
+                )
+
+    else:
+
+        @dataclasses.dataclass  # type: ignore[no-redef]
+        class Fake:
+            retriever: str = "weaviate"
+
+            @classmethod
+            def from_env(cls) -> Fake:
+                seen.append(
+                    {k: os.environ.get(k, "") for k in ("HC_RAG_RETRIEVER", "HC_RAG_RERANKER")}
+                )
+                return cls(retriever=os.environ.get("HC_RAG_RETRIEVER", "weaviate"))
+
+    monkeypatch.setattr("healthcare_rag.graph.settings.GraphSettings", Fake)
+    return seen
+
+
+def test_settings_for_arm_sets_both_env_vars_while_building(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from evals.pageindex_gate import settings_for_arm
+
+    monkeypatch.delenv("HC_RAG_RETRIEVER", raising=False)
+    monkeypatch.setenv("HC_RAG_RERANKER", "leftover")
+    seen = _fake_settings(monkeypatch, with_reranker=True)
+
+    settings = settings_for_arm("pinecone+rerank")
+
+    assert seen == [{"HC_RAG_RETRIEVER": "pinecone", "HC_RAG_RERANKER": "pinecone"}]
+    assert (settings.retriever, settings.reranker) == ("pinecone", "pinecone")
+    # the caller's environment is restored exactly, including the absent variable
+    assert "HC_RAG_RETRIEVER" not in os.environ
+    assert os.environ["HC_RAG_RERANKER"] == "leftover"
+
+
+def test_settings_for_arm_without_rerank_defaults_the_knob_off(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from evals.pageindex_gate import settings_for_arm
+
+    seen = _fake_settings(monkeypatch, with_reranker=True)
+
+    settings = settings_for_arm("weaviate")
+
+    assert seen[0]["HC_RAG_RERANKER"] == "none"
+    assert (settings.retriever, settings.reranker) == ("weaviate", "none")
+
+
+def test_settings_for_arm_tolerates_a_missing_reranker_field_when_unused(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Before the reranker knob lands, plain arms still build; ``+rerank`` says why not."""
+    from evals.pageindex_gate import settings_for_arm
+
+    _fake_settings(monkeypatch, with_reranker=False)
+
+    assert settings_for_arm("pinecone").retriever == "pinecone"
+    with pytest.raises(RuntimeError, match="HC_RAG_RERANKER"):
+        settings_for_arm("pinecone+rerank")
+
+
+# --------------------------------------------------------------------------- #
+# multi-candidate stage 1                                                      #
+# --------------------------------------------------------------------------- #
+
+def _candidates() -> list[dict[str, Any]]:
+    return [
+        _arm(0.82, name="pinecone", latency=2.0),
+        _arm(0.90, name="pinecone+rerank", latency=5.0),
+        _arm(0.70, name="pageindex", latency=0.5),
+    ]
+
+
+def test_stage1_gates_every_candidate_and_selects_the_best_passer() -> None:
+    decision = evaluate_stage1(_arm(0.80, name="weaviate"), _candidates())
+
+    assert decision["selected_arm"] == "pinecone+rerank"
+    assert decision["pass"] is True
+    assert decision["exit_code"] == EXIT_PASS
+    assert decision["score"] == pytest.approx(0.10)
+    assert [c["arm"] for c in decision["candidates"]] == ["pinecone", "pinecone+rerank", "pageindex"]
+    assert [c["pass"] for c in decision["candidates"]] == [True, True, False]
+    assert [c["selected"] for c in decision["candidates"]] == [False, True, False]
+    assert [round(c["delta_page_recall"], 3) for c in decision["candidates"]] == [0.02, 0.10, -0.10]
+    assert [g["arm"] for g in decision["gates"]] == ["pinecone", "pinecone+rerank", "pageindex"]
+    assert decision["gate"]["arm"] == "pinecone+rerank"
+
+
+def test_stage1_tie_on_page_recall_is_broken_by_latency() -> None:
+    candidates = [
+        _arm(0.85, name="pinecone", latency=3.0),
+        _arm(0.85, name="weaviate+rerank", latency=1.2),
+    ]
+
+    decision = evaluate_stage1(_arm(0.80, name="weaviate"), candidates)
+
+    assert decision["selected_arm"] == "weaviate+rerank"
+    assert select_candidate(decision["candidates"]) == "weaviate+rerank"
+
+
+def test_stage1_rejects_when_no_candidate_passes_and_scores_the_least_bad() -> None:
+    candidates = [_arm(0.75, name="pinecone"), _arm(0.60, name="pageindex")]
+
+    decision = evaluate_stage1(_arm(0.80, name="weaviate"), candidates)
+
+    assert decision["selected_arm"] is None
+    assert decision["pass"] is False
+    assert decision["verdict"] == "REJECT"
+    assert decision["exit_code"] == EXIT_STAGE1_REJECT
+    assert decision["score"] == pytest.approx(-0.05)  # best (least bad) delta
+    assert decision["gate"]["arm"] == "pinecone"
+
+
+def test_stage1_stage2_arm_overrides_the_selection_rule() -> None:
+    decision = evaluate_stage1(
+        _arm(0.80, name="weaviate"), _candidates(), stage2_arm="pinecone"
+    )
+
+    assert decision["selected_arm"] == "pinecone"
+    assert decision["pass"] is True
+    assert decision["score"] == pytest.approx(0.02)
+    assert [c["selected"] for c in decision["candidates"]] == [True, False, False]
+
+
+def test_stage1_stage2_arm_must_name_a_candidate() -> None:
+    with pytest.raises(ValueError, match="not one of the candidates"):
+        evaluate_stage1(_arm(0.80), _candidates(), stage2_arm="weaviate")
+
+
+def test_stage1_min_page_recall_delta_raises_the_bar() -> None:
+    candidates = [_arm(0.81, name="pinecone")]
+    reference = _arm(0.80, name="weaviate")
+
+    assert evaluate_stage1(reference, candidates)["pass"] is True
+    strict = evaluate_stage1(reference, candidates, min_page_recall_delta=0.05)
+    assert strict["pass"] is False
+    assert "+ 0.05" in strict["gate"]["threshold"]
+
+
+def test_stage1_single_candidate_dict_keeps_the_old_contract() -> None:
+    decision = evaluate_stage1(_arm(0.80, name="weaviate"), _arm(0.90, name="pageindex"))
+
+    assert decision["pass"] is True
+    assert decision["selected_arm"] == "pageindex"
+    assert len(decision["candidates"]) == 1
+    assert decision["gate"]["threshold"].startswith("page_recall(B) >= page_recall(A) -")
+
+
+# --------------------------------------------------------------------------- #
+# multi-arm CLI / persistence contract                                         #
+# --------------------------------------------------------------------------- #
+
+def test_arm_b_is_repeatable_and_defaults_to_pageindex() -> None:
+    assert parse_args([]).arm_b == ["pageindex"]
+    assert parse_args([]).report_name == "pageindex-vs-weaviate"
+    assert parse_args([]).stage2_arm is None
+    assert parse_args([]).min_page_recall_delta == 0.0
+
+    args = parse_args(
+        ["--arm-b", "pinecone", "--arm-b", "weaviate+rerank", "--report-name", "pinecone-rerank"]
+    )
+
+    assert args.arm_b == ["pinecone", "weaviate+rerank"]
+    assert args.arm_a == "weaviate"
+    assert args.report_name == "pinecone-rerank"
+
+
+@pytest.mark.parametrize("bad", ["foo", "+rerank", "weaviate+foo"])
+def test_parser_rejects_arms_outside_the_grammar(bad: str) -> None:
+    with pytest.raises(SystemExit):
+        parse_args(["--arm-b", bad])
+
+
+def _multiarm_result() -> dict[str, Any]:
+    reference = _arm(0.80, name="weaviate")
+    candidates = [_arm(0.90, name="pinecone+rerank", latency=5.0), _arm(0.70, name="weaviate")]
+    for index, run in enumerate([reference, *candidates]):
+        run["items"] = [{"id": f"q{index}", "page_recall": run["page_recall"]}]
+    decision = evaluate_stage1(reference, candidates)
+    return {
+        "pass": decision["pass"],
+        "score": decision["score"],
+        "stage": 1,
+        "verdict": "INCONCLUSIVE",
+        "smoke": False,
+        "arms": {
+            "a": {"name": "weaviate"},
+            "b": {"name": decision["selected_arm"]},
+            "candidates": ["pinecone+rerank", "weaviate"],
+        },
+        "report_name": "pinecone-rerank",
+        "stage1": {
+            "a": reference,
+            "b": candidates[0],
+            "arms": [reference, *candidates],
+            "candidates": decision["candidates"],
+            "selected_arm": decision["selected_arm"],
+            "eligibility": {"total": 86, "eligible": 71, "skipped_no_expected_pages": 8,
+                            "skipped_multiturn": 7},
+            "gate": decision["gate"],
+            "gates": decision["gates"],
+            "delta_page_recall": decision["score"],
+            "wall_s": 3.0,
+        },
+        "stage2": None,
+        "gates": decision["gates"],
+        "thresholds": dict(THRESHOLDS),
+        "git_sha": "deadbee",
+        "started_at": "2026-08-20T00:00:00+00:00",
+        "finished_at": "2026-08-20T00:01:00+00:00",
+        "wall_s": 60.0,
+        "exit_code": EXIT_PASS,
+    }
+
+
+def test_persist_multiarm_keeps_the_json_contract_and_uses_the_report_name(
+    tmp_path: Path,
+) -> None:
+    result = _multiarm_result()
+
+    written = persist(result, tmp_path / "out", None)
+
+    assert Path(written["md"]).name == "pinecone-rerank.md"
+    payload = json.loads(Path(written["json"]).read_text())
+    assert set(payload) >= {"pass", "score", "verdict", "arms", "gates", "thresholds"}
+    assert payload["pass"] is True
+    assert payload["score"] == pytest.approx(0.10)
+    assert payload["arms"]["a"]["name"] == "weaviate"
+    assert payload["arms"]["b"]["name"] == "pinecone+rerank"
+    assert payload["arms"]["candidates"] == ["pinecone+rerank", "weaviate"]
+    assert payload["stage1"]["selected_arm"] == "pinecone+rerank"
+    assert [c["arm"] for c in payload["stage1"]["candidates"]] == ["pinecone+rerank", "weaviate"]
+    # per-item detail is split out of the main JSON, one entry per arm string
+    assert all("items" not in run for run in payload["stage1"]["arms"])
+    items = json.loads(Path(payload["stage1_items_path"]).read_text())
+    assert list(items) == ["weaviate", "pinecone+rerank", "weaviate#2"]
+    assert items["weaviate#2"][0]["page_recall"] == 0.70
+
+
+def test_persist_report_name_argument_overrides_the_result_field(tmp_path: Path) -> None:
+    written = persist(_multiarm_result(), tmp_path / "out", None, "explicit-name")
+
+    assert Path(written["md"]).name == "explicit-name.md"
+    assert Path(written["json"]).name == "explicit-name.json"
+
+
+def test_render_report_lists_every_candidate_and_names_the_selected_arm() -> None:
+    text = render_report(_multiarm_result())
+
+    assert "### Candidates" in text
+    assert "| `pinecone+rerank` |" in text
+    assert "selected for stage 2: `pinecone+rerank`" in text
+    assert "stage1_page_recall (`pinecone+rerank`)" in text
+
+
+def test_run_baseline_for_arm_carries_both_env_vars_and_the_derived_prefix(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    report = tmp_path / "run.json"
+    report.write_text(json.dumps({"experiment_name": "exp", "aggregate": {}}))
+    captured: dict[str, Any] = {}
+
+    class FakeProc:
+        def __init__(self) -> None:
+            self.stdout = iter([f"json: {report}\n", f"report: {tmp_path / 'run.md'}\n"])
+
+        def wait(self) -> int:
+            return 0
+
+    def fake_popen(cmd: list[str], **kwargs: Any) -> FakeProc:
+        captured["cmd"] = cmd
+        captured["env"] = kwargs.get("env")
+        return FakeProc()
+
+    monkeypatch.setattr(subprocess, "Popen", fake_popen)
+
+    out = run_baseline_for_arm("weaviate+rerank", repetitions=2, smoke=True)
+
+    assert captured["env"]["HC_RAG_RETRIEVER"] == "weaviate"
+    assert captured["env"]["HC_RAG_RERANKER"] == "pinecone"
+    assert captured["cmd"][captured["cmd"].index("--prefix") + 1] == "pi-gate-weaviate-rerank"
+    assert out["arm"] == "weaviate+rerank"
+    assert out["experiment_name"] == "exp"

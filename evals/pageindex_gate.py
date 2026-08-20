@@ -1,31 +1,38 @@
 """
-Two-stage go/no-go gate: PageIndex tree-search retrieval vs. Weaviate hybrid search.
+Two-stage go/no-go gate for retrieval arms: one reference vs. N candidates.
 
-The retrieval stage is the only thing that differs between the two arms
-(``HC_RAG_RETRIEVER=weaviate|pageindex``); safety, decomposition, generation and
-validation are identical, so any delta is attributable to the retriever.
+An **arm string** is ``<retriever>[+rerank]`` — ``weaviate``, ``pinecone``,
+``pageindex``, optionally with ``+rerank`` (which means ``HC_RAG_RERANKER=pinecone``;
+without it the reranker is ``none``). The retrieval stage is the only thing that
+differs between arms; safety, decomposition, generation and validation are
+identical, so any delta is attributable to retrieval.
 
-    # full gate (stage 1, then stage 2 if stage 1 passes)
-    uv run python -m evals.pageindex_gate --json
+    # full gate over three candidates (stage 1, then stage 2 for the winner)
+    uv run python -m evals.pageindex_gate --json \
+        --arm-a weaviate --arm-b pinecone --arm-b weaviate+rerank --arm-b pinecone+rerank \
+        --report-name pinecone-rerank
 
     # cheap plumbing check: 3 questions/arm, no judges
     uv run python -m evals.pageindex_gate --json --smoke
 
-    # self-check: both arms are Weaviate, so every delta must be ~0
+    # self-check: the candidate is the reference, so every delta must be ~0
     uv run python -m evals.pageindex_gate --json --smoke --arm-b weaviate --stage 1
 
 **Stage 1 — retrieval-only gate.** Runs ``retrieve_documents`` for every eligible
-golden question on both arms (no generation, no judges) and compares mean
-``page_recall`` using the *same* ``evals.evaluators.retrieval_page_hit``
-definition the main eval uses. If arm B retrieves worse pages than arm A the
-mission is over: nothing downstream can fix retrieval it never saw. Cheap enough
-(one routing call per question, plus the arm's own retrieval cost) to run before
-spending judge money.
+golden question on the reference arm and on every candidate (no generation, no
+judges) and compares mean ``page_recall`` using the *same*
+``evals.evaluators.retrieval_page_hit`` definition the main eval uses. A candidate
+that retrieves worse pages than the reference is out: nothing downstream can fix
+retrieval it never saw. Among the passing candidates exactly one goes to stage 2 —
+the highest ``page_recall``, ties broken by lower mean retrieval latency (override
+with ``--stage2-arm``). If no candidate passes the mission is over: ``REJECT``,
+exit 2, no judge money spent. Cheap enough (one routing call per question, plus the
+arm's own retrieval cost) to run first.
 
-**Stage 2 — paired full eval.** Runs ``evals.run_baseline`` as a subprocess once
-per arm, in the same session, with identical flags, and compares the aggregates.
-Both arms are re-measured; historical report numbers are never used as the
-baseline (judge noise is ±0.07 correctness at n≈44).
+**Stage 2 — paired full eval.** Runs ``evals.run_baseline`` as a subprocess for the
+reference and the selected candidate, in the same session, with identical flags,
+and compares the aggregates. Both arms are re-measured; historical report numbers
+are never used as the baseline (judge noise is ±0.07 correctness at n≈44).
 
 Exit codes: ``0`` pass · ``2`` stage-1 reject (terminal) · ``3`` stage-2 fail ·
 ``1`` error. With ``--json`` the last line of stdout is one JSON object; all
@@ -80,7 +87,13 @@ OPERATIONAL_GATES = frozenset({"cost_ratio", "latency_p50_ratio"})
 # Gates that cannot be computed without LLM judges (i.e. under --smoke).
 JUDGE_GATES = QUALITY_GATES
 
-ARMS = ("weaviate", "pageindex")
+RETRIEVERS = ("weaviate", "pinecone", "pageindex")
+ARMS = RETRIEVERS  # backwards-compatible alias
+RERANK_SUFFIX = "+rerank"
+RERANKER_ON = "pinecone"
+RERANKER_OFF = "none"
+DEFAULT_CANDIDATE_ARMS = ("pageindex",)
+
 SMOKE_QUESTIONS = 3
 SMOKE_LIMIT = 3
 
@@ -118,6 +131,52 @@ def _fmt(v: Any, kind: str = "num") -> str:
             return f"{v:.3f}×"
         return f"{v:.3f}"
     return str(v)
+
+
+def parse_arm(arm: str) -> tuple[str, str]:
+    """``"<retriever>[+rerank]"`` → ``(HC_RAG_RETRIEVER, HC_RAG_RERANKER)``.
+
+    ``"weaviate"`` → ``("weaviate", "none")`` · ``"pinecone+rerank"`` →
+    ``("pinecone", "pinecone")``. Anything else raises ``ValueError``.
+    """
+    text = (arm or "").strip()
+    head, sep, tail = text.partition("+")
+    reranker = RERANKER_OFF
+    if sep:
+        if tail != RERANK_SUFFIX[1:]:
+            message = (
+                f"invalid arm {arm!r}: the only supported suffix is {RERANK_SUFFIX!r} "
+                f"(got '+{tail}')"
+            )
+            raise ValueError(message)
+        reranker = RERANKER_ON
+    if head not in RETRIEVERS:
+        message = (
+            f"invalid arm {arm!r}: retriever must be one of {', '.join(RETRIEVERS)} "
+            f"(optionally with {RERANK_SUFFIX})"
+        )
+        raise ValueError(message)
+    return head, reranker
+
+
+def arm_string(arm: str) -> str:
+    """Validate an arm string (argparse ``type=``) and return it normalised."""
+    try:
+        retriever, reranker = parse_arm(arm)
+    except ValueError as exc:
+        raise argparse.ArgumentTypeError(str(exc)) from exc
+    return retriever + (RERANK_SUFFIX if reranker == RERANKER_ON else "")
+
+
+def arm_env(arm: str) -> dict[str, str]:
+    """The two environment variables that select an arm's retrieval stage."""
+    retriever, reranker = parse_arm(arm)
+    return {"HC_RAG_RETRIEVER": retriever, "HC_RAG_RERANKER": reranker}
+
+
+def arm_prefix(arm: str) -> str:
+    """``run_baseline --prefix`` for an arm (``weaviate+rerank`` → ``pi-gate-weaviate-rerank``)."""
+    return "pi-gate-" + arm.replace("+", "-")
 
 
 def _git_sha() -> str:
@@ -190,36 +249,46 @@ def eligible_items(golden: list[dict[str, Any]]) -> tuple[list[dict[str, Any]], 
 
 
 def settings_for_arm(arm: str) -> Any:
-    """``GraphSettings`` with the retriever knob set to ``arm``.
+    """``GraphSettings`` with the retriever *and* reranker knobs set to ``arm``.
 
-    The knob is owned by the integration side of the mission; until it lands the
-    dataclass has no ``retriever`` field, in which case only the (default)
-    Weaviate arm can be constructed.
+    Both ``HC_RAG_RETRIEVER`` and ``HC_RAG_RERANKER`` are set for the duration of
+    ``from_env()`` (so knobs derived from them are read consistently) and then
+    restored, and the resulting dataclass is pinned with ``dataclasses.replace``.
+    Fields owned by the integration side of the mission may not exist yet: a
+    missing field is tolerated as long as the arm asks for that knob's default.
     """
     import dataclasses
 
     from healthcare_rag.graph.settings import GraphSettings
 
-    previous = os.environ.get("HC_RAG_RETRIEVER")
-    os.environ["HC_RAG_RETRIEVER"] = arm
+    retriever, reranker = parse_arm(arm)
+    env = {"HC_RAG_RETRIEVER": retriever, "HC_RAG_RERANKER": reranker}
+    previous = {key: os.environ.get(key) for key in env}
+    os.environ.update(env)
     try:
         settings = GraphSettings.from_env()
     finally:
-        if previous is None:
-            os.environ.pop("HC_RAG_RETRIEVER", None)
-        else:
-            os.environ["HC_RAG_RETRIEVER"] = previous
+        for key, value in previous.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
 
     names = {f.name for f in dataclasses.fields(settings)}
-    if "retriever" in names:
-        return dataclasses.replace(settings, retriever=arm)
-    if arm == "weaviate":
-        return settings
-    message = (
-        f"GraphSettings has no 'retriever' field, so arm {arm!r} cannot be built — "
-        "the PageIndex integration (HC_RAG_RETRIEVER knob) has not landed yet."
-    )
-    raise RuntimeError(message)
+    changes: dict[str, Any] = {}
+    for field, value, default, knob in (
+        ("retriever", retriever, "weaviate", "HC_RAG_RETRIEVER"),
+        ("reranker", reranker, RERANKER_OFF, "HC_RAG_RERANKER"),
+    ):
+        if field in names:
+            changes[field] = value
+        elif value != default:
+            message = (
+                f"GraphSettings has no {field!r} field, so arm {arm!r} cannot be built — "
+                f"the {knob} knob has not landed yet."
+            )
+            raise RuntimeError(message)
+    return dataclasses.replace(settings, **changes) if changes else settings
 
 
 async def run_arm_stage1(arm: str, items: list[dict[str, Any]]) -> dict[str, Any]:
@@ -318,27 +387,113 @@ def _per_split(per_item: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return out
 
 
-def evaluate_stage1(arm_a: dict[str, Any], arm_b: dict[str, Any]) -> dict[str, Any]:
-    """Pure: stage-1 arms → gate row, pass flag, score, verdict, exit code."""
-    a, b = arm_a.get("page_recall"), arm_b.get("page_recall")
+def _stage1_gate(
+    reference: dict[str, Any], candidate: dict[str, Any], minimum: float
+) -> dict[str, Any]:
+    """One candidate's page_recall gate row against the reference."""
+    a, b = reference.get("page_recall"), candidate.get("page_recall")
     epsilon = THRESHOLDS["stage1_page_recall_epsilon"]
     if a is None or b is None:
         passed: bool | None = False
         delta = None
     else:
         delta = b - a
-        passed = b >= a - epsilon
-    gate = {
+        passed = b >= a + minimum - epsilon
+    threshold = (
+        f"page_recall(B) >= page_recall(A) - {epsilon:g}"
+        if minimum == 0
+        else f"page_recall(B) >= page_recall(A) + {minimum:g} - {epsilon:g}"
+    )
+    return {
         "name": "stage1_page_recall",
+        "arm": candidate.get("arm"),
         "a": a,
         "b": b,
-        "threshold": f"page_recall(B) >= page_recall(A) - {epsilon:g}",
+        "delta": delta,
+        "threshold": threshold,
         "pass": passed,
     }
+
+
+def select_candidate(candidates: list[dict[str, Any]]) -> str | None:
+    """Best passing candidate: highest ``page_recall``, ties → lower ``mean_latency_s``.
+
+    ``candidates`` are the summary rows built by :func:`evaluate_stage1`.
+    """
+    passers = [c for c in candidates if c["pass"] and c.get("page_recall") is not None]
+    if not passers:
+        return None
+    epsilon = THRESHOLDS["stage1_page_recall_epsilon"]
+    best = max(c["page_recall"] for c in passers)
+    tied = [c for c in passers if c["page_recall"] >= best - epsilon]
+    if len(tied) == 1:
+        return tied[0]["arm"]
+    return min(tied, key=lambda c: (c.get("mean_latency_s") is None, c.get("mean_latency_s") or 0.0))["arm"]
+
+
+def evaluate_stage1(
+    arm_a: dict[str, Any],
+    arm_b: dict[str, Any] | list[dict[str, Any]],
+    *,
+    min_page_recall_delta: float = 0.0,
+    stage2_arm: str | None = None,
+) -> dict[str, Any]:
+    """Pure: reference arm + candidate arm(s) → gate rows, selection, verdict, exit code.
+
+    ``arm_b`` may be a single arm dict (the historical one-candidate contract) or a
+    list of them. Every candidate is gated against the reference independently;
+    the one that goes to stage 2 is ``stage2_arm`` when forced, otherwise the best
+    passer (see :func:`select_candidate`). No candidate passing is a terminal
+    ``REJECT``; ``score`` is then the best (least bad) delta seen.
+    """
+    arms_b = list(arm_b) if isinstance(arm_b, list) else [arm_b]
+    gates = [_stage1_gate(arm_a, candidate, min_page_recall_delta) for candidate in arms_b]
+    candidates = [
+        {
+            "arm": candidate.get("arm"),
+            "page_recall": candidate.get("page_recall"),
+            "chunk_recall": candidate.get("chunk_recall"),
+            "delta_page_recall": gate["delta"],
+            "mean_latency_s": candidate.get("mean_latency_s"),
+            "n_errors": candidate.get("n_errors"),
+            "pass": bool(gate["pass"]),
+            "selected": False,
+        }
+        for candidate, gate in zip(arms_b, gates, strict=True)
+    ]
+
+    if stage2_arm is not None:
+        known = [c["arm"] for c in candidates]
+        if stage2_arm not in known:
+            message = f"--stage2-arm {stage2_arm!r} is not one of the candidates ({', '.join(map(str, known))})"
+            raise ValueError(message)
+        selected = stage2_arm
+    else:
+        selected = select_candidate(candidates)
+
+    for candidate in candidates:
+        candidate["selected"] = candidate["arm"] == selected
+
+    index = next((i for i, c in enumerate(candidates) if c["selected"]), None)
+    if index is None:
+        # Nothing passed: report the least bad candidate so the verdict can name it.
+        deltas = [
+            (i, c["delta_page_recall"])
+            for i, c in enumerate(candidates)
+            if c["delta_page_recall"] is not None
+        ]
+        index = max(deltas, key=lambda pair: pair[1])[0] if deltas else 0
+    primary = candidates[index]
+    passed = bool(gates[index]["pass"]) and selected is not None
+
     return {
-        "gate": gate,
-        "pass": bool(passed),
-        "score": delta,
+        "gate": gates[index],
+        "gates": gates,
+        "candidates": candidates,
+        "selected_arm": selected,
+        "primary_index": index,
+        "pass": passed,
+        "score": primary["delta_page_recall"],
         "verdict": None if passed else "REJECT",
         "exit_code": EXIT_PASS if passed else EXIT_STAGE1_REJECT,
     }
@@ -354,14 +509,19 @@ def run_baseline_for_arm(
     repetitions: int,
     smoke: bool,
     prefix: str | None = None,
+    concurrency: int = 1,
 ) -> dict[str, Any]:
-    """Run ``evals.run_baseline`` in a subprocess with ``HC_RAG_RETRIEVER=<arm>``."""
+    """Run ``evals.run_baseline`` in a subprocess with the arm's retriever/reranker env.
+
+    ``concurrency`` is passed through to ``run_baseline --concurrency``; both arms
+    must use the same value so the paired latency gate stays comparable.
+    """
     cmd = [
         sys.executable,
         "-m",
         "evals.run_baseline",
         "--prefix",
-        prefix or f"pi-gate-{arm}",
+        prefix or arm_prefix(arm),
         "--split",
         "core",
         "--split",
@@ -369,13 +529,13 @@ def run_baseline_for_arm(
         "--repetitions",
         str(repetitions),
         "--concurrency",
-        "1",
+        str(concurrency),
         "--no-sync",
     ]
     if smoke:
         cmd += ["--limit", str(SMOKE_LIMIT), "--no-judges"]
 
-    env = {**os.environ, "HC_RAG_RETRIEVER": arm}
+    env = {**os.environ, **arm_env(arm)}
     _log(f"[stage2] {arm}: {' '.join(cmd)}")
     started = time.perf_counter()
     proc = subprocess.Popen(
@@ -570,16 +730,19 @@ def evaluate_stage2(
 # --------------------------------------------------------------------------- #
 
 def _stage1_table(stage1: dict[str, Any]) -> list[str]:
-    arms = [stage1["a"], stage1["b"]]
+    arms = stage1.get("arms") or [stage1["a"], stage1["b"]]
     splits = sorted({s for arm in arms for s in (arm.get("per_split") or {})})
     header = ["| arm | n | page_recall | chunk_recall "]
     for split in splits:
         header.append(f"| {split} page_recall | {split} chunk_recall ")
     header.append("| errors | wall (s) |")
     lines = ["".join(header), "|---" * (4 + 2 * len(splits) + 2) + "|"]
-    for arm in arms:
+    for position, arm in enumerate(arms):
+        # With an explicit arm list the first row is the reference; the self-check
+        # runs the reference arm string twice, so say which row is which.
+        role = " (reference)" if position == 0 and stage1.get("arms") else ""
         cells = [
-            f"`{arm['arm']}`",
+            f"`{arm['arm']}`{role}",
             str(arm.get("n")),
             _fmt(arm.get("page_recall")),
             _fmt(arm.get("chunk_recall")),
@@ -592,6 +755,24 @@ def _stage1_table(stage1: dict[str, Any]) -> list[str]:
     return lines
 
 
+def _candidates_table(stage1: dict[str, Any]) -> list[str]:
+    """One row per candidate: recall, delta vs. the reference, latency, gate, selection."""
+    candidates = stage1.get("candidates") or []
+    lines = [
+        "| candidate | page_recall | Δ vs. reference | mean latency (s) | pass | → stage 2 |",
+        "|---|---|---|---|---|---|",
+    ]
+    for candidate in candidates:
+        lines.append(
+            f"| `{candidate.get('arm')}` | {_fmt(candidate.get('page_recall'))} "
+            f"| {_fmt(candidate.get('delta_page_recall'))} "
+            f"| {_fmt(candidate.get('mean_latency_s'))} "
+            f"| {_fmt(bool(candidate.get('pass')))} "
+            f"| {'✅' if candidate.get('selected') else ''} |"
+        )
+    return lines
+
+
 def _gate_table(gates: list[dict[str, Any]], names: tuple[str, str]) -> list[str]:
     lines = [
         f"| gate | A (`{names[0]}`) | B (`{names[1]}`) | threshold | pass |",
@@ -600,8 +781,9 @@ def _gate_table(gates: list[dict[str, Any]], names: tuple[str, str]) -> list[str
     for gate in gates:
         kind = "usd" if "cost" in gate["name"] else "num"
         status = "skipped" if gate.get("skipped") else _fmt(gate["pass"])
+        label = gate["name"] + (f" (`{gate['arm']}`)" if gate.get("arm") else "")
         lines.append(
-            f"| {gate['name']} | {_fmt(gate['a'], kind)} | {_fmt(gate['b'], kind)} "
+            f"| {label} | {_fmt(gate['a'], kind)} | {_fmt(gate['b'], kind)} "
             f"| {gate['threshold']} | {status} |"
         )
     return lines
@@ -647,11 +829,18 @@ def _rationale(result: dict[str, Any]) -> str:
     verdict = result["verdict"]
     a = result["arms"]["a"]["name"]
     b = result["arms"]["b"]["name"]
+    stage1 = result.get("stage1") or {}
+    candidates = stage1.get("candidates") or []
     if verdict == "REJECT" and result["stage"] == 1:
+        names = ", ".join(f"`{c['arm']}`" for c in candidates) or f"`{b}`"
+        subject = (
+            f"all {len(candidates)} candidates ({names})" if len(candidates) > 1 else names
+        )
         return (
-            f"Stage 1 rejected `{b}`: mean page_recall {_fmt(result['stage1']['b'].get('page_recall'))} "
-            f"vs. {_fmt(result['stage1']['a'].get('page_recall'))} for `{a}` "
-            f"(Δ {_fmt(result['score'])}) over {result['stage1']['a'].get('n')} eligible golden questions. "
+            f"Stage 1 rejected {subject}: the best of them, `{b}`, reached mean page_recall "
+            f"{_fmt(stage1.get('b', {}).get('page_recall'))} "
+            f"vs. {_fmt(stage1.get('a', {}).get('page_recall'))} for `{a}` "
+            f"(Δ {_fmt(result['score'])}) over {stage1.get('a', {}).get('n')} eligible golden questions. "
             "Retrieval that returns worse pages cannot be recovered downstream, so the paired full eval "
             "was not run and no judge budget was spent."
         )
@@ -673,7 +862,7 @@ def _rationale(result: dict[str, Any]) -> str:
             "Smoke run — plumbing only. Sample sizes are far too small and (for stage 2) judges were "
             "disabled, so no adoption decision can be read off these numbers."
         )
-    failed = result.get("stage2", {}).get("failed_gates") or []
+    failed = (result.get("stage2") or {}).get("failed_gates") or []
     if failed:
         return (
             f"Inconclusive: `{b}` held quality but missed the operational budget "
@@ -688,14 +877,20 @@ def _rationale(result: dict[str, Any]) -> str:
 def render_report(result: dict[str, Any]) -> str:
     a = result["arms"]["a"]["name"]
     b = result["arms"]["b"]["name"]
+    names = result["arms"].get("candidates") or [b]
+    selected = (result.get("stage1") or {}).get("selected_arm")
     lines = [
-        "# PageIndex vs. Weaviate — retrieval go/no-go",
+        f"# Retrieval go/no-go — {' · '.join(f'`{n}`' for n in names)} vs. `{a}`",
         "",
         (
             f"- **Verdict: {result['verdict']}** (stage {result['stage']}, "
             f"`pass={str(result['pass']).lower()}`, score={_fmt(result['score'])})"
         ),
-        f"- Arms: A = `{a}` (reference) · B = `{b}` (candidate)",
+        (
+            f"- Arms: A = `{a}` (reference) · candidates "
+            f"{', '.join(f'`{n}`' for n in names)}"
+            + (f" · selected for stage 2: `{selected}`" if selected else "")
+        ),
         f"- Run: {result['started_at']} → {result['finished_at']} ({result['wall_s']:.0f} s wall)",
         f"- git: `{result['git_sha']}` · smoke: `{str(result['smoke']).lower()}`",
         "",
@@ -723,7 +918,9 @@ def render_report(result: dict[str, Any]) -> str:
             "",
         ]
         lines += _stage1_table(stage1)
-        lines += ["", *_gate_table([stage1["gate"]], (a, b)), ""]
+        if stage1.get("candidates"):
+            lines += ["", "### Candidates", "", *_candidates_table(stage1)]
+        lines += ["", *_gate_table(stage1.get("gates") or [stage1["gate"]], (a, b)), ""]
     else:
         lines += ["_(skipped)_", ""]
 
@@ -771,17 +968,27 @@ async def run_gate(args: argparse.Namespace) -> dict[str, Any]:
     from .dataset import load_golden
 
     started_at, started = _now(), time.perf_counter()
+    candidate_arms: list[str] = list(getattr(args, "arm_b", None) or DEFAULT_CANDIDATE_ARMS)
+    forced = getattr(args, "stage2_arm", None)
+    min_delta = float(getattr(args, "min_page_recall_delta", 0.0) or 0.0)
+    stage2_candidate = forced or candidate_arms[0]
     result: dict[str, Any] = {
         "pass": False,
         "score": None,
         "stage": 1,
         "verdict": "INCONCLUSIVE",
         "smoke": bool(args.smoke),
-        "arms": {"a": {"name": args.arm_a}, "b": {"name": args.arm_b}},
+        "arms": {
+            "a": {"name": args.arm_a},
+            "b": {"name": stage2_candidate},
+            "candidates": candidate_arms,
+        },
+        "report_name": getattr(args, "report_name", None) or REPORT_STEM,
         "stage1": None,
         "stage2": None,
         "gates": [],
         "thresholds": dict(THRESHOLDS),
+        "min_page_recall_delta": min_delta,
         "git_sha": _git_sha(),
         "started_at": started_at,
         "repetitions": args.repetitions,
@@ -797,33 +1004,50 @@ async def run_gate(args: argparse.Namespace) -> dict[str, Any]:
         if args.smoke:
             items = items[:SMOKE_QUESTIONS]
             counts = {**counts, "eligible": len(items), "smoke_subset": True}
-        _log(f"[stage1] {len(items)} questions × 2 arms ({args.arm_a} vs {args.arm_b})")
+        _log(
+            f"[stage1] {len(items)} questions × {len(candidate_arms) + 1} arms "
+            f"({args.arm_a} vs {', '.join(candidate_arms)})"
+        )
         arm_a = await run_arm_stage1(args.arm_a, items)
         _log(f"[stage1] {args.arm_a}: page_recall={_fmt(arm_a['page_recall'])} in {arm_a['wall_s']}s")
-        arm_b = await run_arm_stage1(args.arm_b, items)
-        _log(f"[stage1] {args.arm_b}: page_recall={_fmt(arm_b['page_recall'])} in {arm_b['wall_s']}s")
+        arms_b: list[dict[str, Any]] = []
+        for arm in candidate_arms:
+            run = await run_arm_stage1(arm, items)
+            _log(f"[stage1] {arm}: page_recall={_fmt(run['page_recall'])} in {run['wall_s']}s")
+            arms_b.append(run)
 
-        decision = evaluate_stage1(arm_a, arm_b)
+        decision = evaluate_stage1(
+            arm_a, arms_b, min_page_recall_delta=min_delta, stage2_arm=forced
+        )
+        primary = arms_b[decision["primary_index"]]
         result["stage1"] = {
             "a": arm_a,
-            "b": arm_b,
+            "b": primary,
+            "arms": [arm_a, *arms_b],
+            "candidates": decision["candidates"],
+            "selected_arm": decision["selected_arm"],
             "eligibility": counts,
             "gate": decision["gate"],
+            "gates": decision["gates"],
             "delta_page_recall": decision["score"],
-            "wall_s": round(arm_a["wall_s"] + arm_b["wall_s"], 2),
+            "wall_s": round(arm_a["wall_s"] + sum(run["wall_s"] for run in arms_b), 2),
         }
-        result["gates"] = [decision["gate"]]
+        result["gates"] = decision["gates"]
         result["score"] = decision["score"]
         result["pass"] = decision["pass"]
         exit_code = decision["exit_code"]
+        if decision["selected_arm"]:
+            stage2_candidate = decision["selected_arm"]
+        result["arms"]["b"] = {"name": stage2_candidate}
 
         if not decision["pass"]:
             result["verdict"] = "SMOKE" if args.smoke else "REJECT"
             if args.stage != "2":
                 run_stage2 = False
-            _log(f"[stage1] REJECT: Δpage_recall={_fmt(decision['score'])}")
+            _log(f"[stage1] REJECT: no candidate passed (best Δpage_recall={_fmt(decision['score'])})")
         else:
             result["verdict"] = "SMOKE" if args.smoke else "INCONCLUSIVE"
+            _log(f"[stage1] selected `{stage2_candidate}` for stage 2")
             if not run_stage2:
                 # Stage 1 alone never authorises adoption.
                 result["pass"] = bool(args.smoke)
@@ -832,8 +1056,13 @@ async def run_gate(args: argparse.Namespace) -> dict[str, Any]:
 
     if run_stage2:
         result["stage"] = 2
-        run_a = run_baseline_for_arm(args.arm_a, repetitions=args.repetitions, smoke=args.smoke)
-        run_b = run_baseline_for_arm(args.arm_b, repetitions=args.repetitions, smoke=args.smoke)
+        result["arms"]["b"] = {"name": stage2_candidate}
+        run_a = run_baseline_for_arm(
+            args.arm_a, repetitions=args.repetitions, smoke=args.smoke, concurrency=args.concurrency
+        )
+        run_b = run_baseline_for_arm(
+            stage2_candidate, repetitions=args.repetitions, smoke=args.smoke, concurrency=args.concurrency
+        )
         metrics_a, metrics_b = stage2_metrics(run_a["report"]), stage2_metrics(run_b["report"])
         decision = evaluate_stage2(metrics_a, metrics_b, smoke=args.smoke)
         result["stage2"] = {
@@ -858,10 +1087,37 @@ async def run_gate(args: argparse.Namespace) -> dict[str, Any]:
     return result
 
 
-def persist(result: dict[str, Any], out_dir: Path, run_dir: Path | None) -> dict[str, str]:
+def _items_by_arm(stage1: dict[str, Any]) -> dict[str, list[dict[str, Any]]]:
+    """Per-question stage-1 detail keyed by arm string (reference first).
+
+    A candidate that repeats the reference arm string (the ``--arm-b weaviate``
+    self-check runs it twice, on purpose) gets a ``#2`` suffix so no run is lost.
+    """
+    runs = stage1.get("arms") or [stage1.get(side) for side in ("a", "b")]
+    out: dict[str, list[dict[str, Any]]] = {}
+    for run in runs:
+        if not run:
+            continue
+        key = str(run.get("arm"))
+        if key in out:
+            suffix = 2
+            while f"{key}#{suffix}" in out:
+                suffix += 1
+            key = f"{key}#{suffix}"
+        out[key] = run.get("items") or []
+    return out
+
+
+def persist(
+    result: dict[str, Any],
+    out_dir: Path,
+    run_dir: Path | None,
+    report_name: str | None = None,
+) -> dict[str, str]:
     out_dir.mkdir(parents=True, exist_ok=True)
-    md_path = out_dir / f"{REPORT_STEM}.md"
-    json_path = out_dir / f"{REPORT_STEM}.json"
+    stem = report_name or result.get("report_name") or REPORT_STEM
+    md_path = out_dir / f"{stem}.md"
+    json_path = out_dir / f"{stem}.json"
     result["report_path"] = str(md_path.relative_to(REPO_ROOT) if md_path.is_relative_to(REPO_ROOT) else md_path)
     md_path.write_text(render_report(result))
 
@@ -872,22 +1128,20 @@ def persist(result: dict[str, Any], out_dir: Path, run_dir: Path | None) -> dict
             slim["stage2"][side].pop("full_report", None)
         if slim.get("stage1"):
             slim["stage1"][side].pop("items", None)
+    for run in (slim.get("stage1") or {}).get("arms") or []:
+        run.pop("items", None)
     slim["stage1_items_path"] = None
     if result.get("stage1"):
-        items_path = out_dir / f"{REPORT_STEM}-stage1-items.json"
-        items_path.write_text(
-            json.dumps(
-                {side: result["stage1"][side]["items"] for side in ("a", "b")}, indent=2, default=str
-            )
-        )
+        items_path = out_dir / f"{stem}-stage1-items.json"
+        items_path.write_text(json.dumps(_items_by_arm(result["stage1"]), indent=2, default=str))
         slim["stage1_items_path"] = str(items_path)
     json_path.write_text(json.dumps(slim, indent=2, default=str))
 
     if run_dir:
         run_dir = Path(run_dir)
         run_dir.mkdir(parents=True, exist_ok=True)
-        shutil.copy2(json_path, run_dir / f"{REPORT_STEM}.json")
-        shutil.copy2(md_path, run_dir / f"{REPORT_STEM}.md")
+        shutil.copy2(json_path, run_dir / f"{stem}.json")
+        shutil.copy2(md_path, run_dir / f"{stem}.md")
     return {"json": str(json_path), "md": str(md_path), "slim": json.dumps(slim)}
 
 
@@ -900,10 +1154,20 @@ def build_parser() -> argparse.ArgumentParser:
                     help=f"plumbing check: {SMOKE_QUESTIONS} questions/arm in stage 1, "
                          f"--limit {SMOKE_LIMIT} --no-judges in stage 2")
     ap.add_argument("--stage", choices=["1", "2", "all"], default="all")
-    ap.add_argument("--arm-a", default="weaviate", choices=ARMS, help="reference arm")
-    ap.add_argument("--arm-b", default="pageindex", choices=ARMS,
-                    help="candidate arm (--arm-b weaviate is the self-check: deltas must be ~0)")
+    ap.add_argument("--arm-a", default="weaviate", type=arm_string, help="reference arm")
+    ap.add_argument("--arm-b", action="append", type=arm_string, default=None,
+                    help="candidate arm, repeatable; '<retriever>[+rerank]' with retriever in "
+                         f"{'|'.join(RETRIEVERS)} (default: {DEFAULT_CANDIDATE_ARMS[0]}; "
+                         "--arm-b weaviate is the self-check: deltas must be ~0)")
+    ap.add_argument("--stage2-arm", type=arm_string, default=None,
+                    help="force this candidate into stage 2 instead of the best stage-1 passer")
+    ap.add_argument("--min-page-recall-delta", type=float, default=0.0,
+                    help="stage-1 margin a candidate must beat the reference by (default 0.0)")
+    ap.add_argument("--report-name", default=REPORT_STEM,
+                    help=f"stem for evals/results/<name>.{{md,json}} (default: {REPORT_STEM})")
     ap.add_argument("--repetitions", type=int, default=2, help="stage-2 repetitions per example")
+    ap.add_argument("--concurrency", type=int, default=1,
+                    help="stage-2 run_baseline concurrency (same for both arms; >1 inflates latency equally)")
     ap.add_argument("--out-dir", type=Path, default=DEFAULT_OUT_DIR)
     ap.add_argument("--run-dir", type=Path, default=None,
                     help="also copy the final JSON/MD here (autoresearch run directory)")
@@ -911,11 +1175,19 @@ def build_parser() -> argparse.ArgumentParser:
     return ap
 
 
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    """Parsed CLI args with ``--arm-b`` defaulted (append + default don't mix in argparse)."""
+    args = build_parser().parse_args(argv)
+    if not args.arm_b:
+        args.arm_b = list(DEFAULT_CANDIDATE_ARMS)
+    return args
+
+
 def main() -> int:
-    args = build_parser().parse_args()
+    args = parse_args()
     try:
         result = asyncio.run(run_gate(args))
-        written = persist(result, Path(args.out_dir), args.run_dir)
+        written = persist(result, Path(args.out_dir), args.run_dir, getattr(args, "report_name", None))
         _log(
             f"verdict={result['verdict']} pass={result['pass']} score={_fmt(result['score'])} "
             f"stage={result['stage']} → {written['md']}"

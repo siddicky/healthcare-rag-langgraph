@@ -277,34 +277,62 @@ evals/
 
 ## Retriever A/B gate (`pageindex_gate`)
 
-`evals/pageindex_gate.py` decides whether a *retriever* is worth swapping in. It
-compares two arms of the `HC_RAG_RETRIEVER` knob (`weaviate` | `pageindex`) —
-everything else in the graph is identical, so the delta belongs to retrieval.
+`evals/pageindex_gate.py` decides whether a *retrieval stage* is worth swapping in.
+It compares one **reference arm** against N **candidate arms** — everything else in
+the graph is identical, so the delta belongs to retrieval.
+
+An **arm string** is `<retriever>[+rerank]`:
+
+| arm string | `HC_RAG_RETRIEVER` | `HC_RAG_RERANKER` |
+|---|---|---|
+| `weaviate` / `pinecone` / `pageindex` | that retriever | `none` |
+| `<retriever>+rerank` | that retriever | `pinecone` |
+
+Both variables are set for the arm — while building `GraphSettings` in stage 1 and
+in the subprocess environment in stage 2 — so a `+rerank` arm differs from its base
+arm by the reranking step alone.
 
 ```
-uv run python -m evals.pageindex_gate --json              # full gate
+uv run python -m evals.pageindex_gate --json              # full gate, default candidate: pageindex
 uv run python -m evals.pageindex_gate --json --smoke      # 3 questions/arm, no judges
 uv run python -m evals.pageindex_gate --json --smoke --stage 1 --arm-b weaviate   # self-check: Δ must be 0
+
+# several candidates in one stage-1 sweep; the winner alone goes to stage 2
+uv run python -m evals.pageindex_gate --json \
+    --arm-a weaviate --arm-b pinecone --arm-b weaviate+rerank --arm-b pinecone+rerank \
+    --report-name pinecone-rerank
 ```
+
+Flags: `--arm-a` (single reference, default `weaviate`) · `--arm-b` (repeatable
+candidate, default `pageindex`) · `--stage2-arm` (force a candidate into stage 2
+instead of the selection rule) · `--min-page-recall-delta` (margin a candidate must
+beat the reference by, default `0.0`) · `--report-name` (stem for
+`results/<name>.{md,json}` and `-stage1-items.json`, default `pageindex-vs-weaviate`)
+· `--stage` · `--repetitions` · `--out-dir` · `--run-dir` · `--skip-stage1`.
 
 Two stages, so a bad retriever is rejected before any judge money is spent:
 
 1. **Retrieval only.** Runs the `retrieve_documents` node for every eligible golden
-   question on both arms and compares mean `page_recall`, computed with
-   `evaluators.retrieval_page_hit` — the same definition the main eval uses.
-   71 of 86 questions are eligible (8 have no `expected_source_pages`, 7 are
-   multi-turn); ~2 min per arm. Candidate worse than reference → `REJECT`, exit 2,
-   stage 2 never runs.
+   question on the reference and on each candidate, and compares mean `page_recall`,
+   computed with `evaluators.retrieval_page_hit` — the same definition the main eval
+   uses. 71 of 86 questions are eligible (8 have no `expected_source_pages`, 7 are
+   multi-turn); ~2 min per arm. Each candidate is gated independently
+   (`page_recall(B) ≥ page_recall(A)`); **no candidate passing** → `REJECT`, exit 2,
+   stage 2 never runs. Among the passers exactly one goes to stage 2: highest
+   `page_recall`, ties broken by lower mean retrieval latency.
 2. **Paired full eval.** `run_baseline --split core --split holdout --repetitions 2
-   --concurrency 1` per arm, in the same session (never against a historical
-   report — judge noise is ±0.07 correctness). Passes iff all five gates hold:
-   Δcorrectness ≥ +0.03, groundedness ≥ reference, holdout correctness ≥ reference,
-   cost ≤ 1.25×, p50 latency ≤ 1.25×.
+   --concurrency 1` for the reference and the selected candidate, in the same session
+   (never against a historical report — judge noise is ±0.07 correctness). Passes iff
+   all five gates hold: Δcorrectness ≥ +0.03, groundedness ≥ reference, holdout
+   correctness ≥ reference, cost ≤ 1.25×, p50 latency ≤ 1.25×.
 
 Verdict → exit code: `ADOPT` 0 · `REJECT` (stage 1) 2 · `REJECT`/`INCONCLUSIVE`
 (stage 2) 3 · error 1. Quality gates decide `REJECT`; failing only cost/latency is
-`INCONCLUSIVE`. `--json` puts one JSON object on the last stdout line (progress
-goes to stderr); the run also writes `results/pageindex-vs-weaviate.{md,json}` plus
-the per-question stage-1 detail. Thresholds live in one `THRESHOLDS` dict at the
-top of the module and are frozen for the duration of a comparison — move them and
-the two runs you are comparing stop being comparable.
+`INCONCLUSIVE`. `--json` puts one JSON object on the last stdout line (progress goes
+to stderr): `pass` / `score` (the selected candidate's Δ, or the least bad one on a
+stage-1 reject), `arms.a` / `arms.b` (b = the stage-2 candidate) plus
+`arms.candidates`, and `stage1.candidates` / `stage1.selected_arm` with a per-arm
+gate row. The run also writes `results/<report-name>.{md,json}` plus the
+per-question stage-1 detail, keyed by arm string. Thresholds live in one `THRESHOLDS`
+dict at the top of the module and are frozen for the duration of a comparison — move
+them and the runs you are comparing stop being comparable.
