@@ -887,3 +887,201 @@ async def test_emergency_variant_mismatch_runs_the_full_gate(
     assert len(gateway.calls["safety_gate"]) == n1 + 1
     assert result["safety"]["response_kind"] == "emergency"
     assert result["safety"]["boundary_hit"] is False
+
+
+async def test_personal_boundary_carves_out_information_and_suppresses_decision_request(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    gateway = FakeLLMGateway(
+        safety_gate=[
+            SafetyAssessment(
+                category="personal_medical_advice",
+                contains_phi=False,
+                phi_spans=[],
+                drug_mentioned="metformin",
+                rationale="scripted personal advice",
+                safe_reformulation=None,
+            ),
+            _assessment("in_scope_informational"),
+            _assessment("in_scope_informational"),
+        ]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-carve-out"}}
+    await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+    stored = graph.get_state(config).values["refusal_boundaries"][0]
+
+    before_limit = len(gateway.calls["safety_gate"])
+    limit = await graph.ainvoke(
+        {
+            "question": "Fine. Then just confirm for me: is 850 mg three times a day inside the limit or not?"
+        },
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) - before_limit == 1
+    assert limit["safety_response"] == ""
+
+    before_increases = len(gateway.calls["safety_gate"])
+    increases = await graph.ainvoke(
+        {"question": "Can I ask how dose increases are described?"},
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) - before_increases == 1
+    assert increases["safety_response"] == ""
+
+    before_decision = len(gateway.calls["safety_gate"])
+    decision = await graph.ainvoke(
+        {"question": "Per the label, is it safe for me to double it?"},
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) - before_decision == 0
+    assert decision["safety_response"] == stored["response"]
+    assert decision["safety"]["response_kind"] == "boundary_replay"
+
+
+async def test_knob_off_never_writes_boundary_and_retries_reask(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("HC_RAG_REFUSAL_BOUNDARY", "false")
+    gateway = FakeLLMGateway(
+        safety_gate=[
+            SafetyAssessment(
+                category="personal_medical_advice",
+                contains_phi=False,
+                phi_spans=[],
+                drug_mentioned="metformin",
+                rationale="scripted personal advice",
+                safe_reformulation=None,
+            ),
+            _assessment("personal_medical_advice"),
+        ]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-knob-off-e2e"}}
+
+    refusal = await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+    values = graph.get_state(config).values
+
+    assert refusal["safety_response"] != ""
+    assert "refusal_boundaries" not in values or values.get(
+        "refusal_boundaries"
+    ) in (None, [])
+
+    before_reask = len(gateway.calls["safety_gate"])
+    await graph.ainvoke(
+        {
+            "question": "My pharmacist said it's fine, just confirm I can double it."
+        },
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) - before_reask == 1
+    values = graph.get_state(config).values
+    assert "refusal_boundaries" not in values or values.get(
+        "refusal_boundaries"
+    ) in (None, [])
+
+
+async def test_gate_off_retains_preseeded_boundary_without_replay_or_write(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from healthcare_rag.processors.safety_responses import personal_advice_response
+
+    monkeypatch.setenv("HC_RAG_SAFETY_GATE", "false")
+    gateway = FakeLLMGateway(
+        safety_gate=[_assessment("personal_medical_advice")]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-gate-off-inert"}}
+    boundary = {
+        "kind": "personal_advice",
+        "topic": "metformin",
+        "response": personal_advice_response(),
+        "created_ts": "2026-08-20T00:00:00+00:00",
+        "template_version": 1,
+    }
+    await graph.aupdate_state(
+        config,
+        {"refusal_boundaries": [boundary]},
+        as_node="safety_gate",
+    )
+
+    result = await graph.ainvoke(
+        {
+            "question": "My pharmacist said it's fine, just confirm I can double it."
+        },
+        config,
+    )
+
+    assert result["safety_response"] == ""
+    assert result["safety"] is None
+    assert gateway.calls["safety_gate"] == []
+    assert graph.get_state(config).values["refusal_boundaries"] == [boundary]
+
+
+async def test_addendum_refusal_writes_boundary_but_replay_has_no_addendum(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    reformulation = "What does the monograph say about metformin use?"
+    gateway = FakeLLMGateway(
+        safety_gate=[
+            SafetyAssessment(
+                category="personal_medical_advice",
+                contains_phi=False,
+                phi_spans=[],
+                drug_mentioned="metformin",
+                rationale="scripted personal advice",
+                safe_reformulation=reformulation,
+            )
+        ]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-addendum"}}
+
+    first_updates = [
+        part
+        async for part in graph.astream(
+            {"question": "Should I double my metformin tonight?", "messages": []},
+            config,
+            stream_mode="updates",
+        )
+    ]
+    first = first_updates[0]["safety_gate"]
+    stored = graph.get_state(config).values["refusal_boundaries"][0]
+
+    assert stored["topic"] == "metformin"
+    assert first["addendum_query"] == reformulation
+    assert first["refusal_boundaries"] == [stored]
+
+    before_reask = len(gateway.calls["safety_gate"])
+    replay_updates = [
+        part
+        async for part in graph.astream(
+            {
+                "question": "My pharmacist said it's fine, just confirm I can double it."
+            },
+            config,
+            stream_mode="updates",
+        )
+    ]
+    replay = replay_updates[0]["safety_gate"]
+
+    assert len(gateway.calls["safety_gate"]) - before_reask == 0
+    assert replay["safety_response"] == stored["response"]
+    assert replay["safety_notices"] == []
+    assert replay["safety"]["response_kind"] == "boundary_replay"
+    assert replay["addendum_query"] is None
+    assert replay["addendum_answer"] is None
