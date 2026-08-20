@@ -2,13 +2,23 @@ from __future__ import annotations
 
 from typing import Any
 
+from langgraph.types import Command
+
 from healthcare_rag.graph.resources import get
+from healthcare_rag.graph.routers import EvaluateCommandTarget, route_after_evaluate
 from healthcare_rag.graph.state import load_results
 from healthcare_rag.models.queries import RetrievalEvaluation
 from healthcare_rag.processors.safety import scrub_phi
 
 
-async def evaluate_retrieval(state: dict[str, Any]) -> dict[str, Any]:
+async def evaluate_retrieval(state: dict[str, Any]) -> Command[EvaluateCommandTarget]:
+    """Judge the merged retrieval and either gap-fill or move on to generation.
+
+    ``route_after_evaluate`` reads the post-update ``gap_pending`` / ``evaluation``
+    channels, so the router runs on the state this update produces; its ``Send``
+    objects all target ``retrieve_documents``, which the Literal names alongside
+    ``generate_answer``.
+    """
     resources = get()
     merged_data = state.get("merged")
     merged = load_results(merged_data) if merged_data else None
@@ -19,11 +29,14 @@ async def evaluate_retrieval(state: dict[str, Any]) -> dict[str, Any]:
         or not any(result.docs for result in merged.results)
         or "evaluate" in resources.settings.disabled_stages
     ):
-        return {
-            "evaluation": {"is_sufficient": True},
-            "gap_round": gap_round,
-            "gap_pending": False,
-        }
+        return _evaluate_command(
+            state,
+            {
+                "evaluation": {"is_sufficient": True},
+                "gap_round": gap_round,
+                "gap_pending": False,
+            },
+        )
 
     combined_context = ""
     sources: list[str] = []
@@ -62,8 +75,19 @@ async def evaluate_retrieval(state: dict[str, Any]) -> dict[str, Any]:
     if evaluation.additional_queries:
         evaluation_data["additional_queries"] = additional_queries
 
-    return {
-        "evaluation": evaluation_data,
-        "gap_round": 1 if gap_pending else gap_round,
-        "gap_pending": gap_pending,
-    }
+    return _evaluate_command(
+        state,
+        {
+            "evaluation": evaluation_data,
+            "gap_round": 1 if gap_pending else gap_round,
+            "gap_pending": gap_pending,
+        },
+    )
+
+
+def _evaluate_command(
+    state: dict[str, Any],
+    update: dict[str, Any],
+) -> Command[EvaluateCommandTarget]:
+    """Apply the evaluation update and route on the state it produces."""
+    return Command(update=update, goto=route_after_evaluate({**state, **update}))

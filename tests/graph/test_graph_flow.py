@@ -7,6 +7,7 @@ from typing import Any
 
 import pytest
 from langchain_core.messages import ToolCall
+from langgraph.types import Command
 from weaviate.exceptions import WeaviateBaseError
 
 from healthcare_rag.graph.history import ProcessedHistoryEntry, render_followup_history
@@ -145,9 +146,9 @@ async def test_parent_and_three_subqueries_produce_one_answer_pipeline(
         ],
     }
 
-    merged = await merge_retrievals(state)
+    merged = (await merge_retrievals(state)).update
     pipeline_state = {**_merged_state("parent"), **merged}
-    evaluated = await evaluate_retrieval(pipeline_state)
+    evaluated = (await evaluate_retrieval(pipeline_state)).update
     generated = await generate_answer({**pipeline_state, **evaluated})
     validated = await validate_answer({**pipeline_state, **evaluated, **generated})
 
@@ -177,13 +178,15 @@ async def test_random_completion_order_merges_documents_and_events_deterministic
         randomizer = random.Random(seed)
         shuffled_envelopes = randomizer.sample(envelopes, len(envelopes))
         shuffled_events = randomizer.sample(events, len(events))
-        output = await merge_retrievals(
-            {
-                "working_query": "parent",
-                "selected_branch_type": "initial",
-                "retrievals": shuffled_envelopes,
-            }
-        )
+        output = (
+            await merge_retrievals(
+                {
+                    "working_query": "parent",
+                    "selected_branch_type": "initial",
+                    "retrievals": shuffled_envelopes,
+                }
+            )
+        ).update
         ordered_events = sorted(
             [*shuffled_events, *output["branch_events"]],
             key=lambda event: (
@@ -216,7 +219,7 @@ async def test_five_proposed_subqueries_are_capped_to_parent_plus_three_retrieva
     )
     retriever = FakeRetriever(results={"Lipitor": _result("routed", "doc")})
     install_resources(gateway, retriever=retriever)
-    decomposition = await decompose_query({"working_query": "parent"})
+    decomposition = (await decompose_query({"working_query": "parent"})).update
     sub_queries = decomposition.get("sub_queries", [])
     inputs: list[RetrieveInput] = [
         {"query": "parent", "kind": "initial", "index": 0, "phase": 0, "branch": "initial"},
@@ -282,7 +285,7 @@ async def test_insufficient_evaluation_with_queries_opens_one_gap_round(
     )
     install_resources(gateway)
 
-    output = await evaluate_retrieval(_merged_state())
+    output = (await evaluate_retrieval(_merged_state())).update
 
     assert output["gap_pending"] is True
     assert output["gap_round"] == 1
@@ -295,13 +298,13 @@ async def test_empty_retrieval_never_validates_or_writes_messages(
 ) -> None:
     gateway = FakeGateway()
     install_resources(gateway)
-    merged = await merge_retrievals(
+    merged = (await merge_retrievals(
         {
             "working_query": "unknown",
             "selected_branch_type": "initial",
             "retrievals": [_envelope("unknown", kind="initial")],
         }
-    )
+    )).update
     state = {**_merged_state("unknown"), **merged}
 
     generated = await generate_answer(state)
@@ -330,13 +333,13 @@ async def test_one_routing_failure_does_not_discard_other_retrievals(
         {"query": "good", "kind": "initial", "index": 0, "phase": 0, "branch": "initial"}
     )
 
-    merged = await merge_retrievals(
+    merged = (await merge_retrievals(
         {
             "working_query": "good",
             "selected_branch_type": "initial",
             "retrievals": [*failed["retrievals"], *good["retrievals"]],
         }
-    )
+    )).update
 
     assert failed["branch_events"][0]["status"] == "FAILED"
     assert merged["merged"] == dump_results(_result("good", "good-doc"))
@@ -437,7 +440,7 @@ async def test_insufficient_evaluation_without_queries_has_no_gap_dead_end(
     )
     install_resources(gateway)
 
-    output = await evaluate_retrieval(_merged_state())
+    output = (await evaluate_retrieval(_merged_state())).update
 
     assert output["gap_pending"] is False
     assert output["gap_round"] == 0
@@ -511,7 +514,9 @@ async def test_owned_disabled_stages_are_pass_through_without_llm_calls(
     gateway = FakeGateway()
     install_resources(gateway, disabled=(stage,))
 
-    output = await node(state)
+    result = await node(state)
+    # evaluate_retrieval routes itself, so its update arrives inside a Command.
+    output = result.update if isinstance(result, Command) else result
 
     assert output.items() >= expected.items()
     assert gateway.calls == []
@@ -534,13 +539,12 @@ async def test_preprocess_disabled_stages_are_pass_through_without_llm_calls(
         "history_context": "history",
     }
 
-    output = await (clarify_query(state) if stage == "clarify" else decompose_query(state))
-
-    assert gateway.calls == []
     if stage == "clarify":
-        assert output == {"clarified": None}
+        assert await clarify_query(state) == {"clarified": None}
     else:
-        assert output.get("decomposed") is False
+        # decompose_query routes itself, so its update travels inside a Command.
+        assert (await decompose_query(state)).update.get("decomposed") is False
+    assert gateway.calls == []
 
 
 @pytest.mark.asyncio

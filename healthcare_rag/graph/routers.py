@@ -1,6 +1,20 @@
-"""Pure graph routing decisions and canonical node names."""
+"""Pure graph routing decisions and canonical node names.
 
-from typing import Final
+A node that both updates state and picks its successor returns
+``Command[Literal[...]]``; it computes ``goto`` by calling the router here on its
+own post-update state, so the decision logic stays pure and testable and
+``build.py`` wires no edge for it. LangGraph reads the ``Literal`` inside
+``Command`` to render those dynamic edges, so each such node annotates one of the
+aliases below (``GateTarget``, ``DecomposeTarget``, ``MergeTarget``,
+``EvaluateCommandTarget``) — a bare ``X | Y`` union of literals is *not* read.
+``validate_answer`` is the exception: its "finalize" target is ``finalize`` in the
+public graph and ``END`` in the bare pipeline, so it stays on a conditional edge
+with an explicit path map. ``tests/graph/test_router_typing.py`` pins every
+literal to the node constants, to the nodes' ``Command`` annotations and to the
+compiled graph's edges, so the three cannot drift apart silently.
+"""
+
+from typing import Final, Literal
 
 from langgraph.types import Send
 
@@ -21,16 +35,56 @@ NODE_FINALIZE: Final = "finalize"
 
 _GAP_FILL_CAP: Final = 3
 
+# Router target types. The string values must equal the NODE_* constants above
+# (pinned by tests); Literal cannot reference the constants directly.
+GateTerminalTarget = Literal["finalize"]
+GateFanOutTarget = Literal["clarify_query", "extract_conversation_context"]
+MergeTarget = Literal["evaluate_retrieval", "generate_answer"]
+EvaluateTarget = Literal["generate_answer"]
+ValidateTarget = Literal["generate_follow_ups", "finalize"]
+DecomposeTarget = Literal["retrieve_documents"]
 
-def route_after_gate(state: RAGState) -> list[str] | str:
-    """Route refusals to their terminal path and safe queries to preprocessing."""
+# ``Command[...]`` annotations for the nodes that route themselves. LangGraph only
+# reads the targets when the argument's origin is ``Literal``, so a branch with two
+# shapes of destination is spelled as one *nested* Literal (which flattens) rather
+# than as a union of literals.
+GateTarget = Literal[GateTerminalTarget, GateFanOutTarget]
+EvaluateCommandTarget = Literal[EvaluateTarget, DecomposeTarget]
+NodeName = Literal[
+    "safety_gate",
+    "clarify_query",
+    "extract_conversation_context",
+    "decompose_query",
+    "retrieve_documents",
+    "merge_retrievals",
+    "evaluate_retrieval",
+    "generate_answer",
+    "validate_answer",
+    "generate_follow_ups",
+    "finalize",
+]
+
+
+def route_after_gate(
+    state: RAGState,
+) -> GateTerminalTarget | list[GateFanOutTarget]:
+    """Route refusals to their terminal path and safe queries to preprocessing.
+
+    A refusal goes to one terminal node; a safe query fans out to both
+    preprocessing nodes in parallel. ``safety_gate`` calls this for the ``goto``
+    of its ``Command[GateTarget]``.
+    """
     if state.get("safety_response"):
-        return NODE_FINALIZE
-    return [NODE_CLARIFY, NODE_CONTEXT]
+        return "finalize"
+    return ["clarify_query", "extract_conversation_context"]
 
 
 def route_after_decompose(state: RAGState) -> list[Send]:
-    """Fan out the parent query first, followed by capped decomposition queries."""
+    """Fan out the parent query first, followed by capped decomposition queries.
+
+    ``decompose_query`` calls this for the ``goto`` of its
+    ``Command[DecomposeTarget]``; every ``Send`` targets ``retrieve_documents``.
+    """
     cap = get_resources().settings.max_subqueries
     parent_kind = (
         "clarified" if state.get("selected_branch_type") == "clarified" else "initial"
@@ -62,15 +116,23 @@ def route_after_decompose(state: RAGState) -> list[Send]:
     return sends
 
 
-def route_after_merge(state: RAGState) -> str:
-    """Skip a second evaluation after gap-fill retrievals are merged."""
-    return NODE_GENERATE if state.get("gap_filled") else NODE_EVALUATE
+def route_after_merge(state: RAGState) -> MergeTarget:
+    """Skip a second evaluation after gap-fill retrievals are merged.
+
+    ``merge_retrievals`` calls this for the ``goto`` of its ``Command[MergeTarget]``.
+    """
+    return "generate_answer" if state.get("gap_filled") else "evaluate_retrieval"
 
 
-def route_after_evaluate(state: RAGState) -> list[Send] | str:
-    """Launch one capped gap-fill round or continue directly to generation."""
+def route_after_evaluate(state: RAGState) -> list[Send] | EvaluateTarget:
+    """Launch one capped gap-fill round or continue directly to generation.
+
+    ``evaluate_retrieval`` calls this for the ``goto`` of its
+    ``Command[EvaluateCommandTarget]``, whose Literal names ``retrieve_documents``
+    alongside ``generate_answer`` because the ``Send`` targets carry it.
+    """
     if not state.get("gap_pending"):
-        return NODE_GENERATE
+        return "generate_answer"
     evaluation = state.get("evaluation") or {}
     match evaluation.get("additional_queries"):
         case list() as queries:
@@ -98,6 +160,11 @@ def route_after_evaluate(state: RAGState) -> list[Send] | str:
     ]
 
 
-def route_after_validate(state: RAGState) -> str:
-    """Generate follow-ups only for validated answers."""
-    return NODE_FOLLOW_UPS if state.get("validated") else NODE_FINALIZE
+def route_after_validate(state: RAGState) -> ValidateTarget:
+    """Generate follow-ups only for validated answers.
+
+    The one router still wired as a conditional edge: ``build.py`` maps
+    ``"finalize"`` onto the builder's terminal (``finalize`` in the public graph,
+    ``END`` in the bare pipeline), which a fixed ``Command`` Literal cannot express.
+    """
+    return "generate_follow_ups" if state.get("validated") else "finalize"

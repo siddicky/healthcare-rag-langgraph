@@ -1,4 +1,11 @@
-"""LangGraph builders for the internal pipeline and public healthcare graph."""
+"""LangGraph builders for the internal pipeline and public healthcare graph.
+
+Nodes that both update state and choose a successor own their outgoing edges: they
+return ``Command[Literal[...]]`` (``safety_gate``, ``decompose_query``,
+``merge_retrievals``, ``evaluate_retrieval``) and no edge is wired for them here.
+What stays below is the sequencing that is not a decision — plus ``validate_answer``,
+whose "finalize" target differs between the two builders and so needs a path map.
+"""
 
 from typing import TypedDict
 
@@ -30,10 +37,6 @@ from healthcare_rag.graph.routers import (
     NODE_RETRIEVE,
     NODE_SAFETY,
     NODE_VALIDATE,
-    route_after_decompose,
-    route_after_evaluate,
-    route_after_gate,
-    route_after_merge,
     route_after_validate,
 )
 from healthcare_rag.graph.state import GraphInput, GraphOutput, RAGState, RetrieveInput
@@ -67,22 +70,9 @@ def add_pipeline(
     builder.add_node(NODE_GENERATE, generate_answer, input_schema=RAGState)
     builder.add_node(NODE_VALIDATE, validate_answer, input_schema=RAGState)
     builder.add_edge([NODE_CLARIFY, NODE_CONTEXT], NODE_DECOMPOSE)
-    builder.add_conditional_edges(
-        NODE_DECOMPOSE,
-        route_after_decompose,
-        [NODE_RETRIEVE],
-    )
+    # decompose_query, merge_retrievals and evaluate_retrieval route themselves via
+    # Command; only the non-decision hops are edges.
     builder.add_edge(NODE_RETRIEVE, NODE_MERGE)
-    builder.add_conditional_edges(
-        NODE_MERGE,
-        route_after_merge,
-        [NODE_EVALUATE, NODE_GENERATE],
-    )
-    builder.add_conditional_edges(
-        NODE_EVALUATE,
-        route_after_evaluate,
-        [NODE_RETRIEVE, NODE_GENERATE],
-    )
     builder.add_edge(NODE_GENERATE, NODE_VALIDATE)
     if include_follow_ups:
         builder.add_node(
@@ -131,10 +121,7 @@ def build_graph() -> PublicBuilder:
     builder.add_node(NODE_FINALIZE, finalize, input_schema=RAGState)
     add_pipeline(builder, terminal=NODE_FINALIZE)
     builder.add_edge(START, NODE_SAFETY)
-    builder.add_conditional_edges(
-        NODE_SAFETY,
-        route_after_gate,
-        [NODE_CLARIFY, NODE_CONTEXT, NODE_FINALIZE],
-    )
+    # safety_gate routes itself: Command[GateTarget] covers both terminals and the
+    # parallel hand-off to the two preprocessing nodes.
     builder.add_edge(NODE_FINALIZE, END)
     return builder

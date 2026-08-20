@@ -162,7 +162,7 @@ async def test_gate_off_still_sanitizes_question(
 ) -> None:
     monkeypatch.setenv("HC_RAG_SAFETY_GATE", "false")
 
-    update = await safety_gate({"question": "My name is Jane Doe. Explain Lipitor."})
+    update = (await safety_gate({"question": "My name is Jane Doe. Explain Lipitor."})).update
 
     scrubbed = update["scrubbed_question"]
     working = update["working_query"]

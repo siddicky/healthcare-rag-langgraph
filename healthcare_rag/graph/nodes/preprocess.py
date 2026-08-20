@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+from typing import cast
+
+from langgraph.types import Command
+
 from healthcare_rag.graph.llm import LangChainLLMGateway
 from healthcare_rag.graph.resources import get as get_resources
+from healthcare_rag.graph.routers import DecomposeTarget, route_after_decompose
 from healthcare_rag.graph.state import RAGState
 from healthcare_rag.models.answers import RelevantHistoryContext
 from healthcare_rag.models.queries import ClarifiedQuery, DecomposedQuery
@@ -92,7 +97,13 @@ async def clarify_query(state: RAGState) -> RAGState:
     }
 
 
-async def decompose_query(state: RAGState) -> RAGState:
+async def decompose_query(state: RAGState) -> Command[DecomposeTarget]:
+    """Decide the fan-out shape and dispatch it in the same step.
+
+    ``route_after_decompose`` turns the post-update ``decomposed`` /
+    ``sub_queries`` / ``selected_branch_type`` channels into one ``Send`` per
+    retrieval branch, so the router is called on the state this update produces.
+    """
     query = state.get("working_query", "")
     default = DecomposedQuery(
         original_query=query,
@@ -113,11 +124,14 @@ async def decompose_query(state: RAGState) -> RAGState:
         not decompose_only_complex() or result.query_complexity == "complex"
     )
     if fan_out:
-        return {
-            "decomposed": True,
-            "sub_queries": proposed[: max_subqueries()],
-            "selected_branch_type": "synthesized",
-        }
+        return _decompose_command(
+            state,
+            {
+                "decomposed": True,
+                "sub_queries": proposed[: max_subqueries()],
+                "selected_branch_type": "synthesized",
+            },
+        )
 
     has_clarify_event = any(
         event.get("kind") == "clarify" for event in state.get("branch_events", [])
@@ -139,4 +153,15 @@ async def decompose_query(state: RAGState) -> RAGState:
                 "status": "COMPLETED",
             }
         ]
-    return update
+    return _decompose_command(state, update)
+
+
+def _decompose_command(
+    state: RAGState,
+    update: RAGState,
+) -> Command[DecomposeTarget]:
+    """Apply the decomposition update and fan out from the state it produces."""
+    return Command(
+        update=update,
+        goto=route_after_decompose(cast(RAGState, {**state, **update})),
+    )

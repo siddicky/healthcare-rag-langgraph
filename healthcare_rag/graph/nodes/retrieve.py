@@ -6,11 +6,13 @@ from collections.abc import Callable
 from typing import Any, Final
 
 import anyio
+from langgraph.types import Command
 from langsmith.run_helpers import traceable
 from pinecone.exceptions import PineconeException
 from weaviate.exceptions import WeaviateBaseError
 
 from healthcare_rag.graph.resources import get
+from healthcare_rag.graph.routers import MergeTarget, route_after_merge
 from healthcare_rag.graph.state import RetrieveInput, dump_results, load_results
 from healthcare_rag.models.retrieval import QueryResultList
 from healthcare_rag.processors.pageindex_retrieval import pageindex_search
@@ -169,7 +171,12 @@ async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
     return output
 
 
-async def merge_retrievals(state: dict[str, Any]) -> dict[str, Any]:
+async def merge_retrievals(state: dict[str, Any]) -> Command[MergeTarget]:
+    """Fold every branch's retrieval into one result set and pick the next step.
+
+    ``route_after_merge`` reads the post-update ``gap_filled`` channel — the flag
+    this node just wrote — so the router runs on the state the update produces.
+    """
     envelopes = sorted(
         state.get("retrievals", []),
         key=lambda envelope: (
@@ -186,7 +193,7 @@ async def merge_retrievals(state: dict[str, Any]) -> dict[str, Any]:
     phase = max((envelope["phase"] for envelope in envelopes), default=0)
     branch = "synthesized" if fan_out else state["selected_branch_type"]
 
-    return {
+    update: dict[str, Any] = {
         "merged": dump_results(merged),
         "gap_filled": any(
             envelope["kind"] == "gap_fill" for envelope in envelopes
@@ -203,3 +210,4 @@ async def merge_retrievals(state: dict[str, Any]) -> dict[str, Any]:
             }
         ],
     }
+    return Command(update=update, goto=route_after_merge({**state, **update}))

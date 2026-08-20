@@ -39,7 +39,7 @@ its pins are mutually incompatible; `pyproject.toml` is the dependency source.
 ## Where things are
 | area | path |
 |---|---|
-| graph runtime (StateGraph, routers, build, engine) | `healthcare_rag/graph/` — `build.py` (graph shape), `routers.py`, `nodes/`, `engine.py` (`GraphEngine`, `build_engine()`), `state.py`, `settings.py`, `resources.py`, `history.py` |
+| graph runtime (StateGraph, routers, build, engine) | `healthcare_rag/graph/` — `build.py` (graph shape), `routers.py` (pure routing decisions + node names), `nodes/`, `engine.py` (`GraphEngine`, `build_engine()`), `state.py`, `settings.py`, `resources.py`, `history.py` |
 | query monitor (CLI progress/events) | `healthcare_rag/monitor.py` |
 | processors (LLM steps used by the nodes) | `healthcare_rag/processors/*.py` + `healthcare_rag/prompts/*.yaml.j2` |
 | safety gate + response templates | `healthcare_rag/processors/safety.py`, `safety_responses.py`, `healthcare_rag/prompts/safety_gate.yaml.j2`, `docs/safety.md` |
@@ -110,6 +110,14 @@ Watch multiturn `safety_drift` under the replay-precision invariant
 false-positive lock-in, an over-matching boundary refusing legitimate follow-ups.
 
 ## Known gotchas
+- A node that both updates state and picks its successor returns
+  `Command[Literal[...]]` with `goto` from the matching pure router in
+  `routers.py` (`safety_gate`, `decompose_query`, `merge_retrievals`,
+  `evaluate_retrieval`) and gets **no** edge in `build.py`; route-only or
+  builder-dependent branches stay conditional edges (`validate_answer`, whose
+  "finalize" is `finalize` in the public graph and `END` in `build_pipeline`).
+  The Literal targets are pinned by `tests/graph/test_router_typing.py`, and a
+  `X | Y` union of Literals inside `Command[...]` renders no edges — nest them.
 - Weaviate compose uses `restart: on-failure:0`; if it exits cleanly it stays
   down — `make weaviate` again.
 - Chunk ids are stored as `id_` in Weaviate (`id` is reserved).
