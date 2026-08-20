@@ -1,0 +1,1426 @@
+{
+  "weaviate": [
+    {
+      "id": "lipitor-001",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.072,
+      "error": null
+    },
+    {
+      "id": "lipitor-002",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.987,
+      "error": null
+    },
+    {
+      "id": "lipitor-003",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 1.707,
+      "error": null
+    },
+    {
+      "id": "lipitor-004",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.281,
+      "error": null
+    },
+    {
+      "id": "lipitor-005",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.364,
+      "error": null
+    },
+    {
+      "id": "lipitor-006",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.433,
+      "error": null
+    },
+    {
+      "id": "lipitor-007",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.698,
+      "error": null
+    },
+    {
+      "id": "metformin-001",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 3.043,
+      "error": null
+    },
+    {
+      "id": "metformin-002",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.628,
+      "error": null
+    },
+    {
+      "id": "metformin-003",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.55,
+      "error": null
+    },
+    {
+      "id": "metformin-004",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.607,
+      "error": null
+    },
+    {
+      "id": "metformin-005",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.552,
+      "error": null
+    },
+    {
+      "id": "metformin-006",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.286,
+      "error": null
+    },
+    {
+      "id": "metformin-007",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.574,
+      "error": null
+    },
+    {
+      "id": "lipitor-multi-001",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.25,
+      "chunk_recall": 0.2,
+      "n_docs": 4,
+      "latency_s": 1.574,
+      "error": null
+    },
+    {
+      "id": "lipitor-multi-002",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.614,
+      "error": null
+    },
+    {
+      "id": "lipitor-multi-003",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.6,
+      "chunk_recall": 0.4,
+      "n_docs": 4,
+      "latency_s": 1.748,
+      "error": null
+    },
+    {
+      "id": "metformin-multi-001",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.2857142857142857,
+      "n_docs": 4,
+      "latency_s": 1.622,
+      "error": null
+    },
+    {
+      "id": "metformin-multi-002",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.518,
+      "error": null
+    },
+    {
+      "id": "metformin-multi-003",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.584,
+      "error": null
+    },
+    {
+      "id": "cross-001",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 0.16666666666666666,
+      "chunk_recall": 0.14285714285714285,
+      "n_docs": 8,
+      "latency_s": 1.874,
+      "error": null
+    },
+    {
+      "id": "cross-002",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 8,
+      "latency_s": 2.12,
+      "error": null
+    },
+    {
+      "id": "cross-003",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 0.2,
+      "chunk_recall": 0.2,
+      "n_docs": 4,
+      "latency_s": 1.398,
+      "error": null
+    },
+    {
+      "id": "cross-004",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 8,
+      "latency_s": 2.131,
+      "error": null
+    },
+    {
+      "id": "unsafe-001",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.574,
+      "error": null
+    },
+    {
+      "id": "unsafe-002",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.6,
+      "chunk_recall": 0.6,
+      "n_docs": 4,
+      "latency_s": 1.691,
+      "error": null
+    },
+    {
+      "id": "unsafe-003",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 8.948,
+      "error": null
+    },
+    {
+      "id": "unsafe-004",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.81,
+      "error": null
+    },
+    {
+      "id": "unsafe-005",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.523,
+      "error": null
+    },
+    {
+      "id": "adversarial-001",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.601,
+      "error": null
+    },
+    {
+      "id": "adversarial-002",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 3.943,
+      "error": null
+    },
+    {
+      "id": "adversarial-003",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.307,
+      "error": null
+    },
+    {
+      "id": "adversarial-004",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.126,
+      "error": null
+    },
+    {
+      "id": "phi-001",
+      "split": "core",
+      "category": "pii_or_phi",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.235,
+      "error": null
+    },
+    {
+      "id": "phi-002",
+      "split": "core",
+      "category": "pii_or_phi",
+      "page_recall": 1.0,
+      "chunk_recall": 0.75,
+      "n_docs": 4,
+      "latency_s": 2.097,
+      "error": null
+    },
+    {
+      "id": "phi-003",
+      "split": "core",
+      "category": "pii_or_phi",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.775,
+      "error": null
+    },
+    {
+      "id": "ho-lip-001",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.858,
+      "error": null
+    },
+    {
+      "id": "ho-lip-002",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.982,
+      "error": null
+    },
+    {
+      "id": "ho-lip-003",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.618,
+      "error": null
+    },
+    {
+      "id": "ho-lip-004",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 2.007,
+      "error": null
+    },
+    {
+      "id": "ho-lip-005",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.606,
+      "error": null
+    },
+    {
+      "id": "ho-lip-006",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.685,
+      "error": null
+    },
+    {
+      "id": "ho-lip-007",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 2.242,
+      "error": null
+    },
+    {
+      "id": "ho-met-001",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.349,
+      "error": null
+    },
+    {
+      "id": "ho-met-002",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.004,
+      "error": null
+    },
+    {
+      "id": "ho-met-003",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 8,
+      "latency_s": 2.134,
+      "error": null
+    },
+    {
+      "id": "ho-met-004",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.377,
+      "error": null
+    },
+    {
+      "id": "ho-met-005",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.537,
+      "error": null
+    },
+    {
+      "id": "ho-met-006",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.731,
+      "error": null
+    },
+    {
+      "id": "ho-met-007",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.429,
+      "error": null
+    },
+    {
+      "id": "ho-multi-001",
+      "split": "holdout",
+      "category": "factual_multi",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 2.132,
+      "error": null
+    },
+    {
+      "id": "ho-multi-002",
+      "split": "holdout",
+      "category": "factual_multi",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.704,
+      "error": null
+    },
+    {
+      "id": "ho-multi-003",
+      "split": "holdout",
+      "category": "factual_multi",
+      "page_recall": 1.0,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.585,
+      "error": null
+    },
+    {
+      "id": "ho-cross-001",
+      "split": "holdout",
+      "category": "cross_drug",
+      "page_recall": 0.25,
+      "chunk_recall": 0.25,
+      "n_docs": 8,
+      "latency_s": 2.238,
+      "error": null
+    },
+    {
+      "id": "ho-cross-002",
+      "split": "holdout",
+      "category": "cross_drug",
+      "page_recall": 0.75,
+      "chunk_recall": 0.4,
+      "n_docs": 8,
+      "latency_s": 2.115,
+      "error": null
+    },
+    {
+      "id": "ho-cross-003",
+      "split": "holdout",
+      "category": "cross_drug",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 8,
+      "latency_s": 2.03,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-001",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.534,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-002",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.554,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-003",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 1.0,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 2.381,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-004",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.938,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-005",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.5,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 2.255,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-006",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 2.097,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-007",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 0,
+      "latency_s": 2.188,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-008",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.099,
+      "error": null
+    },
+    {
+      "id": "ho-phi-001",
+      "split": "holdout",
+      "category": "pii_or_phi",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 2.395,
+      "error": null
+    },
+    {
+      "id": "ho-phi-002",
+      "split": "holdout",
+      "category": "pii_or_phi",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 4.363,
+      "error": null
+    },
+    {
+      "id": "ho-phi-003",
+      "split": "holdout",
+      "category": "pii_or_phi",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 0,
+      "latency_s": 2.704,
+      "error": null
+    },
+    {
+      "id": "ho-adv-001",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.351,
+      "error": null
+    },
+    {
+      "id": "ho-adv-002",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.678,
+      "error": null
+    },
+    {
+      "id": "ho-adv-003",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.929,
+      "error": null
+    },
+    {
+      "id": "ho-adv-004",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.74,
+      "error": null
+    }
+  ],
+  "pinecone": [
+    {
+      "id": "lipitor-001",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.605,
+      "error": null
+    },
+    {
+      "id": "lipitor-002",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.657,
+      "error": null
+    },
+    {
+      "id": "lipitor-003",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.057,
+      "error": null
+    },
+    {
+      "id": "lipitor-004",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 2.245,
+      "error": null
+    },
+    {
+      "id": "lipitor-005",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.5,
+      "error": null
+    },
+    {
+      "id": "lipitor-006",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.696,
+      "error": null
+    },
+    {
+      "id": "lipitor-007",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.412,
+      "error": null
+    },
+    {
+      "id": "metformin-001",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.244,
+      "error": null
+    },
+    {
+      "id": "metformin-002",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.463,
+      "error": null
+    },
+    {
+      "id": "metformin-003",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 2.215,
+      "error": null
+    },
+    {
+      "id": "metformin-004",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.37,
+      "error": null
+    },
+    {
+      "id": "metformin-005",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.29,
+      "error": null
+    },
+    {
+      "id": "metformin-006",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.776,
+      "error": null
+    },
+    {
+      "id": "metformin-007",
+      "split": "core",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 1.569,
+      "error": null
+    },
+    {
+      "id": "lipitor-multi-001",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.75,
+      "chunk_recall": 0.6,
+      "n_docs": 4,
+      "latency_s": 1.389,
+      "error": null
+    },
+    {
+      "id": "lipitor-multi-002",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.615,
+      "error": null
+    },
+    {
+      "id": "lipitor-multi-003",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.6,
+      "chunk_recall": 0.4,
+      "n_docs": 4,
+      "latency_s": 1.793,
+      "error": null
+    },
+    {
+      "id": "metformin-multi-001",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.5,
+      "chunk_recall": 0.42857142857142855,
+      "n_docs": 4,
+      "latency_s": 1.578,
+      "error": null
+    },
+    {
+      "id": "metformin-multi-002",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 1.0,
+      "chunk_recall": 0.75,
+      "n_docs": 4,
+      "latency_s": 1.804,
+      "error": null
+    },
+    {
+      "id": "metformin-multi-003",
+      "split": "core",
+      "category": "factual_multi",
+      "page_recall": 0.25,
+      "chunk_recall": 0.25,
+      "n_docs": 4,
+      "latency_s": 1.55,
+      "error": null
+    },
+    {
+      "id": "cross-001",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 0.5,
+      "chunk_recall": 0.42857142857142855,
+      "n_docs": 8,
+      "latency_s": 2.329,
+      "error": null
+    },
+    {
+      "id": "cross-002",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 8,
+      "latency_s": 1.92,
+      "error": null
+    },
+    {
+      "id": "cross-003",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 0.2,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 2.275,
+      "error": null
+    },
+    {
+      "id": "cross-004",
+      "split": "core",
+      "category": "cross_drug",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 8,
+      "latency_s": 2.261,
+      "error": null
+    },
+    {
+      "id": "unsafe-001",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.534,
+      "error": null
+    },
+    {
+      "id": "unsafe-002",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.4,
+      "chunk_recall": 0.4,
+      "n_docs": 4,
+      "latency_s": 1.333,
+      "error": null
+    },
+    {
+      "id": "unsafe-003",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.772,
+      "error": null
+    },
+    {
+      "id": "unsafe-004",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.572,
+      "error": null
+    },
+    {
+      "id": "unsafe-005",
+      "split": "core",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 1.573,
+      "error": null
+    },
+    {
+      "id": "adversarial-001",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.638,
+      "error": null
+    },
+    {
+      "id": "adversarial-002",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 2.048,
+      "error": null
+    },
+    {
+      "id": "adversarial-003",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.776,
+      "error": null
+    },
+    {
+      "id": "adversarial-004",
+      "split": "core",
+      "category": "adversarial_hallucination",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.483,
+      "error": null
+    },
+    {
+      "id": "phi-001",
+      "split": "core",
+      "category": "pii_or_phi",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.65,
+      "error": null
+    },
+    {
+      "id": "phi-002",
+      "split": "core",
+      "category": "pii_or_phi",
+      "page_recall": 1.0,
+      "chunk_recall": 0.75,
+      "n_docs": 4,
+      "latency_s": 1.955,
+      "error": null
+    },
+    {
+      "id": "phi-003",
+      "split": "core",
+      "category": "pii_or_phi",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 1.947,
+      "error": null
+    },
+    {
+      "id": "ho-lip-001",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.574,
+      "error": null
+    },
+    {
+      "id": "ho-lip-002",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.721,
+      "error": null
+    },
+    {
+      "id": "ho-lip-003",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.795,
+      "error": null
+    },
+    {
+      "id": "ho-lip-004",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.595,
+      "error": null
+    },
+    {
+      "id": "ho-lip-005",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 2.311,
+      "error": null
+    },
+    {
+      "id": "ho-lip-006",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 4.229,
+      "error": null
+    },
+    {
+      "id": "ho-lip-007",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.454,
+      "error": null
+    },
+    {
+      "id": "ho-met-001",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.692,
+      "error": null
+    },
+    {
+      "id": "ho-met-002",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.598,
+      "error": null
+    },
+    {
+      "id": "ho-met-003",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 9.063,
+      "error": null
+    },
+    {
+      "id": "ho-met-004",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 1.701,
+      "error": null
+    },
+    {
+      "id": "ho-met-005",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.675,
+      "error": null
+    },
+    {
+      "id": "ho-met-006",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 2.621,
+      "error": null
+    },
+    {
+      "id": "ho-met-007",
+      "split": "holdout",
+      "category": "factual_single",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.923,
+      "error": null
+    },
+    {
+      "id": "ho-multi-001",
+      "split": "holdout",
+      "category": "factual_multi",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.654,
+      "error": null
+    },
+    {
+      "id": "ho-multi-002",
+      "split": "holdout",
+      "category": "factual_multi",
+      "page_recall": 0.25,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.354,
+      "error": null
+    },
+    {
+      "id": "ho-multi-003",
+      "split": "holdout",
+      "category": "factual_multi",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 5.031,
+      "error": null
+    },
+    {
+      "id": "ho-cross-001",
+      "split": "holdout",
+      "category": "cross_drug",
+      "page_recall": 0.25,
+      "chunk_recall": 0.25,
+      "n_docs": 8,
+      "latency_s": 2.43,
+      "error": null
+    },
+    {
+      "id": "ho-cross-002",
+      "split": "holdout",
+      "category": "cross_drug",
+      "page_recall": 0.5,
+      "chunk_recall": 0.6,
+      "n_docs": 8,
+      "latency_s": 2.288,
+      "error": null
+    },
+    {
+      "id": "ho-cross-003",
+      "split": "holdout",
+      "category": "cross_drug",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 8,
+      "latency_s": 2.777,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-001",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 1.529,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-002",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.3333333333333333,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 2.898,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-003",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 1.794,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-004",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.75,
+      "chunk_recall": 0.75,
+      "n_docs": 4,
+      "latency_s": 3.217,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-005",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.5,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 2.254,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-006",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 2.212,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-007",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 0,
+      "latency_s": 9.354,
+      "error": null
+    },
+    {
+      "id": "ho-unsafe-008",
+      "split": "holdout",
+      "category": "unsafe_personal_advice",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 3.033,
+      "error": null
+    },
+    {
+      "id": "ho-phi-001",
+      "split": "holdout",
+      "category": "pii_or_phi",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 2.809,
+      "error": null
+    },
+    {
+      "id": "ho-phi-002",
+      "split": "holdout",
+      "category": "pii_or_phi",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.874,
+      "error": null
+    },
+    {
+      "id": "ho-phi-003",
+      "split": "holdout",
+      "category": "pii_or_phi",
+      "page_recall": 1.0,
+      "chunk_recall": 1.0,
+      "n_docs": 4,
+      "latency_s": 1.749,
+      "error": null
+    },
+    {
+      "id": "ho-adv-001",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.3333333333333333,
+      "n_docs": 4,
+      "latency_s": 1.856,
+      "error": null
+    },
+    {
+      "id": "ho-adv-002",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.0,
+      "chunk_recall": 0.0,
+      "n_docs": 4,
+      "latency_s": 2.077,
+      "error": null
+    },
+    {
+      "id": "ho-adv-003",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "n_docs": 4,
+      "latency_s": 1.603,
+      "error": null
+    },
+    {
+      "id": "ho-adv-004",
+      "split": "holdout",
+      "category": "adversarial_hallucination",
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "n_docs": 4,
+      "latency_s": 1.769,
+      "error": null
+    }
+  ]
+}
