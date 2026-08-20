@@ -238,6 +238,7 @@ class GraphEngine:
             "engine": "graph",
             "langgraph_version": metadata.version("langgraph"),
             "safety": self.settings.safety_gate_enabled,
+            "refusal_boundary_enabled": self.settings.refusal_boundary_enabled,
             "max_subqueries": self.settings.max_subqueries,
             "decompose_only_complex": self.settings.decompose_only_complex,
             "structured_strict": self.settings.structured_strict,

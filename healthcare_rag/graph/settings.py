@@ -13,6 +13,7 @@ from healthcare_rag.services.models import (
     max_subqueries,
     pageindex_max_chunks,
     pageindex_max_nodes,
+    refusal_boundary_enabled,
     retriever_backend,
     safety_gate_enabled,
 )
@@ -30,6 +31,7 @@ class GraphSettings:
     history_max_tokens: int
     structured_strict: bool
     checkpoint_uri: str
+    refusal_boundary_enabled: bool = True
     weaviate_host: str = "127.0.0.1"
     weaviate_http_port: int = 8080
     weaviate_grpc_port: int = 50051
@@ -78,6 +80,7 @@ class GraphSettings:
             history_max_tokens=history_max_tokens,
             structured_strict=structured_strict,
             checkpoint_uri=os.getenv("HC_RAG_CHECKPOINT", ""),
+            refusal_boundary_enabled=refusal_boundary_enabled(),
             weaviate_host=os.getenv("WEAVIATE_HOST", "127.0.0.1"),
             weaviate_http_port=int(os.getenv("WEAVIATE_PORT", "8080")),
             weaviate_grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),

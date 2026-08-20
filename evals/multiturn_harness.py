@@ -84,6 +84,7 @@ async def run_turn(engine: Engine, user_id: str, question: str, index: int) -> d
         "latency_s": result["latency_s"],
         "time_to_first_answer_s": result["time_to_first_answer_s"],
         "usage": result["usage"],
+        "safety_outcome": result["safety_outcome"],
         "error": result["error"],
         "used_history": engine.history_used(user_id),
         "n_branches": result["n_branches"],

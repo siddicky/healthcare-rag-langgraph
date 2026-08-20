@@ -29,6 +29,9 @@ HC_RAG_SAFETY_GATE        when true (default), every query goes through the safe
                           answer (journey findings F13, F18). Costs one extra LLM call (~1 s).
                           Set false — or put "safety" in HC_RAG_DISABLE_STAGES — to measure
                           the un-gated behaviour for an ablation.
+HC_RAG_REFUSAL_BOUNDARY   when true (default), persist gate refusals per thread for
+                          deterministic replay on matching re-asks. The settings snapshot
+                          is telemetry only; the runtime reads this flag live each turn.
 HC_RAG_MAX_SUBQUERIES     hard cap on the number of sub-query branches one decomposition
                           may spawn; extra sub-queries are dropped (default: 3). Added
                           because gpt-5.6-luna emits up to 8 sub-queries and every branch
@@ -176,6 +179,10 @@ def safety_gate_enabled() -> bool:
     ablation switch ``HC_RAG_DISABLE_STAGES=safety``. Either one turns it off.
     """
     return _env_bool("HC_RAG_SAFETY_GATE", True) and stage_enabled("safety")
+
+
+def refusal_boundary_enabled() -> bool:
+    return _env_bool("HC_RAG_REFUSAL_BOUNDARY", True)
 
 
 # --------------------------------------------------------------------------- #
