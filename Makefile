@@ -2,8 +2,14 @@
 PY := .venv/bin/python
 UV := uv
 
+# `pageindex` needs openai>=2, which conflicts with the venv's openai<2 pin
+# (langchain-openai). It therefore runs in an ephemeral, throwaway environment
+# and never touches .venv; the runtime only reads the JSON trees it writes.
+PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --python 3.12 \
+	python healthcare_rag/storage/pageindex_index.py
+
 .PHONY: journey help venv weaviate ingest run container-build container-ingest container-run \
-        dev test test-judges calibrate eval-smoke eval eval-nojudge \
+        dev test test-judges calibrate eval-smoke eval eval-nojudge index-pageindex \
         eval-multiturn eval-multiturn-smoke dataset-sync dataset-sync-multiturn wiki-init wiki-update
 
 help:
@@ -21,6 +27,10 @@ ingest: ## (Re)ingest checked-in chunks into Weaviate (needs OPENAI_API_KEY in .
 	$(PY) healthcare_rag/storage/vector_store.py --delete-all \
 		--collection Lipitor data/chunks_lipitor.json \
 		--collection Metformin data/chunks_metformin.json
+
+index-pageindex: ## Build the cached PageIndex trees for both monographs (isolated env; ~$0.10)
+	$(PAGEINDEX_RUN) --pdf docs/lipitor.pdf   --out data/pageindex_tree_lipitor.json   $(PAGEINDEX_ARGS)
+	$(PAGEINDEX_RUN) --pdf docs/metformin.pdf --out data/pageindex_tree_metformin.json $(PAGEINDEX_ARGS)
 
 run: ## Interactive CLI
 	$(PY) -m healthcare_rag

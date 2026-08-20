@@ -264,3 +264,37 @@ evals/
   multiturn_report.py        aggregates → results/<experiment>.{json,md}, incl. per-turn profile
   run_multiturn.py           CLI entrypoint
 ```
+
+## Retriever A/B gate (`pageindex_gate`)
+
+`evals/pageindex_gate.py` decides whether a *retriever* is worth swapping in. It
+compares two arms of the `HC_RAG_RETRIEVER` knob (`weaviate` | `pageindex`) —
+everything else in the graph is identical, so the delta belongs to retrieval.
+
+```
+uv run python -m evals.pageindex_gate --json              # full gate
+uv run python -m evals.pageindex_gate --json --smoke      # 3 questions/arm, no judges
+uv run python -m evals.pageindex_gate --json --smoke --stage 1 --arm-b weaviate   # self-check: Δ must be 0
+```
+
+Two stages, so a bad retriever is rejected before any judge money is spent:
+
+1. **Retrieval only.** Runs the `retrieve_documents` node for every eligible golden
+   question on both arms and compares mean `page_recall`, computed with
+   `evaluators.retrieval_page_hit` — the same definition the main eval uses.
+   71 of 86 questions are eligible (8 have no `expected_source_pages`, 7 are
+   multi-turn); ~2 min per arm. Candidate worse than reference → `REJECT`, exit 2,
+   stage 2 never runs.
+2. **Paired full eval.** `run_baseline --split core --split holdout --repetitions 2
+   --concurrency 1` per arm, in the same session (never against a historical
+   report — judge noise is ±0.07 correctness). Passes iff all five gates hold:
+   Δcorrectness ≥ +0.03, groundedness ≥ reference, holdout correctness ≥ reference,
+   cost ≤ 1.25×, p50 latency ≤ 1.25×.
+
+Verdict → exit code: `ADOPT` 0 · `REJECT` (stage 1) 2 · `REJECT`/`INCONCLUSIVE`
+(stage 2) 3 · error 1. Quality gates decide `REJECT`; failing only cost/latency is
+`INCONCLUSIVE`. `--json` puts one JSON object on the last stdout line (progress
+goes to stderr); the run also writes `results/pageindex-vs-weaviate.{md,json}` plus
+the per-question stage-1 detail. Thresholds live in one `THRESHOLDS` dict at the
+top of the module and are frozen for the duration of a comparison — move them and
+the two runs you are comparing stop being comparable.

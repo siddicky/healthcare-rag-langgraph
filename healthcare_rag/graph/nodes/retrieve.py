@@ -10,6 +10,7 @@ from weaviate.exceptions import WeaviateBaseError
 from healthcare_rag.graph.resources import get
 from healthcare_rag.graph.state import RetrieveInput, dump_results, load_results
 from healthcare_rag.models.retrieval import QueryResultList
+from healthcare_rag.processors.pageindex_retrieval import pageindex_search
 from healthcare_rag.processors.retrieval import (
     hybrid_search,
     union_results,
@@ -37,14 +38,18 @@ async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
         tool_calls = []
 
     results: list[QueryResultList | None] = []
-    search = resources.hybrid_search or hybrid_search
+    pageindex = resources.settings.retriever == "pageindex"
+    # An explicit injection always wins; otherwise the knob picks the arm.
+    search = resources.hybrid_search or (pageindex_search if pageindex else hybrid_search)
     for tool_call in tool_calls:
         collection_name = tool_call["name"].removeprefix("query_").capitalize()
         routed_query = scrub_phi(str(tool_call["args"].get("query", query)))[0]
 
         @traceable(name="retrieve_documents", run_type="retriever")
         async def traced_search() -> QueryResultList:
-            return await search(await resources.weaviate(), collection_name, routed_query)
+            # The PageIndex arm reads cached trees/chunks: never open Weaviate for it.
+            client = None if pageindex else await resources.weaviate()
+            return await search(client, collection_name, routed_query)
 
         for attempt in range(3):
             try:

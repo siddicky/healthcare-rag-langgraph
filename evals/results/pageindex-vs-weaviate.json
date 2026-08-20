@@ -1,0 +1,102 @@
+{
+  "pass": false,
+  "score": -0.07112676056338019,
+  "stage": 1,
+  "verdict": "REJECT",
+  "smoke": false,
+  "arms": {
+    "a": {
+      "name": "weaviate"
+    },
+    "b": {
+      "name": "pageindex"
+    }
+  },
+  "stage1": {
+    "a": {
+      "arm": "weaviate",
+      "n": 71,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.6805164319248825,
+      "chunk_recall": 0.6182427900737759,
+      "per_split": {
+        "core": {
+          "n": 36,
+          "page_recall": 0.6847222222222222,
+          "chunk_recall": 0.6271825396825397
+        },
+        "holdout": {
+          "n": 35,
+          "page_recall": 0.6761904761904762,
+          "chunk_recall": 0.6090476190476191
+        }
+      },
+      "wall_s": 117.99,
+      "mean_latency_s": 1.661830985915493
+    },
+    "b": {
+      "arm": "pageindex",
+      "n": 71,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.6093896713615023,
+      "chunk_recall": 0.600972501676727,
+      "per_split": {
+        "core": {
+          "n": 36,
+          "page_recall": 0.6370370370370371,
+          "chunk_recall": 0.6361772486772487
+        },
+        "holdout": {
+          "n": 35,
+          "page_recall": 0.5809523809523809,
+          "chunk_recall": 0.5647619047619047
+        }
+      },
+      "wall_s": 219.85,
+      "mean_latency_s": 3.0964788732394366
+    },
+    "eligibility": {
+      "total": 86,
+      "eligible": 71,
+      "skipped_no_expected_pages": 8,
+      "skipped_multiturn": 7
+    },
+    "gate": {
+      "name": "stage1_page_recall",
+      "a": 0.6805164319248825,
+      "b": 0.6093896713615023,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": false
+    },
+    "delta_page_recall": -0.07112676056338019,
+    "wall_s": 337.84
+  },
+  "stage2": null,
+  "gates": [
+    {
+      "name": "stage1_page_recall",
+      "a": 0.6805164319248825,
+      "b": 0.6093896713615023,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": false
+    }
+  ],
+  "thresholds": {
+    "stage1_page_recall_epsilon": 1e-09,
+    "min_correctness_delta": 0.03,
+    "min_groundedness_delta": 0.0,
+    "min_holdout_correctness_delta": 0.0,
+    "max_cost_ratio": 1.25,
+    "max_latency_p50_ratio": 1.25
+  },
+  "git_sha": "6bfb4ca",
+  "started_at": "2026-08-20T12:24:34+00:00",
+  "repetitions": 2,
+  "finished_at": "2026-08-20T12:30:15+00:00",
+  "wall_s": 340.93,
+  "exit_code": 2,
+  "report_path": "evals/results/pageindex-vs-weaviate.md",
+  "stage1_items_path": "/Users/siddicky/Projects/nymble/healthcare-rag-langgraph/evals/results/pageindex-vs-weaviate-stage1-items.json"
+}

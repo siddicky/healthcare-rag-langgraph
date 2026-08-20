@@ -1,0 +1,238 @@
+{
+  "source_pdf": "docs/lipitor.pdf",
+  "collection": "Lipitor",
+  "index_model": "openai/gpt-5.6-luna",
+  "mode": "flash",
+  "page_count": 48,
+  "generated_at": "2026-08-20T12:13:12+00:00",
+  "tree": [
+    {
+      "node_id": "0000",
+      "title": "PART I: HEALTH PROFESSIONAL INFORMATION",
+      "start_index": 3,
+      "end_index": 25,
+      "summary": "This section provides comprehensive prescribing information for Priva-ATORVASTATIN, including its composition, formulations, packaging, storage, indications, lipid evaluation requirements, dosing and titration for adult, pediatric, familial, severe, and cardiovascular-prevention uses, and overdose management. It explains the drug’s HMG-CoA reductase mechanism, lipid and cardiovascular effects, pharmacokinetics, and use in special populations. It also details contraindications, pregnancy and lactation restrictions, hepatic, renal, metabolic, endocrine, and muscle-related warnings, monitoring and discontinuation criteria, common and serious adverse reactions, laboratory abnormalities, post-marketing safety findings, and extensive drug, food, and laboratory interactions.",
+      "nodes": [
+        {
+          "node_id": "0001",
+          "title": "SUMMARY PRODUCT INFORMATION",
+          "start_index": 3,
+          "end_index": 3,
+          "summary": "Priva-ATORVASTATIN is an oral atorvastatin calcium tablet available in four strengths with specified excipients and coating ingredients. It is used alongside lifestyle and dietary measures to improve cholesterol and triglyceride abnormalities across multiple hyperlipidemic conditions, including familial hypercholesterolemia, with LDL apheresis recommended or monotherapy permitted for homozygous disease when necessary. Pediatric use applies to selected 10–17-year-old patients with heterozygous familial hypercholesterolemia meeting specified LDL-C and cardiovascular risk criteria despite dietary therapy. Secondary causes of dyslipidemia should be ruled out, a complete lipid profile obtained, and LDL-C estimated using the provided formulas when triglycerides are below 400 mg/dL.",
+          "nodes": []
+        },
+        {
+          "node_id": "0002",
+          "title": "INDICATIONS AND CLINICAL USE",
+          "start_index": 3,
+          "end_index": 4,
+          "summary": "The text describes the oral atorvastatin calcium tablet strengths, excipients, lipid-lowering and cardiovascular-prevention indications in adults and selected adolescents, required lipid evaluation and LDL-C calculation methods, management of severe hypertriglyceridemia, cautious fibrate coadministration, associated metabolic-syndrome and lifestyle considerations, and contraindications involving hypersensitivity, liver disease, pregnancy, and breastfeeding.",
+          "nodes": []
+        },
+        {
+          "node_id": "0003",
+          "title": "CONTRAINDICATIONS",
+          "start_index": 4,
+          "end_index": 5,
+          "summary": "The text addresses limitations of LDL-C estimation at very high triglyceride levels, possible triglyceride-lowering treatment and the need for caution with fibrate combinations, the association of hypertriglyceridemia with metabolic syndrome, and the importance of lifestyle modification. It outlines atorvastatin’s cardiovascular prevention indications, contraindications involving allergy, liver disease, pregnancy, and breastfeeding, and pregnancy-related counseling. It also provides precautions on pretreatment management, CYP3A4 pharmacokinetic interactions, statin-associated muscle toxicity and rhabdomyolysis, required monitoring and discontinuation criteria, and risk factors predisposing to these muscle effects.",
+          "nodes": []
+        },
+        {
+          "node_id": "0004",
+          "title": "WARNINGS AND PRECAUTIONS",
+          "start_index": 5,
+          "end_index": 10,
+          "summary": "This section provides general prescribing guidance and describes atorvastatin interactions and safety risks, especially CYP3A4-related exposure, muscle toxicity, myopathy, and potentially fatal rhabdomyolysis, including risk factors, symptom and CK monitoring, interacting combinations, and discontinuation requirements. It also covers possible immune-mediated necrotizing myopathy, hemorrhagic stroke, CoQ10 depletion, endocrine and reproductive uncertainties, glucose and diabetes effects, lipoprotein(a), and special concerns with high-dose therapy. Hepatic monitoring and management, alcohol and liver-disease precautions, lack of demonstrated lens toxicity, cautious low-dose use in renal impairment, hypersensitivity manifestations, pregnancy and lactation, pediatric and geriatric considerations, and overall tolerability and clinical-trial adverse-event and discontinuation data are included.",
+          "nodes": [
+            {
+              "node_id": "0005",
+              "title": "Cardiovascular",
+              "start_index": 6,
+              "end_index": 7,
+              "summary": "The text outlines atorvastatin precautions, focusing on myopathy and rhabdomyolysis risks, especially with renal impairment, acute serious illnesses, surgery or trauma, frailty, diabetes with hepatic fatty change, high drug exposure, and interacting CYP3A4 inhibitors. It identifies combinations to avoid or use cautiously, recommends temporary or permanent discontinuation when myopathy is suspected, and describes rare immune-mediated necrotizing myopathy. It also discusses hemorrhagic stroke risk after recent stroke or TIA, reduced CoQ10 levels, uncertain endocrine and reproductive effects, increased glucose and diabetes risk, possible increases in lipoprotein(a), and special precautions for patients receiving high doses for severe hypercholesterolemia.",
+              "nodes": []
+            },
+            {
+              "node_id": "0006",
+              "title": "Endocrine and Metabolism",
+              "start_index": 7,
+              "end_index": 8,
+              "summary": "The text outlines atorvastatin precautions involving recurrent hemorrhagic stroke, statin-related CoQ10 depletion, possible endocrine effects, increased glucose and diabetes risk, Lp(a) elevation, and higher exposure with high doses in severe hypercholesterolemia. It details hepatic monitoring, management of transaminase elevations and serious liver injury, contraindications and alcohol/liver-disease cautions, lack of demonstrated lens toxicity, low-dose cautious use in renal impairment because of rhabdomyolysis risk, and a range of possible statin-associated hypersensitivity manifestations.",
+              "nodes": []
+            },
+            {
+              "node_id": "0007",
+              "title": "Atorvastatin Hepatic, Ophthalmologic, Renal, and Hypersensitivity Effects",
+              "start_index": 8,
+              "end_index": 8,
+              "summary": "The page describes atorvastatin safety considerations involving the liver, eyes, kidneys, and hypersensitivity. It outlines monitoring and dose-reduction or discontinuation requirements for persistent transaminase elevations, precautions for serious hepatic injury, alcohol use, liver disease, and contraindications in active liver disease. Long-term data show no adverse lens effects. Renal insufficiency does not substantially alter atorvastatin exposure or efficacy, but suspected rhabdomyolysis risk warrants cautious use of the lowest dose, especially in severe impairment. It also lists the broad features of a reported HMG-CoA reductase inhibitor hypersensitivity syndrome.",
+              "nodes": []
+            },
+            {
+              "node_id": "0008",
+              "title": "Sensitivity/Resistance",
+              "start_index": 8,
+              "end_index": 10,
+              "summary": "The text describes atorvastatin precautions and adverse effects involving the liver, lens, kidneys, hypersensitivity, pregnancy and lactation, pediatric and geriatric use, and overall tolerability. It provides management guidance for transaminase elevations and serious hepatic injury, recommends cautious low-dose use in renal impairment and older adults, outlines contraindications and reproductive counseling, summarizes pediatric evidence and limitations, and reports discontinuation rates and the comparative incidences of common drug-related adverse events in placebo-controlled trials.",
+              "nodes": []
+            }
+          ]
+        },
+        {
+          "node_id": "0009",
+          "title": "ADVERSE REACTIONS",
+          "start_index": 10,
+          "end_index": 12,
+          "summary": "The text provides geriatric dosing and myopathy precautions, describes the generally mild and transient adverse-reaction profile of atorvastatin in controlled trials with frequencies for common events, lists less frequent and pediatric adverse events, details clinically significant laboratory abnormalities, and summarizes post-marketing reports including myopathy, allergic, neurologic, cognitive, metabolic, pulmonary, ophthalmologic, and other reactions. It concludes with a warning that interaction studies in healthy subjects may not predict drug interactions in patients with comorbidities or multiple medications.",
+          "nodes": []
+        },
+        {
+          "node_id": "0010",
+          "title": "DRUG INTERACTIONS",
+          "start_index": 12,
+          "end_index": 19,
+          "summary": "The text describes atorvastatin-associated laboratory abnormalities and post-marketing adverse reactions, including muscle, allergic, neurologic, endocrine, psychiatric, pulmonary, cognitive, ophthalmologic, gastrointestinal, and tendon effects. It details pharmacokinetic and pharmacodynamic interactions with lipid regulators, bile acid sequestrants, anticoagulants, cardiovascular drugs, contraceptives, antacids, antibiotics, antivirals, immunosuppressants, antifungals, enzyme inducers, fusidic acid, colchicine, grapefruit juice, and other agents, including required monitoring, avoidance recommendations, and dose restrictions. It also covers laboratory-test interference, absence of established herbal interactions, pretreatment diet and lipid evaluation, and individualized dosing for primary or mixed hypercholesterolemia, including starting doses, administration, titration, response timing, and the 80 mg/day maximum.",
+          "nodes": []
+        },
+        {
+          "node_id": "0011",
+          "title": "DOSAGE AND ADMINISTRATION",
+          "start_index": 19,
+          "end_index": 20,
+          "summary": "The text describes atorvastatin interaction precautions, including possible colchicine-associated myopathy, grapefruit juice-related increases in drug exposure, unestablished herbal interactions, and effects on laboratory enzymes. It provides preparation and monitoring requirements plus detailed dosing guidance for hyperlipidemias, severe and familial disease, pediatric patients, and cardiovascular prevention, including dose ranges, timing, titration, and renal/concomitant-therapy references. It also explains overdose management and atorvastatin’s mechanism as competitive inhibition of HMG-CoA reductase in cholesterol synthesis.",
+          "nodes": []
+        },
+        {
+          "node_id": "0012",
+          "title": "OVERDOSAGE",
+          "start_index": 20,
+          "end_index": 20,
+          "summary": "The text outlines atorvastatin dosing and monitoring: lipid levels should be periodically assessed and doses adjusted to target LDL-C levels; severe dyslipidemias may require up to 80 mg/day; pediatric patients with heterozygous familial hypercholesterolemia should start at 10 mg/day and not exceed 20 mg/day, with adjustments at least every 4 weeks. It describes 10 mg/day use in primary myocardial infarction prevention and a 10–80 mg/day range for secondary prevention, notes that concomitant therapy and renal insufficiency are covered elsewhere, and explains overdose management with supportive care and limited expected benefit from hemodialysis. Finally, it describes atorvastatin’s mechanism as competitive inhibition of HMG-CoA reductase, reducing cholesterol biosynthesis.",
+          "nodes": []
+        },
+        {
+          "node_id": "0013",
+          "title": "ACTION AND CLINICAL PHARMACOLOGY",
+          "start_index": 20,
+          "end_index": 23,
+          "summary": "This section covers atorvastatin dosing, monitoring, clinical uses, overdose management, and its mechanism as a selective competitive HMG-CoA reductase inhibitor. It explains the drug’s lipid-lowering and endothelial effects, its impact on cardiovascular and pancreatitis-related risk factors, evidence and limitations concerning lipid fractions, and efficacy across dyslipidemias. It also details absorption, distribution, metabolism, elimination, half-lives, population-specific pharmacokinetics and precautions, as well as product storage, handling, strengths, and excipients.",
+          "nodes": [
+            {
+              "node_id": "0014",
+              "title": "Atorvastatin Dosing, Overdose Management, and Mechanism",
+              "start_index": 20,
+              "end_index": 20,
+              "summary": "The page outlines atorvastatin dose monitoring and dose ranges for severe dyslipidemias, pediatric heterozygous familial hypercholesterolemia, and cardiovascular disease prevention, including guidance on concomitant therapy and renal insufficiency. It describes supportive management of overdose, notes that hemodialysis is ineffective for clearance, and directs suspected cases to Poison Control. It also explains atorvastatin’s mechanism as competitive inhibition of HMG-CoA reductase, an early rate-limiting enzyme in cholesterol synthesis.",
+              "nodes": []
+            },
+            {
+              "node_id": "0015",
+              "title": "Mechanism of Action",
+              "start_index": 20,
+              "end_index": 21,
+              "summary": "The text provides atorvastatin dosing guidance for general monitoring, severe dyslipidemias, pediatric familial hypercholesterolemia, cardiovascular prevention, concomitant therapy, and renal impairment, as well as overdose management. It explains atorvastatin’s HMG-CoA reductase inhibition and resulting effects on hepatic cholesterol synthesis, LDL receptors, and lipid fractions. It summarizes pharmacodynamic evidence that lowering LDL-C, total cholesterol, and apo B reduces cardiovascular risk, while discussing the relationships of LDL-C, HDL-C, triglycerides, IDL, and other lipoproteins to atherosclerosis, coronary disease, cardiovascular outcomes, and pancreatitis, including limitations in evidence regarding the independent benefits of raising HDL-C or lowering triglycerides.",
+              "nodes": []
+            },
+            {
+              "node_id": "0016",
+              "title": "Pharmacodynamics",
+              "start_index": 21,
+              "end_index": 22,
+              "summary": "Atorvastatin calcium is a selective competitive HMG-CoA reductase inhibitor that improves the lipid profile by lowering total cholesterol, LDL-C and particles, VLDL-C, triglycerides, IDL, and apo B-containing particles while raising HDL-C, with additional reductions in IDL-C and apo E in dysbetalipoproteinemia. The text explains the relationships between these lipid abnormalities, atherosclerosis, CAD, cardiovascular morbidity and mortality, and pancreatitis; notes the benefits of effective dyslipidemia treatment and atorvastatin’s efficacy in multiple lipid disorders, including homozygous familial hypercholesterolemia; and describes improved endothelial function in type II hyperlipidemia. It also details atorvastatin pharmacokinetics, including rapid dose-proportional absorption, effects of food and dosing time, distribution and protein binding, CYP3A4 metabolism to active metabolites, biliary elimination, and parent-drug and pharmacodynamic half-lives.",
+              "nodes": []
+            },
+            {
+              "node_id": "0017",
+              "title": "Pharmacokinetics",
+              "start_index": 22,
+              "end_index": 23,
+              "summary": "The text describes atorvastatin’s lipid-lowering and endothelial benefits, including effects in familial hypercholesterolemia and dysbetalipoproteinemia, followed by its absorption, distribution, CYP3A4 metabolism, biliary excretion, and pharmacokinetic half-lives. It outlines pharmacokinetic considerations for pediatric, elderly, gender, racial, hepatic, and renal populations, emphasizing markedly increased exposure in hepatic disease and cautious low-dose use in renal insufficiency. It also provides storage requirements, confirms no special handling instructions, and lists available tablet strengths and excipients for Priva-ATORVASTATIN.",
+              "nodes": []
+            }
+          ]
+        },
+        {
+          "node_id": "0018",
+          "title": "Special Populations, Storage, and Product Composition",
+          "start_index": 23,
+          "end_index": 23,
+          "summary": "The page describes atorvastatin pharmacokinetic and efficacy considerations in pediatric, elderly, female, racial, hepatic-insufficiency, and renal-insufficiency populations, including cautious use of the lowest dose in renal disease because of rhabdomyolysis reports. It specifies storage at 15–30°C and states that special handling is not applicable. It also lists the available oral tablet strengths and the active and non-medicinal ingredients provided in the text.",
+          "nodes": []
+        },
+        {
+          "node_id": "0019",
+          "title": "DOSAGE FORMS, COMPOSITION AND PACKAGING",
+          "start_index": 23,
+          "end_index": 25,
+          "summary": "The text describes pharmacokinetic and efficacy considerations for atorvastatin in pediatric, elderly, male and female, Black and White, hepatic-insufficient, and renal-insufficient populations, including renal dosing precautions due to rhabdomyolysis risk. It specifies storage conditions and the absence of special handling requirements, then details Priva-ATORVASTATIN tablet strengths, ingredients, coating, appearance, identifying markings, and packaging. It also provides the drug substance’s chemical name, molecular formula, molecular weight, and physical solubility characteristics.",
+          "nodes": []
+        }
+      ]
+    },
+    {
+      "node_id": "0020",
+      "title": "PART II: SCIENTIFIC INFORMATION",
+      "start_index": 25,
+      "end_index": 46,
+      "summary": "This section provides comprehensive scientific information on atorvastatin calcium, including its pharmaceutical characteristics, fasting bioequivalence with Lipitor, pharmacokinetics, lipid-lowering efficacy across varied dyslipidemias and populations, dose responses, comparator studies, pediatric data, and limitations. It summarizes cardiovascular prevention results, human and animal pharmacology, antiatherosclerotic activity, drug interactions, and extensive preclinical toxicology, including carcinogenicity, mutagenicity, reproductive, and teratogenicity findings. It also lists supporting references and supplies consumer guidance for Priva-ATORVASTATIN on use, mechanism, contraindications, formulation, muscle risks, and relevant medical, medication, alcohol, pregnancy, and breastfeeding precautions.",
+      "nodes": [
+        {
+          "node_id": "0021",
+          "title": "PHARMACEUTICAL INFORMATION",
+          "start_index": 25,
+          "end_index": 26,
+          "summary": "The text provides pharmaceutical information for atorvastatin calcium, including its chemical identity, formula, molecular weight, physical description, and solubility. It reports a fasting bioequivalence study showing comparable pharmacokinetics between 80 mg Pharmapar atorvastatin tablets and Lipitor in 68 healthy men, including exposure, Cmax, Tmax, half-life, geometric mean ratios, and confidence intervals. It also summarizes atorvastatin’s lipid-lowering efficacy across multiple hypercholesterolemia and dyslipidemia conditions, the reductions observed in type IV hypertriglyceridemia, the lack of study in chylomicron-dominant types I and V, and findings from two six-week dose-response trials, including the timing of therapeutic and maximal responses.",
+          "nodes": []
+        },
+        {
+          "node_id": "0022",
+          "title": "CLINICAL TRIALS",
+          "start_index": 26,
+          "end_index": 26,
+          "summary": "The text reports a fasting 80 mg atorvastatin crossover bioequivalence study in 68 healthy men, including comparative AUC, Cmax, Tmax, half-life, geometric mean ratios, confidence intervals, and product-manufacturing details. It then summarizes atorvastatin calcium’s lipid-lowering efficacy across several hypercholesterolemic and dyslipidemic conditions, quantifies reductions in type IV hypertriglyceridemia, identifies unstudied types I and V conditions, and describes two six-week placebo-controlled studies showing reductions in total and LDL cholesterol, triglycerides, and apolipoprotein B, increased HDL, and onset and timing of maximum response.",
+          "nodes": []
+        },
+        {
+          "node_id": "0023",
+          "title": "COMPARATIVE BIOAVAILABILITY STUDIES",
+          "start_index": 26,
+          "end_index": 37,
+          "summary": "The text presents clinical-trial evidence for atorvastatin calcium, beginning with a fasting 80 mg bioequivalence study showing comparable exposure to Lipitor. It reviews extensive lipid-lowering efficacy across primary, familial, combined, mixed, type III and type IV dyslipidemias, homozygous and heterozygous familial hypercholesterolemia, NIDDM, postmenopausal women and pediatric patients, including dose-response findings and comparisons with colestipol, estradiol, niacin and fenofibrate. It reports sustained LDL-target achievement, pediatric safety findings and study limitations. Cardiovascular prevention data from ASCOT and CARDS demonstrate reduced coronary events, myocardial infarction and stroke, while several other cardiovascular and mortality outcomes were not significantly reduced. The detailed pharmacology section describes increased atorvastatin exposure with erythromycin and clarithromycin but no meaningful interaction with azithromycin.",
+          "nodes": []
+        },
+        {
+          "node_id": "0024",
+          "title": "DETAILED PHARMACOLOGY",
+          "start_index": 37,
+          "end_index": 40,
+          "summary": "The text reports atorvastatin’s clinical cardiovascular effects, including a significant reduction in myocardial infarction but no statistically significant benefit for several other coronary outcomes or mortality. It details human pharmacokinetic interactions, showing increased atorvastatin exposure with erythromycin, clarithromycin, itraconazole, and especially cyclosporine, increased digoxin exposure at high atorvastatin doses, and minimal effects with azithromycin, amlodipine, or quinapril. Animal studies demonstrate broad lipid-lowering, inhibition of sterol synthesis and apo B production, and antiatherosclerotic effects. Toxicology findings indicate low acute toxicity, while repeated dosing affected several organs in rats and dogs, with optic nerve effects limited to intolerably high doses.",
+          "nodes": []
+        },
+        {
+          "node_id": "0025",
+          "title": "TOXICOLOGY",
+          "start_index": 40,
+          "end_index": 43,
+          "summary": "The text describes atorvastatin’s antiatherosclerotic effects in rabbits, including reductions in arterial lipid enrichment, lesion area, and macrophage content, followed by its preclinical toxicology. Acute toxicity was low in mice, rats, and dogs, while repeated dosing primarily affected the liver, with additional high-dose gastrointestinal, muscular, gallbladder, intestinal, brain, and optic-nerve findings that generally diminished over time or after withdrawal. Atorvastatin was noncarcinogenic in rats, tumorigenic only at a high mouse dose, and negative in mutagenicity and clastogenicity tests. It caused no fertility, reproductive, sperm, or teratogenic effects in the tested animals. The section concludes with 13 references covering clinical efficacy, safety, pharmacology, cardiovascular prevention, drug interactions, and related topics.",
+          "nodes": []
+        },
+        {
+          "node_id": "0026",
+          "title": "REFERENCES",
+          "start_index": 43,
+          "end_index": 46,
+          "summary": "The text first lists 34 references documenting atorvastatin’s efficacy, safety, cardiovascular benefits, comparisons with other lipid-lowering therapies, pharmacokinetics, interactions, and adverse effects. It then provides consumer information for Priva-ATORVASTATIN, explaining its prescription use with diet and lifestyle changes to improve lipid levels and reduce cardiovascular events, including use in selected adolescents with familial hypercholesterolemia. It describes statin action, lipid effects, contraindications, ingredients, tablet strengths, serious muscle warnings, and medical conditions, medications, alcohol use, pregnancy, and breastfeeding issues that must be discussed before treatment.",
+          "nodes": []
+        }
+      ]
+    },
+    {
+      "node_id": "0027",
+      "title": "PART III: CONSUMER INFORMATION",
+      "start_index": 46,
+      "end_index": 48,
+      "summary": "This Canadian consumer leaflet explains that prescription Priva-ATORVASTATIN, a statin available in four tablet strengths, lowers harmful blood fats and cardiovascular risk when combined with lifestyle changes. It identifies its ingredients, approved adult and pediatric uses and dosing, contraindications, pregnancy and muscle-related warnings, diabetes and monitoring considerations, drug and grapefruit interactions, administration, missed-dose and overdose instructions, common and serious side effects, storage requirements, and procedures for reporting adverse effects and obtaining further product information.",
+      "nodes": []
+    }
+  ]
+}

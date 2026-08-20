@@ -37,6 +37,16 @@ HC_RAG_DECOMPOSE_ONLY_COMPLEX
                           when true (default), only decompose when the decomposer labelled
                           the query `query_complexity == "complex"`. Set false to decompose
                           whenever 2+ sub-queries come back.
+HC_RAG_RETRIEVER          which retrieval arm runs: weaviate (default) or pageindex. The
+                          pageindex arm replaces only the per-collection search callable with
+                          a PageIndex tree-search adapter (one LLM call picks tree nodes, the
+                          selected page ranges map back onto the same contextualised chunks);
+                          routing, merge and every downstream stage are unchanged.
+HC_RAG_PAGEINDEX_MAX_NODES
+                          cap on tree nodes the selection call may keep (default: 4).
+HC_RAG_PAGEINDEX_MAX_CHUNKS
+                          cap on chunks the selected page ranges expand to (default: 8).
+HC_RAG_PAGEINDEX_DIR      directory holding pageindex_tree_*.json / chunks_*.json (default: data).
 
 Model history
 -------------
@@ -166,3 +176,55 @@ def safety_gate_enabled() -> bool:
     ablation switch ``HC_RAG_DISABLE_STAGES=safety``. Either one turns it off.
     """
     return _env_bool("HC_RAG_SAFETY_GATE", True) and stage_enabled("safety")
+
+
+# --------------------------------------------------------------------------- #
+# Retrieval backend (PageIndex A/B arm)                                        #
+# --------------------------------------------------------------------------- #
+
+DEFAULT_RETRIEVER = "weaviate"
+VALID_RETRIEVERS = ("weaviate", "pageindex")
+
+DEFAULT_PAGEINDEX_MAX_NODES = 4
+DEFAULT_PAGEINDEX_MAX_CHUNKS = 8
+
+
+def retriever_backend() -> str:
+    """Which retrieval arm the graph uses: ``weaviate`` (default) or ``pageindex``.
+
+    ``pageindex`` swaps *only* the per-collection search callable for the
+    tree-search adapter in ``healthcare_rag/processors/pageindex_retrieval.py``;
+    routing, merging and every downstream stage are untouched.
+    """
+    raw = os.getenv("HC_RAG_RETRIEVER")
+    if raw is None or not raw.strip():
+        return DEFAULT_RETRIEVER
+    value = raw.strip().lower()
+    if value not in VALID_RETRIEVERS:
+        raise ValueError(
+            f"HC_RAG_RETRIEVER must be one of {sorted(VALID_RETRIEVERS)}, got {raw!r}"
+        )
+    return value
+
+
+def _env_positive_int(name: str, default: int) -> int:
+    raw = os.getenv(name)
+    if raw is None or not raw.strip():
+        return default
+    try:
+        value = int(raw.strip())
+    except ValueError:
+        raise ValueError(f"{name} must be an integer, got {raw!r}") from None
+    if value < 1:
+        raise ValueError(f"{name} must be >= 1, got {value}")
+    return value
+
+
+def pageindex_max_nodes() -> int:
+    """Hard cap on how many PageIndex tree nodes one selection call may keep."""
+    return _env_positive_int("HC_RAG_PAGEINDEX_MAX_NODES", DEFAULT_PAGEINDEX_MAX_NODES)
+
+
+def pageindex_max_chunks() -> int:
+    """Hard cap on how many chunks the selected page ranges may expand to."""
+    return _env_positive_int("HC_RAG_PAGEINDEX_MAX_CHUNKS", DEFAULT_PAGEINDEX_MAX_CHUNKS)

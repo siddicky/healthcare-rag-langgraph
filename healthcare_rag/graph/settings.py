@@ -11,6 +11,9 @@ from healthcare_rag.services.models import (
     default_validator_model,
     disabled_stages,
     max_subqueries,
+    pageindex_max_chunks,
+    pageindex_max_nodes,
+    retriever_backend,
     safety_gate_enabled,
 )
 
@@ -32,6 +35,9 @@ class GraphSettings:
     weaviate_grpc_port: int = 50051
     openai_api_key: str = ""
     collection_names: tuple[str, ...] = ("Lipitor", "Metformin")
+    retriever: str = "weaviate"
+    pageindex_max_nodes: int = 4
+    pageindex_max_chunks: int = 8
 
     _TRUTHY: ClassVar[frozenset[str]] = frozenset({"1", "true", "yes", "on"})
     _FALSY: ClassVar[frozenset[str]] = frozenset({"0", "false", "no", "off"})
@@ -76,4 +82,7 @@ class GraphSettings:
             weaviate_http_port=int(os.getenv("WEAVIATE_PORT", "8080")),
             weaviate_grpc_port=int(os.getenv("WEAVIATE_GRPC_PORT", "50051")),
             openai_api_key=os.getenv("OPENAI_API_KEY", ""),
+            retriever=retriever_backend(),
+            pageindex_max_nodes=pageindex_max_nodes(),
+            pageindex_max_chunks=pageindex_max_chunks(),
         )

@@ -30,3 +30,15 @@ class QueryResultList(BaseModel):
 class ErrorResult(BaseModel):
     """Simple error representation."""
     error: str 
+
+
+class PageIndexSelection(BaseModel):
+    """Tree nodes the PageIndex arm picked for one query (one LLM call)."""
+    node_ids: list[str] = Field(
+        default_factory=list,
+        description="node_id values of the selected tree nodes, most relevant first.",
+    )
+    rationale: str = Field(
+        default="",
+        description="One short sentence explaining the selection.",
+    )

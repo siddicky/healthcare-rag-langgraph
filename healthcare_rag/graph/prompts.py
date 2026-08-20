@@ -11,6 +11,7 @@ from typing_extensions import TypedDict
 
 from healthcare_rag.models.answers import CitedAnswerResult, RelevantHistoryContext
 from healthcare_rag.models.misc import FollowUpQuestions
+from healthcare_rag.models.retrieval import PageIndexSelection
 from healthcare_rag.models.queries import (
     ClarifiedQuery,
     DecomposedQuery,
@@ -33,6 +34,7 @@ STAGE_FILES: Final = {
     "generate_answer": "answer_generation",
     "validate_answer": "answer_structuring",
     "generate_follow_ups": "follow_up_questions",
+    "pageindex_select": "pageindex_select",
 }
 
 RESPONSE_MODELS: Final[dict[str, type[BaseModel]]] = {
@@ -43,6 +45,7 @@ RESPONSE_MODELS: Final[dict[str, type[BaseModel]]] = {
     "evaluate_retrieval": RetrievalEvaluation,
     "validate_answer": CitedAnswerResult,
     "generate_follow_ups": FollowUpQuestions,
+    "pageindex_select": PageIndexSelection,
 }
 
 _PROMPT_MESSAGES_ADAPTER: Final = TypeAdapter(list[PromptMessageData])

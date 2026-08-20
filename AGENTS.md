@@ -44,6 +44,7 @@ its pins are mutually incompatible; `pyproject.toml` is the dependency source.
 | processors (LLM steps used by the nodes) | `healthcare_rag/processors/*.py` + `healthcare_rag/prompts/*.yaml.j2` |
 | safety gate + response templates | `healthcare_rag/processors/safety.py`, `safety_responses.py`, `healthcare_rag/prompts/safety_gate.yaml.j2`, `docs/safety.md` |
 | retrieval / Weaviate schema & ingestion | `healthcare_rag/processors/retrieval.py`, `healthcare_rag/storage/vector_store.py` |
+| PageIndex retrieval arm (A/B, off by default) | `healthcare_rag/processors/pageindex_retrieval.py`, `healthcare_rag/storage/pageindex_index.py`, `data/pageindex_tree_*.json` |
 | model config | `healthcare_rag/services/models.py` |
 | LangSmith tracing (opt-in) | `healthcare_rag/services/tracing.py` |
 | evals + reports | `evals/`, `evals/results/` |
@@ -111,6 +112,12 @@ questions is the failure mode to watch for.
   `safety_outcome` in the result; the engine also sets
   `monitor.raw_answer_event` (with no raw answer) so a UI waiting for a
   preliminary answer does not sit on its timeout.
+- `HC_RAG_RETRIEVER=pageindex` swaps **only** the per-collection search callable
+  for a PageIndex tree-search adapter (one LLM call picks <=4 tree nodes, their
+  page ranges map back onto the same contextualised chunks; caps:
+  `HC_RAG_PAGEINDEX_MAX_NODES`, `HC_RAG_PAGEINDEX_MAX_CHUNKS`). It needs the cached
+  trees from `make index-pageindex` and never connects to Weaviate. Default stays
+  `weaviate`; an injected `Resources.hybrid_search` still wins over the knob.
 - The decomposer is non-deterministic on borderline queries: the same question
   can come back `simple` on one call and `complex` with 4 sub-queries on the
   next, so branch counts vary run to run.

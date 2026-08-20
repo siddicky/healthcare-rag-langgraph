@@ -244,6 +244,7 @@ class GraphEngine:
             "llm_model": self.settings.llm_model,
             "validator_model": self.settings.validator_model,
             "reasoning_effort": self.settings.reasoning_effort,
+            "retriever": self.settings.retriever,
         }
 
     async def aclose(self) -> None:
