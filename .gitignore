@@ -30,3 +30,7 @@ uv.lock
 
 # PageIndex local-mode store (trees are cached under data/ instead)
 .pageindex/
+
+# oh-my-claudecode operational state (any level); project skills stay committable
+.omc/
+!.omc/skills/
