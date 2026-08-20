@@ -4,5 +4,8 @@
     "healthcare_rag": "./healthcare_rag/graph/__init__.py:graph"
   },
   "env": ".env",
-  "python_version": "3.12"
+  "python_version": "3.12",
+  "dockerfile_lines": [
+    "ENV PRESIDIO_DEVICE=cpu"
+  ]
 }

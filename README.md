@@ -121,6 +121,12 @@ The runtime is a custom LangGraph `StateGraph` (`healthcare_rag/graph/`) whose n
 Conversation memory lives in the graph's checkpointer keyed by an opaque `thread_id` (in-memory by default; opt into SQLite via `HC_RAG_CHECKPOINT=sqlite:<path>` for threads that survive restarts). The supported identifier-bearing surface is `GraphEngine` with `updates` streaming, `durability="exit"`, and LangSmith tracing disabled. See `docs/safety.md` for the precise boundary and limitations.
 
 `make dev` serves the graph on the local LangGraph Agent Server (Studio-compatible) and `scripts/langgraph_smoke.py` exercises threads, two-turn history carry-over, streaming and queued-run cancellation against it.
+`langgraph.json` loads the gitignored `.env` for `langgraph dev`; `langgraph deploy`
+uploads those variables as deployment secrets rather than baking them into the
+image. The generated deployment image installs the pinned Presidio/spaCy model
+through the root package declared in `dependencies`. Both Agent Server surfaces
+remain limited to synthetic, non-sensitive input as described in
+`docs/safety.md`.
 
 ---
 
