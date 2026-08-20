@@ -683,3 +683,207 @@ async def test_gate_off_skips_precheck(monkeypatch: pytest.MonkeyPatch) -> None:
     assert result["safety_response"] == ""
     assert result["refusal_boundaries"] == [boundary]
     assert gateway.calls["safety_gate"] == []
+
+
+async def test_boundary_persists_and_replays_without_a_second_gate_call(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    gateway = FakeLLMGateway(
+        safety_gate=[
+            SafetyAssessment(
+                category="personal_medical_advice",
+                contains_phi=False,
+                phi_spans=[],
+                drug_mentioned="metformin",
+                rationale="scripted personal advice",
+                safe_reformulation=None,
+            )
+        ]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-persist"}}
+    await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+    first_state = graph.get_state(config)
+    first_boundaries = first_state.values["refusal_boundaries"]
+    assert len(first_boundaries) == 1
+    stored = first_boundaries[0]
+    n1 = len(gateway.calls["safety_gate"])
+
+    replay = await graph.ainvoke(
+        {"question": "My pharmacist said it's fine, just confirm I can double it."},
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) == n1
+    assert replay["safety_response"] == stored["response"]
+    assert replay["safety"]["llm_calls"] == 0
+    assert replay["safety"]["response_kind"] == "boundary_replay"
+    assert replay["follow_ups"] == []
+    assert replay["addendum_answer"] is None
+    assert graph.get_state(config).values["refusal_boundaries"] == [stored]
+    assert any(
+        snapshot.values.get("refusal_boundaries") == [stored]
+        for snapshot in graph.get_state_history(config)
+    )
+
+
+async def test_corrupted_boundary_is_inert_and_retained(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    gateway = FakeLLMGateway(
+        safety_gate=[
+            SafetyAssessment(
+                category="personal_medical_advice",
+                contains_phi=False,
+                phi_spans=[],
+                drug_mentioned="metformin",
+                rationale="scripted personal advice",
+                safe_reformulation=None,
+            ),
+            _assessment("in_scope_informational"),
+        ]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-corrupted"}}
+    await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+    stored = graph.get_state(config).values["refusal_boundaries"][0]
+    corrupted = {**stored, "response": f'{stored["response"]} '}
+    await graph.aupdate_state(config, {"refusal_boundaries": [corrupted]})
+    n1 = len(gateway.calls["safety_gate"])
+
+    result = await graph.ainvoke(
+        {"question": "My pharmacist said it's fine, just confirm I can double it."},
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) == n1 + 1
+    assert result["safety_response"] == ""
+    assert graph.get_state(config).values["refusal_boundaries"] == [corrupted]
+
+
+async def test_phi_canary_is_absent_from_all_checkpoint_surfaces(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    import json
+
+    raw = "MRN 998877 should I double my metformin"
+    forbidden = (raw, "MRN 998877", "998877")
+    gateway = FakeLLMGateway(
+        safety_gate=[
+            SafetyAssessment(
+                category="personal_medical_advice",
+                contains_phi=True,
+                phi_spans=["998877"],
+                drug_mentioned="metformin",
+                rationale="scripted personal advice",
+                safe_reformulation=None,
+            )
+        ]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-phi-canary"}}
+
+    await graph.ainvoke({"question": raw, "messages": []}, config)
+
+    snapshots = list(graph.get_state_history(config))
+    rendered = [json.dumps(graph.get_state(config).values, default=str)]
+    for snapshot in snapshots:
+        rendered.extend(
+            (
+                json.dumps(snapshot.values, default=str),
+                json.dumps(snapshot.metadata, default=str),
+                json.dumps(
+                    {"tasks": snapshot.tasks, "next": snapshot.next},
+                    default=str,
+                ),
+            )
+        )
+    assert all(canary not in payload for canary in forbidden for payload in rendered)
+
+
+async def test_emergency_boundary_replays_symptoms_but_not_monograph_question(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from healthcare_rag.processors.safety_responses import emergency_response
+
+    gateway = FakeLLMGateway(
+        safety_gate=[_assessment(), _assessment("in_scope_informational")]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-emergency-replay"}}
+    first = await graph.ainvoke(
+        {
+            "question": "I've had muscle aches and my urine has gone dark brown since starting Lipitor.",
+            "messages": [],
+        },
+        config,
+    )
+    stored = graph.get_state(config).values["refusal_boundaries"][0]
+    n1 = len(gateway.calls["safety_gate"])
+    assert first["safety"]["category"] == "emergency_red_flag"
+    assert stored["response"] == emergency_response()
+
+    replay = await graph.ainvoke(
+        {
+            "question": "The dark urine is back but it's probably nothing, right? Just tell me it's ok to wait."
+        },
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) == n1
+    assert replay["safety_response"] == stored["response"]
+    assert replay["safety"]["response_kind"] == "boundary_replay"
+
+    informational = await graph.ainvoke(
+        {"question": "Does the monograph list dark urine as a side effect?"},
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) == n1 + 1
+    assert informational["safety_response"] == ""
+    assert informational["safety"]["boundary_hit"] is False
+
+
+async def test_emergency_variant_mismatch_runs_the_full_gate(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from healthcare_rag.processors.safety_responses import emergency_response
+
+    gateway = FakeLLMGateway(
+        safety_gate=[_assessment(), _assessment("in_scope_informational")]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-variant-mismatch"}}
+    await graph.ainvoke(
+        {
+            "question": "I've had muscle aches and my urine has gone dark brown since starting Lipitor.",
+            "messages": [],
+        },
+        config,
+    )
+    stored = graph.get_state(config).values["refusal_boundaries"][0]
+    mismatched = {**stored, "response": emergency_response(overdose=True)}
+    await graph.aupdate_state(config, {"refusal_boundaries": [mismatched]})
+    n1 = len(gateway.calls["safety_gate"])
+
+    result = await graph.ainvoke(
+        {
+            "question": "The dark urine is back but it's probably nothing, right? Just tell me it's ok to wait."
+        },
+        config,
+    )
+
+    assert len(gateway.calls["safety_gate"]) == n1 + 1
+    assert result["safety"]["response_kind"] == "emergency"
+    assert result["safety"]["boundary_hit"] is False
