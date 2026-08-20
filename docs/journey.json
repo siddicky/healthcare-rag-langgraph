@@ -699,6 +699,13 @@
       "amendment": "A5",
       "decision": "Approved A2 latency threshold confirmed as x1.35 (both splits); the plan's x1.30 line was a transcription error, corrected in place. Gate code was always x1.35 (commit 399f2ee); no re-gate required; both parity seals stand (v2 core x1.320, final x1.343/x1.344).",
       "why": "F1 audit found the plan/gate mismatch outcome-determinative; evidence (gate commit at A2 time, orchestrator approval record, core already x1.32 at drafting) pointed to transcription error; user confirmed option A."
+    },
+    {
+      "id": "D15",
+      "when": "2026-08-20",
+      "amendment": null,
+      "decision": "Validator cost accepted as-is for now (~90% of pipeline spend, ~5s p50). No optimisation work scheduled.",
+      "why": "User decision after the T22 ablation proved the validator is the hallucination/false-premise backstop (removing it: false_premise 1.0->0.875, hallucinated +0.08, correct_but_ungrounded +0.06). If cost ever matters, the lever is a cheaper validator (smaller model / batched verification) - never removal."
     }
   ],
   "experiments": [
@@ -1153,7 +1160,8 @@
     },
     {
       "item": "Validator is ~90% of pipeline cost - if cost ever matters, make it cheaper (smaller model/batched), never remove (T22 ablation).",
-      "status": "open"
+      "status": "accepted-as-is",
+      "note": "User decision 2026-08-20: validator cost acceptable for now. Lever remains documented (smaller validator model / batched statement verification) if cost ever matters; removal is ruled out by the T22 ablation (guardrail stage)."
     }
   ]
 }
