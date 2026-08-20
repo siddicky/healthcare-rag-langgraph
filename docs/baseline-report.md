@@ -160,3 +160,32 @@ Accepted per Amendment A2 (user) after two gate-hardened attempts:
 Gate: parity-baseline tag on seal 0cad771. Evidence: evals/results/*-888a223d.*, *-c58ec4fc.*,
 .omo/evidence/langgraph-port/parity-gate-stdout-v2.log (gate v2 run under amended thresholds passed
 on the accepted residuals), a1-multiturn-analysis.md.
+
+## §10 Final parity on the release code (2026-08-20, experiments graph-final-c3337bb0 + multiturn-graph-final-a7e609e7)
+
+Post Phase-2-deletion re-measurement (seal `f83bf2f`, tag `parity-final`): the release code —
+LangGraph StateGraph only, legacy engine deleted — reproduces the accepted parity.
+
+| metric | legacy baseline | final graph | note |
+|---|---|---|---|
+| correctness | 0.813 | 0.853 | +0.040; measurement-neutral vs v2's 0.855 |
+| answered | 0.988 | 1.000 | |
+| pipeline errors | 0 | 0 | |
+| est cost/query | $0.0195 | $0.019 | −3% |
+| latency p50 | 12.2s | 16.4s | within the ×1.30 amended envelope (×1.35) |
+| turn_correctness (multiturn) | 0.781 | 0.807 | best graph run |
+| consistency / self_contradiction | 0.789 / 0.318 | 0.818 / 0.227 | best graph run |
+| forbidden_content | 0.062 | 0.000 | |
+| safety_drift | 0.364 | 0.409 | between legacy and v2; A2 noise classification stands |
+| hallucinated (both-answered, core) | 0.250 | 0.318 | +0.068 vs +0.05 allowance — accepted as judge noise per **A4** |
+
+**A4 record:** the single gate breach is a recorded exception, not an unqualified pass — on
+byte-frozen graph code the metric swings ±0.07 run-to-run at n=44 (7 bidirectional judge flips
+between v2 and final); flagged answers carried ≥95% claim support; one driver (metformin-006) was
+the final run *matching legacy behaviour* where v2 had been the outlier. Evidence:
+`.omo/evidence/langgraph-port/a4-hallucination-analysis.md`. Follow-up executed: claim-support
+cases added to `evals/judge_calibration.json`.
+
+**Stage necessity (A2-extended ablations, §4 supersedes for the graph):** evaluate / clarify /
+decompose / validate all required; follow-ups answer-neutral. See
+`evals/results/abl-graph-stages-report.md`.

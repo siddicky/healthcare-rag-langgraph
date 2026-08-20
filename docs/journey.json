@@ -2,7 +2,7 @@
   "$schema_note": "Durable, append-only-ish record of the work on this repo: what was done, in what order, what was found (with evidence), what was decided and why. Rendered by docs/journey.html. Update via docs/update_journey.py or by hand; keep ids stable.",
   "project": "healthcare-rag (nymble take-home)",
   "started": "2026-08-18",
-  "last_updated": "2026-08-19",
+  "last_updated": "2026-08-20",
   "goal": "Understand the inherited RAG system, instrument it, and establish honest baseline metrics (RAG quality, safety behaviour, latency, cost) with LangSmith before changing it — then use those numbers to drive the required healthcare-safety work and the model upgrade.",
   "context": {
     "exercise": "nymble health — Senior Python Engineer take-home. Direction 4 (healthcare safety) required; 2–3 more chosen. Deliverables: PRs to main, Google Doc write-up, 5-min video.",
@@ -231,6 +231,34 @@
       "decisions": [
         "D10",
         "D11"
+      ]
+    },
+    {
+      "id": "T22",
+      "when": "2026-08-19",
+      "step": "Flipped build_engine() default to the graph; ran the A2-extended FIVE stage ablations (judges on, untraced, LS experiments deleted after export); fixed python -m healthcare_rag never loading .env (legacy had loaded it accidentally via the evals.engines import chain - every ChatOpenAI built keyless and make run refused everything in 0.1s).",
+      "outcome": "Stage necessity answered: evaluate REQUIRED (correctness -0.114 without, biggest lever), clarify REQUIRED (pure quality, zero savings), decompose REQUIRED for complex (holdout -0.100 without; core alone would skip it), validate REQUIRED for guardrails (false_premise 1.0->0.875, ~90% of the cost is its price), followups answer-neutral (0.855 both). Reports: abl-graph-stages-report.md.",
+      "experiments": [
+        "abl-graph-no-validate-6c667857",
+        "abl-graph-no-evaluate-4866ed18",
+        "abl-graph-no-decompose-19965a4a",
+        "abl-graph-no-clarify-361f5415",
+        "abl-graph-no-followups-e90ffd69"
+      ],
+      "decisions": []
+    },
+    {
+      "id": "T23",
+      "when": "2026-08-19",
+      "step": "Phase-2 deletion (orch/, pipeline/, storage/history.py, services/llm.py, 6 dead processor classes, LegacyEngine, HC_RAG_ENGINE/HC_RAG_SYNTHESIS, legacy prompts/tests; monitor -> healthcare_rag/monitor.py; docs refreshed) at 3435caf, then final parity re-measurement of the release code at seal f83bf2f.",
+      "outcome": "Final gate vs legacy: PASS on every check except core.hallucinated[both-answered] +0.068 vs +0.05 allowance (n=44, ~3 net judge flips) - accepted as judge noise per A4 on frozen-code flip-table evidence (a4-hallucination-analysis.md). Single-turn 0.853 correctness / 1.0 answered / 0 errors; multiturn best run ever: turn_correctness 0.807, consistency 0.818, self_contradiction 0.227, forbidden_content 0.000. Tag parity-final @ f83bf2f.",
+      "experiments": [
+        "graph-final-c3337bb0",
+        "multiturn-graph-final-a7e609e7"
+      ],
+      "decisions": [
+        "D12",
+        "D13"
       ]
     }
   ],
@@ -499,6 +527,27 @@
       "area": "ops",
       "title": "langgraph dev on 0.12.6: rollback cancel of a QUEUED run leaves it `interrupted` instead of deleting (documented contract divergence — user-approved terminal-status assertion); dev server needs --allow-blocking for sync weaviate clients; grpcio pinned 1.80 for the cli stubs",
       "detail": "Platform version quirks recorded so future upgrades know what to re-assert."
+    },
+    {
+      "id": "F32",
+      "when": "2026-08-19",
+      "category": "runtime",
+      "finding": "Judge flag hallucinated is run-unstable at n=44: paraphrase-level answer differences flip it; false_premise_corrected moves 0.125 per single judge flip on n=8 categories.",
+      "action": "Never read single small-category deltas as signal; pull branch metadata + correctness/groundedness as falsifiers (a4-hallucination-analysis.md)."
+    },
+    {
+      "id": "F33",
+      "when": "2026-08-19",
+      "category": "infra",
+      "finding": "python -m healthcare_rag never loaded .env; the legacy engine had done it accidentally via the evals.engines import chain, so the default-graph flip silently broke make run (keyless ChatOpenAI, 0.1s refusals).",
+      "action": "load_dotenv() now runs in __main__.py before the CLI import chain; documented in AGENTS.md."
+    },
+    {
+      "id": "F34",
+      "when": "2026-08-20",
+      "category": "measurement",
+      "finding": "Judge strictness characterised via new calibration cases (A4b): (1) a synthesis/generalisation sentence atop supported facts draws a hallucination flag - answers must restate, not summarise, if they want hallucinated=0; (2) modality changes (should->must) count as partial support; (3) one fabricated claim in a 6-claim answer is still caught (hallucinated=1) with groundedness correctly ~10/11 - length does not dilute clear fabrications. These reproduce the A4 gate-noise mechanism in a controlled test.",
+      "action": "Three claim-support cases added to evals/judge_calibration.json (long-supported, paraphrase-supported, fabricated-in-long); make test + make test-judges green. Extend whenever a gate flip is root-caused."
     }
   ],
   "decisions": [
@@ -597,6 +646,20 @@
       "id": "D11",
       "decision": "Phase-2 cleanup plan: delete legacy orch/pipeline/history/LLM plumbing after ablations; QueryMonitor→healthcare_rag/monitor.py; final parity re-run + parity-final tag gates the release",
       "why": "Keep one engine, not two; the final re-measure proves the deletions did not change behavior (measurement sources blob-pinned vs base SHA)."
+    },
+    {
+      "id": "D12",
+      "when": "2026-08-19",
+      "amendment": "A3",
+      "decision": "Frozen-diff invariant reworded to 'graph logic frozen': parity-baseline..parity-final may touch only the build_engine() selector block, its import wiring, and one stale docstring line in resources.py; nodes/routers/state/prompts byte-identical.",
+      "why": "The original 'empty diff' acceptance was unsatisfiable - todos 12/13 both mandate editing build_engine(), which lives inside the frozen dir."
+    },
+    {
+      "id": "D13",
+      "when": "2026-08-19",
+      "amendment": "A4",
+      "decision": "Final-gate single breach (core.hallucinated[both-answered] +0.068) accepted as judge noise with recorded exception; claim-support calibration cases added to judge_calibration.json.",
+      "why": "On byte-frozen code the metric swung +-0.07 (7 bidirectional flips v2<->final at n=44) - larger than the +0.05 allowance; flagged answers carried >=95% claim support; no unsupported-claim pattern existed."
     }
   ],
   "experiments": [
@@ -898,6 +961,79 @@
         "turn_answered_rate": 1.0,
         "cost_per_turn_usd": 0.014918290097402597
       }
+    },
+    {
+      "name": "abl-graph-no-validate-6c667857",
+      "config": "graph, validate disabled, conc 10",
+      "split": "golden 86",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": 0.852,
+        "false_premise_corrected": 0.875,
+        "est_cost_usd": 0.002
+      }
+    },
+    {
+      "name": "abl-graph-no-evaluate-4866ed18",
+      "config": "graph, evaluate disabled, conc 10",
+      "split": "golden 86",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": 0.741,
+        "chunk_recall": 0.536
+      }
+    },
+    {
+      "name": "abl-graph-no-decompose-19965a4a",
+      "config": "graph, decompose disabled, conc 10",
+      "split": "golden 86",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": 0.838,
+        "holdout_correctness": 0.729
+      }
+    },
+    {
+      "name": "abl-graph-no-clarify-361f5415",
+      "config": "graph, clarify disabled, conc 10",
+      "split": "golden 86",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": 0.814
+      }
+    },
+    {
+      "name": "abl-graph-no-followups-e90ffd69",
+      "config": "graph, followups disabled, conc 10",
+      "split": "golden 86",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": 0.855
+      }
+    },
+    {
+      "name": "graph-final-c3337bb0",
+      "config": "graph, release code seal f83bf2f, conc 3",
+      "split": "golden 86",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": 0.853,
+        "answered": 1.0,
+        "latency_p50_s": 16.4,
+        "est_cost_usd": 0.019
+      }
+    },
+    {
+      "name": "multiturn-graph-final-a7e609e7",
+      "config": "graph, release code seal f83bf2f, conc 3",
+      "split": "multiturn 22",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "turn_correctness": 0.807,
+        "consistency": 0.818,
+        "safety_drift": 0.409,
+        "forbidden_content": 0.0
+      }
     }
   ],
   "artefacts": [
@@ -954,19 +1090,17 @@
       "priority": "medium"
     },
     {
-      "id": "O03",
-      "item": "Validation cost (F03/F21): ablation shows no measurable groundedness gain for 94% of spend; next: validate once per query on a cheaper model, or LLM-free quote check; keep citation display.",
-      "priority": "high"
-    },
-    {
-      "id": "O04",
-      "item": "Run/compare: luna-terra-full (core+holdout), baseline holdout, multi-turn, ablations — then finalise the migration recommendation.",
-      "priority": "in progress"
-    },
-    {
       "id": "O05",
       "item": "LangSmith alerts (error rate / latency / cost / judge feedback) — waiting on a notification channel (Slack / webhook / PagerDuty).",
       "priority": "low"
+    },
+    {
+      "item": "Refusal-heavy + claim-support judge calibration cases added (A2/A4 follow-up) - keep extending whenever a judge flip is root-caused to phrasing.",
+      "status": "done"
+    },
+    {
+      "item": "Validator is ~90% of pipeline cost - if cost ever matters, make it cheaper (smaller model/batched), never remove (T22 ablation).",
+      "status": "open"
     }
   ]
 }
