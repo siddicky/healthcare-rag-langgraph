@@ -15,18 +15,21 @@ from healthcare_rag.graph.llm import LangChainLLMGateway
 from healthcare_rag.graph.nodes import render_display_answer
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.state import JSONValue, RAGState
-from healthcare_rag.models.safety import SafetyAssessment, SafetyOutcome
+from healthcare_rag.models.safety import SafetyAssessment, SafetyCategory, SafetyOutcome
 from healthcare_rag.processors.refusal_boundary import (
     TEMPLATE_VERSION,
     BoundaryKind,
     RefusalBoundary,
     allowed_responses,
+    boundary_hit,
     derive_boundary_topic,
+    load_boundaries,
     upsert_boundary,
 )
 from healthcare_rag.processors.safety import SafetyGate, addendum_is_safe, scrub_phi
 from healthcare_rag.processors.safety_responses import (
     ADDENDUM_HEADING,
+    PHI_NOTICE,
     emergency_response,
     injection_response,
     personal_advice_response,
@@ -35,6 +38,11 @@ from healthcare_rag.services.models import refusal_boundary_enabled, safety_gate
 
 logger = logging.getLogger("MedicalRAG")
 GATEWAY: LangChainLLMGateway | None = None
+KIND_TO_CATEGORY: dict[BoundaryKind, SafetyCategory] = {
+    "personal_advice": "personal_medical_advice",
+    "emergency": "emergency_red_flag",
+    "injection": "prompt_injection",
+}
 
 
 class _Pipeline(Protocol):
@@ -149,6 +157,34 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
             "working_query": scrubbed_question,
         }
 
+    boundary_on = refusal_boundary_enabled()
+    valid: list[RefusalBoundary] = []
+    if boundary_on:
+        scrubbed, phi_kinds = scrub_phi(question)
+        valid = load_boundaries(state.get("refusal_boundaries") or [])
+        hit = boundary_hit(scrubbed, valid)
+        if hit is not None:
+            return {
+                **reset,
+                "scrubbed_question": scrubbed,
+                "working_query": scrubbed,
+                "safety_response": hit.response,
+                "safety_kind": f"boundary:{hit.kind}",
+                "safety_notices": [PHI_NOTICE] if phi_kinds else [],
+                "safety": SafetyOutcome(
+                    category=KIND_TO_CATEGORY[hit.kind],
+                    contains_phi=bool(phi_kinds),
+                    short_circuited=True,
+                    response_kind="boundary_replay",
+                    deterministic_flags=[f"boundary_hit:{hit.kind}:{hit.topic}"],
+                    phi_kinds=phi_kinds,
+                    llm_calls=0,
+                    boundary_hit=True,
+                    boundaries_active=len(valid),
+                ).model_dump(mode="json"),
+                "route": Overwrite([f"safety_gate:boundary:{hit.kind}"]),
+            }
+
     async def adapter(
         prompt_name: str,
         temperature: float,
@@ -177,7 +213,7 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
     boundary_update: SafetyGateUpdate = {}
     if (
         gate_on
-        and refusal_boundary_enabled()
+        and boundary_on
         and decision.short_circuit
         and decision.kind in {"personal_advice", "emergency", "injection"}
     ):
@@ -220,6 +256,8 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
         deterministic_flags=decision.flags,
         phi_kinds=decision.phi_kinds,
         llm_calls=decision.llm_calls,
+        boundary_hit=False,
+        boundaries_active=len(valid),
         gate_latency_s=round(latency, 3),
         rationale=rationale,
     )

@@ -80,5 +80,11 @@ class SafetyOutcome(BaseModel):
     phi_kinds: List[str] = Field(default_factory=list)
     addendum_appended: bool = False
     llm_calls: int = 1
+    boundary_hit: bool = Field(
+        default=False, description="Whether a stored refusal boundary replayed."
+    )
+    boundaries_active: int = Field(
+        default=0, description="Number of valid refusal boundaries active."
+    )
     gate_latency_s: Optional[float] = None
     rationale: str = ""
