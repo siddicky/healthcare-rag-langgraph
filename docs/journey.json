@@ -270,6 +270,18 @@
         "priv-sanitizer-safety-ca3da172"
       ],
       "decisions": []
+    },
+    {
+      "id": "T25",
+      "when": "2026-08-20",
+      "step": "Deep interview (7 rounds, 10% ambiguity gate) -> autoresearch mission: PageIndex tree-search arm behind HC_RAG_RETRIEVER, two-stage frozen gate evals/pageindex_gate.py (self-check delta 0.000), stage-1 run over 71 golden questions.",
+      "outcome": "REJECT at stage 1 (page_recall 0.609 vs 0.681). ~28 min, ~$0.30. D16."
+    },
+    {
+      "id": "T26",
+      "when": "2026-08-20",
+      "step": "Second mission: Pinecone hybrid arm (same text-embedding-3-small + hosted sparse) and a bge-reranker-v2-m3 stage (12 -> 4) behind HC_RAG_RERANKER; gate generalised to N candidate arms; 4-arm stage 1, dense-only diagnostic, paired judged stage 2 for the selected weaviate+rerank arm (n=172/arm, concurrency 8 at the user's request after an aborted single-threaded attempt).",
+      "outcome": "Pinecone REJECT at stage 1 (-0.185; -0.057 dense-only), reranker REJECT at stage 2 (correctness 0.799 vs 0.850). Weaviate hybrid kept unchanged. ~2h40, ~$10. D17, F38-F42."
     }
   ],
   "findings": [
@@ -580,6 +592,41 @@
       "area": "privacy",
       "title": "HIPAA Safe Harbor assessed as a coverage inventory for the sanitizer, not a compliance target: 15/18 categories covered or deliberately diverged (cue-gated dates, clinical-code preservation), 2 N/A for text (biometrics, photos), 1 inherently heuristic (catch-all); VIN/plate gap closed as VEHICLE_ID (cue-bound, clinical-text negative tests pinned)",
       "detail": "docs/safety.md carries the full 18-row table with divergences stated honestly. Blanket date removal would redact every clinically meaningful date in monograph QA; the catch-all cannot be satisfied deterministically by anyone. App is Canadian-context (PIPEDA/PHIPA before HIPAA) and already disclaims Safe Harbor/Expert Determination compliance."
+    },
+    {
+      "id": "F38",
+      "severity": "high",
+      "area": "retrieval",
+      "title": "Retrieval is not the binding constraint on this corpus: three alternatives (PageIndex tree search, Pinecone hybrid, bge reranker) all lost to the inherited Weaviate hybrid under a frozen paired gate",
+      "detail": "Stage-1 page_recall: PageIndex -0.071, Pinecone -0.185 (-0.057 dense-only), reranker +0.050; stage-2 correctness for the reranker -0.051 (holdout -0.091). Losses in the paired per-question analysis were answer completeness, not missing pages. docs/retrieval-experiments.md"
+    },
+    {
+      "id": "F39",
+      "severity": "medium",
+      "area": "evals",
+      "title": "Reference drift: the unchanged Weaviate retriever scored 0.681 / 0.648 / 0.664 page_recall across three same-day stage-1 runs (routing-LLM nondeterminism ~ +/-0.02)",
+      "detail": "Any retrieval comparison must be paired against a fresh reference in the same session; stage-1 deltas below ~0.03 are noise. The gate enforces this (never compares with historical reports)."
+    },
+    {
+      "id": "F40",
+      "severity": "medium",
+      "area": "retrieval",
+      "title": "A retrieval-recall win does not imply an answer-quality win: the reranker gained +0.050 page_recall at stage 1 and lost -0.051 correctness at stage 2",
+      "detail": "Full-pipeline page_recall was flat (0.680 -> 0.690, decomposition/gap-fill unions recover pages anyway) while chunk_recall (0.657 -> 0.639) and must_mention_recall (0.603 -> 0.568) fell: same pages, less complete chunks. This is why the gate has a judged second stage."
+    },
+    {
+      "id": "F41",
+      "severity": "low",
+      "area": "retrieval",
+      "title": "PageIndex local mode (pip `pageindex`, MIT) has no LLM retrieval primitive - only submit_document / get_tree / get_ocr; its reasoning retrieval lives in its chat agent; local mode is PDF-only; the package requires openai>=2 and cannot share the app venv (openai<2 pin)",
+      "detail": "Tree build runs in an isolated `uv run --no-project --with pageindex` env; runtime only reads cached tree JSON. Flash-mode trees left Lipitor pp.1-2 / Metformin p.1 unassigned (no golden item expects them)."
+    },
+    {
+      "id": "F42",
+      "severity": "low",
+      "area": "retrieval",
+      "title": "Pinecone arm confound: convex combination of raw dot-product and raw sparse scores is not equivalent to Weaviate's normalised relative-score fusion; the dense-only diagnostic isolates ~0.13 of the 0.185 page_recall loss to this choice",
+      "detail": "Recorded, not tuned (mission rule: no tuning past a stage-1 REJECT). Reopening Pinecone means normalised/RRF fusion through the same gate. Also: Pinecone metadata has no int lists (page_numbers stored as strings), and the arm embeds `contextualized` only while text2vec-openai embeds class name + all properties."
     }
   ],
   "decisions": [
@@ -706,6 +753,20 @@
       "amendment": null,
       "decision": "Validator cost accepted as-is for now (~90% of pipeline spend, ~5s p50). No optimisation work scheduled.",
       "why": "User decision after the T22 ablation proved the validator is the hallucination/false-premise backstop (removing it: false_premise 1.0->0.875, hallucinated +0.08, correct_but_ungrounded +0.06). If cost ever matters, the lever is a cheaper validator (smaller model / batched verification) - never removal."
+    },
+    {
+      "id": "D16",
+      "when": "2026-08-20",
+      "amendment": null,
+      "decision": "PageIndex (vectorless tree-search retrieval) REJECTED as a replacement for Weaviate hybrid search; kept only as an opt-in A/B arm (HC_RAG_RETRIEVER=pageindex).",
+      "why": "Frozen two-stage gate, retrieval stage only. Stage 1 over 71 golden questions: page_recall 0.681 (Weaviate) vs 0.609 (PageIndex), holdout 0.676 vs 0.581, 12 wins / 21 losses / 38 ties, 2x retrieval latency. A stage-1 loss is terminal by design (no judge budget spent). Corpus is 79 pages; PageIndex local mode has no LLM retrieval primitive, so the node selector was ours. docs/decisions/pageindex-vs-weaviate.md"
+    },
+    {
+      "id": "D17",
+      "when": "2026-08-20",
+      "amendment": null,
+      "decision": "Pinecone hybrid index REJECTED (as configured) at stage 1 and a bge-reranker-v2-m3 reranking stage REJECTED at stage 2. Weaviate hybrid search (limit 4, alpha 0.65, relative-score fusion) stays unchanged with no reranker; both arms remain opt-in knobs.",
+      "why": "Stage 1 (71 q): pinecone 0.463 vs 0.648 page_recall (-0.185; dense-only diagnostic -0.057, so ~0.13 was the raw-score convex fusion I configured), pinecone+rerank 0.504, weaviate+rerank 0.698 (+0.050) -> stage 2. Stage 2 paired, n=172/arm, 2 reps: correctness 0.799 vs 0.850 (holdout 0.737 vs 0.828), groundedness flat, cost +3%, p50 +7%. The reranker keeps the right pages but picks less complete chunks (chunk_recall 0.657->0.639, must_mention 0.603->0.568). Retrieval is not the binding constraint on this corpus. docs/decisions/pinecone-rerank.md"
     }
   ],
   "experiments": [
@@ -1094,6 +1155,70 @@
         "hallucinated": 0.538,
         "correctness": 0.872
       }
+    },
+    {
+      "name": "pageindex-vs-weaviate (stage 1)",
+      "config": "retrieval-only gate, 71 eligible golden q, route + search per arm, no generation",
+      "split": "core 36 + holdout 35",
+      "judge": "none (deterministic page_recall)",
+      "metrics": {
+        "weaviate_page_recall": 0.681,
+        "pageindex_page_recall": 0.609,
+        "weaviate_chunk_recall": 0.618,
+        "pageindex_chunk_recall": 0.601,
+        "delta_page_recall": -0.071
+      }
+    },
+    {
+      "name": "pinecone-rerank (stage 1, 4 arms)",
+      "config": "retrieval-only gate; arms weaviate / pinecone / weaviate+rerank / pinecone+rerank; top-4 into generation on every arm",
+      "split": "core 36 + holdout 35",
+      "judge": "none",
+      "metrics": {
+        "weaviate": 0.648,
+        "pinecone": 0.463,
+        "weaviate_rerank": 0.698,
+        "pinecone_rerank": 0.504
+      }
+    },
+    {
+      "name": "pinecone-dense-diag (labelled diagnostic)",
+      "config": "pinecone dense-only (HC_RAG_PINECONE_ALPHA=1.0) vs weaviate, stage 1 only, not used for selection",
+      "split": "core 36 + holdout 35",
+      "judge": "none",
+      "metrics": {
+        "weaviate": 0.664,
+        "pinecone_dense": 0.607,
+        "delta": -0.057
+      }
+    },
+    {
+      "name": "pi-gate-weaviate-89bc4ed3 / pi-gate-weaviate-rerank-606da650 (stage 2, paired)",
+      "config": "run_baseline core+holdout, --repetitions 2, concurrency 8 on both arms, judges gpt-5.6-sol",
+      "split": "core+holdout (86 x 2 = 172 per arm)",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "correctness": {
+          "weaviate": 0.85,
+          "weaviate_rerank": 0.799
+        },
+        "holdout_correctness": {
+          "weaviate": 0.828,
+          "weaviate_rerank": 0.737
+        },
+        "groundedness": {
+          "weaviate": 0.925,
+          "weaviate_rerank": 0.922
+        },
+        "est_cost_usd": {
+          "weaviate": 0.0188,
+          "weaviate_rerank": 0.0194
+        },
+        "latency_p50_s": {
+          "weaviate": 17.6,
+          "weaviate_rerank": 18.9
+        }
+      }
     }
   ],
   "artefacts": [
@@ -1136,6 +1261,22 @@
     {
       "path": "docs/baseline-report.md",
       "what": "consolidated baseline + migration + ablation + multi-turn numbers with experiment names (write-up source)"
+    },
+    {
+      "path": "docs/retrieval-experiments.md",
+      "what": "evidence report for the retrieval slice: gate design, all results, kept/changed/left-alone, AI process, second-pass notes (write-up source)"
+    },
+    {
+      "path": "docs/decisions/pageindex-vs-weaviate.md, docs/decisions/pinecone-rerank.md",
+      "what": "decision records with gate tables, confounds and 'what would change the verdict'"
+    },
+    {
+      "path": "evals/pageindex_gate.py",
+      "what": "reusable two-stage multi-arm retriever gate (JSON + exit codes; an eval loop an AI tool can call)"
+    },
+    {
+      "path": "docs/experiments/",
+      "what": "raw evidence trail: deep-interview spec, missions, evaluator contracts, decision logs, per-iteration evaluation JSON"
     }
   ],
   "open_items": [
@@ -1162,6 +1303,16 @@
       "item": "Validator is ~90% of pipeline cost - if cost ever matters, make it cheaper (smaller model/batched), never remove (T22 ablation).",
       "status": "accepted-as-is",
       "note": "User decision 2026-08-20: validator cost acceptable for now. Lever remains documented (smaller validator model / batched statement verification) if cost ever matters; removal is ruled out by the T22 ablation (guardrail stage)."
+    },
+    {
+      "item": "Pinecone was rejected as configured (raw-score convex fusion). If Pinecone is ever wanted operationally, implement normalised/RRF fusion and re-run the gate; also rotate PINECONE_API_KEY (it transited chat) and delete the `healthcare-rag` index if no reruns are planned.",
+      "status": "open",
+      "note": "Index and knobs are in place; ~20 min to re-run stage 1."
+    },
+    {
+      "item": "Cheapest untested retrieval lever: alpha/limit sweep on the existing Weaviate hybrid, and a completeness-aware reranker over a larger pool, both through evals/pageindex_gate.py.",
+      "status": "open",
+      "note": "Stage-1 headroom measured at ~+0.05 page_recall; expectations should be modest."
     }
   ]
 }

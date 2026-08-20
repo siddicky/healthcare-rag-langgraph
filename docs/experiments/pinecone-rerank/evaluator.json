@@ -1,0 +1,15 @@
+{
+  "name": "retriever-gate",
+  "command": "uv run python -m evals.pageindex_gate --json --arm-a weaviate --arm-b pinecone --arm-b weaviate+rerank --arm-b pinecone+rerank",
+  "smoke_command": "uv run python -m evals.pageindex_gate --json --smoke --stage 1 --arm-a weaviate --arm-b pinecone --arm-b weaviate+rerank --arm-b pinecone+rerank",
+  "output": "json-stdout", "pass_field": "pass", "score_field": "score",
+  "exit_codes": { "0": "pass", "2": "stage1_reject_all_candidates", "3": "stage2_fail", "1": "error" },
+  "arm_grammar": "<retriever>[+rerank]; retriever in weaviate|pinecone|pageindex; +rerank => HC_RAG_RERANKER=pinecone",
+  "stage1": { "pass_if": "page_recall(candidate) >= page_recall(reference)", "select": "best page_recall among passers, tie -> lower latency" },
+  "stage2": { "runner": "python -m evals.run_baseline --split core --split holdout --repetitions 2 --concurrency 1 --no-sync",
+              "pass_if_all": ["dcorr >= 0.03", "groundedness >= ref", "holdout corr >= ref", "cost <= 1.25x", "p50 <= 1.25x"] },
+  "thresholds_frozen": true,
+  "report_path": "evals/results/pinecone-rerank.md",
+  "decision_record_path": "docs/decisions/pinecone-rerank.md",
+  "max_runtime": "4h"
+}

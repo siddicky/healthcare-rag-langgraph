@@ -45,6 +45,8 @@ its pins are mutually incompatible; `pyproject.toml` is the dependency source.
 | safety gate + response templates | `healthcare_rag/processors/safety.py`, `safety_responses.py`, `healthcare_rag/prompts/safety_gate.yaml.j2`, `docs/safety.md` |
 | retrieval / Weaviate schema & ingestion | `healthcare_rag/processors/retrieval.py`, `healthcare_rag/storage/vector_store.py` |
 | PageIndex retrieval arm (A/B, off by default) | `healthcare_rag/processors/pageindex_retrieval.py`, `healthcare_rag/storage/pageindex_index.py`, `data/pageindex_tree_*.json` |
+| Pinecone retrieval arm + reranker (A/B, off by default) | `healthcare_rag/processors/pinecone_retrieval.py`, `healthcare_rag/processors/rerank.py`, `healthcare_rag/storage/pinecone_store.py` (`make ingest-pinecone`) |
+| retrieval A/B gate + decision records | `evals/pageindex_gate.py` (`--arm-b <retriever>[+rerank]`, two-stage, JSON + exit codes), `docs/decisions/`, `docs/retrieval-experiments.md`, `docs/experiments/` |
 | model config | `healthcare_rag/services/models.py` |
 | LangSmith tracing (opt-in) | `healthcare_rag/services/tracing.py` |
 | evals + reports | `evals/`, `evals/results/` |
@@ -130,6 +132,22 @@ false-positive lock-in, an over-matching boundary refusing legitimate follow-ups
   `HC_RAG_PAGEINDEX_MAX_NODES`, `HC_RAG_PAGEINDEX_MAX_CHUNKS`). It needs the cached
   trees from `make index-pageindex` and never connects to Weaviate. Default stays
   `weaviate`; an injected `Resources.hybrid_search` still wins over the knob.
+- `HC_RAG_RETRIEVER=pinecone` and `HC_RAG_RERANKER=pinecone` are the other two A/B
+  knobs and both need `PINECONE_API_KEY` in `.env` (every Pinecone path raises
+  `ValueError("PINECONE_API_KEY is not set")` rather than hanging). The pinecone arm
+  reads one serverless index, namespace = collection lower-cased, loaded by
+  `make ingest-pinecone`; it embeds `contextualized` alone, while Weaviate's
+  `text2vec-openai` embeds the class name plus *all* properties, so the two arms'
+  dense vectors are close but not identical. Pinecone metadata has no int lists, so
+  `page_numbers` is stored as strings and converted back on read. Turning the reranker
+  on makes each search fetch `HC_RAG_RERANK_CANDIDATES` (12) instead of 4 and trims
+  back to `HC_RAG_RERANK_TOP_K` (4), so generation still sees 4 docs per collection;
+  the reranker is fail-soft (a Pinecone outage keeps the search's own top-4).
+- Before proposing a retrieval change, read `docs/retrieval-experiments.md`: PageIndex, Pinecone
+  hybrid and a bge reranker were all measured and rejected against the Weaviate hybrid on
+  2026-08-20. Judge any new retrieval idea with `evals/pageindex_gate.py` (paired, two-stage,
+  frozen thresholds) rather than against historical report numbers — the unchanged reference
+  drifts ±0.02 page_recall run to run.
 - The decomposer is non-deterministic on borderline queries: the same question
   can come back `simple` on one call and `complex` with 4 sub-queries on the
   next, so branch counts vary run to run.
