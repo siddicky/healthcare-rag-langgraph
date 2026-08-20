@@ -86,6 +86,8 @@ Content max 1200px, reading max 760px. Desktop uses a 12-column editorial grid w
 
 **Decision note.** Conclusion, evidence, caveat, next action. Surface fill with a strong left rule. Amber variant for caveats, green for kept decisions. No floating-card shadow.
 
+**Figure pair.** Two screenshots side by side on a paper surface with an amber top rule, each with a bold lead-in caption that names what the image proves and how to reproduce it. Images are embedded as data URIs so the page stays self-contained; the originals live in `img/`.
+
 **Source note.** Bold lead-in naming the area, then the artifact paths in monospace. Full filenames wrap; provenance is never truncated.
 
 ## 6. Motion and interaction
