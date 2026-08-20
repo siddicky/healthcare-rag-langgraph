@@ -555,6 +555,14 @@
       "area": "parity",
       "title": "n_branches is semantically divergent legacy-vs-graph and must not be compared raw: legacy counted every speculative branch it raced (journey legacy runs: 2.2-3.9), the graph folds decomposed sub-branches into one synthesized merge answering the original query (graph runs: ~1.74)",
       "detail": "Deterministic merge (decomposed_* branches stop after retrieve; documents de-duplicated by doc_id into one synthesized answer) is by design (AGENTS.md). The comparable behavioural metric is used_refined_branch (graph 0.302 vs legacy 0.302 at parity). Any future orchestration-metrics comparison must normalise branch counts or compare fold-adjusted."
+    },
+    {
+      "id": "F36",
+      "severity": "low",
+      "area": "ops",
+      "title": "Post-seal venv drift: unconstrained reinstall (make venv / uv pip install -e) can pull langgraph-api 0.12.6 whose grpcio>=1.80 runtime need breaks the locked grpcio 1.78 - langgraph dev then crashes",
+      "detail": "F3 QA hit this: the dev server failed on first attempt after the .venv drifted from uv.lock. Restore with uv sync --frozen --extra evals,dev,graph-sqlite (langgraph-api 0.8.7 serves /ok in ~2s). Environment-only, no source change; sealed parity unaffected.",
+      "action": "If langgraph dev crashes with grpcio errors, uv sync --frozen before debugging anything else."
     }
   ],
   "decisions": [
@@ -667,6 +675,13 @@
       "amendment": "A4",
       "decision": "Final-gate single breach (core.hallucinated[both-answered] +0.068) accepted as judge noise with recorded exception; claim-support calibration cases added to judge_calibration.json.",
       "why": "On byte-frozen code the metric swung +-0.07 (7 bidirectional flips v2<->final at n=44) - larger than the +0.05 allowance; flagged answers carried >=95% claim support; no unsupported-claim pattern existed."
+    },
+    {
+      "id": "D14",
+      "when": "2026-08-20",
+      "amendment": "A5",
+      "decision": "Latency parity threshold confirmed as x1.35 (both splits); the plan's original x1.30 wording was a transcription error of the user-approved A2 decision.",
+      "why": "F1 audit R1: gate commit 399f2ee implements x1.35, approval record says x1.35, and core was already x1.32 at A2 drafting time - x1.30 would have failed its own gate. User chose option A (confirm x1.35) over re-gating."
     }
   ],
   "experiments": [
