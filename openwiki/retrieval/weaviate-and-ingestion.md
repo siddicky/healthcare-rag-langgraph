@@ -9,11 +9,11 @@ tags: [retrieval, weaviate, ingestion]
 
 ## Request path
 
-`QueryRouter` dynamically creates one OpenAI function tool per configured collection: `query_<collection.lower()>`. The model chooses zero or more tools; each valid call checks the collection exists, runs search, and becomes a source-grouped `QueryResult` (`healthcare_rag/processors/retrieval.py#L19-L107`). Thus configured collection names must remain compatible with `_extract_collection_name` (`query_lipitor` → `Lipitor`) and with the ingested collection names. Renaming a collection requires updating runtime defaults/configuration, ingestion target, and eval expectations together.
+Routing builds one OpenAI function tool per configured collection — `query_<collection.lower()>` — via `build_routing_tools` (`healthcare_rag/processors/retrieval.py#L13-L35`). The graph node `retrieve_documents` asks the shared `LangChainLLMGateway.aroute_tools` which tools to call; each call's tool name is mapped back to a collection (`query_lipitor` → `Lipitor`) and its `query` argument is the search text (`healthcare_rag/graph/nodes/retrieve.py`). Thus configured collection names must stay compatible with that mapping and with the ingested collection names. Renaming a collection requires updating runtime defaults/configuration, ingestion target, and eval expectations together.
 
-Each tool accepts one required string argument, `query`, intended to be the user query verbatim. No tool calls means `QueryResultList(results=[])`; a missing named collection or a malformed/failed individual tool call is logged and omitted while other calls continue. A top-level routing exception is caught and also returns an empty result list rather than aborting the request (`healthcare_rag/processors/retrieval.py#L67-L107`, `#L131-L167`).
+Each tool accepts one required string argument, `query`, intended to be the user query verbatim. A routing failure is caught and degraded to an empty result list rather than aborting the request; each Weaviate search is retried up to three times (1 s / 2 s backoff) on `WeaviateBaseError` (`graph/nodes/retrieve.py#L29-L63`).
 
-For each tool call, `collection.query.hybrid` uses:
+For each tool call, `hybrid_search` uses `collection.query.hybrid` with:
 
 | Parameter | Value | Consequence |
 |---|---:|---|
@@ -23,7 +23,7 @@ For each tool call, `collection.query.hybrid` uses:
 | `fusion_type` | `HybridFusion.RELATIVE_SCORE` | relative-score hybrid fusion |
 | metadata | `score=True` | exposes Weaviate score in `QueryDocument.score` |
 
-The router uses the returned object UUID as `QueryDocument.doc_id`, with all properties other than `contextualized` as metadata (`#L150-L201`). Those UUIDs—not chunk `id_`—are citations' durable runtime IDs. `id_` remains metadata used by eval chunk-recall.
+`to_query_documents` uses the returned object UUID as `QueryDocument.doc_id`, with all properties other than `contextualized` as metadata (`processors/retrieval.py#L38-L58`). Those UUIDs—not chunk `id_`—are citations' durable runtime IDs. `id_` remains metadata used by eval chunk-recall.
 
 ## Stored schema and ingestion
 
@@ -37,6 +37,6 @@ Docker persists `/var/lib/weaviate` in `weaviate_data` (`docker-compose.yml#L15-
 
 Import validates only nonempty `text`, batches at 100, stops after **more than 10** batch errors, and reports an *approximate* successful count. It can therefore leave a partially loaded collection without failing loudly (`#L187-L234`). Recovery: inspect loader errors, fix the artifact/schema/network issue, delete the affected collection (or intentionally use whole-store `--delete-all`), then reingest; do not assume a rerun repairs duplicates or partial state. After rebuild, issue a narrow known-drug query/eval and verify collection routing plus expected chunk/page recall.
 
-Retrieval evaluation sends initial context to `retrieval_evaluation.yaml.j2`. It issues additional queries only when the parsed result explicitly says `is_sufficient=False` **and** supplies nonempty `additional_queries`; otherwise its default/failure behavior is to return the original results unaugmented. Additional routes run concurrently. If their routing/search work raises, `_fetch_additional_results` catches it and returns an empty addition, again preserving initial results. Returned follow-up groups append in place; it neither deduplicates docs nor enforces a global cap after gap filling (`healthcare_rag/processors/retrieval.py#L222-L313`). Changes to retrieval breadth affect answer prompt size, citations, cost, and branch winner `gap_filled`; validate in [evaluations](../observability/evaluations.md).
+Retrieval evaluation is the graph node `evaluate_retrieval` (`graph/nodes/evaluate.py`): it sends the merged context to `retrieval_evaluation.yaml.j2` and issues a gap-fill round only when the parsed result says `is_sufficient=False`, `additional_queries` is nonempty, **and** no gap round has run yet (`gap_round == 0`); extra queries are capped at three. Gap-fill queries fan out via `Send` back into `retrieve_documents`, and `route_after_merge` skips re-evaluation for the merged gap-fill results so the flow goes straight to generation (`graph/routers.py`). All retrieval envelopes are merged and deduplicated by Weaviate UUID in `union_results`, ordered by phase then kind (`initial`/`clarified` < `decomposed` < `gap_fill`) in `merge_retrievals` (`graph/nodes/retrieve.py`; `processors/retrieval.py#L79-L99`). Changes to retrieval breadth affect answer prompt size, citations, cost, and the `gap_filled` telemetry; validate in [evaluations](../observability/evaluations.md).
 
 **Focused validation:** `make weaviate`, `make ingest`, then `uv run python -m evals.run_baseline --category factual_single --no-judges`. Use a category matching a changed drug/corpus and inspect `chunk_recall`, `page_recall`, and `right_collection_routed`.

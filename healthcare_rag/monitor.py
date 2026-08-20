@@ -8,7 +8,7 @@ import asyncio
 import logging
 from typing import Dict, List, Optional, Any
 
-from ..models.answers import AnswerGenerationResult
+from .models.answers import AnswerGenerationResult
 
 logger = logging.getLogger(__name__)
 

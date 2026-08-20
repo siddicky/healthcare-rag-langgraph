@@ -37,12 +37,47 @@ user message
 |---|---|
 | gate + deterministic checks + policy | `healthcare_rag/processors/safety.py` |
 | response templates (plain strings) | `healthcare_rag/processors/safety_responses.py` |
-| classification prompt | `prompts/safety_gate.yaml.j2` |
+| classification prompt | `healthcare_rag/prompts/safety_gate.yaml.j2` |
 | structured output + observability record | `healthcare_rag/models/safety.py` |
-| traced stage wrapper (`safety_gate`) | `healthcare_rag/orch/tasks.py` |
-| wiring / short-circuit | `healthcare_rag/orch/orchestrator.py` |
-| linear API | `healthcare_rag/pipeline/medical_rag.py` (`process_query_simple`) |
-| tests | `tests/test_safety_gate.py` |
+| `safety_gate` graph node (wiring, short-circuit, outcome sanitisation) | `healthcare_rag/graph/nodes/safety.py` |
+| tests (gate policy) | `tests/test_safety_gate.py` |
+| tests (graph wiring: short-circuit, reset, sanitised outcome) | `tests/graph/test_graph_safety.py` |
+
+## The gate as a graph node
+
+The runtime is a LangGraph `StateGraph` (`healthcare_rag/graph/`). `safety_gate` is its
+first node and the only code that ever sees the raw question:
+
+* **The raw question rides an untracked channel** (`question: Annotated[str,
+  UntrackedValue(str)]`). Its `checkpoint()` is MISSING, so the raw value is **never
+  checkpointed** — not in thread state, not in checkpoint history, not in the SQLite
+  checkpoint file, including on failed runs.
+* **The gate node clears it** (`question = ""`) in the same update that publishes the
+  scrubbed query, so no post-gate node input carries the raw value (gate-disabled turns
+  clear it too).
+* **The output schema excludes it**: the graph is compiled with an explicit output
+  schema whose keys do not include `question`, so it is never returned from a run. The
+  engine streams `updates` only — default `values` streaming would echo the raw input
+  in its first chunk and must not be consumed.
+* **The stored `SafetyOutcome` is sanitised**: the model-authored `rationale` passes
+  through `scrub_phi` and has every `assessment.phi_spans` substring removed before it
+  is written to state — a free-text field written by a model is a PHI leak path, not an
+  instruction to be trusted.
+* **`finalize` persists the scrubbed question**, never a clarification, and history
+  views are defensively re-scrubbed whenever the gate is enabled.
+
+Residuals (accepted, documented): the `safety_gate` node's own LangSmith child-run
+input contains the raw question *during* its execution (`LANGSMITH_HIDE_INPUTS=true`
+recommended); LangGraph's own traced graph-run receives the raw input under the outer
+scrubbed root trace; Agent-Server run records retain request `kwargs`; Studio-initiated
+runs bypass the engine wrapper and default to `durability="async"`, under which the
+synthetic START input channel **is** checkpointed — Studio is therefore classified NOT
+PHI-SAFE for real patient input (local monograph QA only). Every SDK/engine-created run
+uses `durability="exit"`, and the engine's root trace records only the scrubbed query
+(scrubbed even when the processor raises — the redactor fails closed). Scrubbing the
+question *before* the gate (a pre-scrub step) was considered and deferred: it would
+blur the distinction between "the user said this" and "the gate cleaned it" that the
+policy relies on.
 
 ## Categories and what happens
 
@@ -141,16 +176,15 @@ Measured on the worktree smoke, 2026-08-18 (gpt-5.6-luna, `reasoning_effort=none
   answered from the monograph; "my chest hurts" is escalated. That is deliberate —
   escalating every mention of a symptom would wreck the factual metrics — but it means a
   third-person emergency ("my father's chest hurts") depends on the model, not the regex.
-* **History written before this gate shipped** may contain identifiers. It is scrubbed on
-  read as well as on write, but the files on disk are not rewritten.
-* **Traces**: the `safety_gate` stage and the root `process_query` run record the
-  *scrubbed* query. Downstream stages receive already-scrubbed text. LangSmith is still a
-  third-party copy of the conversation — treat the project as sensitive.
-* **`process_query_simple`** (the linear, non-orchestrated API) runs the same gate with
-  the same templates and the same scrubbing, but never attaches the addendum: that needs a
-  second pipeline run, which that deliberately simple path does not do.
-* **This is not a clinical decision system.** The gate reduces measured harm; it does not
-  make the assistant safe to use for treatment decisions.
+* **History written before the gate shipped** may contain identifiers. History views
+  are scrubbed on read as well as on write; pre-gate artifacts on disk are not
+  rewritten.
+* **Traces**: the engine's root `process_query` trace records the *scrubbed* query
+  (fail-closed), and downstream stages receive already-scrubbed text. The residuals
+  above still apply — LangSmith remains a third-party copy of the conversation; treat
+  the project as sensitive.
+* **This is not a clinical decision system.** The gate reduces measured harm; it does
+  not make the assistant safe to use for treatment decisions.
 
 ## Measuring it
 

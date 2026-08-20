@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import os
 import time
 from importlib import import_module, metadata
 from typing import Any, Protocol, Self
@@ -23,7 +22,7 @@ from healthcare_rag.graph.engine_record import (
 from healthcare_rag.graph.history import LegacyTurn, seed_messages
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.settings import GraphSettings
-from healthcare_rag.orch.monitor import QueryMonitor
+from healthcare_rag.monitor import QueryMonitor
 from healthcare_rag.processors.safety import scrub_phi
 
 __all__ = ["Engine", "GraphEngine", "UsageRecorder", "build_engine", "fold_branches"]
@@ -238,10 +237,7 @@ class GraphEngine:
         await get_resources().aclose()
 
 
-async def build_engine(env_var: str = "HC_RAG_ENGINE") -> Engine:
-    """Build the selected engine; the LangGraph engine is the default (todo 12)."""
-    if os.getenv(env_var, "graph").strip().lower() == "legacy":
-        module = import_module("evals.engines")
-        return await module.LegacyEngine.create()
+async def build_engine() -> Engine:
+    """Build the LangGraph engine — the only runtime since the Phase-2 cleanup."""
     engine = GraphEngine()
     return await engine.__aenter__()

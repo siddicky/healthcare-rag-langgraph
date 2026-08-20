@@ -47,8 +47,8 @@ class Resources:
     async def weaviate(self) -> WeaviateAsyncClient:
         """Construct AND connect the async Weaviate client on first use.
 
-        Mirrors legacy ``config.setup_medical_rag`` (``await client.connect()``);
-        weaviate-client v4 refuses queries on an unconnected client.
+        Connects eagerly (``await client.connect()``); weaviate-client v4
+        refuses queries on an unconnected client.
         """
         async with self._async_lock:
             if self._weaviate is None:

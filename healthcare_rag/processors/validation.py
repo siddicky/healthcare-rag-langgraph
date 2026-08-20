@@ -1,6 +1,5 @@
 import logging
 import re
-import openai
 from collections.abc import Awaitable, Callable
 from typing import Dict, List, Optional, Tuple
 
@@ -8,9 +7,8 @@ from fuzzywuzzy import fuzz, process as fuzzy_process
 
 from ..models.retrieval import QueryDocument, QueryResultList
 from ..models.answers import CitedAnswerResult, StatementWithCitations, Citation
-from ..services.llm import LLMParserService
 from ..services.models import default_llm_model
-from .base import PromptManager, log_timing
+from .base import log_timing
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -30,39 +28,11 @@ class AnswerValidator:
         llm_call: ValidatorLLMCall | None = None,
         *,
         llm_model: str | None = None,
-        async_client: openai.AsyncOpenAI | None = None,
-        prompt_manager: PromptManager | None = None,
-        parser_service: LLMParserService | None = None,
     ) -> None:
         self.gateway: ValidatorLLMCall | None = gateway
         self.temperature: float = temperature
         self.llm_model: str = llm_model or default_llm_model()
-        self.async_client: openai.AsyncOpenAI | None = async_client
-        self.pm: PromptManager = prompt_manager or PromptManager()
-        self.parser_service: LLMParserService | None = parser_service
-        self._llm_call: ValidatorLLMCall = (
-            llm_call or gateway or self._legacy_llm_call
-        )
-
-    async def _legacy_llm_call(
-        self,
-        prompt_name: str,
-        temperature: float,
-        response_format: type[CitedAnswerResult],
-        default_response: CitedAnswerResult | None = None,
-        **prompt_args: str,
-    ) -> CitedAnswerResult | None:
-        messages = self.pm.messages(prompt_name, **prompt_args)
-        if self.parser_service is None:
-            logger.error("LLM parser service is not initialized")
-            return default_response
-        return await self.parser_service.parse_completion(
-            model=self.llm_model,
-            messages=messages,
-            temperature=temperature,
-            response_format=response_format,
-            default_response=default_response,
-        )
+        self._llm_call: ValidatorLLMCall | None = llm_call or gateway
 
     def _find_document_by_id(
         self, doc_id: str, retrieval_results: QueryResultList
@@ -343,6 +313,9 @@ class AnswerValidator:
         logger.info("Attempting to structure the plain text answer.")
 
         # Step 1: Structure the plain answer using LLM
+        if self._llm_call is None:
+            logger.error("AnswerValidator has no LLM call configured")
+            return None, None
         structured_answer = await self._llm_call(
             prompt_name="answer_structuring",
             answer=plain_answer,

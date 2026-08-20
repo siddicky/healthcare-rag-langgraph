@@ -6,7 +6,7 @@ import sys
 import time
 
 from ..graph.engine import Engine, build_engine
-from ..orch.monitor import QueryMonitor
+from ..monitor import QueryMonitor
 from ..processors.safety import scrub_phi
 
 # Configure logging

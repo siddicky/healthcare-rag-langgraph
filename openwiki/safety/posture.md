@@ -20,10 +20,10 @@ This is a monograph-grounded information system for the configured Lipitor and M
 ## What is implemented
 
 * **Runtime safety gate before every query** ([safety gate](gate.md)): deterministic PHI/injection/red-flag pre-checks OR-ed with one LLM classification; personal-advice, emergency, out-of-scope, and injection messages short-circuit to templated refuse-and-redirect responses containing **no numbers with clinical units** (`healthcare_rag/processors/safety.py`, `safety_responses.py`, `docs/safety.md`).
-* **PHI scrubbing on input:** identifiers are replaced with `[REDACTED_<KIND>]` in the query, the history context, in-memory history, and everything persisted to disk; a request to read identifiers back is refused with its own template (`scrub_phi`; `healthcare_rag/orch/orchestrator.py#L126-L138`, `#L239-L243`). One-line notices tell the user identifiers were disregarded.
+* **PHI scrubbing on input:** identifiers are replaced with `[REDACTED_<KIND>]` in the query and in checkpointed history messages before any prompt sees them, and history is seeded scrubbed (`scrub_phi`; `graph/nodes/safety.py`, `graph/history.py`). A request to read identifiers back is refused with its own template. One-line notices tell the user identifiers were disregarded.
 * **Source-oriented answer generation:** the answer template asks for each claim to cite supplied document IDs and to say it lacks an answer when documents do not contain it (`prompts/answer_generation.yaml.j2#L4-L15`).
 * **Post-generation citation checking:** structuring resolves `doc_N` to retrieved UUIDs, verifies quote evidence against retrieved text (exact or fuzzy threshold 85), and drops statements whose citations all fail. Full details: [answer validation](../processors/validation.md).
-* **Scoped persistence isolation in evals:** the eval harness replaces history with a temporary directory (`evals/harness.py#L150-L157`). This is an evaluation feature, not application privacy protection.
+* **Scoped persistence isolation in evals:** each eval turn uses a fresh random `eval_*` user id on an isolated engine, so production threads are never touched (`evals/harness.py`). This is an evaluation feature, not application privacy protection.
 
 ### Measured impact (all 86 golden examples, `synth-luna-terra-0b106b95` → `safety-luna-terra-e9214cbf`; multi-turn `multiturn-luna-terra-7ac5b9fb` → `multiturn-safety-853f353d`)
 
@@ -43,11 +43,11 @@ Costs of the gate: correctness 0.89 → 0.81 and chunk_recall 0.83 → 0.65, dri
 
 * **The classifier can be wrong.** It is a model at temperature 0; the deterministic pre-checks are a floor, not a fence — names without a cue word, non-Latin scripts, and non-North-American phone/postal formats rely on the model's `phi_spans`. Red flags require a first-person report, so third-person emergencies depend on the model.
 * **Multi-turn drift persists at 0.36:** once refused, the assistant can still yield under sustained pressure — fixing this needs conversation-level state, not a per-message gate.
-* **History written before the gate shipped** may contain identifiers; it is scrubbed on read, but files on disk are not rewritten. File-backed history still has no authentication, tenancy, retention, or deletion controls (`healthcare_rag/storage/history.py#L25-L44`, `#L102-L143`).
+* **Persistence is only as protected as the checkpointer.** With the default in-memory saver nothing survives the process; with `HC_RAG_CHECKPOINT=sqlite:...` conversation state (scrubbed queries, answers) is written to a local SQLite file with no authentication, tenancy, retention, or deletion controls (`graph/engine.py`, `graph/history.py`). `seed_messages` scrubs legacy turns, but pre-existing data sources are not rewritten.
 * **LangSmith holds a third-party copy** of the (scrubbed) conversation when tracing is on; treat the project as sensitive.
 * Validation still does **not** require every statement to be cited: uncited statements pass, and a cited statement survives when one citation validates.
-* The CLI still renders a `PRELIMINARY ANSWER (not verified)` between raw generation and validation (`healthcare_rag/cli/interactive.py`); any consumer surfacing streamed output inherits this. The gate's short-circuit path sets the monitor event immediately, so refusals do not stall the UI.
-* `MedicalRAG.process_query_simple` runs the same gate and templates but never appends the general-information addendum (`healthcare_rag/pipeline/medical_rag.py#L140-L156`), and can still return an unvalidated plain answer when validation fails.
+* The CLI still renders a preliminary raw answer between generation and validation (`healthcare_rag/cli/interactive.py`); any consumer surfacing streamed output inherits this. The gate's short-circuit path sets the monitor event immediately, so refusals do not stall the UI.
+* With `HC_RAG_DISABLE_STAGES=validate` the graph returns the unvalidated plain answer — that is ablation machinery, never a production setting.
 
 ## Required safety regression evidence
 
@@ -65,3 +65,4 @@ For changes to the gate, prompts, models, validation, routing, history, or CLI p
 | context misuse/contradiction | multi-turn `context_carryover`, `consistency`, worst-turn scores |
 
 Run `make test` (the gate suite is `tests/test_safety_gate.py`) and `make eval-nojudge PREFIX=safety-change` while iterating, then a full judge run and the multi-turn safety run before accepting changed behaviour. A safety gain paid for with factual regressions is not a gain — watch `correctness`/`groundedness`/`chunk_recall` for over-refusal. Per-example gate decisions are recorded as `safety_outcome` in eval results. New failure modes become versioned golden/multi-turn examples with explicit expected behaviour.
+sions is not a gain — watch `correctness`/`groundedness`/`chunk_recall` for over-refusal. Per-example gate decisions are recorded as `safety_outcome` in eval results. New failure modes become versioned golden/multi-turn examples with explicit expected behaviour.

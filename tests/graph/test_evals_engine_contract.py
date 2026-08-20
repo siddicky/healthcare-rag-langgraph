@@ -1,11 +1,9 @@
 from __future__ import annotations
 
-from types import SimpleNamespace
 from typing import Any
 
 import pytest
 
-from evals.engines import LegacyEngine
 from evals.multiturn_harness import run_turn
 from healthcare_rag.graph.engine import GraphEngine
 from healthcare_rag.graph.resources import get
@@ -84,11 +82,5 @@ async def test_multiturn_adapter_adds_used_history_only_to_turn_record() -> None
     }
 
 
-def test_engine_descriptions_identify_different_implementations() -> None:
-    rag = SimpleNamespace(
-        generator=SimpleNamespace(llm_model="legacy-llm"),
-        validator=SimpleNamespace(llm_model="legacy-validator"),
-    )
-
-    assert LegacyEngine(rag).describe()["engine"] == "legacy"
+def test_engine_description_identifies_the_graph_runtime() -> None:
     assert GraphEngine(get().settings).describe()["engine"] == "graph"

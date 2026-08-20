@@ -37,15 +37,13 @@ from __future__ import annotations
 import html
 import logging
 import re
-import openai
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 from typing import List, Optional, Sequence, Tuple
 
 from ..models.safety import SafetyAssessment
-from ..services.llm import LLMParserService
 from ..services.models import default_llm_model
-from .base import PromptManager, log_timing
+from .base import log_timing
 from .safety_responses import (
     ADDENDUM_HEADING,
     INJECTION_NOTICE,
@@ -169,7 +167,7 @@ def _phi_matches(text: str) -> List[Tuple[int, int, str, str]]:
 def _extra_span_matches(text: str, extra_spans: Sequence[str]) -> List[Tuple[int, int, str, str]]:
     """Locate model-reported identifier spans that really occur in ``text``.
 
-    ``PromptManager`` renders prompts with Jinja autoescaping on, so the model sees
+    Prompts are rendered with Jinja autoescaping on, so the model sees
     ``O&#39;Brien`` where the raw message says ``O'Brien``. Both forms are tried, so a
     faithfully copied span still lines up with the text we are about to scrub.
     """
@@ -551,39 +549,11 @@ class SafetyGate:
         llm_call: SafetyLLMCall | None = None,
         *,
         llm_model: str | None = None,
-        async_client: openai.AsyncOpenAI | None = None,
-        prompt_manager: PromptManager | None = None,
-        parser_service: LLMParserService | None = None,
     ) -> None:
         self.gateway: SafetyLLMCall | None = gateway
         self.temperature: float = temperature
         self.llm_model: str = llm_model or default_llm_model()
-        self.async_client: openai.AsyncOpenAI | None = async_client
-        self.pm: PromptManager = prompt_manager or PromptManager()
-        self.parser_service: LLMParserService | None = parser_service
-        self._llm_call: SafetyLLMCall = (
-            llm_call or gateway or self._legacy_llm_call
-        )
-
-    async def _legacy_llm_call(
-        self,
-        prompt_name: str,
-        temperature: float,
-        response_format: type[SafetyAssessment],
-        default_response: SafetyAssessment | None = None,
-        **prompt_args: str,
-    ) -> SafetyAssessment | None:
-        messages = self.pm.messages(prompt_name, **prompt_args)
-        if self.parser_service is None:
-            logger.error("LLM parser service is not initialized")
-            return default_response
-        return await self.parser_service.parse_completion(
-            model=self.llm_model,
-            messages=messages,
-            temperature=temperature,
-            response_format=response_format,
-            default_response=default_response,
-        )
+        self._llm_call: SafetyLLMCall | None = llm_call or gateway
 
     async def _llm_assess(self, query: str, history_context: str = "") -> SafetyAssessment:
         """The single structured-output call. Isolated so tests can stub it."""
@@ -595,13 +565,17 @@ class SafetyGate:
             rationale="safety-gate LLM call failed; deterministic checks only",
             safe_reformulation=None,
         )
-        result = await self._llm_call(
-            prompt_name="safety_gate",
-            temperature=0.0,
-            response_format=SafetyAssessment,
-            default_response=default,
-            user_query=query,
-            conversation_context=history_context or "",
+        result = (
+            await self._llm_call(
+                prompt_name="safety_gate",
+                temperature=0.0,
+                response_format=SafetyAssessment,
+                default_response=default,
+                user_query=query,
+                conversation_context=history_context or "",
+            )
+            if self._llm_call is not None
+            else None
         )
         return result or default
 

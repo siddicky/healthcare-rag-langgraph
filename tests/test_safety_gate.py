@@ -8,17 +8,18 @@ Background (docs/journey.json):
   * F18 — LangSmith Insights over the luna+terra traces independently flagged
     personal-dosing advice and partial answers to out-of-monograph questions.
 
-Three layers are covered here, none of which touch the network:
+Two layers are covered here, none of which touch the network:
 
 1. the deterministic pre-checks (PHI regexes + scrubbing, instruction-override
    patterns, identifier-recall requests, emergency red flags),
 2. the policy that turns an assessment into a response, driven by a stubbed LLM so
-   every category can be pinned,
-3. the orchestrator short-circuit, driven by the fake MedicalRAG from
-   ``tests/test_orchestrator_synthesis.py`` (no Weaviate, no OpenAI).
+   every category can be pinned.
+
+(The graph wiring — short-circuit, sanitised outcome, per-turn reset — is covered by
+``tests/graph/test_graph_safety.py``.)
 
 The invariant that matters most: **a refusal never contains a specific dose.** That is
-asserted over every template and over every refuse-path answer the orchestrator produces.
+asserted over every template and over every refuse-path decision the gate produces.
 """
 
 from __future__ import annotations
@@ -27,10 +28,9 @@ from typing import Callable, Optional
 
 import pytest
 
+from healthcare_rag.graph.prompts import PromptRegistry
 from healthcare_rag.models.safety import SafetyAssessment
-from healthcare_rag.orch.orchestrator import RefactoredOrchestrator
 from healthcare_rag.processors import safety_responses as tpl
-from healthcare_rag.processors.base import PromptManager
 from healthcare_rag.processors.safety import (
     NUMERIC_DOSE,
     SafetyGate,
@@ -44,23 +44,12 @@ from healthcare_rag.processors.safety import (
     strip_injection,
 )
 
-# The fake MedicalRAG (fake router / generator / validator / history) already used by the
-# orchestrator synthesis tests.
-from test_orchestrator_synthesis import (  # noqa: E402
-    FakeGenerator,
-    FakeRag,
-    branch_types,
-)
-
-from healthcare_rag.models.answers import AnswerGenerationResult  # noqa: E402
-
 
 @pytest.fixture(autouse=True)
 def _clean_settings(monkeypatch):
     """Pin the settings these tests care about so a developer's .env cannot change them."""
     monkeypatch.setenv("HC_RAG_SAFETY_GATE", "true")
     monkeypatch.setenv("HC_RAG_DISABLE_STAGES", "")
-    monkeypatch.setenv("HC_RAG_SYNTHESIS", "true")
     monkeypatch.setenv("HC_RAG_DECOMPOSE_ONLY_COMPLEX", "true")
     monkeypatch.setenv("HC_RAG_MAX_SUBQUERIES", "3")
 
@@ -107,14 +96,6 @@ class StubGate(SafetyGate):
 def gate_for(*categories: str, **kwargs) -> StubGate:
     """A gate whose LLM always answers with ``categories[0]``."""
     return StubGate(lambda _q: assessment(categories[0], **kwargs))
-
-
-def rag_with_gate(gate: SafetyGate, docs_by_query: Optional[dict] = None, **kwargs) -> FakeRag:
-    rag = FakeRag(
-        decomposition=("simple", []), docs_by_query=docs_by_query or {}, **kwargs
-    )
-    rag.safety_gate = gate
-    return rag
 
 
 def no_numeric_dose(text: str) -> bool:
@@ -527,171 +508,9 @@ async def test_llm_failure_still_leaves_the_deterministic_floor():
 
 
 def test_the_safety_prompt_renders_to_a_valid_chat_message_list():
-    messages = PromptManager().messages(
+    messages = PromptRegistry().format_messages(
         "safety_gate", user_query="Should I double my dose?", conversation_context=""
     )
-    assert [m["role"] for m in messages] == ["system", "user"]
-    assert "Should I double my dose?" in messages[1]["content"]
-    assert "in_scope_informational" in messages[0]["content"]
-
-
-# --------------------------------------------------------------------------- #
-# 7. Orchestrator wiring                                                       #
-# --------------------------------------------------------------------------- #
-
-REFUSE_QUERY = "My sugar was 14 this morning. Should I just double my metformin dose tonight?"
-
-
-async def test_orchestrator_short_circuits_and_runs_no_pipeline_stage():
-    rag = rag_with_gate(
-        gate_for("personal_medical_advice", reformulation="What is the maximum daily dose?")
-    )
-    orch = RefactoredOrchestrator(rag)
-
-    answer, follow_ups = await orch.process_query(REFUSE_QUERY, "u-safety-1")
-
-    assert follow_ups == [], "follow-up suggestions under a refusal undo the refusal"
-    assert answer is not None and no_numeric_dose(answer)
-    assert "pharmacist" in answer
-    # Nothing downstream ran: no retrieval, no generation, no validation, no follow-ups.
-    assert rag.calls["retrieve"] == [] and rag.calls["answer"] == []
-    assert rag.calls["validate"] == [] and rag.calls["followups"] == []
-    assert rag.calls["clarify"] == [] and rag.calls["decompose"] == []
-    assert branch_types(orch) == []
-
-    outcome = orch.safety_outcome
-    assert outcome is not None
-    assert outcome.category == "personal_medical_advice"
-    assert outcome.short_circuited is True
-    assert outcome.response_kind == "personal_advice"
-    assert outcome.contains_phi is False
-    assert outcome.addendum_appended is False
-
-
-async def test_orchestrator_stores_the_scrubbed_query_in_history():
-    rag = rag_with_gate(gate_for("personal_medical_advice"))
-    orch = RefactoredOrchestrator(rag)
-
-    query = ("My name is John Smith, DOB 1970-01-01, my Ontario health card number is "
-             "1234-567-890. What dose of metformin should I take?")
-    answer, _ = await orch.process_query(query, "u-safety-2")
-
-    assert len(rag.conversation_history.entries) == 1
-    _user, stored_query, stored_answer = rag.conversation_history.entries[0]
-    for identifier in ("John Smith", "1970-01-01", "1234-567-890"):
-        assert identifier not in stored_query, stored_query
-        assert identifier not in stored_answer
-        assert identifier not in (answer or "")
-    assert "[REDACTED_" in stored_query
-    assert orch.safety_outcome is not None and orch.safety_outcome.contains_phi is True
-
-
-async def test_orchestrator_appends_a_safe_general_information_addendum():
-    reformulation = "Is fatigue a reported adverse reaction to atorvastatin?"
-    rag = rag_with_gate(
-        gate_for("personal_medical_advice", reformulation=reformulation),
-        docs_by_query={reformulation: ("Lipitor", ["lip-1"])},
-    )
-    orch = RefactoredOrchestrator(rag)
-
-    answer, follow_ups = await orch.process_query("Is my tiredness on Lipitor normal?", "u-safety-3")
-
-    assert follow_ups == []
-    assert tpl.ADDENDUM_HEADING in answer
-    assert f"answer to: {reformulation}" in answer
-    # The refusal comes first; the general information is an addendum, not the answer.
-    assert answer.index(tpl.ADDENDUM_HEADING) > answer.index("I can't tell you")
-    assert no_numeric_dose(answer)
-    # The reformulation went through the real pipeline exactly once...
-    assert rag.calls["retrieve"] == [reformulation]
-    assert [q for q, _ in rag.calls["answer"]] == [reformulation]
-    # ... and never landed in the user's history as a question of their own.
-    assert len(rag.conversation_history.entries) == 1
-    assert orch.safety_outcome is not None and orch.safety_outcome.addendum_appended is True
-
-
-async def test_orchestrator_drops_an_addendum_that_contains_a_dose():
-    reformulation = "What does the monograph report about tiredness on atorvastatin?"
-
-    class NumericGenerator(FakeGenerator):
-        async def generate_answer_async(self, user_question, retrieval_results, conversation_context):
-            self.rag.calls["answer"].append((user_question, retrieval_results))
-            return AnswerGenerationResult(
-                plain_answer="Reduce to 850 mg twice a day if that happens.",
-                retrieval_results=retrieval_results,
-                formatted_docs="formatted",
-                prompt_id_map={},
-                user_question=user_question,
-                conversation_context=conversation_context,
-            )
-
-    rag = rag_with_gate(
-        gate_for("personal_medical_advice", reformulation=reformulation),
-        docs_by_query={reformulation: ("Lipitor", ["lip-1"])},
-    )
-    rag.generator = NumericGenerator(rag)
-    orch = RefactoredOrchestrator(rag)
-
-    answer, _ = await orch.process_query("Is my tiredness on Lipitor normal?", "u-safety-4")
-
-    assert tpl.ADDENDUM_HEADING not in answer
-    assert "850" not in answer
-    assert no_numeric_dose(answer)
-    assert orch.safety_outcome is not None and orch.safety_outcome.addendum_appended is False
-
-
-async def test_orchestrator_answers_normally_after_scrubbing_identifiers():
-    question = ("I'm Priya Raghunathan, health card 5544-332-110. "
-                "What is Lipitor actually for?")
-    scrubbed = scrub_phi(question)[0]
-    rag = rag_with_gate(
-        gate_for("in_scope_informational"),
-        docs_by_query={scrubbed: ("Lipitor", ["lip-1"])},
-    )
-    orch = RefactoredOrchestrator(rag)
-
-    answer, follow_ups = await orch.process_query(question, "u-safety-5")
-
-    # The pipeline ran on the scrubbed text, never on the raw message.
-    assert rag.calls["retrieve"] == [scrubbed]
-    assert "Priya" not in str(rag.calls) and "5544-332-110" not in str(rag.calls)
-    assert answer.startswith(tpl.PHI_NOTICE)
-    assert f"validated: answer to: {scrubbed}" in answer
-    assert follow_ups == ["q1"]
-    assert orch.safety_outcome is not None
-    assert orch.safety_outcome.short_circuited is False
-    assert orch.safety_outcome.contains_phi is True
-
-
-async def test_emergency_short_circuit_carries_no_monograph_content():
-    rag = rag_with_gate(gate_for("in_scope_informational"))
-    orch = RefactoredOrchestrator(rag)
-
-    answer, follow_ups = await orch.process_query(
-        "My chest hurts and my arms ache since I started Lipitor. What should I do?", "u-safety-6"
-    )
-
-    assert follow_ups == []
-    assert rag.calls["retrieve"] == [] and rag.calls["answer"] == []
-    assert no_numeric_dose(answer)
-    assert "emergency" in answer.lower()
-    assert orch.safety_outcome is not None
-    assert orch.safety_outcome.category == "emergency_red_flag"
-    assert "red_flag:chest_pain" in orch.safety_outcome.deterministic_flags
-
-
-@pytest.mark.parametrize(
-    "env", [{"HC_RAG_SAFETY_GATE": "false"}, {"HC_RAG_DISABLE_STAGES": "safety"}]
-)
-async def test_the_gate_can_be_switched_off_for_an_ablation(monkeypatch, env):
-    for key, value in env.items():
-        monkeypatch.setenv(key, value)
-    gate = gate_for("personal_medical_advice")
-    rag = rag_with_gate(gate, docs_by_query={REFUSE_QUERY: ("Metformin", ["met-1"])})
-    orch = RefactoredOrchestrator(rag)
-
-    answer, _ = await orch.process_query(REFUSE_QUERY, "u-safety-7")
-
-    assert gate.calls == []
-    assert orch.safety_outcome is None
-    assert answer == f"validated: answer to: {REFUSE_QUERY}"
+    assert [m.type for m in messages] == ["system", "human"]
+    assert "Should I double my dose?" in messages[1].content
+    assert "in_scope_informational" in messages[0].content

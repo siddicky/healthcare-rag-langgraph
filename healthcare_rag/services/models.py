@@ -33,12 +33,6 @@ HC_RAG_MAX_SUBQUERIES     hard cap on the number of sub-query branches one decom
                           may spawn; extra sub-queries are dropped (default: 3). Added
                           because gpt-5.6-luna emits up to 8 sub-queries and every branch
                           pays retrieve+evaluate (journey finding F07).
-HC_RAG_SYNTHESIS          when true (default), decomposed sub-branches only retrieve and
-                          evaluate; their documents are unioned into a single "synthesized"
-                          branch that answers the *original* query once. When false the old
-                          behaviour is used: every sub-branch answers+validates on its own
-                          and the winner is picked by `_select_best_answer` (journey finding
-                          F06 — that returned one sub-question's answer).
 HC_RAG_DECOMPOSE_ONLY_COMPLEX
                           when true (default), only decompose when the decomposer labelled
                           the query `query_complexity == "complex"`. Set false to decompose
@@ -119,7 +113,7 @@ def stage_enabled(name: str) -> bool:
 
 
 # --------------------------------------------------------------------------- #
-# Decomposition / synthesis settings                                           #
+# Decomposition settings                                                       #
 # --------------------------------------------------------------------------- #
 
 DEFAULT_MAX_SUBQUERIES = 3
@@ -154,11 +148,6 @@ def max_subqueries() -> int:
     if value < 1:
         raise ValueError(f"HC_RAG_MAX_SUBQUERIES must be >= 1, got {value}")
     return value
-
-
-def synthesis_enabled() -> bool:
-    """True when decomposed sub-branches are merged into one synthesised answer."""
-    return _env_bool("HC_RAG_SYNTHESIS", True)
 
 
 def decompose_only_complex() -> bool:

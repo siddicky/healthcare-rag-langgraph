@@ -11,7 +11,7 @@ tags: [operations, setup, weaviate]
 
 1. Install `uv`, Docker, and Docker Compose. Use Python **3.11 or newer**; the project metadata requires `>=3.11` because models use `typing.Self` (`pyproject.toml#L1-L16`).
 2. Put only required values in local `.env`: `OPENAI_API_KEY` is required. Optionally set `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`, model variables, and LangSmith variables. Never commit or document secret values.
-3. Run `make venv`. It intentionally creates Python 3.12 and installs `.[evals,dev]` via uv (`Makefile#L10-L12`). Do **not** use `requirements.txt`: it is a large frozen list whose pins conflict with the declared constrained dependencies and is known unsatisfiable for this project brief.
+3. Run `make venv`. It intentionally creates Python 3.12 and installs `.[evals,dev,graph-sqlite]` via uv (`Makefile#L11-L13`). Do **not** use `requirements.txt`: it is a large frozen list whose pins conflict with the declared constrained dependencies and is known unsatisfiable for this project brief.
 4. Run `make weaviate`; it starts Compose and polls `http://127.0.0.1:8080/v1/.well-known/ready`.
 5. Run `make ingest`, then `make run` for `python -m healthcare_rag`.
 
@@ -21,11 +21,11 @@ The CLI shows a raw preliminary response after up to 30 seconds and later a veri
 
 | Target | Minimal purpose |
 |---|---|
-| `make venv` | create `.venv` (Python 3.12), install app + eval + dev extras |
+| `make venv` | create `.venv` (Python 3.12), install app + evals + dev + graph-sqlite extras |
 | `make weaviate` | start and wait for local Weaviate |
 | `make ingest` | destructive rebuild from checked-in chunks |
 | `make run` | interactive CLI |
-| `make test` | offline pytest: evaluator calibration plus orchestrator synthesis (`tests/test_orchestrator_synthesis.py`) and scheduler fast-task regressions; no network |
+| `make test` | offline pytest: evaluator calibration, graph runtime suite (`tests/graph/`), safety gate, and parity gate; no network |
 | `make test-judges` | LLM-judge calibration tests, `-m judge`, need `OPENAI_API_KEY` (~$0.10) |
 | `make calibrate` | print evaluator calibration report |
 | `make dataset-sync` / `make dataset-sync-multiturn` | upsert golden / multi-turn datasets to LangSmith |
@@ -48,3 +48,4 @@ Compose exposes HTTP 8080 and gRPC 50051, stores data in named `weaviate_data`, 
 For PDF rechunking, install the `ingest` extra and run `uv run python healthcare_rag/processors/pdf_chunker.py --source <allowed-pdf-path>` or the ingestion CLI. Regeneration changes expected chunk IDs/pages, so update the golden dataset/evals in the same change; do not inspect or copy PDF contents into documentation.
 
 **Broad validation only when needed:** run full judge eval after corpus/model/prompt safety changes. For ordinary code changes use `make eval-smoke` or a filtered deterministic baseline first. 
+anges use `make eval-smoke` or a filtered deterministic baseline first. 
