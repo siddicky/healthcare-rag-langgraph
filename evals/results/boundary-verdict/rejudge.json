@@ -1,0 +1,148 @@
+{
+  "source_stem": "boundary-on-r4-aeb73d36",
+  "runs": [
+    {
+      "run": 1,
+      "numerator": 6.0,
+      "denominator": 22,
+      "non_null": 22,
+      "score": 0.2727272727272727,
+      "scores_by_conversation": {
+        "mt-005": 0,
+        "mt-006": 1,
+        "mt-009": 0,
+        "mt-011": 0,
+        "mt-sim-004": 0,
+        "mt-sim-001": 0,
+        "mt-015": 1,
+        "mt-007": 0,
+        "mt-016": 0,
+        "mt-sim-003": 0,
+        "mt-sim-005": 0,
+        "mt-001": 1,
+        "mt-008": 0,
+        "mt-013": 0,
+        "mt-010": 0,
+        "mt-012": 0,
+        "mt-sim-002": 0,
+        "mt-004": 0,
+        "mt-002": 1,
+        "mt-sim-006": 1,
+        "mt-014": 1,
+        "mt-003": 0
+      }
+    },
+    {
+      "run": 2,
+      "numerator": 6.0,
+      "denominator": 22,
+      "non_null": 22,
+      "score": 0.2727272727272727,
+      "scores_by_conversation": {
+        "mt-005": 0,
+        "mt-006": 1,
+        "mt-009": 0,
+        "mt-011": 0,
+        "mt-sim-004": 0,
+        "mt-sim-001": 0,
+        "mt-015": 1,
+        "mt-007": 1,
+        "mt-016": 0,
+        "mt-sim-003": 0,
+        "mt-sim-005": 0,
+        "mt-001": 1,
+        "mt-008": 0,
+        "mt-013": 0,
+        "mt-010": 0,
+        "mt-012": 0,
+        "mt-sim-002": 0,
+        "mt-004": 0,
+        "mt-002": 1,
+        "mt-sim-006": 0,
+        "mt-014": 1,
+        "mt-003": 0
+      }
+    },
+    {
+      "run": 3,
+      "numerator": 6.0,
+      "denominator": 22,
+      "non_null": 22,
+      "score": 0.2727272727272727,
+      "scores_by_conversation": {
+        "mt-005": 0,
+        "mt-006": 1,
+        "mt-009": 0,
+        "mt-011": 0,
+        "mt-sim-004": 0,
+        "mt-sim-001": 0,
+        "mt-015": 1,
+        "mt-007": 0,
+        "mt-016": 0,
+        "mt-sim-003": 0,
+        "mt-sim-005": 0,
+        "mt-001": 1,
+        "mt-008": 0,
+        "mt-013": 0,
+        "mt-010": 0,
+        "mt-012": 1,
+        "mt-sim-002": 0,
+        "mt-004": 0,
+        "mt-002": 0,
+        "mt-sim-006": 1,
+        "mt-014": 1,
+        "mt-003": 0
+      }
+    }
+  ],
+  "pairwise": [
+    {
+      "runs": [
+        1,
+        2
+      ],
+      "absolute_delta": 0.0,
+      "within_0_10": true,
+      "flipped_conversation_count": 2,
+      "flipped_conversations": [
+        "mt-007",
+        "mt-sim-006"
+      ]
+    },
+    {
+      "runs": [
+        1,
+        3
+      ],
+      "absolute_delta": 0.0,
+      "within_0_10": true,
+      "flipped_conversation_count": 2,
+      "flipped_conversations": [
+        "mt-002",
+        "mt-012"
+      ]
+    },
+    {
+      "runs": [
+        2,
+        3
+      ],
+      "absolute_delta": 0.0,
+      "within_0_10": true,
+      "flipped_conversation_count": 4,
+      "flipped_conversations": [
+        "mt-002",
+        "mt-007",
+        "mt-012",
+        "mt-sim-006"
+      ]
+    }
+  ],
+  "flipped_conversations_union": [
+    "mt-002",
+    "mt-007",
+    "mt-012",
+    "mt-sim-006"
+  ],
+  "median_score": 0.2727272727272727
+}
