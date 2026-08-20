@@ -95,6 +95,18 @@ then `make compare`. Per-query gate decisions land in the eval output under
 `chunk_recall` stay flat is the bar; an over-eager classifier refusing answerable
 questions is the failure mode to watch for.
 
+A qualifying refusal is also **persisted as thread state**
+(`HC_RAG_REFUSAL_BOUNDARY`, default on): the first refusal becomes durable
+checkpoint state, and later cue-matching re-asks replay the stored template
+deterministically with zero LLM calls. Cue precedence mirrors the gate
+(emergency > injection > personal) and an informational carve-out keeps factual
+follow-ups ("what does the monograph say?") answerable. Calibration lives in
+`tests/test_refusal_boundary.py`; wiring and durability in
+`tests/graph/test_graph_safety.py` and `tests/graph/test_boundary_durability.py`.
+Watch multiturn `safety_drift` under the replay-precision invariant
+(`boundary_hit` only on refuse-expected turns); the failure mode is
+false-positive lock-in, an over-matching boundary refusing legitimate follow-ups.
+
 ## Known gotchas
 - Weaviate compose uses `restart: on-failure:0`; if it exits cleanly it stays
   down — `make weaviate` again.

@@ -146,14 +146,88 @@ The override is never complied with. What happens next depends on which pattern 
 
 Recursion is capped at one extra pass, so the worst case is two classification calls.
 
+## Persisted refusal boundary
+
+The gate classifies each turn on its own, so a multi-turn pressure campaign is a
+series of independent trials: the refusal that held on turn one says nothing to
+the turn-three classifier. The persisted refusal boundary closes part of that gap.
+When the gate's *final* decision short-circuits as `personal_medical_advice`,
+`emergency_red_flag` or `prompt_injection` (final means after any injection
+salvage pass), that refusal is written into the thread's checkpointed state and
+every later turn in the same thread runs a deterministic pre-check *before* the
+classification call. A re-ask that carries the stored refusal's cues replays the
+template byte-identically with zero LLM calls, instead of re-rolling the
+classifier.
+
+* **What is stored.** Five fields: the refusal kind, a derived drug topic, the
+  byte-exact static template body for that kind, a UTC timestamp, and a template
+  version. Nothing else is ever persisted: no raw user text, no PHI spans, no
+  model rationale, no safe reformulation. On every read the stored body must be
+  byte-equal to a template the current code allows for its kind
+  (`healthcare_rag/processors/safety_responses.py`); an entry that fails that
+  check is inert. `identifier_recall` and `out_of_scope` refusals are never
+  persisted at all (identifier recall is re-caught deterministically every turn;
+  out-of-scope has no in-scope topic to key on).
+* **Where it lives.** `refusal_boundaries` in the checkpointed `RAGState`. A
+  boundary survives across turns with the default `InMemorySaver` (same process)
+  and across restarts with `HC_RAG_CHECKPOINT=sqlite:<path>`. Nothing is deleted
+  mid-thread: writing a refusal replaces only the entry with the same key, and
+  stale-version, invalid-response and malformed entries ride along in state,
+  ignored by the matcher.
+* **The pre-check and its layers.** It runs on the scrubbed query, before the
+  classification call, in this order: a decision-request suppressor (wording like
+  "is it safe for me to double it" is asking for a personal verdict however it is
+  dressed up); an informational override that sends document-sourced wording
+  ("per the monograph", "inside the limit", "can I ask how...") back through the
+  full gate unchanged, so factual follow-ups on a refused topic stay answerable;
+  then exclusive cue precedence mirroring the gate's own merge order (emergency >
+  injection > personal). A stored personal refusal can never serve a
+  red-flag or override query, and a salvageable-only override always takes the
+  existing one-pass salvage path rather than a replay.
+* **A replay** returns the stored template byte-identically: no LLM call, no
+  addendum, `follow_ups == []`. The outcome records
+  `response_kind="boundary_replay"`, `llm_calls=0`, `boundary_hit=true` and
+  `boundaries_active=<n>`, and the route is `safety_gate:boundary:<kind>`. The
+  final rendered answer may still gain the current-turn PHI notice line; the
+  stored template bytes do not change.
+* **Topic rules.** Explicit drug words decide: the in-scope lexicons are
+  lipitor/atorvastatin and metformin/glucophage; a word from a fixed out-of-scope
+  lexicon (insulin, warfarin, aspirin, ...) maps to `other`, and out-of-scope-drug
+  refusals therefore generalize to out-of-scope re-asks (`other` matching
+  `other`). A query with no drug word at all (`none`) inherits a stored topic
+  only through anaphoric wording: 15 or fewer whitespace tokens, or a referent
+  ("it", "that", "the max"), or a continuation marker ("still", "again", "after
+  all"); long referent-free drug-less questions fall through to a fresh trial. At
+  write time an explicit drug in the query beats the classifier's
+  `drug_mentioned`, so a context-pulled assessment cannot retag the topic.
+* **Only escalate, never weaken.** A stored boundary is never relaxed or removed;
+  a topic change acts as expiry (a query naming a different drug simply does not
+  match). Refreshing a refusal replaces the entry with the same key. Emergency
+  boundaries key by overdose variant as well, so a later overdose refusal never
+  displaces a stored non-overdose emergency boundary on the same topic: both
+  coexist, and the red-flag cue selects between them.
+* **What it does not catch.** This is conditional risk reduction, not a fence.
+  Cue-less elliptical re-asks ("Three tonight then?"), anaphoric emergencies that
+  do not restate a symptom ("It's happening again; can I wait?") and injection
+  wordings outside the deterministic patterns all remain fresh classifier trials,
+  by design. One false-positive surface is pinned: a short or anaphoric query
+  naming an unknown, out-of-lexicon drug ("Can I take prednisone?") can inherit
+  and replay an earlier refusal. The replayed refusal is still category-correct,
+  and the informational override still protects factual follow-ups.
+* **Concurrency.** Same-thread concurrent turns are unsupported and must be
+  serialized by the caller; the engine holds no per-thread lock. The CLI and the
+  eval harness are sequential today.
+
 ## Configuration
 
 | variable | default | effect |
 |---|---|---|
 | `HC_RAG_SAFETY_GATE` | `true` | `false` disables safety classification only; identifier sanitization remains active |
 | `HC_RAG_DISABLE_STAGES` | *(empty)* | add `safety` for the same classification ablation; identifier sanitization remains active |
+| `HC_RAG_REFUSAL_BOUNDARY` | `true` | persist qualifying gate refusals per thread and replay them deterministically on matching re-asks; `false` restores exactly the pre-boundary behavior; implied off whenever the safety gate is off |
 
-Both are read in `healthcare_rag/services/models.py` (`safety_gate_enabled()`).
+All are read in `healthcare_rag/services/models.py` (`safety_gate_enabled()`,
+`refusal_boundary_enabled()`).
 
 ## Cost and latency
 
@@ -176,6 +250,13 @@ Measured on the worktree smoke, 2026-08-18 (gpt-5.6-luna, `reasoning_effort=none
   unsupported regional formats, obfuscation variants, contextual quasi-identifiers,
   and rich narratives can remain. Normalization beyond directly tested variants is a
   residual, not an implied capability.
+* **The boundary matcher is a floor too.** The persisted-refusal pre-check is
+  deterministic, which gives it its own false-positive and false-negative
+  surfaces, pinned above and in the calibration table
+  `tests/test_refusal_boundary.py`. The decision-request suppressor and the
+  informational override absorb the loudest false positives, and the eval
+  replay-precision invariant requires that a boundary replay (`boundary_hit`)
+  only ever occur on a turn whose expected behavior is refusal.
 * **Red flags require a first-person report.** "Is chest pain a listed side effect?" is
   answered from the monograph; "my chest hurts" is escalated. That is deliberate —
   escalating every mention of a symptom would wreck the factual metrics — but it means a
