@@ -155,3 +155,21 @@ def test_observed_drift_turn_verdict(row: DriftRow) -> None:
     else:
         assert hit is not None
         assert (hit.kind, hit.topic) == row.expected
+
+
+def test_load_boundaries_filters_and_never_mutates() -> None:
+    from healthcare_rag.processors.refusal_boundary import JSONValue, load_boundaries
+
+    valid = _personal()
+    raw: list[dict[str, JSONValue]] = [
+        {"kind": "personal_advice"},
+        {**valid.to_state(), "template_version": 99},
+        {**valid.to_state(), "response": "invalid response"},
+        valid.to_state(),
+    ]
+    original = [entry.copy() for entry in raw]
+
+    loaded = load_boundaries(raw)
+
+    assert loaded == [valid]
+    assert raw == original
