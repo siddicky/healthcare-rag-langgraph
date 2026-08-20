@@ -22,3 +22,5 @@ openwiki/.last-update.json
 .agents/
 .codex/
 .playwright-mcp/
+
+.langgraph_api/
