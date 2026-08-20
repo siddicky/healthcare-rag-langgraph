@@ -22,12 +22,14 @@ A generated refusal is a probability. The gate is the part we can promise.
 ```
 user message
    │
-   ├─ deterministic pre-checks  (regex; no network)      ─┐
+   ├─ Presidio + deterministic identifier sanitizer
+   │    (current message and history; always enabled)
+   ├─ deterministic safety pre-checks  (regex; no network) ─┐
    │    PHI · instruction override · identifier recall ·  │ OR-ed
    │    emergency red flags                               │
    ├─ one LLM classification    (safety_gate prompt)     ─┘
    │
-   ├─ scrub identifiers out of the query, the history context, and the stored history
+   ├─ sanitize every model-authored query and answer before its next sink
    │
    ├─ short-circuit with a template  ──→  answer, follow_ups = []
    └─ or continue into the normal pipeline with the SCRUBBED query
@@ -36,6 +38,8 @@ user message
 | piece | file |
 |---|---|
 | gate + deterministic checks + policy | `healthcare_rag/processors/safety.py` |
+| Presidio lifecycle, registry, span union, replacement | `healthcare_rag/processors/privacy.py` |
+| deterministic healthcare identifier patterns | `healthcare_rag/processors/privacy_patterns.py` |
 | response templates (plain strings) | `healthcare_rag/processors/safety_responses.py` |
 | classification prompt | `healthcare_rag/prompts/safety_gate.yaml.j2` |
 | structured output + observability record | `healthcare_rag/models/safety.py` |
@@ -59,25 +63,23 @@ first node and the only code that ever sees the raw question:
   schema whose keys do not include `question`, so it is never returned from a run. The
   engine streams `updates` only — default `values` streaming would echo the raw input
   in its first chunk and must not be consumed.
-* **The stored `SafetyOutcome` is sanitised**: the model-authored `rationale` passes
-  through `scrub_phi` and has every `assessment.phi_spans` substring removed before it
-  is written to state — a free-text field written by a model is a PHI leak path, not an
-  instruction to be trusted.
-* **`finalize` persists the scrubbed question**, never a clarification, and history
-  views are defensively re-scrubbed whenever the gate is enabled.
+* **The stored `SafetyOutcome` is sanitised**: model-authored rationale passes through
+  the local sanitizer. Model `phi_spans` can affect classification metadata but never
+  authorize text mutation.
+* **Every model-authored query/output is scanned at its next boundary**: clarification,
+  decomposition, gap-fill and tool-routed queries before retrieval; generation before
+  validation and preliminary monitor publication; validated answers and follow-ups
+  before final state, messages, monitor fields and engine results. Trusted monograph
+  documents and citation-source quotes are not blanket-scanned.
+* **`finalize` persists the scrubbed question and answer**, and history/seed messages
+  are defensively re-scrubbed even when safety classification is disabled.
 
-Residuals (accepted, documented): the `safety_gate` node's own LangSmith child-run
-input contains the raw question *during* its execution (`LANGSMITH_HIDE_INPUTS=true`
-recommended); LangGraph's own traced graph-run receives the raw input under the outer
-scrubbed root trace; Agent-Server run records retain request `kwargs`; Studio-initiated
-runs bypass the engine wrapper and default to `durability="async"`, under which the
-synthetic START input channel **is** checkpointed — Studio is therefore classified NOT
-PHI-SAFE for real patient input (local monograph QA only). Every SDK/engine-created run
-uses `durability="exit"`, and the engine's root trace records only the scrubbed query
-(scrubbed even when the processor raises — the redactor fails closed). Scrubbing the
-question *before* the gate (a pre-scrub step) was considered and deferred: it would
-blur the distinction between "the user said this" and "the gate cleaned it" that the
-policy relies on.
+The supported identifier-bearing runtime is controlled `GraphEngine` execution with
+`stream_mode="updates"`, `durability="exit"`, LangSmith tracing disabled, and an opaque
+non-personal `thread_id`. Direct compiled-graph calls, Agent Server, Studio, and
+`values`, `checkpoints`, `tasks`, or `debug` streams are development-only surfaces for
+non-sensitive synthetic input: outer request records, caller-selected callbacks, and
+pre-node stream events cannot be retroactively sanitized by graph code.
 
 ## Categories and what happens
 
@@ -89,7 +91,7 @@ policy relies on.
 | `prompt_injection` | **Refuse the override**, then re-assess the underlying question once (see below). | depends on the second pass | none if refused |
 | `in_scope_informational` | Normal pipeline, on the scrubbed query. | yes | yes |
 | `ambiguous` | Normal pipeline — the existing clarify stage already handles under-specified queries. | yes | yes |
-| *any* + `contains_phi` | Identifiers are replaced with `[REDACTED_…]` **before** the text reaches retrieval, any prompt, or the history file, and the reply is prefixed with one line: *"I've disregarded the personal identifiers in your message; please don't share them here."* | — | — |
+| *any* + `contains_phi` | Recognized identifiers are replaced with `[REDACTED_…]` **before** the text reaches the safety LLM, retrieval, downstream prompts, updates, monitor fields, results, or history, and the reply is prefixed with one line: *"I've disregarded the personal identifiers in your message; please don't share them here."* | — | — |
 
 A request to read identifiers back ("remind me what my health card number was", "just the
 last three digits") is refused with its own template. There is genuinely nothing to read
@@ -148,8 +150,8 @@ Recursion is capped at one extra pass, so the worst case is two classification c
 
 | variable | default | effect |
 |---|---|---|
-| `HC_RAG_SAFETY_GATE` | `true` | `false` runs the pipeline un-gated (for a before/after ablation) |
-| `HC_RAG_DISABLE_STAGES` | *(empty)* | add `safety` for the same effect through the generic stage switch |
+| `HC_RAG_SAFETY_GATE` | `true` | `false` disables safety classification only; identifier sanitization remains active |
+| `HC_RAG_DISABLE_STAGES` | *(empty)* | add `safety` for the same classification ablation; identifier sanitization remains active |
 
 Both are read in `healthcare_rag/services/models.py` (`safety_gate_enabled()`).
 
@@ -167,11 +169,13 @@ Measured on the worktree smoke, 2026-08-18 (gpt-5.6-luna, `reasoning_effort=none
 
 * **The classifier can be wrong.** It is a language model at temperature 0, not an oracle.
   The deterministic pre-checks are the floor: they can only *escalate* an outcome (force
-  emergency / injection, set `contains_phi`), never relax one the model chose.
-* **The regexes are a floor, not a fence.** A name with no cue word before it
-  ("… - Emeka Okafor, 22 Maple Ave …" is caught by a "save my details" cue; "Ranjit called
-  about her atorvastatin" is not) relies on the model's `phi_spans`. Non-Latin scripts,
-  non-North-American phone and postal formats, and free-form identifiers are not covered.
+  emergency / injection), never relax one the model chose. Identifier metadata comes
+  from the local sanitizer, not model-proposed spans.
+* **Detection is a floor, not a fence.** The configured Presidio/spaCy PERSON detector
+  and deterministic CA/US patterns are heuristic. Uncued single-token names,
+  unsupported regional formats, obfuscation variants, contextual quasi-identifiers,
+  and rich narratives can remain. Normalization beyond directly tested variants is a
+  residual, not an implied capability.
 * **Red flags require a first-person report.** "Is chest pain a listed side effect?" is
   answered from the monograph; "my chest hurts" is escalated. That is deliberate —
   escalating every mention of a symptom would wreck the factual metrics — but it means a
@@ -179,12 +183,53 @@ Measured on the worktree smoke, 2026-08-18 (gpt-5.6-luna, `reasoning_effort=none
 * **History written before the gate shipped** may contain identifiers. History views
   are scrubbed on read as well as on write; pre-gate artifacts on disk are not
   rewritten.
-* **Traces**: the engine's root `process_query` trace records the *scrubbed* query
-  (fail-closed), and downstream stages receive already-scrubbed text. The residuals
-  above still apply — LangSmith remains a third-party copy of the conversation; treat
-  the project as sensitive.
+* **Process memory**: spaCy may retain analyzed token strings in its process-owned
+  vocabulary for the worker lifetime. Disable core dumps/model serialization and bound
+  worker lifetime according to deployment policy.
+* **Tracing and server surfaces**: supported identifier-bearing execution requires
+  tracing off. Agent Server/Studio request records, unsafe stream modes, legacy
+  checkpoints, identity linkage, retention/deletion, encryption and legal/BAA controls
+  are deployment concerns outside this sanitizer.
 * **This is not a clinical decision system.** The gate reduces measured harm; it does
   not make the assistant safe to use for treatment decisions.
+
+This safety gate reduces exposure of recognized personal identifiers. It does not by
+itself establish HIPAA Safe Harbor, Expert Determination, or HIPAA compliance.
+
+## Safe Harbor inventory assessment
+
+We use HIPAA's 18-identifier enumeration (45 CFR §164.514(b)(2)) as a **coverage
+checklist** for the sanitizer — not as a compliance target. This application is a
+Canadian-context monograph QA demo (OHIP/SIN/postal patterns present; PIPEDA/PHIPA
+would govern before HIPAA), and Safe Harbor's requirements (blanket date removal,
+deterministic completeness) would be both unattainable and wrong for this use case.
+
+| # | Safe Harbor category | Covered by | Status |
+|---|---|---|---|
+| 1 | Names | `NAME` cue patterns + spaCy PERSON NER | covered |
+| 2 | Geography smaller than state/province | `ADDRESS`, `POSTAL_CODE` patterns | covered |
+| 3 | Dates tied to a person | `DOB`, `EVENT_DATE` cue patterns | **deliberate divergence**: documentary dates without a person/event cue are preserved (monograph approval dates, "stop 2 days before surgery"); Safe Harbor requires removing ALL dates |
+| 4 | Phone numbers | `PHONE` pattern + `PhoneRecognizer` (CA/US) | covered |
+| 5 | Fax numbers | `PHONE` pattern | partially — fax-formatted numbers caught; a "fax:"-labelled distinct kind is not modelled |
+| 6 | Email | `EMAIL` pattern | covered |
+| 7 | SSN | `US_SSN` + `CaSinRecognizer` (SIN) | covered (both countries) |
+| 8 | MRN | `MRN` patterns | covered |
+| 9 | Health plan / beneficiary numbers | `MEMBER_ID`, `PATIENT_ACCOUNT`, `US_MBI` | covered |
+| 10 | Account numbers | cue-bound `CLAIM_ID`/`PRIOR_AUTH_ID`/`ACCESSION_ID`/`ENCOUNTER_ID` family | covered (cue-bound) |
+| 11 | Certificate / license numbers | `MEDICAL_LICENSE`, `US_DRIVER_LICENSE` | covered |
+| 12 | Vehicle identifiers / plates | cue-bound `VEHICLE_ID` (VIN, license plate, vehicle registration) | covered (cue-bound) |
+| 13 | Device serials | `DEVICE_SERIAL` (cue-bound) + clinical-code preserve list | covered (cue-bound) |
+| 14 | URLs | `UrlRecognizer` | covered |
+| 15 | IP addresses | `IpRecognizer` | covered |
+| 16 | Biometric identifiers | — | **not modelled** (no biometric input path in a text pipeline) |
+| 17 | Full-face photos / comparable images | — | **not applicable** (no image path) |
+| 18 | Any other unique identifying number | healthcare-ID cue family + NER catch-all | **inherently heuristic** — no deterministic system satisfies this; residuals listed above |
+
+Net: 15 of 18 categories covered or intentionally diverged, 2 not applicable to a
+text pipeline, 1 (the catch-all) heuristic by nature. The divergences are design
+decisions for a monograph QA assistant, not gaps to close: blanket date removal
+would redact every clinically meaningful date in a drug monograph discussion, and
+cue-free capture of arbitrary "unique numbers" would redact doses and lab values.
 
 ## Measuring it
 

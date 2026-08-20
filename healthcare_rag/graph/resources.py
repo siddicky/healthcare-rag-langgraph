@@ -12,6 +12,7 @@ from weaviate.connect import ConnectionParams
 
 from healthcare_rag.graph.llm import LangChainLLMGateway
 from healthcare_rag.graph.settings import GraphSettings
+from healthcare_rag.processors.privacy import PrivacySanitizer
 
 if TYPE_CHECKING:
     from healthcare_rag.graph.llm import PromptRegistry
@@ -20,7 +21,11 @@ if TYPE_CHECKING:
 class Resources:
     """Mutable resource owner; construction and network connection remain separate."""
 
-    def __init__(self, settings: GraphSettings | None = None) -> None:
+    def __init__(
+        self,
+        settings: GraphSettings | None = None,
+        privacy: PrivacySanitizer | None = None,
+    ) -> None:
         self.settings: GraphSettings = settings or GraphSettings.from_env()
         self._prompts: PromptRegistry | None = None
         self.hybrid_search: Callable[..., Any] | None = None
@@ -29,6 +34,7 @@ class Resources:
         self.format_documents_for_prompt: Callable[..., Any] | None = None
         self._weaviate: WeaviateAsyncClient | None = None
         self._gateway: LangChainLLMGateway | None = None
+        self._privacy: PrivacySanitizer = privacy or PrivacySanitizer()
         self._lock: Lock = Lock()
         self._async_lock: AsyncLock = AsyncLock()
 
@@ -76,6 +82,10 @@ class Resources:
             if self._gateway is None:
                 self._gateway = LangChainLLMGateway(self.settings, self.prompts)
             return self._gateway
+
+    @property
+    def privacy(self) -> PrivacySanitizer:
+        return self._privacy
 
     async def aclose(self) -> None:
         """Close the Weaviate client only when this owner constructed and opened it."""

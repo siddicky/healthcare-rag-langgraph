@@ -5,6 +5,7 @@ from typing import Any
 from healthcare_rag.graph.resources import get
 from healthcare_rag.graph.state import load_results
 from healthcare_rag.models.queries import RetrievalEvaluation
+from healthcare_rag.processors.safety import scrub_phi
 
 
 async def evaluate_retrieval(state: dict[str, Any]) -> dict[str, Any]:
@@ -48,11 +49,16 @@ async def evaluate_retrieval(state: dict[str, Any]) -> dict[str, Any]:
         retrieved_information=combined_context,
         sources=", ".join(sources),
     ) or default
-    additional_queries = (evaluation.additional_queries or [])[:3]
+    additional_queries = [
+        scrub_phi(query)[0] for query in (evaluation.additional_queries or [])[:3]
+    ]
     gap_pending = (
         not evaluation.is_sufficient and gap_round == 0 and bool(additional_queries)
     )
     evaluation_data = evaluation.model_dump(mode="json")
+    evaluation_data["missing_information"] = scrub_phi(
+        str(evaluation_data.get("missing_information") or "")
+    )[0]
     if evaluation.additional_queries:
         evaluation_data["additional_queries"] = additional_queries
 

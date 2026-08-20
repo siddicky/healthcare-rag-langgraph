@@ -37,9 +37,8 @@ async def process_query_with_orchestrator(
     """
     result = await engine.process_query(query, user_id, monitor)
 
-    monitor.final_answer = result["answer"]
-    monitor.follow_up_questions = result["follow_ups"]
-    monitor.final_answer_event.set()
+    monitor.set_final_answer(result["answer"])
+    monitor.set_follow_up_questions(result["follow_ups"])
 
 def print_banner():
     """Print a professional banner for the application."""
@@ -60,8 +59,8 @@ async def interactive_main():
     try:
         engine = await build_engine()
         print("✓ Medical RAG System Initialized Successfully")
-    except Exception as e:
-        print(f"✗ Error initializing system: {e}")
+    except Exception:
+        print("✗ Error initializing system: PRIVACY_OR_RUNTIME_INITIALIZATION_FAILED")
         return
 
     # Use a consistent user ID for the whole session
@@ -145,9 +144,9 @@ async def interactive_main():
                 
                 print("─" * 60)
                 
-            except Exception as e:
-                print(f"\n❌ An error occurred: {e}")
-                logger.error(f"Error processing query '{user_query}': {e}", exc_info=True)
+            except Exception:
+                print("\n❌ An error occurred: PIPELINE_EXECUTION_FAILED")
+                logger.error("PIPELINE_EXECUTION_FAILED")
 
     except KeyboardInterrupt:
         print("\n\nSession interrupted by user. Shutting down...")
@@ -158,16 +157,16 @@ async def interactive_main():
                 await engine.aclose()
                 print("✓ Connection closed successfully.")
                 print("Thank you for using Medical RAG Assistant!")
-            except Exception as e:
-                print(f"✗ Error while closing connection: {e}")
+            except Exception:
+                print("✗ Error while closing connection: RUNTIME_CLOSE_FAILED")
 
 def main():
     """Entry point for the CLI."""
     try:
         asyncio.run(interactive_main())
-    except Exception as e:
-        print(f"\n❌ Fatal error: {e}")
-        logging.critical(f"Fatal error: {e}", exc_info=True)
+    except Exception:
+        print("\n❌ Fatal error: RUNTIME_FATAL_ERROR")
+        logging.critical("RUNTIME_FATAL_ERROR")
         sys.exit(1)
 
 if __name__ == "__main__":

@@ -260,6 +260,16 @@
         "D12",
         "D13"
       ]
+    },
+    {
+      "id": "T24",
+      "when": "2026-08-20",
+      "step": "Integrated the process-owned privacy sanitizer (Presidio 2.2.364 + spaCy en_core_web_sm 3.8.0 + deterministic healthcare-ID patterns): identifiers scrubbed from query+history BEFORE safety classification, from every model-authored query at its next sink, and from answers/follow-ups at finalize; model phi_spans lost text-mutation authority; engine fails closed with raw-free error codes; read-only non-root container profile with the model baked in (make container-build/ingest/run). Safe Harbor used as coverage inventory (15/18 + 2 N/A + 1 heuristic; VIN/plate gap closed; documented divergences) - never as a compliance claim.",
+      "outcome": "Safety-category eval vs graph-final (35 rows): behavior_match/forbidden_content/numeric_advice_leak/false_premise identical; hallucinated 0.643->0.538; correctness 0.859->0.872; safe_redirect 0.68->0.64 = one judge flip on unsafe-004 where the deterministic template text was byte-identical (third F32 instance). 255 tests green (246 + 9 privacy rows). Report: priv-sanitizer-safety-ca3da172.",
+      "experiments": [
+        "priv-sanitizer-safety-ca3da172"
+      ],
+      "decisions": []
     }
   ],
   "findings": [
@@ -563,6 +573,13 @@
       "title": "Post-seal venv drift: unconstrained reinstall (make venv / uv pip install -e) can pull langgraph-api 0.12.6 whose grpcio>=1.80 runtime need breaks the locked grpcio 1.78 - langgraph dev then crashes",
       "detail": "F3 QA hit this: the dev server failed on first attempt after the .venv drifted from uv.lock. Restore with uv sync --frozen --extra evals,dev,graph-sqlite (langgraph-api 0.8.7 serves /ok in ~2s). Environment-only, no source change; sealed parity unaffected.",
       "action": "If langgraph dev crashes with grpcio errors, uv sync --frozen before debugging anything else."
+    },
+    {
+      "id": "F37",
+      "severity": "low",
+      "area": "privacy",
+      "title": "HIPAA Safe Harbor assessed as a coverage inventory for the sanitizer, not a compliance target: 15/18 categories covered or deliberately diverged (cue-gated dates, clinical-code preservation), 2 N/A for text (biometrics, photos), 1 inherently heuristic (catch-all); VIN/plate gap closed as VEHICLE_ID (cue-bound, clinical-text negative tests pinned)",
+      "detail": "docs/safety.md carries the full 18-row table with divergences stated honestly. Blanket date removal would redact every clinically meaningful date in monograph QA; the catch-all cannot be satisfied deterministically by anyone. App is Canadian-context (PIPEDA/PHIPA before HIPAA) and already disclaims Safe Harbor/Expert Determination compliance."
     }
   ],
   "decisions": [
@@ -1055,6 +1072,20 @@
         "consistency": 0.818,
         "safety_drift": 0.409,
         "forbidden_content": 0.0
+      }
+    },
+    {
+      "name": "priv-sanitizer-safety-ca3da172",
+      "config": "graph + Presidio privacy sanitizer, safety categories only (4), conc 10",
+      "split": "safety 35",
+      "judge": "gpt-5.6-sol",
+      "metrics": {
+        "behavior_match": 0.886,
+        "forbidden_content": 0.0,
+        "numeric_advice_leak": 0.04,
+        "false_premise_corrected": 1.0,
+        "hallucinated": 0.538,
+        "correctness": 0.872
       }
     }
   ],

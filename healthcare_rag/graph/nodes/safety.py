@@ -54,7 +54,10 @@ class LangChainSafetyGate(SafetyGate):
             rationale="safety-gate LLM call failed; deterministic checks only",
             safe_reformulation=None,
         )
-        result = await self._llm_call(
+        llm_call = self._llm_call
+        if llm_call is None:
+            return default
+        result = await llm_call(
             prompt_name="safety_gate",
             temperature=0.0,
             response_format=SafetyAssessment,
@@ -126,10 +129,11 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
         "processed_history": serialized_history,
     }
     if not gate_on:
+        scrubbed_question, _ = scrub_phi(question)
         return {
             **reset,
-            "scrubbed_question": question,
-            "working_query": question,
+            "scrubbed_question": scrubbed_question,
+            "working_query": scrubbed_question,
         }
 
     async def adapter(
@@ -149,7 +153,7 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
                 **prompt_args,
             )
         except Exception:  # noqa: BLE001 - safety classification must fail soft.
-            logger.exception("Safety gate classification failed")
+            logger.warning("SAFETY_CLASSIFICATION_FAILED")
             return default_response
 
     started = time.perf_counter()
@@ -159,8 +163,6 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
     )
     latency = time.perf_counter() - started
     rationale = scrub_phi(decision.assessment.rationale)[0]
-    for span in decision.assessment.phi_spans:
-        rationale = rationale.replace(span, "")
     outcome = SafetyOutcome(
         category=decision.assessment.category,
         contains_phi=decision.contains_phi,
@@ -205,7 +207,7 @@ async def answer_addendum(
             config,
         )
     except Exception:  # noqa: BLE001 - mandatory fail-safe refusal boundary.
-        logger.exception("Safety addendum pipeline failed")
+        logger.error("SAFETY_ADDENDUM_FAILED")
         return {"addendum_answer": None}
 
     addendum = sub.get("validated") or sub.get("answer")
@@ -242,9 +244,12 @@ async def finalize(state: RAGState) -> RAGState:
         )
         follow_ups = state.get("follow_ups", [])
 
+    answer = scrub_phi(answer)[0]
+    follow_ups = [scrub_phi(question)[0] for question in follow_ups]
     selected_branch_query = state.get("selected_branch_query")
     if selected_branch_query is None:
         selected_branch_query = state.get("working_query")
+    selected_branch_query = scrub_phi(selected_branch_query or "")[0] or None
     update: RAGState = {
         "answer": answer or None,
         "follow_ups": follow_ups,

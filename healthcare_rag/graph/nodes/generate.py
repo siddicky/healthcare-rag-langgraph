@@ -11,6 +11,7 @@ from healthcare_rag.models.answers import CitedAnswerResult
 from healthcare_rag.models.misc import FollowUpQuestions
 from healthcare_rag.processors.generation import format_documents_for_prompt
 from healthcare_rag.processors.validation import AnswerValidator
+from healthcare_rag.processors.safety import scrub_phi
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -32,13 +33,14 @@ async def generate_answer(state: dict[str, Any]) -> dict[str, Any]:
     formatted_docs, prompt_id_map = format_documents_for_prompt(merged)
     summary = state.get("summary") or {}
     conversation_context = str(summary.get("relevant_snippets") or "")
-    plain_answer = await get().gateway.acomplete(
+    model_answer = await get().gateway.acomplete(
         "generate_answer",
         temperature=0.1,
         conversation_context=conversation_context,
         retrieval_results=formatted_docs,
         user_question=state["working_query"],
     )
+    plain_answer = scrub_phi(model_answer)[0]
     return {
         "generation": {
             "plain_answer": plain_answer,
@@ -53,7 +55,7 @@ async def validate_answer(state: dict[str, Any]) -> dict[str, Any]:
     generation = state.get("generation") or {}
     plain_answer = str(generation.get("plain_answer") or "")
     if "validate" in resources.settings.disabled_stages:
-        return {"validated": plain_answer}
+        return {"validated": scrub_phi(plain_answer)[0]}
 
     merged_data = state.get("merged")
     if not merged_data:
@@ -85,11 +87,18 @@ async def validate_answer(state: dict[str, Any]) -> dict[str, Any]:
             quote_match_threshold=85,
         )
     except Exception:  # noqa: BROAD_EXCEPT_OK - validation must never fail open.
-        logger.exception("Graph answer validation failed")
+        logger.error("ANSWER_VALIDATION_FAILED")
         structured, validated = None, None
+    structured_data = structured.model_dump(mode="json") if structured else None
+    if structured_data:
+        for statement in structured_data["statements"]:
+            statement["text"] = scrub_phi(str(statement.get("text") or ""))[0]
+            for citation in statement.get("citations", []):
+                for field in ("doc_id", "source_name", "quote"):
+                    citation[field] = scrub_phi(str(citation.get(field) or ""))[0]
     return {
-        "structured": structured.model_dump(mode="json") if structured else None,
-        "validated": validated,
+        "structured": structured_data,
+        "validated": scrub_phi(validated or "")[0] or None,
     }
 
 
@@ -117,9 +126,13 @@ async def generate_follow_ups(state: dict[str, Any]) -> dict[str, Any]:
                 answer=answer,
             )
         except Exception:  # noqa: BROAD_EXCEPT_OK - gateway failure is a normal empty result.
-            logger.exception("Follow-up LLM stage failed")
+            logger.warning("FOLLOW_UP_GENERATION_FAILED")
             response = default
-        return {"follow_ups": (response or default).questions}
+        return {
+            "follow_ups": [
+                scrub_phi(question)[0] for question in (response or default).questions
+            ]
+        }
     except Exception:  # noqa: BROAD_EXCEPT_OK - preserves the legacy unexpected-error sentinel.
-        logger.exception("Unexpected follow-up generation failure")
+        logger.error("FOLLOW_UP_PIPELINE_FAILED")
         return {"follow_ups": ["Error generating follow-ups."]}

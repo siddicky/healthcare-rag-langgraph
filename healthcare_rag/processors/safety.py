@@ -12,21 +12,21 @@ turns (F18).
 
 Design
 ------
-Two layers, OR-ed together, because they fail differently:
+Privacy sanitization runs first and is independent of the classification switch. Safety
+classification then uses two layers, OR-ed together, because they fail differently:
 
-1. **Deterministic pre-checks** (this module, no network): regexes for personal
-   identifiers, instruction-override attempts, requests to recite identifiers back, and
-   emergency red-flag symptoms. Cheap, auditable, and unaffected by how the model feels
-   today. This is the *floor* — it can only ever escalate the outcome, never relax it.
+1. **Deterministic pre-checks** (this module, no network): regexes for
+   instruction-override attempts, requests to recite identifiers back, and emergency
+   red-flag symptoms. Cheap, auditable, and unaffected by how the model feels today.
+   This is the *floor* — it can only ever escalate the outcome, never relax it.
 2. **One LLM classification call** (``prompts/safety_gate.yaml.j2`` ->
    :class:`~healthcare_rag.models.safety.SafetyAssessment`, temperature 0, default
    model). It catches the wording the regexes cannot enumerate and produces the
    ``safe_reformulation`` that lets a refused question still be *useful*.
 
 Merge precedence, highest first: emergency red flag > prompt injection > identifier
-recall > whatever the LLM said. ``contains_phi`` is the OR of both layers. If the LLM
-call fails, the deterministic layer still decides (fail-safe for the four things it can
-see; fail-open for classification, which is exactly what the pre-existing pipeline did).
+recall > whatever the LLM said. ``contains_phi`` and identifier kinds come only from the
+local sanitizer. If the LLM call fails, the deterministic layer still decides.
 
 Everything the caller needs is in :class:`SafetyDecision`. Templates live in
 ``safety_responses.py``; the policy that picks one lives in :meth:`SafetyGate.evaluate`.
@@ -34,7 +34,6 @@ Everything the caller needs is in :class:`SafetyDecision`. Templates live in
 
 from __future__ import annotations
 
-import html
 import logging
 import re
 from collections.abc import Awaitable, Callable
@@ -58,171 +57,30 @@ from .safety_responses import (
 logger = logging.getLogger("MedicalRAG")
 
 
-# --------------------------------------------------------------------------- #
-# 1. Personal identifiers (PHI)                                                #
-# --------------------------------------------------------------------------- #
-
-# A name token: capital + lowercase ("Smith", "O'Brien") or an initial ("J.").
-# All-caps tokens are excluded on purpose so "pt J. Tremblay MRN 004512" stops the
-# name at "Tremblay" and leaves "MRN 004512" for the MRN pattern.
-_NAME_TOKEN = r"(?:[A-Z][a-z][A-Za-z'’\-]*|[A-Z]\.)"
-
-#: First name tokens that are almost always a false positive after "I'm"/"patient".
-_NAME_STOPWORDS = frozenset(
-    {
-        "type", "lipitor", "metformin", "atorvastatin", "teva", "ontario", "canadian",
-        "sorry", "just", "also", "hi", "hello", "yes", "no", "not", "still", "really",
-        "very", "currently", "on", "taking", "trying", "worried", "scared", "confused",
-        "fine", "okay", "ok", "diabetic", "male", "female", "the", "a", "an", "my",
-        "she", "he", "they", "asking", "wondering", "having", "getting", "new",
-    }
-)
-
-_PHI_PATTERNS: Tuple[Tuple[str, "re.Pattern[str]"], ...] = (
-    ("EMAIL", re.compile(r"\b[A-Za-z0-9._%+\-]+@[A-Za-z0-9.\-]+\.[A-Za-z]{2,}\b")),
-    # Ontario health card "1234-567-890" (optionally + two-letter version code).
-    ("HEALTH_CARD", re.compile(r"(?<!\d)\d{4}[-\s]\d{3}[-\s]\d{3}(?:[-\s][A-Z]{2})?(?!\d)")),
-    (
-        "HEALTH_CARD",
-        re.compile(
-            r"\b(?:health\s*card|hc|ohip)\s*(?:number|num|no\.?|#)?\s*[:#]?\s*\d[\d\-\s]{6,14}\d",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "MRN",
-        re.compile(
-            r"\b(?:mrn|m\.r\.n\.|medical\s+record\s*(?:number|num|no\.?|#)?|chart\s*(?:number|no\.?|#)"
-            r"|hospital\s*(?:number|no\.?|#)|patient\s*(?:id|number|no\.?|#))\s*[:#]?\s*[A-Za-z]{0,3}\d{4,10}\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "DOB",
-        re.compile(
-            r"\b(?:dob|d\.o\.b\.|date\s+of\s+birth|born(?:\s+on)?)\b\s*[:\-]?\s*"
-            r"(?:\d{1,4}[-/.]\d{1,2}[-/.]\d{1,4}"
-            r"|\d{1,2}\s+[A-Za-z]{3,9},?\s+\d{4}"
-            r"|[A-Za-z]{3,9}\s+\d{1,2},?\s+\d{4})",
-            re.IGNORECASE,
-        ),
-    ),
-    ("DOB", re.compile(r"\b(?:19|20)\d{2}-\d{2}-\d{2}\b")),
-    ("PHONE", re.compile(r"(?<!\d)(?:\+?1[-.\s]?)?\(?\d{3}\)?[-.\s]\d{3}[-.\s]\d{4}(?!\d)")),
-    ("POSTAL_CODE", re.compile(r"\b[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d\b")),
-    (
-        "ADDRESS",
-        re.compile(
-            r"\b\d{1,6}\s+(?:[A-Z][A-Za-z.\-']*\s+){1,3}"
-            r"(?i:street|st|avenue|ave|road|rd|boulevard|blvd|drive|dr|lane|ln|court|ct|way"
-            r"|crescent|cres|place|pl|terrace|trail|parkway|pkwy)\b\.?"
-            r"(?:\s*,?\s*(?i:apt|apartment|unit|suite|ste)\.?\s*#?\s*\w+)?"
-        ),
-    ),
-    (
-        "NAME",
-        re.compile(
-            r"\b(?i:my name is|i'?m|i am|this is|name is|name:|patient|pt\.?|resident|client)\s+"
-            rf"({_NAME_TOKEN}(?:\s+{_NAME_TOKEN}){{0,3}})"
-        ),
-    ),
-    # "save my details for next time - Emeka Okafor, 22 Maple Ave ..." — the name is not
-    # introduced by "my name is", so allow a short lower-case run between the cue and it.
-    (
-        "NAME",
-        re.compile(
-            r"\b(?i:save my details|my details are|my details|my info|my contact info|contact details|"
-            r"details for (?:next time|your records)|here are my details|for my file)"
-            r"[^A-Z\n]{0,25}"
-            rf"({_NAME_TOKEN}(?:\s+{_NAME_TOKEN}){{1,3}})"
-        ),
-    ),
-)
-
-#: Words the *model* sometimes returns as "identifiers" that must never be redacted.
-_PHI_SPAN_DENYLIST = frozenset(
-    {
-        "lipitor", "metformin", "atorvastatin", "teva-metformin", "patient", "doctor",
-        "pharmacist", "nurse", "me", "my", "i", "you", "diabetes", "cholesterol",
-    }
-)
-
-
-def _phi_matches(text: str) -> List[Tuple[int, int, str, str]]:
-    """Return ``(start, end, kind, matched_text)`` for every deterministic PHI hit."""
-    spans: List[Tuple[int, int, str, str]] = []
-    for kind, pattern in _PHI_PATTERNS:
-        for m in pattern.finditer(text):
-            # For NAME the identifier is group 1 (the intro phrase is not PHI).
-            start, end = (m.span(1) if kind == "NAME" and m.lastindex else m.span())
-            value = text[start:end]
-            if kind == "NAME":
-                first = re.split(r"\s+", value.strip())[0].strip(".'’").lower()
-                if first in _NAME_STOPWORDS or len(value.strip()) < 2:
-                    continue
-            spans.append((start, end, kind, value))
-    return spans
-
-
-def _extra_span_matches(text: str, extra_spans: Sequence[str]) -> List[Tuple[int, int, str, str]]:
-    """Locate model-reported identifier spans that really occur in ``text``.
-
-    Prompts are rendered with Jinja autoescaping on, so the model sees
-    ``O&#39;Brien`` where the raw message says ``O'Brien``. Both forms are tried, so a
-    faithfully copied span still lines up with the text we are about to scrub.
-    """
-    out: List[Tuple[int, int, str, str]] = []
-    for span in extra_spans or ():
-        raw = (span or "").strip()
-        if len(raw) < 3 or len(raw) > 120 or raw.lower() in _PHI_SPAN_DENYLIST:
-            continue
-        for candidate in dict.fromkeys([raw, html.unescape(raw), html.escape(raw, quote=True)]):
-            if not candidate:
-                continue
-            for m in re.finditer(re.escape(candidate), text):
-                out.append((m.start(), m.end(), "IDENTIFIER", candidate))
-    return out
-
-
-def _merge_spans(spans: List[Tuple[int, int, str, str]]) -> List[Tuple[int, int, str, str]]:
-    """Drop overlapping spans, keeping the longest (leftmost wins on a tie)."""
-    ordered = sorted(spans, key=lambda s: (s[0], -(s[1] - s[0])))
-    kept: List[Tuple[int, int, str, str]] = []
-    for span in ordered:
-        if kept and span[0] < kept[-1][1]:
-            if span[1] > kept[-1][1] and span[0] >= kept[-1][0]:
-                continue  # partial overlap to the right: keep the earlier, longer span
-            continue
-        kept.append(span)
-    return kept
-
-
 def scrub_phi(text: str, extra_spans: Sequence[str] = ()) -> Tuple[str, List[str]]:
     """Replace personal identifiers in ``text`` with ``[REDACTED_<KIND>]`` tokens.
 
     Args:
         text: the raw message.
-        extra_spans: additional verbatim identifier strings (e.g. the LLM's
-            ``phi_spans``); only used when they actually occur in ``text``.
+        extra_spans: retained for call compatibility and intentionally ignored; model
+            output never receives text-mutation authority.
 
     Returns:
         ``(clean_text, found)`` where ``found`` lists the identifier kinds removed,
         in order of appearance. ``found`` is empty when nothing was redacted.
     """
+    del extra_spans
     if not text:
         return text, []
-    spans = _merge_spans(_phi_matches(text) + _extra_span_matches(text, extra_spans))
-    if not spans:
-        return text, []
-    out = text
-    for start, end, kind, _value in sorted(spans, key=lambda s: s[0], reverse=True):
-        out = f"{out[:start]}[REDACTED_{kind}]{out[end:]}"
-    return out, [kind for _s, _e, kind, _v in sorted(spans, key=lambda s: s[0])]
+    from healthcare_rag.graph.resources import get
+
+    scan = get().privacy.scan(text)
+    return scan.text, list(scan.kinds)
 
 
 def contains_phi(text: str) -> bool:
     """True when the deterministic layer finds any personal identifier in ``text``."""
-    return bool(_phi_matches(text))
+    return bool(scrub_phi(text)[1])
 
 
 # --------------------------------------------------------------------------- #
@@ -589,9 +447,9 @@ class SafetyGate:
         """
         det_red_flags = red_flag_terms(query)
         det_injection = injection_flags(query)
-        det_phi = _phi_matches(query)
-
-        llm = await self._llm_assess(query, history_context)
+        scrubbed_query, phi_kinds = scrub_phi(query)
+        scrubbed_history = scrub_phi(history_context)[0]
+        llm = await self._llm_assess(scrubbed_query, scrubbed_history)
 
         category = llm.category
         if det_red_flags:
@@ -599,15 +457,10 @@ class SafetyGate:
         elif det_injection and category != "emergency_red_flag":
             category = "prompt_injection"
 
-        spans = list(llm.phi_spans or [])
-        for _s, _e, _kind, value in det_phi:
-            if value not in spans:
-                spans.append(value)
-
         return SafetyAssessment(
             category=category,
-            contains_phi=bool(llm.contains_phi or det_phi),
-            phi_spans=spans,
+            contains_phi=bool(phi_kinds),
+            phi_spans=list(llm.phi_spans or []),
             drug_mentioned=llm.drug_mentioned,
             rationale=llm.rationale,
             safe_reformulation=llm.safe_reformulation,
@@ -627,7 +480,7 @@ class SafetyGate:
         if identifier_recall_requested(query):
             flags.append("identifier_recall")
 
-        scrubbed, phi_kinds = scrub_phi(query, extra_spans=assessment.phi_spans)
+        scrubbed, phi_kinds = scrub_phi(query)
         notices: List[str] = []
         if phi_kinds:
             notices.append(PHI_NOTICE)
@@ -691,9 +544,7 @@ class SafetyGate:
             decision.kind = "personal_advice"
             decision.response = personal_advice_response()
             if addendum_allowed(assessment.safe_reformulation):
-                reformulation, _ = scrub_phi(
-                    assessment.safe_reformulation or "", extra_spans=assessment.phi_spans
-                )
+                reformulation, _ = scrub_phi(assessment.safe_reformulation or "")
                 decision.addendum_query = reformulation
             return decision
 

@@ -103,7 +103,7 @@ class LangChainLLMGateway:
                 return result
             return default
         except Exception:  # noqa: BROAD_EXCEPT_OK - required fail-soft LLM boundary.
-            logger.exception("Graph structured LLM stage failed: %s", stage)
+            logger.warning("LLM_STRUCTURED_STAGE_FAILED")
             return default
 
     async def acomplete(
@@ -120,7 +120,7 @@ class LangChainLLMGateway:
             response = await self.chat_model("default", temperature).ainvoke(messages)
             return str(response.content)
         except Exception:  # noqa: BROADEXCEPT_OK - required fail-soft LLM boundary.
-            logger.exception("Graph completion LLM stage failed: %s", stage)
+            logger.warning("LLM_COMPLETION_STAGE_FAILED")
             return default
 
     async def aroute_tools(self, query: str) -> list[ToolCall]:

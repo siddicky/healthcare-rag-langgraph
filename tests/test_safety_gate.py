@@ -169,12 +169,12 @@ def test_scrub_leaves_ordinary_clinical_text_untouched(text):
     assert not contains_phi(text)
 
 
-def test_scrub_uses_model_reported_spans_for_names_the_regexes_miss():
+def test_scrub_does_not_give_model_reported_spans_text_mutation_authority():
     text = "Ranjit called about her atorvastatin."
     assert not contains_phi(text)  # no cue word, so the deterministic layer misses it
     clean, found = scrub_phi(text, extra_spans=["Ranjit"])
-    assert "Ranjit" not in clean
-    assert found == ["IDENTIFIER"]
+    assert clean == text
+    assert found == []
 
 
 def test_scrub_ignores_model_spans_that_are_not_identifiers():

@@ -6,9 +6,11 @@ This module provides utilities for tracking and displaying query processing prog
 
 import asyncio
 import logging
+import re
 from typing import Dict, List, Optional, Any
 
 from .models.answers import AnswerGenerationResult
+from .processors.safety import scrub_phi
 
 logger = logging.getLogger(__name__)
 
@@ -38,21 +40,35 @@ class QueryMonitor:
         self.steps_completed.append(step)
         logger.debug(f"QueryMonitor: {self.status_message}")
 
+    def set_raw_answer(self, answer: str | None) -> None:
+        self.raw_answer = scrub_phi(answer or "")[0] or None
+        self.raw_answer_event.set()
+
+    def set_final_answer(self, answer: str | None) -> None:
+        self.final_answer = scrub_phi(answer or "")[0] or None
+        self.final_answer_event.set()
+
+    def set_follow_up_questions(self, questions: list[str] | None) -> None:
+        self.follow_up_questions = [scrub_phi(question)[0] for question in questions or []]
+
+    def set_error(self, code: str) -> None:
+        self.error = code if re.fullmatch(r"[A-Z][A-Z0-9_]*", code) else "PIPELINE_EXECUTION_FAILED"
+        self.raw_answer_event.set()
+        self.final_answer_event.set()
+
     def update_from_workflow_state(self, state: Dict[str, Any]) -> None:
         """Update monitor state from a workflow state dictionary."""
         if 'current_step' in state:
             self.current_step = state['current_step']
         
         if 'raw_answer' in state and state['raw_answer']:
-            self.raw_answer = state['raw_answer']
-            self.raw_answer_event.set()
+            self.set_raw_answer(state['raw_answer'])
         
         if 'final_answer' in state and state['final_answer']:
-            self.final_answer = state['final_answer']
-            self.final_answer_event.set()
+            self.set_final_answer(state['final_answer'])
         
         if 'follow_up_questions' in state:
-            self.follow_up_questions = state['follow_up_questions']
+            self.set_follow_up_questions(state['follow_up_questions'])
 
     def on_workflow_completed(self, state: Dict[str, Any]) -> None:
         """
@@ -62,11 +78,10 @@ class QueryMonitor:
             state: Final workflow state
         """
         self.update_from_workflow_state(state)
-        self.final_answer = state.get("validated_answer", state.get("generation_result", {}).get("plain_answer", None))
+        self.set_final_answer(state.get("validated_answer", state.get("generation_result", {}).get("plain_answer", None)))
         follow_ups = state.get("follow_ups", None)
         if follow_ups and hasattr(follow_ups, "questions"):
-            self.follow_up_questions = follow_ups.questions
-        self.final_answer_event.set()
+            self.set_follow_up_questions(follow_ups.questions)
 
     def on_generation_complete(self, result: Any) -> None:
         """
@@ -76,8 +91,7 @@ class QueryMonitor:
             result: The generation result
         """
         if hasattr(result, "plain_answer"):
-            self.raw_answer = result.plain_answer
-            self.raw_answer_event.set()
+            self.set_raw_answer(result.plain_answer)
 
     def on_branch_completed(self, branch_id: str, answer: str) -> None:
         """
@@ -87,10 +101,9 @@ class QueryMonitor:
             branch_id: ID of the branch that completed
             answer: The validated answer string
         """
-        logger.info(f"Branch {branch_id} completed with a valid answer")
+        logger.info("BRANCH_COMPLETED")
         if not self.final_answer:
-            self.final_answer = answer
-            self.final_answer_event.set()
+            self.set_final_answer(answer)
 
     def on_answer_task_completed(self, branch_id: str, result: AnswerGenerationResult) -> None:
         """
@@ -103,8 +116,7 @@ class QueryMonitor:
         if result and hasattr(result, "plain_answer") and result.plain_answer:
             # Only update if we haven't set a raw answer yet
             if not self.raw_answer:
-                self.raw_answer = result.plain_answer
-                self.raw_answer_event.set()
+                self.set_raw_answer(result.plain_answer)
                 
     async def display_progress(self) -> None:
         """Display a live progress indicator for the query processing."""
@@ -143,4 +155,4 @@ class QueryMonitor:
             await asyncio.sleep(0.1)
         
         # Clear the line when done
-        print("\r\033[K", end="", flush=True) 
+        print("\r\033[K", end="", flush=True)

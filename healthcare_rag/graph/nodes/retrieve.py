@@ -14,6 +14,7 @@ from healthcare_rag.processors.retrieval import (
     hybrid_search,
     union_results,
 )
+from healthcare_rag.processors.safety import scrub_phi
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -28,18 +29,18 @@ _RETRY_DELAYS: Final = (1.0, 2.0)
 
 async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
     resources = get()
-    query = state["query"]
+    query = scrub_phi(state["query"])[0]
     try:
         tool_calls = await resources.gateway.aroute_tools(query)
     except Exception:  # noqa: BROAD_EXCEPT_OK - routing is a fail-soft external boundary.
-        logger.exception("Retrieval routing failed")
+        logger.warning("RETRIEVAL_ROUTING_FAILED")
         tool_calls = []
 
     results: list[QueryResultList | None] = []
     search = resources.hybrid_search or hybrid_search
     for tool_call in tool_calls:
         collection_name = tool_call["name"].removeprefix("query_").capitalize()
-        routed_query = str(tool_call["args"].get("query", query))
+        routed_query = scrub_phi(str(tool_call["args"].get("query", query)))[0]
 
         @traceable(name="retrieve_documents", run_type="retriever")
         async def traced_search() -> QueryResultList:
@@ -51,15 +52,9 @@ async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
                 break
             except WeaviateBaseError:
                 if attempt == 2:
-                    logger.exception(
-                        "Retrieval failed after retries for collection %s",
-                        collection_name,
-                    )
+                    logger.error("RETRIEVAL_FAILED")
                     break
-                logger.warning(
-                    "Retrying retrieval for collection %s after transient failure",
-                    collection_name,
-                )
+                logger.warning("RETRIEVAL_RETRY")
                 await anyio.sleep(_RETRY_DELAYS[attempt])
 
     combined = union_results(results)

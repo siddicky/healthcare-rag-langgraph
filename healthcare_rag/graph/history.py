@@ -22,8 +22,7 @@ class LegacyTurn(TypedDict, total=False):
 
 
 def _scrub_message(message: BaseMessage, gate_on: bool) -> BaseMessage:
-    if not gate_on:
-        return message
+    del gate_on
     clean, _ = scrub_phi(str(message.content))
     return message.model_copy(update={"content": clean})
 

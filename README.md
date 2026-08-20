@@ -11,7 +11,7 @@ Instead of a rigid sequential pipeline (or racing multiple answer paths), the gr
 *   **Validated Answer Synthesis:** Generates a freeform answer incorporating retrieved context and history summary, followed by a rigorous multi-step validation process detailed further below. This validation ensures the final answer is factually grounded in the source documents by checking cited evidence.
 *   **Dialogue Promotion:** Suggests relevant follow-up questions based on the interaction.
 
-This orchestrated approach, powered by technologies like Weaviate, OpenAI, LangGraph and Docling (for document processing), aims to deliver fast, accurate, and context-aware responses for healthcare information retrieval — with per-thread conversation memory, a visual debugger (LangGraph Studio via `make dev`), and streaming progress over the Agent-Server API.
+This orchestrated approach, powered by technologies like Weaviate, OpenAI, LangGraph and Docling (for document processing), aims to deliver fast, accurate, and context-aware responses for healthcare information retrieval, with per-thread conversation memory and controlled `GraphEngine` update streaming. LangGraph Studio and Agent Server remain development surfaces for non-sensitive synthetic input.
 
 ## Table of Contents
 - [Core Pipeline Components](#core-pipeline-components)
@@ -112,13 +112,13 @@ This project utilizes the following core technologies:
 
 The runtime is a custom LangGraph `StateGraph` (`healthcare_rag/graph/`) whose node names are the pipeline stages and whose conditional edges are the runtime self-evaluators:
 
-*   **`safety_gate` →** every query is classified and scrubbed *before* anything else. Emergency / personal-advice / out-of-scope / prompt-injection messages short-circuit straight to `finalize` with a templated response (see `docs/safety.md`); a safe reformulation of a personal question may take the `answer_addendum` path.
+*   **`safety_gate` →** the process-owned Presidio/deterministic sanitizer scans the current query and history before safety classification. Emergency / personal-advice / out-of-scope / prompt-injection messages short-circuit straight to `finalize` with a templated response (see `docs/safety.md`); a safe reformulation of a personal question may take the `answer_addendum` path. Identifier sanitization remains active during safety-classification ablations.
 *   **`decompose_query` →** simple queries retrieve once; complex queries fan out via LangGraph `Send` — the parent (possibly clarified) query **plus** up to `HC_RAG_MAX_SUBQUERIES` sub-queries retrieve in parallel, and `merge_retrievals` de-duplicates their documents by `doc_id` into one merged set. There is deliberately **no speculative racing**: one answer and one validation per turn, on the original query (the measured "synthesis" behaviour).
 *   **`evaluate_retrieval` →** one sufficiency check on the merged documents; an insufficient round fans out ≤3 gap-fill retrievals, after which the graph routes straight to generation (no second evaluation).
 *   **`validate_answer` →** citation validation (below); a structuring failure writes no answer rather than failing open.
 *   **`generate_follow_ups` →** answer-neutral UX feature; `finalize` persists the (scrubbed) question and the final answer to the thread's checkpointed history.
 
-Conversation memory lives in the graph's checkpointer keyed by `thread_id` (in-memory by default; opt into SQLite via `HC_RAG_CHECKPOINT=sqlite:<path>` for threads that survive restarts). The engine streams `updates` events so a UI can show the preliminary answer while validation runs (`healthcare_rag/monitor.py`), and every run is created with `durability="exit"` so the raw question is never checkpointed (see `docs/safety.md` for the full PHI posture).
+Conversation memory lives in the graph's checkpointer keyed by an opaque `thread_id` (in-memory by default; opt into SQLite via `HC_RAG_CHECKPOINT=sqlite:<path>` for threads that survive restarts). The supported identifier-bearing surface is `GraphEngine` with `updates` streaming, `durability="exit"`, and LangSmith tracing disabled. See `docs/safety.md` for the precise boundary and limitations.
 
 `make dev` serves the graph on the local LangGraph Agent Server (Studio-compatible) and `scripts/langgraph_smoke.py` exercises threads, two-turn history carry-over, streaming and queued-run cancellation against it.
 
@@ -151,6 +151,22 @@ make ingest                     # load data/chunks_*.json into the Lipitor / Met
 make run                        # interactive CLI  (python -m healthcare_rag)
 ```
 
+To run the same GraphEngine CLI entirely from containers, keep the API keys in
+the required, gitignored `.env` and use the opt-in `app` Compose profile:
+
+```bash
+make container-build            # build app + baked Presidio/spaCy model
+make container-ingest           # start Weaviate and load the checked-in chunks
+make container-run              # interactive CLI in the app container
+```
+
+The image installs the locked `presidio-analyzer==2.2.364`, spaCy 3.8.15 and
+`en_core_web_sm` 3.8.0 during the build, then verifies the privacy analyzer can
+initialize. Runtime model downloads are neither needed nor permitted by the
+read-only, non-root container. The Compose app profile forces LangSmith tracing
+off for identifier-bearing CLI input and reaches Weaviate over the internal
+Compose network; the existing `make weaviate` workflow remains unchanged.
+
 > `requirements.txt` is the original frozen environment and its pins are mutually incompatible
 > (`grpcio` vs `grpcio-tools`); dependencies now live in `pyproject.toml`. Re-chunking the PDFs
 > (`healthcare_rag/processors/pdf_chunker.py`) needs the optional `ingest` extra (docling).
@@ -160,7 +176,7 @@ make run                        # interactive CLI  (python -m healthcare_rag)
 `HC_RAG_REASONING_EFFORT`; defaults `gpt-5.6-luna` / `gpt-5.6-terra`).
 `HC_RAG_DISABLE_STAGES` short-circuits pipeline stages for ablation experiments.
 
-**Observability** — set `LANGSMITH_TRACING=true` and every query is traced to LangSmith as a
+**Observability** — for synthetic/non-sensitive development input, set `LANGSMITH_TRACING=true` and every query is traced to LangSmith as a
 tree of named stages (clarify / decompose / retrieve / evaluate / answer / validate / follow-ups)
 with per-call token usage and cost. See `healthcare_rag/services/tracing.py`.
 

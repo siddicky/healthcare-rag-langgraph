@@ -7,6 +7,7 @@ from typing import Any, Final
 
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.graph.state import load_results
+from healthcare_rag.processors.safety import scrub_phi
 
 EVENT_KIND_RANK: Final = {"clarify": 0, "retrieve": 1, "merge": 2}
 
@@ -84,13 +85,16 @@ def build_result(
         refusal=bool(state.get("safety_response")),
         validate_disabled="validate" in context.settings.disabled_stages,
     )
-    answer = state.get("answer")
+    answer = scrub_phi(state.get("answer") or "")[0] or None
+    raw_answer = scrub_phi(str(generation.get("plain_answer") or ""))[0] or None
+    follow_ups = [scrub_phi(item)[0] for item in state.get("follow_ups") or []]
+    selected_query = scrub_phi(state.get("selected_branch_query") or "")[0] or None
     first = context.timing.first_answer or context.timing.finalized
     record = {
         "answer": answer,
         "answered": bool(answer),
-        "raw_answer": generation.get("plain_answer"),
-        "follow_ups": state.get("follow_ups") or [],
+        "raw_answer": raw_answer,
+        "follow_ups": follow_ups,
         "contexts": contexts,
         "retrieved_chunk_ids": [c["chunk_id"] for c in contexts if c["chunk_id"] is not None],
         "retrieved_pages": sorted({page for c in contexts for page in c["page_numbers"]}),
@@ -105,12 +109,12 @@ def build_result(
         "usage": summarize_usage(calls),
         "per_call_usage": [asdict(call) | {"cost_usd": call.cost_usd} for call in calls],
         "safety_outcome": state.get("safety"),
-        "error": context.error or state.get("error"),
+        "error": context.error or ("PIPELINE_STATE_ERROR" if state.get("error") else None),
         "n_branches": len(folded),
         "branch_types": [branch for branch, _ in folded],
         "branch_statuses": [status for _, status in folded],
         "selected_branch_type": state.get("selected_branch_type"),
-        "selected_branch_query": state.get("selected_branch_query"),
+        "selected_branch_query": selected_query,
     }
     used_history = bool((state.get("summary") or {}).get("required_context", False))
     return record, used_history

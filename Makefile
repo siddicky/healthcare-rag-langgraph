@@ -2,7 +2,8 @@
 PY := .venv/bin/python
 UV := uv
 
-.PHONY: journey help venv weaviate ingest run dev test test-judges calibrate eval-smoke eval eval-nojudge \
+.PHONY: journey help venv weaviate ingest run container-build container-ingest container-run \
+        dev test test-judges calibrate eval-smoke eval eval-nojudge \
         eval-multiturn eval-multiturn-smoke dataset-sync dataset-sync-multiturn wiki-init wiki-update
 
 help:
@@ -23,6 +24,18 @@ ingest: ## (Re)ingest checked-in chunks into Weaviate (needs OPENAI_API_KEY in .
 
 run: ## Interactive CLI
 	$(PY) -m healthcare_rag
+
+container-build: ## Build the app image with the pinned Presidio/spaCy model baked in
+	docker compose --profile app build healthcare-rag
+
+container-ingest: weaviate ## (Re)ingest checked-in chunks from the app image
+	docker compose --profile app run --rm healthcare-rag \
+		python -m healthcare_rag.storage.vector_store --delete-all \
+		--collection Lipitor data/chunks_lipitor.json \
+		--collection Metformin data/chunks_metformin.json
+
+container-run: weaviate ## Run the privacy-safe interactive CLI from the app image
+	docker compose --profile app run --rm healthcare-rag
 
 dev: ## Start the local LangGraph Agent Server
 	.venv/bin/langgraph dev

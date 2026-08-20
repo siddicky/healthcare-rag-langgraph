@@ -24,6 +24,7 @@ from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.monitor import QueryMonitor
 from healthcare_rag.processors.safety import scrub_phi
+from healthcare_rag.processors.privacy import PrivacyScanError
 
 __all__ = ["Engine", "GraphEngine", "UsageRecorder", "build_engine", "fold_branches"]
 
@@ -125,6 +126,7 @@ class GraphEngine:
         await self.aclose()
 
     async def _initialize(self) -> None:
+        get_resources().privacy.initialize()
         uri = self.settings.checkpoint_uri
         if uri.startswith("sqlite:"):
             try:
@@ -162,15 +164,16 @@ class GraphEngine:
     async def _run(
         self, thread_id: str, question: str, monitor: QueryMonitor | None
     ) -> dict[str, Any]:
-        await self.__aenter__()
         recorder = UsageRecorder()
         config = {"configurable": {"thread_id": thread_id}, "callbacks": [recorder]}
         started = time.perf_counter()
         first_answer: float | None = None
         finalized: float | None = None
         refusal = False
+        privacy_failed = False
         error: str | None = None
         try:
+            await self.__aenter__()
             async for part in self.compiled.astream(
                 {"question": question, "user_id": thread_id},
                 config,
@@ -186,18 +189,31 @@ class GraphEngine:
                         first_answer = time.perf_counter()
                         if monitor is not None and not refusal:
                             generation = update.get("generation") or {}
-                            monitor.raw_answer = str(generation.get("plain_answer") or "")
-                            monitor.raw_answer_event.set()
+                            monitor.set_raw_answer(str(generation.get("plain_answer") or ""))
                     if node == "finalize":
                         finalized = time.perf_counter()
                         if monitor is not None:
-                            monitor.final_answer = update.get("answer")
-                            monitor.follow_up_questions = update.get("follow_ups")
-                            monitor.final_answer_event.set()
-        except Exception as exc:  # noqa: BLE001 - eval contract records pipeline failures.
-            error = f"{type(exc).__name__}: {exc}"
-        snapshot = await self.compiled.aget_state(config)
-        state = snapshot.values
+                            monitor.set_final_answer(update.get("answer"))
+                            monitor.set_follow_up_questions(update.get("follow_ups"))
+        except Exception as exc:  # noqa: BLE001 - top-level raw-free request boundary.
+            if isinstance(exc, PrivacyScanError):
+                privacy_failed = True
+                error = str(exc)
+            else:
+                error = "PIPELINE_EXECUTION_FAILED"
+            if monitor is not None:
+                monitor.set_error(error)
+        if self.compiled is None or privacy_failed:
+            state: dict[str, Any] = {}
+        else:
+            try:
+                snapshot = await self.compiled.aget_state(config)
+                state = snapshot.values
+            except Exception:  # noqa: BROAD_EXCEPT_OK - raw-free state boundary.
+                error = error or "PIPELINE_STATE_READ_FAILED"
+                state = {}
+                if monitor is not None:
+                    monitor.set_error(error)
         if monitor is not None and refusal:
             monitor.raw_answer_event.set()
         if monitor is not None and not monitor.final_answer_event.is_set():

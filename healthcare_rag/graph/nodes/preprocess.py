@@ -5,6 +5,7 @@ from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.state import RAGState
 from healthcare_rag.models.answers import RelevantHistoryContext
 from healthcare_rag.models.queries import ClarifiedQuery, DecomposedQuery
+from healthcare_rag.processors.safety import scrub_phi
 from healthcare_rag.services.models import (
     decompose_only_complex,
     disabled_stages,
@@ -45,7 +46,14 @@ async def extract_conversation_context(state: RAGState) -> RAGState:
         current_query=state.get("working_query", ""),
         history_text=history_text,
     )
-    return {"summary": (summary or default).model_dump(mode="json")}
+    summary_data = (summary or default).model_dump(mode="json")
+    summary_data["relevant_snippets"] = scrub_phi(
+        str(summary_data.get("relevant_snippets") or "")
+    )[0]
+    summary_data["explanation"] = scrub_phi(
+        str(summary_data.get("explanation") or "")
+    )[0]
+    return {"summary": summary_data}
 
 
 async def clarify_query(state: RAGState) -> RAGState:
@@ -65,7 +73,7 @@ async def clarify_query(state: RAGState) -> RAGState:
         user_query=query,
         conversation_context=history_context,
     )
-    clarified = (result or default).clarified_query
+    clarified = scrub_phi((result or default).clarified_query)[0]
     if clarified == query:
         return {"clarified": None}
     return {
@@ -100,7 +108,7 @@ async def decompose_query(state: RAGState) -> RAGState:
             default=default,
             user_query=query,
         ) or default
-    proposed = result.decomposed_query or []
+    proposed = [scrub_phi(query)[0] for query in (result.decomposed_query or [])]
     fan_out = len(proposed) >= 2 and (
         not decompose_only_complex() or result.query_complexity == "complex"
     )
