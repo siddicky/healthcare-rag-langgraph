@@ -6,6 +6,7 @@ from typing import Literal
 
 import pytest
 from langchain_core.messages import AIMessage, HumanMessage
+from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import END, START, StateGraph
 
@@ -385,3 +386,160 @@ async def test_context_extraction_skips_llm_without_history_and_uses_default_on_
         "explanation": "No relevant context found",
         "relevant_snippets": "",
     }
+
+
+def _compile_safety_node_graph():
+    return (
+        StateGraph(RAGState)
+        .add_node("safety_gate", safety_gate)
+        .add_edge(START, "safety_gate")
+        .add_edge("safety_gate", END)
+        .compile(checkpointer=InMemorySaver())
+    )
+
+
+async def test_personal_advice_refusal_writes_boundary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from datetime import datetime, timedelta
+
+    from healthcare_rag.processors.safety_responses import personal_advice_response
+
+    gateway = FakeLLMGateway(
+        safety_gate=[
+            SafetyAssessment(
+                category="personal_medical_advice",
+                contains_phi=False,
+                phi_spans=[],
+                drug_mentioned="metformin",
+                rationale="scripted personal advice",
+                safe_reformulation=None,
+            )
+        ]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-personal"}}
+
+    await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+
+    boundaries = graph.get_state(config).values["refusal_boundaries"]
+    assert len(boundaries) == 1
+    boundary = boundaries[0]
+    assert boundary == {
+        "kind": "personal_advice",
+        "topic": "metformin",
+        "response": personal_advice_response(),
+        "created_ts": boundary["created_ts"],
+        "template_version": 1,
+    }
+    assert datetime.fromisoformat(boundary["created_ts"]).utcoffset() == timedelta(0)
+
+
+async def test_identifier_recall_and_out_of_scope_write_nothing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    gateway = FakeLLMGateway(
+        safety_gate=[_assessment(), _assessment("out_of_scope")]
+    )
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {
+        "configurable": {"thread_id": "boundary-nonqualifying"}
+    }
+
+    await graph.ainvoke(
+        {"question": "remind me what my health card number was", "messages": []},
+        config,
+    )
+    await graph.ainvoke({"question": "How much ibuprofen can I take?"}, config)
+
+    assert graph.get_state(config).values.get("refusal_boundaries", []) == []
+
+
+async def test_gate_off_writes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    gateway = FakeLLMGateway(safety_gate=[_assessment("personal_medical_advice")])
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    monkeypatch.setenv("HC_RAG_SAFETY_GATE", "false")
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-gate-off"}}
+
+    await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+
+    assert graph.get_state(config).values.get("refusal_boundaries", []) == []
+
+
+async def test_knob_off_writes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
+    gateway = FakeLLMGateway(safety_gate=[_assessment("personal_medical_advice")])
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    monkeypatch.setenv("HC_RAG_REFUSAL_BOUNDARY", "false")
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-knob-off"}}
+
+    await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+
+    assert graph.get_state(config).values.get("refusal_boundaries", []) == []
+
+
+async def test_stale_entry_survives_new_write(monkeypatch: pytest.MonkeyPatch) -> None:
+    from healthcare_rag.processors.safety_responses import personal_advice_response
+
+    stale = {
+        "kind": "personal_advice",
+        "topic": "metformin",
+        "response": "garbage",
+        "created_ts": "2020-01-01T00:00:00+00:00",
+        "template_version": 99,
+    }
+    gateway = FakeLLMGateway(safety_gate=[_assessment("personal_medical_advice")])
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-stale"}}
+    await graph.aupdate_state(config, {"refusal_boundaries": [stale]})
+
+    await graph.ainvoke(
+        {"question": "Should I double my metformin tonight?", "messages": []},
+        config,
+    )
+
+    boundaries = graph.get_state(config).values["refusal_boundaries"]
+    assert len(boundaries) == 2
+    assert boundaries[0] == stale
+    assert boundaries[1]["kind"] == "personal_advice"
+    assert boundaries[1]["topic"] == "metformin"
+    assert boundaries[1]["response"] == personal_advice_response()
+    assert boundaries[1]["template_version"] == 1
+
+
+async def test_emergency_refusal_writes_variant_boundary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from healthcare_rag.processors.safety_responses import emergency_response
+
+    gateway = FakeLLMGateway(safety_gate=[_assessment("emergency_red_flag")])
+    monkeypatch.setattr(safety, "GATEWAY", gateway)
+    graph = _compile_safety_node_graph()
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-emergency"}}
+
+    await graph.ainvoke(
+        {
+            "question": "I think I took the whole bottle of metformin",
+            "messages": [],
+        },
+        config,
+    )
+
+    boundary = graph.get_state(config).values["refusal_boundaries"][0]
+    assert boundary["kind"] == "emergency"
+    assert boundary["topic"] == "metformin"
+    assert boundary["response"] == emergency_response(overdose=True)
+    assert boundary["template_version"] == 1

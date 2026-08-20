@@ -32,6 +32,7 @@ class RAGState(TypedDict, total=False):
     safety_kind: str
     safety_response: str
     safety_notices: list[str]
+    refusal_boundaries: list[dict[str, JSONValue]]
     addendum_query: str | None
     addendum_answer: str | None
     summary: dict[str, JSONValue] | None

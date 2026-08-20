@@ -16,9 +16,22 @@ from healthcare_rag.graph.nodes import render_display_answer
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.state import JSONValue, RAGState
 from healthcare_rag.models.safety import SafetyAssessment, SafetyOutcome
+from healthcare_rag.processors.refusal_boundary import (
+    TEMPLATE_VERSION,
+    BoundaryKind,
+    RefusalBoundary,
+    allowed_responses,
+    derive_boundary_topic,
+    upsert_boundary,
+)
 from healthcare_rag.processors.safety import SafetyGate, addendum_is_safe, scrub_phi
-from healthcare_rag.processors.safety_responses import ADDENDUM_HEADING
-from healthcare_rag.services.models import safety_gate_enabled
+from healthcare_rag.processors.safety_responses import (
+    ADDENDUM_HEADING,
+    emergency_response,
+    injection_response,
+    personal_advice_response,
+)
+from healthcare_rag.services.models import refusal_boundary_enabled, safety_gate_enabled
 
 logger = logging.getLogger("MedicalRAG")
 GATEWAY: LangChainLLMGateway | None = None
@@ -161,6 +174,42 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
         question,
         history_context,
     )
+    boundary_update: SafetyGateUpdate = {}
+    if (
+        gate_on
+        and refusal_boundary_enabled()
+        and decision.short_circuit
+        and decision.kind in {"personal_advice", "emergency", "injection"}
+    ):
+        boundary_kinds: dict[str, BoundaryKind] = {
+            "personal_advice": "personal_advice",
+            "emergency": "emergency",
+            "injection": "injection",
+        }
+        boundary_kind = boundary_kinds[decision.kind]
+        raw = list(state.get("refusal_boundaries") or [])
+        fallback = {
+            "personal_advice": personal_advice_response(),
+            "emergency": emergency_response(
+                overdose="red_flag:possible_overdose" in decision.flags
+            ),
+            "injection": injection_response(),
+        }[decision.kind]
+        new = RefusalBoundary(
+            kind=boundary_kind,
+            topic=derive_boundary_topic(
+                decision.scrubbed_query,
+                decision.assessment.drug_mentioned,
+            ),
+            response=(
+                decision.response
+                if decision.response in allowed_responses(boundary_kind)
+                else fallback
+            ),
+            created_ts=datetime.now(timezone.utc).isoformat(),
+            template_version=TEMPLATE_VERSION,
+        )
+        boundary_update["refusal_boundaries"] = upsert_boundary(raw, new)
     latency = time.perf_counter() - started
     rationale = scrub_phi(decision.assessment.rationale)[0]
     outcome = SafetyOutcome(
@@ -176,6 +225,7 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
     )
     return {
         **reset,
+        **boundary_update,
         "scrubbed_question": decision.scrubbed_query,
         "working_query": decision.scrubbed_query,
         "safety": outcome.model_dump(mode="json"),
