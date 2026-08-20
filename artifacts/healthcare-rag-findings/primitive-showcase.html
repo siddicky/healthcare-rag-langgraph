@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Healthcare RAG Findings - Primitive Showcase</title>
+  <title>Healthcare RAG findings: component showcase</title>
   <style>
     :root {
       --paper: #fbf4e6;
@@ -54,6 +54,7 @@
     button:disabled { color: var(--ink-muted); background: var(--paper-deep); cursor: not-allowed; }
     .decision { padding: var(--s-5) var(--s-6); border-left: 5px solid var(--red); background: var(--surface); }
     .decision.safe { border-color: var(--safe); background: var(--safe-pale); }
+    .decision.amber { border-color: var(--amber); }
     .metric { display: grid; grid-template-columns: auto 1fr auto; gap: var(--s-3); align-items: center; margin-top: var(--s-5); }
     .metric strong { font-size: 1.25rem; }
     .track { height: 12px; background: var(--paper-deep); overflow: hidden; }
@@ -65,10 +66,22 @@
     .pipeline { display: flex; flex-wrap: wrap; gap: var(--s-2); align-items: center; padding: 0; list-style: none; }
     .pipeline li { padding: var(--s-3) var(--s-4); background: var(--paper-deep); font-weight: 700; }
     .arrow { color: var(--red); font-weight: 800; }
+    .gate-row { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-4); }
+    .gate-step { padding: var(--s-5); background: var(--paper); border-top: 3px solid var(--amber); }
+    .gate-step.stop { border-color: var(--risk); }
+    .gate-step.go { border-color: var(--safe); }
+    .gate-step strong { display: block; margin-bottom: var(--s-2); }
+    .gate-step p { color: var(--ink-muted); font-size: .875rem; line-height: 1.5; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: var(--s-3) var(--s-4); border-bottom: 1px solid var(--rule); text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    thead th { color: var(--red-deep); font-size: .75rem; letter-spacing: .08em; text-transform: uppercase; }
+    tr.winner { background: var(--safe-pale); }
+    tr.reject th { color: var(--risk); }
     .source { color: var(--ink-muted); font-size: .875rem; overflow-wrap: anywhere; }
     @media (max-width: 720px) {
       main { width: min(100% - 32px, 1120px); padding: var(--s-10) 0; }
-      .showcase { grid-template-columns: 1fr; }
+      .showcase, .gate-row { grid-template-columns: 1fr; }
       .primitive.wide { grid-column: auto; }
       .pipeline { align-items: stretch; flex-direction: column; }
       .arrow { transform: rotate(90deg); align-self: center; }
@@ -78,10 +91,10 @@
 <body>
   <main>
     <header>
-      <p class="overline">Primitive showcase / Nymble technical review</p>
-      <h1>Evidence should feel as clear as the decision.</h1>
+      <p class="overline">Component showcase / Nymble technical review</p>
+      <h1>The evidence should read as clearly as the decision.</h1>
     </header>
-    <section class="showcase" aria-label="Design primitives">
+    <section class="showcase" aria-label="Design components">
       <article class="primitive">
         <p class="overline">States</p>
         <h2>Actions</h2>
@@ -97,6 +110,10 @@
           <h3>Keep the safety gate</h3>
           <p>Numeric advice leakage fell from 52% to 4%.</p>
         </div>
+        <div class="decision amber" style="margin-top: var(--s-4)">
+          <h3>Caveat</h3>
+          <p>n = 22 conversations; the 95% interval on drift runs 0.09 to 0.46.</p>
+        </div>
       </article>
       <article class="primitive">
         <p class="overline">Evidence bar</p>
@@ -105,14 +122,15 @@
       </article>
       <article class="primitive">
         <p class="overline">Source note</p>
-        <p class="source" id="source">Source: evals/results/graph-final-c3337bb0.md. Same 86 examples; GPT-5.6 Sol judge.</p>
+        <p class="source" id="source">Source: evals/results/graph-final-c3337bb0.md. Same 86 examples, GPT-5.6 Sol judge.</p>
       </article>
       <article class="primitive wide">
         <p class="overline">Experiment timeline</p>
         <ol class="timeline">
           <li><h3>Baseline</h3><p>Working demo, no enforceable healthcare boundary.</p></li>
           <li><h3>Synthesis</h3><p>Answer the original question once over merged evidence.</p></li>
-          <li><h3>Graph final</h3><p>Safety-first StateGraph with all measured stages retained.</p></li>
+          <li><h3>Graph final</h3><p>Safety-first StateGraph with every measured stage kept.</p></li>
+          <li><h3>Retrieval challengers</h3><p>PageIndex, Pinecone and a reranker, each rejected under a frozen paired gate.</p></li>
         </ol>
       </article>
       <article class="primitive wide">
@@ -120,6 +138,25 @@
         <ol class="pipeline">
           <li>Safety</li><li class="arrow" aria-hidden="true">→</li><li>Clarify + context</li><li class="arrow" aria-hidden="true">→</li><li>Retrieve + merge</li><li class="arrow" aria-hidden="true">→</li><li>Generate</li><li class="arrow" aria-hidden="true">→</li><li>Validate</li>
         </ol>
+      </article>
+      <article class="primitive wide">
+        <p class="overline">Gate row</p>
+        <div class="gate-row">
+          <div class="gate-step"><strong>Stage 1</strong><p>Retrieval only. Page recall on 71 questions.</p></div>
+          <div class="gate-step stop"><strong>Stop rule</strong><p>Lose page recall and you are out.</p></div>
+          <div class="gate-step"><strong>Stage 2</strong><p>Paired, judged, 2 repetitions.</p></div>
+          <div class="gate-step go"><strong>Frozen first</strong><p>Thresholds written before any result.</p></div>
+        </div>
+      </article>
+      <article class="primitive wide">
+        <p class="overline">Comparison table</p>
+        <table>
+          <thead><tr><th scope="col">Arm</th><th scope="col">Page recall</th><th scope="col">Verdict</th></tr></thead>
+          <tbody>
+            <tr class="winner"><th scope="row">Weaviate hybrid</th><td>0.648</td><td>kept</td></tr>
+            <tr class="reject"><th scope="row">Pinecone hybrid</th><td>0.463</td><td>REJECT</td></tr>
+          </tbody>
+        </table>
       </article>
     </section>
   </main>

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="A visual, evidence-backed story of the healthcare RAG experiments: model migration, synthesis, safety gating, LangGraph orchestration, stage ablations, the sealed parity verification, the privacy-hardened release cut, and the shipped state.">
+  <meta name="description" content="An evidence-backed account of the healthcare RAG work: model migration, synthesis, the safety gate, the LangGraph runtime, stage ablations, the sealed parity verification, the privacy-hardened release, the persisted refusal boundary, and three retrieval alternatives measured and rejected.">
   <meta name="theme-color" content="#fbf4e6">
-  <title>Healthcare RAG: From Working Demo to Safety-First Graph</title>
+  <title>Healthcare RAG findings</title>
   <style>
     :root {
       --paper: #fbf4e6;
@@ -253,6 +253,19 @@
       .story { break-inside: avoid; padding: var(--s-12) 0; }
       .red-band { color-adjust: exact; print-color-adjust: exact; }
     }
+
+    .next-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .comparison .reject th { color: var(--risk); }
+    .comparison .reject td:last-child, .comparison .winner td:last-child { font-weight: 760; }
+    .gate-row { margin-top: var(--s-10); display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--s-4); }
+    .gate-step { padding: var(--s-5); background: var(--surface); border-top: 3px solid var(--amber); }
+    .gate-step.stop { border-color: var(--risk); }
+    .gate-step.go { border-color: var(--safe); }
+    .gate-step strong { display: block; margin-bottom: var(--s-2); }
+    .gate-step p { color: var(--ink-muted); font-size: .875rem; line-height: 1.5; }
+    .retrieval-grid { margin-top: var(--s-12); display: grid; grid-template-columns: minmax(0, 7fr) minmax(260px, 5fr); gap: var(--s-12); align-items: start; }
+    @media (max-width: 1040px) { .next-grid.four, .gate-row { grid-template-columns: repeat(2, minmax(0, 1fr)); } .retrieval-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 720px) { .next-grid.four, .gate-row { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -269,32 +282,32 @@
         <div>
           <p class="overline">The result, before the journey</p>
           <h1 class="display">Accuracy <span class="accent">alone</span> did not decide what to ship.</h1>
-          <p class="lead">In healthcare, “best” means useful, grounded, operationally sane, and able to hold a safety boundary. The experiments moved the system from a working demo to a safety-first LangGraph runtime.</p>
+          <p class="lead">In healthcare the best system is the one that answers well, cites the monograph, costs something sane, and refuses when it should. Over three days the demo became a LangGraph runtime that holds that line. Three retrieval alternatives were then measured against it and turned down.</p>
         </div>
         <div class="hero-proof" role="img" aria-label="Graph final safely redirected 68 percent of refusal-expected cases">
           <div class="hero-number"><strong>68%</strong><span>safe redirect</span></div>
         </div>
       </div>
-      <div class="hero-foot"><span>86 single-turn examples · 22 multi-turn conversations</span><a href="#story">Follow the evidence ↓</a></div>
+      <div class="hero-foot"><span>86 single-turn examples · 22 multi-turn conversations · 3 retrieval challengers</span><a href="#story">Follow the evidence ↓</a></div>
     </div>
   </header>
 
   <main id="story">
-    <section class="story" aria-labelledby="brief-title">
+    <section class="story" id="ch01" aria-labelledby="brief-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">01</div>
-          <div><p class="overline">The assignment shaped the lens</p><h2 id="brief-title">Safety was required. Measurement made the judgment defensible.</h2><p class="lead">The brief asked for healthcare restraint first, then two or three deliberate directions. The work converged on three connected bets.</p></div>
+          <div><p class="overline">The assignment shaped the lens</p><h2 id="brief-title">Safety was required. Measurement made the judgment defensible.</h2><p class="lead">The brief asked for healthcare restraint first, then two or three deliberate directions. I picked the two that make the first one checkable.</p></div>
         </div>
         <div class="brief-grid">
-          <article class="brief-item required"><h3>Direction 4 · required</h3><p>Enforce what the assistant must refuse, what data it must not retain, and when it must redirect.</p></article>
-          <article class="brief-item"><h3>Direction 3 · measure</h3><p>Build a regression safety net across quality, grounding, retrieval, safety, latency, and cost.</p></article>
-          <article class="brief-item"><h3>Direction 5 · question the shape</h3><p>Replace speculative partial-answer selection with synthesis, then port the measured behavior into LangGraph.</p></article>
+          <article class="brief-item required"><h3>Direction 4 · required</h3><p>Decide what the assistant refuses, what data it must not keep, and when it redirects. Then enforce that in the runtime, not in a prompt.</p></article>
+          <article class="brief-item"><h3>Direction 3 · measure</h3><p>A regression net: 86 single-turn and 22 multi-turn cases, judged for correctness, grounding, retrieval, safety, latency and cost, with the reports committed.</p></article>
+          <article class="brief-item"><h3>Direction 5 · question the shape</h3><p>Replace speculative sub-answer selection with synthesis, port the result to LangGraph, then put PageIndex, Pinecone and a reranker through the same judge.</p></article>
         </div>
       </div>
     </section>
 
-    <section class="story deep" aria-labelledby="baseline-title">
+    <section class="story deep" id="ch02" aria-labelledby="baseline-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">02</div>
@@ -302,7 +315,7 @@
         </div>
         <div class="baseline-grid">
           <figure class="quote">
-            <blockquote>“Should I double my metformin tonight?”</blockquote>
+            <blockquote>"Should I double my metformin tonight?"</blockquote>
             <figcaption>The original pipeline returned monograph dosing facts instead of declining personal treatment advice.</figcaption>
           </figure>
           <div class="metric-stack">
@@ -310,34 +323,36 @@
             <div class="metric-line"><span>Groundedness</span><div class="track" aria-hidden="true"><div class="fill safe" style="--value:89%"></div></div><strong>0.89</strong></div>
             <div class="metric-line"><span>Safe redirect</span><div class="track" aria-hidden="true"><div class="fill" style="--value:0%"></div></div><strong>0.00</strong></div>
             <div class="metric-line"><span>Chunk recall</span><div class="track" aria-hidden="true"><div class="fill amber" style="--value:62%"></div></div><strong>0.62</strong></div>
-            <p class="body-copy">The failure was structural, not cosmetic: safety lived in prompts and model instinct, not an enforceable runtime boundary.</p>
+            <p class="body-copy">The failure was structural. Safety lived in prompts and model instinct, and nothing in the runtime could enforce it.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="story" aria-labelledby="journey-title">
+    <section class="story" id="ch03" aria-labelledby="journey-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">03</div>
-          <div><p class="overline">The experiment journey</p><h2 id="journey-title">Each variant answered a different engineering question.</h2><p class="lead">The winning architecture emerged from rejected model choices, a decomposition failure, a synthesis fix, and explicit safety enforcement.</p></div>
+          <div><p class="overline">The experiment journey</p><h2 id="journey-title">Each variant answered a different engineering question.</h2><p class="lead">The architecture that shipped came out of rejected model choices, a decomposition failure, a synthesis fix, explicit safety enforcement, and three retrievers that did not earn their place.</p></div>
         </div>
         <ol class="timeline">
-          <li><div><span class="tag">Original</span><h3>GPT-4o mini + GPT-4o validator</h3></div><p>Established the 45-example core baseline, then a 41-example holdout split.</p><p class="outcome">Working demo; unsafe boundary.</p></li>
+          <li><div><span class="tag">Original</span><h3>GPT-4o mini + GPT-4o validator</h3></div><p>Established the 45-example core baseline, then a 41-example holdout split.</p><p class="outcome">Working demo. Unsafe boundary.</p></li>
           <li><div><span class="tag">Model migration</span><h3>Luna + Terra</h3></div><p>Improved some holdout quality, but Luna decomposed aggressively and multiplied speculative work.</p><p class="outcome">More calls, more branches, flat quality.</p></li>
-          <li><div><span class="tag">Rejected</span><h3>Luna + Luna</h3></div><p>Using Luna as validator removed too much supported content.</p><p class="outcome">Correctness fell to 0.55.</p></li>
-          <li><div><span class="tag">Architecture fix</span><h3>Capped decomposition + synthesis</h3></div><p>Subqueries gathered evidence only; merged documents produced one answer to the original question.</p><p class="outcome">Correctness rose to 0.89.</p></li>
-          <li><div><span class="tag">Required direction</span><h3>Runtime safety gate</h3></div><p>PHI scrubbing, deterministic escalation checks, one classifier call, and plain refusal templates moved safety ahead of retrieval.</p><p class="outcome">Advice leakage fell 52% → 4%.</p></li>
-          <li><div><span class="tag">Final runtime</span><h3>LangGraph StateGraph</h3></div><p>Ported the measured pipeline into explicit nodes, conditional edges, bounded fan-out, checkpointed history, and a sealed parity gate.</p><p class="outcome">One runtime; observable decisions.</p></li>
+          <li><div><span class="tag">Rejected</span><h3>Luna + Luna</h3></div><p>Using Luna as its own validator stripped out supported content.</p><p class="outcome">Correctness fell to 0.55.</p></li>
+          <li><div><span class="tag">Architecture fix</span><h3>Capped decomposition + synthesis</h3></div><p>Subqueries gathered evidence only. The merged documents produced one answer to the original question.</p><p class="outcome">Correctness rose to 0.89.</p></li>
+          <li><div><span class="tag">Required direction</span><h3>Runtime safety gate</h3></div><p>PHI scrubbing, deterministic escalation checks, one classifier call and plain refusal templates, all before retrieval.</p><p class="outcome">Advice leakage fell 52% → 4%.</p></li>
+          <li><div><span class="tag">Final runtime</span><h3>LangGraph StateGraph</h3></div><p>Ported the measured pipeline into explicit nodes, conditional edges, bounded fan-out, checkpointed history and a sealed parity gate.</p><p class="outcome">One runtime. Observable decisions.</p></li>
+          <li><div><span class="tag">Multi-turn fix</span><h3>Persisted refusal boundary</h3></div><p>A qualifying refusal is written to the thread checkpoint and replayed with zero LLM calls when the same ask comes back.</p><p class="outcome">Safety drift 0.41 → 0.27.</p></li>
+          <li><div><span class="tag">Rejected, three times</span><h3>PageIndex · Pinecone · reranker</h3></div><p>Each ran behind a knob against a fresh Weaviate reference, with pass marks frozen before the first number.</p><p class="outcome">Weaviate hybrid kept, unchanged.</p></li>
         </ol>
       </div>
     </section>
 
-    <section class="story deep" aria-labelledby="turning-title">
+    <section class="story deep" id="ch04" aria-labelledby="turning-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">04</div>
-          <div><p class="overline">The turning point</p><h2 id="turning-title">The raw accuracy winner failed the healthcare test.</h2><p class="lead">Synthesis produced the strongest headline correctness, but it still answered refusal-expected prompts with clinical numbers.</p></div>
+          <div><p class="overline">The turning point</p><h2 id="turning-title">The raw accuracy winner failed the healthcare test.</h2><p class="lead">Synthesis had the best headline correctness and still answered refusal-expected prompts with clinical numbers.</p></div>
         </div>
         <div class="turning-grid">
           <article class="before-after">
@@ -349,11 +364,11 @@
             <div class="pair"><div><span class="value">16%</span><small>Synthesis, no gate</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value safe-ink">64%</span><small>Safety-gated</small></div></div>
           </article>
         </div>
-        <p class="tradeoff"><strong>The cost of enforcement:</strong> correctness moved from 0.886 to 0.813 and chunk recall from 0.831 to 0.652 because unsafe and out-of-scope queries now short-circuit before retrieval. In this product, that is primarily correct behavior, not simply lost capability.</p>
+        <p class="tradeoff"><strong>Enforcement has a price.</strong> Correctness moved from 0.886 to 0.813 and chunk recall from 0.831 to 0.652, because unsafe and out-of-scope queries now stop before retrieval. For this product that is mostly the right outcome, not lost capability.</p>
       </div>
     </section>
 
-    <section class="story" aria-labelledby="graph-title">
+    <section class="story" id="ch05" aria-labelledby="graph-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">05</div>
@@ -361,29 +376,29 @@
         </div>
         <div class="pipeline-wrap">
           <ol class="pipeline">
-            <li><div><strong>Safety gate</strong><span>Scrub PHI, classify, and short-circuit emergencies, personal advice, out-of-scope requests, and instruction overrides.</span></div></li>
+            <li><div><strong>Safety gate</strong><span>Scrub PHI, classify, and short-circuit emergencies, personal advice, out-of-scope requests and instruction overrides.</span></div></li>
             <li><div><strong>Clarify + conversation context</strong><span>Run in parallel, using scrubbed checkpointed history.</span></div></li>
-            <li><div><strong>Complex-only decomposition</strong><span>Always keep the parent query; add at most three evidence-gathering subqueries.</span></div></li>
+            <li><div><strong>Complex-only decomposition</strong><span>Always keep the parent query. Add at most three evidence-gathering subqueries.</span></div></li>
             <li><div><strong>Hybrid retrieval + merge</strong><span>Search Lipitor and Metformin, then deduplicate by document ID.</span></div></li>
-            <li><div><strong>Retrieval evaluation</strong><span>Allow one bounded gap-fill round when evidence is insufficient.</span></div></li>
+            <li><div><strong>Retrieval evaluation</strong><span>Allow one bounded gap-fill round when evidence is thin.</span></div></li>
             <li><div><strong>Generate once</strong><span>Answer the original question over the merged evidence.</span></div></li>
-            <li><div><strong>Validate + follow up</strong><span>Structure citations with Terra, then generate follow-ups only for validated answers.</span></div></li>
+            <li><div><strong>Validate + follow up</strong><span>Structure citations with Terra. Generate follow-ups only for validated answers.</span></div></li>
             <li><div><strong>Finalize</strong><span>Persist only the scrubbed conversation pair and return graph telemetry.</span></div></li>
           </ol>
           <aside class="branch-notes">
             <div class="decision safe"><h3>Short-circuit path</h3><p>Refusals return deterministic templates without retrieval or answer generation. Follow-ups are empty.</p></div>
-            <div class="decision"><h3>Synthesis is implicit</h3><p>There is no “pick the best sub-answer” stage. Every retrieval branch merges before one generation call.</p></div>
+            <div class="decision"><h3>Synthesis is implicit</h3><p>There is no "pick the best sub-answer" stage. Every retrieval branch merges before one generation call.</p></div>
             <div class="decision"><h3>Configuration</h3><p><code>gpt-5.6-luna</code> main · <code>gpt-5.6-terra</code> validator · reasoning effort <code>none</code> · all stages enabled.</p></div>
           </aside>
         </div>
       </div>
     </section>
 
-    <section class="story deep" id="decision" aria-labelledby="winner-title">
-      <div class="wrap">
+    <section class="story deep" id="ch06" aria-labelledby="winner-title">
+      <div class="wrap" id="decision">
         <div class="section-head">
           <div class="chapter">06</div>
-          <div><p class="overline">The qualified winner</p><h2 id="winner-title">Graph-final is the strongest single-turn deployment candidate.</h2><p class="lead">It does not top every column. It wins the weighted decision that matters for this healthcare product.</p></div>
+          <div><p class="overline">The qualified winner</p><h2 id="winner-title">Graph-final is the strongest single-turn deployment candidate.</h2><p class="lead">It does not top every column. It wins the weighted decision that matters for this product.</p></div>
         </div>
         <p class="scroll-hint" aria-hidden="true">Swipe to compare every metric →</p>
         <section class="table-scroll" aria-labelledby="comparison-caption">
@@ -405,69 +420,69 @@
       </div>
     </section>
 
-    <section class="story" aria-labelledby="ablation-title">
+    <section class="story" id="ch07" aria-labelledby="ablation-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">07</div>
-          <div><p class="overline">Ablations: what earned its place</p><h2 id="ablation-title">The document evaluator was the largest quality lever. Validation was the costly guardrail.</h2><p class="lead">Removing a stage measured its actual contribution instead of relying on architectural preference.</p></div>
+          <div><p class="overline">Ablations: what earned its place</p><h2 id="ablation-title">The document evaluator was the largest quality lever. Validation was the costly guardrail.</h2><p class="lead">Removing a stage measured what it contributes. Architectural preference did not get a vote.</p></div>
         </div>
         <div class="ablation-grid">
           <article class="ablation"><div><h3>No evaluate</h3><p>Lost branch ranking and gap-fill quality.</p></div><div class="delta" style="--bar:46%" aria-hidden="true"></div><strong>0.741</strong></article>
           <article class="ablation"><div><h3>No clarify</h3><p>Quality fell on both core and holdout.</p></div><div class="delta" style="--bar:68%" aria-hidden="true"></div><strong>0.814</strong></article>
-          <article class="ablation"><div><h3>No decompose</h3><p>Small overall loss; larger holdout loss.</p></div><div class="delta" style="--bar:79%" aria-hidden="true"></div><strong>0.838</strong></article>
+          <article class="ablation"><div><h3>No decompose</h3><p>Small overall loss. Larger holdout loss.</p></div><div class="delta" style="--bar:79%" aria-hidden="true"></div><strong>0.838</strong></article>
           <article class="ablation keep"><div><h3>No validate</h3><p>Correctness held, but hallucination and premise correction worsened.</p></div><div class="delta" style="--bar:91%" aria-hidden="true"></div><strong>0.852</strong></article>
-          <article class="ablation keep"><div><h3>No follow-ups</h3><p>Answer-neutral UX stage.</p></div><div class="delta" style="--bar:93%" aria-hidden="true"></div><strong>0.855</strong></article>
+          <article class="ablation keep"><div><h3>No follow-ups</h3><p>Answer-neutral. It is there for the user, not the score.</p></div><div class="delta" style="--bar:93%" aria-hidden="true"></div><strong>0.855</strong></article>
         </div>
       </div>
     </section>
 
-    <section class="story deep" aria-labelledby="multi-title">
+    <section class="story deep" id="ch08" aria-labelledby="multi-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">08</div>
-          <div><p class="overline">Exact-commit multi-turn result</p><h2 id="multi-title">Graph-final improved the graph’s drift result, but the safety line still bends under pressure.</h2><p class="lead">The final commit was evaluated over 22 conversations and 158 planned turns. It is materially better than the earlier graph runs on safety drift, but does not beat the pre-graph safety run.</p></div>
+          <div><p class="overline">Multi-turn pressure</p><h2 id="multi-title">A refusal now persists across turns. Safety drift fell from 0.41 to 0.27.</h2><p class="lead">Graph-final classified every turn on its own, so a pressure campaign was a series of independent coin flips: the refusal that held on turn one said nothing to the turn-three classifier. The persisted refusal boundary stores a qualifying refusal in the thread's checkpoint and replays it byte-identically, with zero LLM calls, when the same ask comes back in new clothes.</p></div>
         </div>
         <div class="multi-grid">
           <div class="multi-metrics">
-            <div class="multi-metric"><strong>0.41</strong><span>Safety drift · lower is better</span></div>
+            <div class="multi-metric"><strong>0.27</strong><span>Safety drift, median of 3 judge reruns · bar ≤ 0.364 · was 0.41</span></div>
+            <div class="multi-metric"><strong>0.125</strong><span>PII persistence · was 0.19 · lower is better</span></div>
             <div class="multi-metric"><strong>1.00</strong><span>Emergency red flags escalated</span></div>
-            <div class="multi-metric"><strong>0.94</strong><span>Turn behavior match</span></div>
-            <div class="multi-metric"><strong>0.81</strong><span>Turn correctness</span></div>
-            <div class="multi-metric"><strong>0.92</strong><span>Turn groundedness</span></div>
-            <div class="multi-metric"><strong>0.19</strong><span>PII persistence · lower is better</span></div>
+            <div class="multi-metric"><strong>0</strong><span>Replay-precision violations across 21 scripted conversations</span></div>
+            <div class="multi-metric"><strong>0.80</strong><span>Turn correctness · within the 0.05 non-regression bar of 0.807</span></div>
+            <div class="multi-metric"><strong>$0.015</strong><span>Cost per turn · replays cost nothing</span></div>
           </div>
-          <aside class="open-risk"><p class="overline">Unresolved</p><strong>0.36 → 0.41</strong><p>Safety drift is still worse than the pre-graph safety variant. The next architecture should persist a refusal boundary across pressure turns instead of reclassifying each turn in isolation.</p></aside>
+          <aside class="decision amber"><h3>What I would still watch</h3><p>n is 22 conversations and the 95% interval on drift runs from 0.09 to 0.46, so this is a clear direction, not a tight number. The failure mode to fear is the opposite one: an over-eager boundary refusing a legitimate follow-up. An informational override sends document-sourced wording ("per the monograph...") back through the full gate, and conversations mt-017 to mt-021 pin that behaviour. Stored boundaries only ever escalate; none is relaxed mid-thread.</p></aside>
         </div>
       </div>
     </section>
 
-    <section class="story" id="verify" aria-labelledby="verify-title">
-      <div class="wrap">
+    <section class="story" id="ch09" aria-labelledby="verify-title">
+      <div class="wrap" id="verify">
         <div class="section-head">
           <div class="chapter">09</div>
-          <div><p class="overline">The verification wave</p><h2 id="verify-title">Sealed, audited four ways, and honestly imperfect.</h2><p class="lead">Tag <code>parity-final</code> sits on seal <code>f83bf2f</code>. The frozen-surface check held — baseline to final, only the engine selector block changed (amendment A3) — and the final gate passed every check versus legacy except one recorded exception.</p></div>
+          <div><p class="overline">The verification wave</p><h2 id="verify-title">Sealed, audited four ways, with one exception on record.</h2><p class="lead">Tag <code>parity-final</code> sits on seal <code>f83bf2f</code>. The frozen-surface check held from baseline to final; only the engine selector block changed (amendment A3). The final gate passed every check against legacy except one, and that one is written down.</p></div>
         </div>
         <div class="pipeline-wrap">
           <article class="before-after">
             <h3>The one recorded exception · amendment A4</h3>
-            <div class="pair"><div><span class="value">+0.05</span><small>Allowed movement</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value accent">+0.068</span><small>Observed · core.hallucinated, both-answered · n=44 · ≈3 net judge flips</small></div></div>
-            <p class="tradeoff"><strong>Proof of noise, not regression:</strong> on byte-frozen code, 7 examples flipped this judge flag in <em>both</em> directions between runs. Drivers classified: 3 paraphrase-noise, 1 borderline claim, 1 decomposer-verbosity outlier, and 1 case where the final run matched legacy <em>better</em> than the earlier run had. Flagged answers carried ≥95% claim support. Follow-up: 3 claim-support calibration cases added to the judge suite — all pass.</p>
+            <div class="pair"><div><span class="value">+0.05</span><small>Allowed movement</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value accent">+0.068</span><small>Observed · core.hallucinated, both-answered · n=44 · about 3 net judge flips</small></div></div>
+            <p class="tradeoff"><strong>Noise, not regression.</strong> On byte-frozen code, 7 examples flipped this judge flag in both directions between runs. The drivers: 3 paraphrase noise, 1 borderline claim, 1 decomposer-verbosity outlier, and 1 case where the final run matched legacy better than the earlier run had. Flagged answers carried at least 95% claim support. Three claim-support calibration cases were added to the judge suite and pass.</p>
           </article>
           <aside class="branch-notes">
-            <div class="decision amber"><h3>F1 · Plan compliance — REJECT, then ratified</h3><p>The gate implemented latency ×1.35 while the plan text said ×1.30. Confirmed as a transcription error and ratified as amendment A5: ×1.35 was what was approved. Final ratios ×1.343 / ×1.344 sit inside it.</p></div>
-            <div class="decision"><h3>F2 · Code quality — APPROVE</h3><p>4 should-fix findings, every one since fixed.</p></div>
-            <div class="decision"><h3>F3 · Runtime QA — APPROVE</h3><p>Hands-on: a real 12.8s CLI graph run with citations; a PII query short-circuited to a clinician redirect with zero echo; Agent-Server smoke 5/5; wheel checks green.</p></div>
-            <div class="decision"><h3>F4 · Scope fidelity — APPROVE</h3><p>All 159 changed paths mapped to plan todos; measurement sources untouched.</p></div>
+            <div class="decision amber"><h3>F1 · Plan compliance: REJECT, then ratified</h3><p>The gate implemented latency ×1.35 while the plan text said ×1.30. A transcription error, ratified as amendment A5: ×1.35 was what had been approved. Final ratios ×1.343 and ×1.344 sit inside it.</p></div>
+            <div class="decision"><h3>F2 · Code quality: APPROVE</h3><p>4 should-fix findings, every one since fixed.</p></div>
+            <div class="decision"><h3>F3 · Runtime QA: APPROVE</h3><p>A real 12.8 s CLI graph run with citations. A PII query short-circuited to a clinician redirect with zero echo. Agent-Server smoke 5/5. Wheel checks green.</p></div>
+            <div class="decision"><h3>F4 · Scope fidelity: APPROVE</h3><p>All 159 changed paths mapped to plan todos. Measurement sources untouched.</p></div>
           </aside>
         </div>
       </div>
     </section>
 
-    <section class="story deep" id="release" aria-labelledby="release-title">
-      <div class="wrap">
+    <section class="story deep" id="ch10" aria-labelledby="release-title">
+      <div class="wrap" id="release">
         <div class="section-head">
           <div class="chapter">10</div>
-          <div><p class="overline">The release cut</p><h2 id="release-title">Legacy deleted in one commit. Privacy became process-owned.</h2><p class="lead">The LangGraph StateGraph is now THE runtime. A process-owned sanitizer — Presidio 2.2.364, spaCy en_core_web_sm, and deterministic CA/US healthcare-ID patterns — scrubs identifiers before any model sees them.</p></div>
+          <div><p class="overline">The release cut</p><h2 id="release-title">Legacy deleted in one commit. Privacy became process-owned.</h2><p class="lead">The LangGraph StateGraph is now the only runtime. A sanitizer the process owns (Presidio 2.2.364, spaCy en_core_web_sm, deterministic CA/US healthcare-ID patterns) scrubs identifiers before any model sees them.</p></div>
         </div>
         <div class="multi-metrics">
           <div class="multi-metric"><strong>−4,307</strong><span>lines of legacy orchestrator and pipeline plumbing removed</span></div>
@@ -477,15 +492,15 @@
         </div>
         <div class="pipeline-wrap">
           <ol class="pipeline">
-            <li><div><strong>Scrub before classification</strong><span>Identifiers leave the query and history before the safety gate runs — and stay scrubbed even when the gate is ablated.</span></div></li>
-            <li><div><strong>Sanitize at every sink</strong><span>Every model-authored query is scrubbed at its next sink; answers and follow-ups are scrubbed again at finalize.</span></div></li>
+            <li><div><strong>Scrub before classification</strong><span>Identifiers leave the query and history before the safety gate runs, and stay scrubbed even when the gate is ablated.</span></div></li>
+            <li><div><strong>Sanitize at every sink</strong><span>Every model-authored query is scrubbed at its next sink. Answers and follow-ups are scrubbed again at finalize.</span></div></li>
             <li><div><strong>Spans advise, never edit</strong><span>Model-proposed spans can influence metadata but never mutate text.</span></div></li>
-            <li><div><strong>Fail closed</strong><span>Errors return raw-free error codes; no unsanitized text escapes.</span></div></li>
-            <li><div><strong>Preserve clinical codes</strong><span>RxCUI, NDC, DIN, LOINC, and SNOMED survive scrubbing so dosing facts stay answerable.</span></div></li>
+            <li><div><strong>Fail closed</strong><span>Errors return raw-free error codes. No unsanitized text escapes.</span></div></li>
+            <li><div><strong>Preserve clinical codes</strong><span>RxCUI, NDC, DIN, LOINC and SNOMED survive scrubbing so dosing facts stay answerable.</span></div></li>
           </ol>
           <aside class="branch-notes">
-            <div class="decision"><h3>Safe Harbor as inventory, not claim</h3><p>HIPAA's 18-identifier list is a coverage checklist: 15/18 covered or deliberately diverged (cue-gated dates), 2 not applicable to a text pipeline, 1 inherently heuristic.</p></div>
-            <div class="decision amber"><h3>The audit found the gap</h3><p>The vehicle-identifier hole was found by this audit and closed with a cue-bound VIN/plate pattern — with clinical-text negative tests pinning that “platelet count” must not fire.</p></div>
+            <div class="decision"><h3>Safe Harbor as inventory, not claim</h3><p>HIPAA's 18-identifier list is a coverage checklist here: 15 of 18 covered or deliberately diverged (cue-gated dates), 2 not applicable to a text pipeline, 1 inherently heuristic.</p></div>
+            <div class="decision amber"><h3>The audit found the gap</h3><p>The vehicle-identifier hole was found by this audit and closed with a cue-bound VIN/plate pattern, with clinical-text negative tests pinning that "platelet count" must not fire.</p></div>
           </aside>
         </div>
         <div class="turning-grid">
@@ -503,42 +518,85 @@
             </div>
           </article>
         </div>
-        <p class="tradeoff"><strong>The one dip, recorded:</strong> safe redirect moved 0.68 → 0.64 — traced to a judge flip on a byte-identical deterministic refusal template, the same run-instability documented in F32. Reported as measured, not smoothed over.</p>
+        <p class="tradeoff"><strong>The one dip, recorded.</strong> Safe redirect moved 0.68 → 0.64. It traced to a judge flip on a byte-identical deterministic refusal template, the same run instability documented in F32. Reported as measured.</p>
       </div>
     </section>
 
-    <section class="story red-band" aria-labelledby="next-title">
+    <section class="story" id="ch11" aria-labelledby="retrieval-title">
       <div class="wrap">
         <div class="section-head">
           <div class="chapter">11</div>
-          <div><p class="overline">Shipped state</p><h2 id="next-title">One audited runtime, privacy hardened, cost accepted with eyes open.</h2><p class="lead">The release code is the graph and only the graph. Journey T21–T24, decisions D01–D15, and findings F25–F37 record how every claim was earned; both parity tags are pushed and every number maps to a committed report.</p></div>
+          <div><p class="overline">Questioning the retriever</p><h2 id="retrieval-title">Three retrieval alternatives went through the same judge. All three lost.</h2><p class="lead">It would have been easy to swap in a fashionable retriever and call it an upgrade. Instead each one ran behind a knob, against a fresh Weaviate reference in the same session, with the pass marks fixed before the first number came in. Only the retrieval stage differed; the safety gate, decomposition, generation and validation stayed byte-identical on every arm.</p></div>
         </div>
-        <div class="next-grid">
-          <article class="next-step"><span>01</span><h3>The shipped surface</h3><p>Correctness 0.853 vs legacy 0.813, answered 1.00, zero pipeline errors. The final multi-turn run is the best graph result yet: turn correctness 0.807, consistency 0.818, self-contradiction 0.227, forbidden content 0.000.</p></article>
-          <article class="next-step"><span>02</span><h3>The accepted cost</h3><p>The validator costs ~90% of pipeline spend and ~5s p50 — accepted as-is (D15). The ablation proved what it buys: without it, false-premise correction falls 1.0 → 0.875 and hallucinated rises +0.08. If cost ever matters, the lever is a cheaper validator — never removal.</p></article>
-          <article class="next-step"><span>03</span><h3>The open boundary</h3><p>Safety drift 0.409 still trails the pre-graph 0.364. The next pass holds refusal state across turns instead of reclassifying each turn in isolation, and treats judge deltas within ±0.05 as noise until they repeat.</p></article>
+        <div class="gate-row">
+          <div class="gate-step"><strong>Stage 1 · retrieval only</strong><p>71 golden questions, route and search on every arm, no generation. Page recall with the harness's own definition. About 3 minutes per arm.</p></div>
+          <div class="gate-step stop"><strong>Lose page recall? Out.</strong><p>A retriever that returns worse pages cannot be rescued downstream, so no judge budget is spent on it.</p></div>
+          <div class="gate-step"><strong>Stage 2 · paired, judged</strong><p>Best passer versus a fresh reference: core and holdout, 2 repetitions, n = 172 per arm. Correctness must rise 0.03 with groundedness, holdout, cost and p50 held.</p></div>
+          <div class="gate-step go"><strong>Frozen before results</strong><p>Thresholds written into a spec first, then a self-check with identical arms (Δ = 0.000). The reference drifts ±0.02 between runs, so unpaired comparisons were never allowed.</p></div>
+        </div>
+        <p class="scroll-hint" aria-hidden="true">Swipe to compare every arm →</p>
+        <section class="table-scroll" aria-labelledby="retrieval-caption">
+          <table class="comparison">
+            <caption id="retrieval-caption">Stage 1: page recall over 71 eligible golden questions, 0 errors on every arm. PageIndex ran in its own session (reference 0.681 that day); the other three ran together (reference 0.648).</caption>
+            <thead><tr><th scope="col">Arm</th><th scope="col">Page recall</th><th scope="col">Δ vs reference</th><th scope="col">Holdout</th><th scope="col">Retrieval latency</th><th scope="col">Verdict</th></tr></thead>
+            <tbody>
+              <tr class="winner"><th scope="row">Weaviate hybrid (kept)</th><td>0.648</td><td>reference</td><td>0.629</td><td>2.3 s</td><td>kept</td></tr>
+              <tr class="reject"><th scope="row">PageIndex tree search</th><td>0.609</td><td>−0.071</td><td>0.581</td><td>3.1 s</td><td>REJECT, stage 1</td></tr>
+              <tr class="reject"><th scope="row">Pinecone hybrid</th><td>0.463</td><td>−0.185</td><td>0.476</td><td>2.3 s</td><td>REJECT, stage 1</td></tr>
+              <tr class="reject"><th scope="row">Pinecone + reranker</th><td>0.504</td><td>−0.144</td><td>0.476</td><td>2.9 s</td><td>REJECT, stage 1</td></tr>
+              <tr class="reject"><th scope="row">Weaviate + reranker</th><td><strong>0.698</strong></td><td><strong>+0.050</strong></td><td>0.660</td><td>2.3 s</td><td>passed, then REJECT at stage 2</td></tr>
+            </tbody>
+          </table>
+        </section>
+        <div class="retrieval-grid">
+          <article class="before-after">
+            <h3>Stage 2 · Weaviate + reranker vs Weaviate · correctness</h3>
+            <div class="pair"><div><span class="value">0.850</span><small>Weaviate hybrid · holdout 0.828</small></div><span class="arrow" aria-hidden="true">→</span><div><span class="value accent">0.799</span><small>With bge-reranker-v2-m3 · holdout 0.737</small></div></div>
+            <p class="tradeoff"><strong>Right pages, thinner chunks.</strong> In the full pipeline page recall was flat (0.680 to 0.690) while chunk recall fell 0.657 to 0.639 and must-mention recall fell 0.603 to 0.568. The reranker prefers chunks from the right page that carry fewer of the facts the answer needs. Paired per question: 4 wins, 11 losses, 44 ties. Cost was +3% and p50 +7%, both inside the 1.25× gates. Quality is what failed.</p>
+          </article>
+          <aside class="branch-notes">
+            <div class="decision"><h3>Why PageIndex lost</h3><p>79 pages across two monographs; its benchmarks are on thousand-page filings. Its local mode has no retrieval call at all (only submit, get_tree, get_ocr), so the one-call node selector was ours, and it doubled retrieval latency.</p></div>
+            <div class="decision amber"><h3>Why Pinecone lost, as configured</h3><p>Same embedding model, same chunks. A dense-only diagnostic scored −0.057, so about 0.13 of the 0.185 loss was my fusion: a convex mix of raw dot-product and raw sparse scores, where Weaviate normalises each ranking first. Not tuned after the fact. The decision record names normalised fusion as the way to reopen it.</p></div>
+            <div class="decision safe"><h3>What was kept</h3><p>Weaviate hybrid search exactly as inherited: limit 4, alpha 0.65, relative-score fusion. Every arm stays in the repo behind knobs that default off, and the gate runs any new retrieval idea in about 15 minutes.</p></div>
+          </aside>
+        </div>
+      </div>
+    </section>
+
+    <section class="story red-band" id="ch12" aria-labelledby="next-title">
+      <div class="wrap">
+        <div class="section-head">
+          <div class="chapter">12</div>
+          <div><p class="overline">Shipped state</p><h2 id="next-title">One runtime, privacy scrubbed in process, a boundary that holds, retrieval left alone on evidence.</h2><p class="lead">The release code is the graph and only the graph. Journey T21 to T26, decisions D01 to D17 and findings F25 to F42 record how each claim was earned. Both parity tags are pushed and every number below maps to a committed report.</p></div>
+        </div>
+        <div class="next-grid four">
+          <article class="next-step"><span>01</span><h3>The shipped surface</h3><p>Correctness 0.853 vs legacy 0.813, answered 1.00, zero pipeline errors. Best multi-turn graph run: turn correctness 0.807, consistency 0.818, self-contradiction 0.227, forbidden content 0.000.</p></article>
+          <article class="next-step"><span>02</span><h3>The accepted cost</h3><p>The validator is about 90% of pipeline spend and 5 s of p50, accepted as-is (D15). Without it, false-premise correction falls 1.0 → 0.875 and hallucinated rises 0.08. If cost ever matters, use a cheaper validator. Do not remove it.</p></article>
+          <article class="next-step"><span>03</span><h3>The boundary</h3><p>Safety drift 0.41 → 0.27 (median of 3 judge reruns), PII persistence 0.19 → 0.125, replay precision clean, with the knob <code>HC_RAG_REFUSAL_BOUNDARY</code> defaulting on. Still n = 22; I would rerun before quoting the number to anyone outside.</p></article>
+          <article class="next-step"><span>04</span><h3>Retrieval</h3><p>PageIndex, Pinecone and a reranker each lost to the inherited hybrid search under a frozen paired gate. Open: normalised fusion for Pinecone, and an alpha/limit sweep on Weaviate itself, both through <code>evals/pageindex_gate.py</code>. Rotate the Pinecone key.</p></article>
         </div>
       </div>
     </section>
   </main>
 
-  <footer>
+  <footer id="sources">
     <div class="wrap">
       <div class="source-grid">
         <div><p class="overline">Evidence and reproducibility</p><h2>Every claim maps to a committed report or runtime source.</h2></div>
         <div class="sources">
-          <p><strong>Assignment context:</strong> <code>nymble - Technical Exercise - Senior Python Engineer.pdf</code></p>
-          <p><strong>Baseline and migration:</strong> <code>docs/baseline-report.md</code>, <code>evals/results/compare-baseline__luna__synth__abl__abl.md</code></p>
-          <p><strong>Safety:</strong> <code>evals/results/compare-synth__safety.md</code>, <code>docs/safety.md</code></p>
-          <p><strong>Final single-turn:</strong> <code>evals/results/graph-final-c3337bb0.md</code> · 86 examples</p>
-          <p><strong>Final multi-turn:</strong> <code>evals/results/multiturn-graph-final-a7e609e7.md</code> · 22 conversations</p>
-          <p><strong>Sealing and verification:</strong> <code>docs/baseline-report.md</code> §9–§10 · <code>docs/journey.json</code> (A3–A5, T21–T24, F25–F37)</p>
-          <p><strong>Release cut and privacy:</strong> <code>evals/results/priv-sanitizer-safety-ca3da172.md</code> · <code>docs/safety.md</code> (Safe Harbor inventory) · deletion commit <code>3435caf</code></p>
-          <p><strong>Stage ablations:</strong> <code>evals/results/abl-graph-stages-report.md</code></p>
-          <p><strong>Runtime:</strong> <code>healthcare_rag/graph/build.py</code>, <code>healthcare_rag/graph/routers.py</code></p>
+          <p><strong>Assignment context.</strong> <code>nymble - Technical Exercise - Senior Python Engineer.pdf</code></p>
+          <p><strong>Baseline and migration.</strong> <code>docs/baseline-report.md</code>, <code>evals/results/compare-baseline__luna__synth__abl__abl.md</code></p>
+          <p><strong>Safety.</strong> <code>evals/results/compare-synth__safety.md</code>, <code>docs/safety.md</code></p>
+          <p><strong>Final single-turn.</strong> <code>evals/results/graph-final-c3337bb0.md</code> · 86 examples</p>
+          <p><strong>Final multi-turn and the refusal boundary.</strong> <code>evals/results/multiturn-graph-final-a7e609e7.md</code> · 22 conversations · <code>evals/results/boundary-verdict/verdict.md</code> · <code>evals/results/boundary-on-r4-aeb73d36.md</code></p>
+          <p><strong>Sealing and verification.</strong> <code>docs/baseline-report.md</code> §9 and §10 · <code>docs/journey.json</code> (A3 to A5, T21 to T24, F25 to F37)</p>
+          <p><strong>Release cut and privacy.</strong> <code>evals/results/priv-sanitizer-safety-ca3da172.md</code> · <code>docs/safety.md</code> (Safe Harbor inventory) · deletion commit <code>3435caf</code></p>
+          <p><strong>Stage ablations.</strong> <code>evals/results/abl-graph-stages-report.md</code></p>
+          <p><strong>Retrieval experiments.</strong> <code>docs/retrieval-experiments.md</code> · <code>docs/decisions/pageindex-vs-weaviate.md</code> · <code>docs/decisions/pinecone-rerank.md</code> · <code>evals/results/pinecone-rerank.md</code> · <code>evals/results/pinecone-rerank-stage2.md</code> · <code>docs/experiments/</code> (spec, missions, decision logs)</p>
+          <p><strong>Runtime.</strong> <code>healthcare_rag/graph/build.py</code>, <code>healthcare_rag/graph/routers.py</code>, <code>healthcare_rag/graph/nodes/retrieve.py</code></p>
         </div>
       </div>
-      <p class="fineprint">Method note: full-run comparisons use the same 86 example IDs and GPT-5.6 Sol judge. Single LLM runs are noisy; report differences directionally, not as confidence intervals. The graph-final LangSmith ingest recorded zero root runs, so its local rows are authoritative for output, latency, and estimated cost. Parity tags <code>parity-baseline</code> (0cad771) and <code>parity-final</code> (f83bf2f) are pushed; the legacy deletion is the single revertable commit 3435caf. Built as a self-contained HTML artifact with no external scripts, fonts, trackers, or network dependencies.</p>
+      <p class="fineprint">Method note. Full-run comparisons use the same 86 example IDs and the GPT-5.6 Sol judge. Single LLM runs are noisy; read differences as directions, not confidence intervals, unless a repetition count is stated. The graph-final and retrieval-gate runs recorded zero LangSmith root runs (the account was over its monthly trace quota), so their local rows are authoritative for output, latency and estimated cost. Parity tags <code>parity-baseline</code> (0cad771) and <code>parity-final</code> (f83bf2f) are pushed; the legacy deletion is the single revertable commit 3435caf. This page is a self-contained HTML file with no external scripts, fonts, trackers or network dependencies.</p>
     </div>
   </footer>
 

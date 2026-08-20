@@ -1277,6 +1277,14 @@
     {
       "path": "docs/experiments/",
       "what": "raw evidence trail: deep-interview spec, missions, evaluator contracts, decision logs, per-iteration evaluation JSON"
+    },
+    {
+      "path": "artifacts/healthcare-rag-findings/index.html",
+      "what": "self-contained visual story of the findings, 12 chapters incl. the persisted refusal boundary and the three rejected retrievers; DESIGN.md and primitive-showcase.html document the design system"
+    },
+    {
+      "path": "artifacts/google-doc-export/Healthcare-RAG-Findings-Google-Docs.docx",
+      "what": "Google-Docs import of the story: one image per chapter plus an editable evidence appendix and source map"
     }
   ],
   "open_items": [
