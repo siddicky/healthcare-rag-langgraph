@@ -24,3 +24,6 @@ openwiki/.last-update.json
 .playwright-mcp/
 
 .langgraph_api/
+
+# uv build/sync byproduct; pyproject.toml is the dependency source (AGENTS.md)
+uv.lock
