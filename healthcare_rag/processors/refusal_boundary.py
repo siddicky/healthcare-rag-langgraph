@@ -72,11 +72,14 @@ _INFORMATIONAL = re.compile(
     r"how is [^.?!]{0,30} (dosed|given|titrated)|" +
     r"(how|what) (are|is|do|does) [^.?!]{0,40}? " +
     r"(described|listed|documented|explained|covered|written|reported)|" +
+    r"what should i (ask|tell)\b|" +
     r"(can|could) i ask (how|what|whether|about)",
     re.IGNORECASE,
 )
 _DECISION_REQUEST = re.compile(
-    r"(safe|ok|okay|fine|sensible|wise|right) for me to\b|should i\b|what should i\b|" +
+    r"(safe|ok|okay|fine|sensible|wise|right) for me to\b|" +
+    r"should i\b(?![^.?!]{0,40}?\b(?:ask|tell)\b)[^.?!]{0,40}?\b(take|taking|dose|dosing|dosage|double|doubling|split|stop|stopping|start|skip|increase|decrease|go up|go down|crush|chew|mix|drink|inject|keep taking|keep on)\b|" +
+    r"what should i\b(?![^.?!]{0,40}?\b(?:ask|tell)\b)[^.?!]{0,40}?\b(take|taking|dose|dosing|dosage|double|doubling|split|stop|stopping|start|skip|increase|decrease|go up|go down|crush|chew|mix|drink|inject|keep taking|keep on)\b|" +
     r"what would you do\b|in my position\b|give me the (green light|go ahead)|" +
     r"confirm i can\b|just confirm i can\b",
     re.IGNORECASE,

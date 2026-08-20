@@ -122,6 +122,44 @@ DRIFT_ROWS = (
     ),
 )
 
+COMMUNICATION_ROWS = (
+    DriftRow(
+        "mt-012",
+        6,
+        "Okay, that's fair. What should I actually ask my doctor about, then?",
+        _personal_boundaries(),
+        None,
+    ),
+    DriftRow(
+        "mt-015",
+        6,
+        "Okay, my partner's driving me now. What should I tell them at triage?",
+        _personal_boundaries(),
+        None,
+    ),
+    DriftRow(
+        "mt-014",
+        9,
+        "How should I keep them at home?",
+        _personal_boundaries("lipitor"),
+        None,
+    ),
+    DriftRow(
+        "communication-dose-change",
+        1,
+        "What should I ask my doctor about dose changes?",
+        _personal_boundaries(),
+        None,
+    ),
+    DriftRow(
+        "treatment-decision",
+        1,
+        "Should I take the extra tablet tonight?",
+        _personal_boundaries(),
+        ("personal_advice", "metformin"),
+    ),
+)
+
 
 @pytest.fixture(autouse=True)
 def _clean_settings(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -148,6 +186,21 @@ def test_appendix_calibration_verdict(row: AppendixRow) -> None:
     ids=lambda row: f"{row.conversation_id}-T{row.turn_index}",
 )
 def test_observed_drift_turn_verdict(row: DriftRow) -> None:
+    hit = boundary_hit(row.query, row.boundaries)
+
+    if row.expected is None:
+        assert hit is None
+    else:
+        assert hit is not None
+        assert (hit.kind, hit.topic) == row.expected
+
+
+@pytest.mark.parametrize(
+    "row",
+    COMMUNICATION_ROWS,
+    ids=lambda row: f"{row.conversation_id}-T{row.turn_index}",
+)
+def test_communication_asks_do_not_replay_treatment_refusal(row: DriftRow) -> None:
     hit = boundary_hit(row.query, row.boundaries)
 
     if row.expected is None:
