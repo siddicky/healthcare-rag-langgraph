@@ -15,7 +15,6 @@ from healthcare_rag.graph.resources import (
 )
 from healthcare_rag.graph.state import dump_results
 from healthcare_rag.models.answers import Citation, CitedAnswerResult, StatementWithCitations
-from healthcare_rag.models.misc import FollowUpQuestions
 from healthcare_rag.models.retrieval import QueryDocument, QueryResult, QueryResultList
 from healthcare_rag.monitor import QueryMonitor
 from healthcare_rag.processors.privacy import PrivacySanitizer, PrivacyScanError, Readiness
@@ -206,7 +205,7 @@ async def test_engine_failure_sets_stable_monitor_channels(
     assert monitor.final_answer_event.is_set()
 
 
-async def test_runtime_failure_logs_and_legacy_monitor_callbacks_are_raw_free(
+async def test_runtime_failure_logs_and_monitor_surfaces_are_raw_free(
     install_resources: ResourceInstaller,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -225,14 +224,8 @@ async def test_runtime_failure_logs_and_legacy_monitor_callbacks_are_raw_free(
         }
     )
     monitor = QueryMonitor()
-    monitor.on_workflow_completed(
-        {
-            "validated_answer": f"My name is {canary}. Lipitor information.",
-            "follow_ups": FollowUpQuestions(
-                questions=[f"Patient account AC-77881 for {canary}"]
-            ),
-        }
-    )
+    monitor.set_final_answer(f"My name is {canary}. Lipitor information.")
+    monitor.set_follow_up_questions([f"Patient account AC-77881 for {canary}"])
     monitor.set_error(f"failure for {canary}")
 
     assert canary not in caplog.text

@@ -1,7 +1,6 @@
 """LangChain ChatOpenAI gateway for graph nodes."""
 
 import logging
-from importlib import import_module
 from threading import Lock
 from typing import Any, Literal, Protocol, TypeVar
 
@@ -12,6 +11,7 @@ from pydantic import BaseModel
 from healthcare_rag.services.models import sampling_params
 
 from healthcare_rag.graph.settings import GraphSettings
+from healthcare_rag.processors.retrieval import build_routing_tools
 
 logger = logging.getLogger("MedicalRAG")
 ModelT = TypeVar("ModelT", bound=BaseModel)
@@ -66,14 +66,9 @@ class LangChainLLMGateway:
     def _messages(self, stage: str, variables: dict[str, Any]) -> list[BaseMessage]:
         registry = self._prompts
         if registry is None:
-            try:
-                from healthcare_rag.graph.prompts import PromptRegistry as Registry
-            except ImportError as error:
-                message = (
-                    "PromptRegistry is unavailable; graph prompt support lands in todo 4"
-                )
-                raise NotImplementedError(message) from error
-            registry = Registry()
+            from healthcare_rag.graph.prompts import get_registry
+
+            registry = get_registry()
             self._prompts = registry
         return registry.format_messages(stage, **variables)
 
@@ -124,15 +119,7 @@ class LangChainLLMGateway:
             return default
 
     async def aroute_tools(self, query: str) -> list[ToolCall]:
-        """Route a query using the retrieval tools introduced in todo 5."""
-        retrieval = import_module("healthcare_rag.processors.retrieval")
-        build_routing_tools = getattr(retrieval, "build_routing_tools", None)
-        if not callable(build_routing_tools):
-            message = "Routing tools are unavailable; build_routing_tools lands in todo 5"
-            raise NotImplementedError(message)
+        """Route a query to the configured collections' retrieval tools."""
         tools = build_routing_tools(list(self.settings.collection_names))
-        if not isinstance(tools, list):
-            message = "build_routing_tools must return a list of LangChain tools"
-            raise TypeError(message)
         response = await self.chat_model("default").bind_tools(tools).ainvoke(query)
         return response.tool_calls

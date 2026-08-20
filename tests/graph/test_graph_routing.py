@@ -1,5 +1,12 @@
+from dataclasses import replace
+
 from langgraph.types import Send
 
+from healthcare_rag.graph.resources import (
+    Resources,
+    get as get_resources,
+    override as override_resources,
+)
 from healthcare_rag.graph.routers import (
     NODE_ADDENDUM,
     NODE_EVALUATE,
@@ -14,6 +21,8 @@ from healthcare_rag.graph.routers import (
     route_after_validate,
 )
 from healthcare_rag.graph.state import RAGState
+
+from .conftest import make_settings
 
 
 def _send_args(sends: list[Send]) -> list[dict[str, str | int]]:
@@ -122,6 +131,52 @@ def test_route_after_decompose_caps_subqueries_at_three() -> None:
     )
 
     assert len(sends) == 4
+    assert [send.arg["query"] for send in sends] == [
+        "parent",
+        "one",
+        "two",
+        "three",
+    ]
+
+
+def test_route_after_decompose_cap_follows_max_subqueries_setting() -> None:
+    previous = get_resources()
+    override_resources(Resources(replace(make_settings(), max_subqueries=5)))
+    try:
+        sends = route_after_decompose(
+            {
+                "working_query": "parent",
+                "decomposed": True,
+                "sub_queries": ["one", "two", "three", "four", "five"],
+            }
+        )
+    finally:
+        override_resources(previous)
+
+    assert [send.arg["query"] for send in sends] == [
+        "parent",
+        "one",
+        "two",
+        "three",
+        "four",
+        "five",
+    ]
+
+
+def test_route_after_decompose_cap_defaults_to_three_from_settings() -> None:
+    previous = get_resources()
+    override_resources(Resources(make_settings()))
+    try:
+        sends = route_after_decompose(
+            {
+                "working_query": "parent",
+                "decomposed": True,
+                "sub_queries": ["one", "two", "three", "four", "five"],
+            }
+        )
+    finally:
+        override_resources(previous)
+
     assert [send.arg["query"] for send in sends] == [
         "parent",
         "one",

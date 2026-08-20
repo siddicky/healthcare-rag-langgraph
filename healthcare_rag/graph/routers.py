@@ -4,6 +4,7 @@ from typing import Final
 
 from langgraph.types import Send
 
+from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.state import RAGState, RetrieveInput
 
 NODE_SAFETY: Final = "safety_gate"
@@ -19,7 +20,7 @@ NODE_FOLLOW_UPS: Final = "generate_follow_ups"
 NODE_ADDENDUM: Final = "answer_addendum"
 NODE_FINALIZE: Final = "finalize"
 
-_MAX_FAN_OUT: Final = 3
+_GAP_FILL_CAP: Final = 3
 
 
 def route_after_gate(state: RAGState) -> list[str] | str:
@@ -33,6 +34,7 @@ def route_after_gate(state: RAGState) -> list[str] | str:
 
 def route_after_decompose(state: RAGState) -> list[Send]:
     """Fan out the parent query first, followed by capped decomposition queries."""
+    cap = get_resources().settings.max_subqueries
     parent_kind = (
         "clarified" if state.get("selected_branch_type") == "clarified" else "initial"
     )
@@ -57,7 +59,7 @@ def route_after_decompose(state: RAGState) -> list[Send]:
                 ),
             )
             for index, query in enumerate(
-                state.get("sub_queries", [])[:_MAX_FAN_OUT], start=1
+                state.get("sub_queries", [])[:cap], start=1
             )
         )
     return sends
@@ -95,7 +97,7 @@ def route_after_evaluate(state: RAGState) -> list[Send] | str:
                 branch="gap_fill",
             ),
         )
-        for index, query in enumerate(string_queries[:_MAX_FAN_OUT])
+        for index, query in enumerate(string_queries[:_GAP_FILL_CAP])
     ]
 
 

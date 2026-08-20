@@ -54,14 +54,16 @@ class Resources:
         """Construct AND connect the async Weaviate client on first use.
 
         Connects eagerly (``await client.connect()``); weaviate-client v4
-        refuses queries on an unconnected client.
+        refuses queries on an unconnected client. The client is published to
+        the singleton only after a successful connect, so a failed connect
+        leaves no partial state and the next call retries cleanly.
         """
         async with self._async_lock:
             if self._weaviate is None:
                 if not self.settings.openai_api_key:
                     message = "Required environment variable OPENAI_API_KEY is not set"
                     raise ValueError(message)
-                self._weaviate = WeaviateAsyncClient(
+                client = WeaviateAsyncClient(
                     connection_params=ConnectionParams.from_params(
                         http_host=self.settings.weaviate_host,
                         http_port=self.settings.weaviate_http_port,
@@ -72,7 +74,8 @@ class Resources:
                     ),
                     additional_headers={"X-OpenAI-Api-Key": self.settings.openai_api_key},
                 )
-                await self._weaviate.connect()
+                await client.connect()
+                self._weaviate = client
             return self._weaviate
 
     @property
@@ -90,6 +93,7 @@ class Resources:
     async def aclose(self) -> None:
         """Close the Weaviate client only when this owner constructed and opened it."""
         client = self._weaviate
+        self._weaviate = None
         if client is not None and client.is_connected():
             await client.close()
 
