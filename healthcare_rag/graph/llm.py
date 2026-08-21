@@ -1,7 +1,6 @@
 """LangChain ChatOpenAI gateway for graph nodes."""
 
 import logging
-import re
 from dataclasses import dataclass
 from threading import Lock
 from typing import Annotated, Any, Final, Literal, Protocol, TypeVar
@@ -12,9 +11,10 @@ from langchain_openai import ChatOpenAI
 from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError
 
 from healthcare_rag.graph.settings import GraphSettings
+from healthcare_rag.processors.direct_output_policy import evaluate_generated_output
 from healthcare_rag.processors.privacy import MAX_INPUT_BYTES, PrivacyScanError
 from healthcare_rag.processors.retrieval import build_routing_tools
-from healthcare_rag.processors.safety import NUMERIC_DOSE, scrub_phi
+from healthcare_rag.processors.safety import scrub_phi
 from healthcare_rag.services.models import sampling_params
 
 logger = logging.getLogger("MedicalRAG")
@@ -39,11 +39,6 @@ QUERY_OR_RESPOND_TOOL: Final[dict[str, Any]] = {
     },
 }
 _HISTORY_MESSAGE_TYPES: Final = {"human": HumanMessage, "ai": AIMessage}
-_DIRECT_ADVICE_PREFIX: Final = re.compile(
-    r"(?i)^\s*(?:please\s+|you\s+(?:should|must|need to)\s+|"
-    r"i\s+(?:recommend|advise)\s+|(?:take|stop|start|double|increase|decrease|skip|hold|use|swallow)\b)"
-)
-_PERCENT_QUANTITY = re.compile(r"(?i)\b\d+(?:[.,]\d+)?\s*(?:percent\b|%)")
 
 
 class RetrieveMonographsArguments(BaseModel):
@@ -79,14 +74,6 @@ def _project_history(history: list[BaseMessage]) -> list[BaseMessage]:
     return projected
 
 
-def _clinical_direct_content(text: str) -> bool:
-    return bool(
-        NUMERIC_DOSE.search(text)
-        or _PERCENT_QUANTITY.search(text)
-        or _DIRECT_ADVICE_PREFIX.match(text)
-    )
-
-
 def _query_or_respond_decision(response: AIMessage) -> QueryOrRespondDecision:
     tool_call_count = len(response.tool_calls) + len(response.invalid_tool_calls)
     if response.invalid_tool_calls:
@@ -120,15 +107,15 @@ def _query_or_respond_decision(response: AIMessage) -> QueryOrRespondDecision:
     raw_content = response.content.strip()
     if not raw_content:
         return QueryOrRespondDecision(None, "", None, "empty_response", 0)
-    if len(raw_content.encode("utf-8")) > MAX_INPUT_BYTES:
-        return QueryOrRespondDecision("direct", "", None, "privacy_error", 0)
-    if _clinical_direct_content(raw_content):
-        return QueryOrRespondDecision("direct", "", None, "clinical_direct_content", 0)
     try:
-        direct_content = _scrub_router_text(raw_content).strip()
+        policy = evaluate_generated_output(raw_content)
     except PrivacyScanError:
         return QueryOrRespondDecision("direct", "", None, "privacy_error", 0)
-    return QueryOrRespondDecision("direct", direct_content, None, None, 0)
+    except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK
+        return QueryOrRespondDecision("direct", "", None, "direct_policy_error", 0)
+    return QueryOrRespondDecision(
+        "direct", policy.content, None, policy.denial_reason, 0
+    )
 
 
 class PromptRegistry(Protocol):
