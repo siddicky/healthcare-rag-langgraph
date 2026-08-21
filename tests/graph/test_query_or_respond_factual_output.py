@@ -18,6 +18,14 @@ from .query_or_respond_fakes import _install, _state
         "Lipitor can cause muscle pain.",
         "Hello. Metformin treats diabetes.",
         "I can explain information about how Metformin treats diabetes.",
+        "Diabetes is a chronic condition.",
+        "Statins lower LDL cholesterol.",
+        "This medicine treats high blood sugar.",
+        "Aspirin relieves pain.",
+        "Hello! Diabetes is a chronic condition.",
+        "Hypertension damages blood vessels.",
+        "Antibiotics treat bacterial infections.",
+        "Thanks! Insulin lowers blood sugar.",
     ],
 )
 async def test_social_factual_medical_prose_uses_deterministic_fallback(
