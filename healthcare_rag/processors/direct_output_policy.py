@@ -30,8 +30,14 @@ _SOCIAL_ONLY_SENTENCE: Final = re.compile(
 _CAPABILITY_SENTENCE: Final = re.compile(
     r"(?:"
     r"(?:happy|glad)\s+to\s+(?:answer|assist|help)"
+    r"|(?:i|we)(?:['’](?:m|re)|\s+(?:am|are))\s+"
+    r"(?:happy|glad)\s+to\s+(?:answer|assist|discuss|help|provide)"
+    r"|(?:i|we)(?:['’]d|\s+would)\s+be\s+"
+    r"(?:happy|glad)\s+to\s+(?:answer|assist|discuss|help|provide)"
+    r"|(?:i|we)(?:['’](?:m|re)|\s+(?:am|are))\s+here\s+to\s+"
+    r"(?:answer|assist|discuss|help|provide)"
     r"|(?:i|we)\s+(?:(?:can|could)\s+|(?:am|are)\s+able\s+to\s+)"
-    r"(?:answer|assist|discuss|explain|help)"
+    r"(?:answer|assist|discuss|explain|help|provide)"
     r"|you\s+(?:can|may)\s+ask"
     r"|ask"
     r"|feel\s+free\s+to\s+ask"
@@ -59,6 +65,7 @@ _MONOGRAPH_TOPIC: Final = (
 _CAPABILITY_TOPIC: Final = (
     rf"(?:{_MONOGRAPH_TOPIC}"
     rf"|{_DRUG_SCOPE}\s+{_CAPABILITY_CATEGORY}"
+    rf"(?:\s+from\s+{_MONOGRAPH_SCOPE})?"
     rf"|{_CAPABILITY_CATEGORY}(?:\s+in\s+general)?"
     rf"(?:\s+from\s+{_MONOGRAPH_SCOPE})?"
     rf"|information\s+(?:about|from|on)\s+{_MONOGRAPH_TOPIC})"

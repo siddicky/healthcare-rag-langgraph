@@ -34,6 +34,10 @@ from .query_or_respond_fakes import _install, _state
         "Feel free to ask metformin uses atorvastatin.",
         "I can discuss lipitor interactions metformin.",
         "We could help with metformin uses atorvastatin.",
+        "I'm happy to answer metformin treats diabetes.",
+        "I'd be glad to discuss atorvastatin uses metformin.",
+        "I can provide information about metformin treats diabetes.",
+        "I'm here to help with metformin uses atorvastatin.",
     ],
 )
 async def test_social_factual_medical_prose_uses_deterministic_fallback(
@@ -63,3 +67,87 @@ async def test_social_factual_medical_prose_uses_deterministic_fallback(
     assert content not in repr(update)
     assert "messages" not in update
     assert model.bound.messages[-1].content == "Hello"
+
+
+@pytest.mark.parametrize(
+    ("intent", "content"),
+    [
+        ("greeting", "Hello there."),
+        ("thanks", "Happy to help."),
+        ("goodbye", "Goodbye."),
+        ("capability", "I can help with dosing in general from the monographs."),
+        ("greeting", "Do not hesitate to ask another question."),
+        ("capability", "You can ask about the monographs."),
+        ("thanks", "Never mind, thanks."),
+        ("greeting", "Consider asking another question."),
+        ("capability", "I can discuss Lipitor and metformin monographs."),
+        (
+            "capability",
+            "I can answer questions about Lipitor and metformin product monographs.",
+        ),
+        ("capability", "Happy to answer questions about Lipitor monographs."),
+        ("capability", "Feel free to ask me about Metformin monographs."),
+        (
+            "capability",
+            "Glad to help with questions about the product monographs.",
+        ),
+        ("capability", "Ask me anything about the Lipitor monograph."),
+        ("capability", "I can answer questions about the Lipitor monograph."),
+        ("capability", "Feel free to ask another question."),
+        (
+            "capability",
+            "I am able to discuss any question about product monographs.",
+        ),
+        (
+            "capability",
+            "We could help with your questions on metformin interactions.",
+        ),
+        (
+            "capability",
+            "I'm happy to answer questions about metformin interactions.",
+        ),
+        ("capability", "I'd be glad to discuss the Lipitor product monograph."),
+        ("capability", "I can provide information about the metformin monograph."),
+        (
+            "capability",
+            "I'm here to help with questions grounded in the monographs.",
+        ),
+        (
+            "capability",
+            "We're glad to help with questions about Lipitor interactions.",
+        ),
+        (
+            "capability",
+            "We'd be happy to provide information from the product monographs.",
+        ),
+        (
+            "capability",
+            "I can discuss atorvastatin warnings from the monograph.",
+        ),
+        (
+            "capability",
+            "I can answer questions about metformin interactions from the monograph.",
+        ),
+        ("greeting", "That pillbox looks useful."),
+    ],
+)
+async def test_social_direct_content_preserves_allowed_intents(
+    monkeypatch: pytest.MonkeyPatch,
+    intent: str,
+    content: str,
+) -> None:
+    _install(monkeypatch, AIMessage(content=content))
+    state = _state(benign_social=True)
+    state["safety"] = {
+        "category": "out_of_scope",
+        "benign_social": True,
+        "social_intent": intent,
+    }
+
+    update = await query_or_respond.generate_query_or_respond(state)
+
+    assert update.get("direct_response") == content
+    telemetry = update.get("query_router")
+    assert isinstance(telemetry, dict)
+    assert telemetry.get("fallback") is False
+    assert telemetry.get("error") is False
