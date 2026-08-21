@@ -7,6 +7,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock
 
+import pytest
 from pydantic import BaseModel
 
 from healthcare_rag.graph.llm import LangChainLLMGateway
@@ -18,11 +19,18 @@ def _gateway_with_fake_model() -> tuple[LangChainLLMGateway, MagicMock]:
     gateway = LangChainLLMGateway(settings=settings)
     model = MagicMock()
     bound = MagicMock()
-    bound.ainvoke = AsyncMock(return_value=MagicMock(tool_calls=[{"name": "query_lipitor"}]))
+    bound.ainvoke = AsyncMock(
+        return_value=MagicMock(tool_calls=[{"name": "query_lipitor"}])
+    )
     model.bind_tools.return_value = bound
-    gateway._models[(  # type: ignore[assignment]
-        "default", settings.llm_model, None, settings.reasoning_effort
-    )] = model
+    gateway._models[
+        (  # type: ignore[assignment]
+            "default",
+            settings.llm_model,
+            None,
+            settings.reasoning_effort,
+        )
+    ] = model
     return gateway, model
 
 
@@ -35,12 +43,11 @@ async def test_aroute_tools_binds_every_configured_collection() -> None:
     assert names == {"query_lipitor", "query_metformin"}
 
 
-class _SlowStructured(MagicMock):
+class _SlowStructured:
     """Simulates a 0.2s LLM call; sync .invoke would serialize two of them."""
 
     def __init__(self) -> None:
-        super().__init__()
-        async def _slow(_messages: Any, **_: Any) -> "_Outcome":
+        async def _slow(_messages: Any, **_: Any) -> _Outcome:
             await asyncio.sleep(0.2)
             return _Outcome(ok=True)
 
@@ -53,12 +60,17 @@ class _Outcome(BaseModel):
     ok: bool = True
 
 
-async def test_astructured_calls_run_concurrently() -> None:
+async def test_astructured_calls_run_concurrently(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     settings = GraphSettings.from_env()
     gateway = LangChainLLMGateway(settings=settings)
-    gateway._models[(  # type: ignore[assignment]
-        "default", settings.llm_model, 0.1, settings.reasoning_effort
-    )] = _SlowStructured()
+    slow_model = _SlowStructured()
+    monkeypatch.setattr(
+        gateway,
+        "chat_model",
+        lambda _tier, _temperature=None: slow_model,
+    )
 
     started = time.perf_counter()
     results = await asyncio.gather(
@@ -71,7 +83,9 @@ async def test_astructured_calls_run_concurrently() -> None:
     )
     elapsed = time.perf_counter() - started
     assert all(isinstance(r, _Outcome) for r in results)
-    assert elapsed < 0.35, f"calls serialized: {elapsed:.2f}s (expected ~0.2s concurrent)"
+    assert elapsed < 0.35, (
+        f"calls serialized: {elapsed:.2f}s (expected ~0.2s concurrent)"
+    )
 
 
 def test_settings_carry_the_legacy_collections() -> None:

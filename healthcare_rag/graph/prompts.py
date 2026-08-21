@@ -11,12 +11,12 @@ from typing_extensions import TypedDict
 
 from healthcare_rag.models.answers import CitedAnswerResult, RelevantHistoryContext
 from healthcare_rag.models.misc import FollowUpQuestions
-from healthcare_rag.models.retrieval import PageIndexSelection
 from healthcare_rag.models.queries import (
     ClarifiedQuery,
     DecomposedQuery,
     RetrievalEvaluation,
 )
+from healthcare_rag.models.retrieval import PageIndexSelection
 from healthcare_rag.models.safety import SafetyAssessment
 
 
@@ -35,6 +35,7 @@ STAGE_FILES: Final = {
     "validate_answer": "answer_structuring",
     "generate_follow_ups": "follow_up_questions",
     "pageindex_select": "pageindex_select",
+    "query_or_respond": "query_or_respond",
 }
 
 RESPONSE_MODELS: Final[dict[str, type[BaseModel]]] = {
@@ -73,9 +74,7 @@ class PromptRegistry:
             yaml.safe_load(rendered)
         )
         return [
-            _MESSAGE_TYPES[prompt_message["role"]](
-                content=prompt_message["content"]
-            )
+            _MESSAGE_TYPES[prompt_message["role"]](content=prompt_message["content"])
             for prompt_message in prompt_messages
         ]
 
