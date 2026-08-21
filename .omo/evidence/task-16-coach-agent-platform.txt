@@ -1,0 +1,56 @@
+Task 16 — in-process eval parity + multiturn gate
+
+Implementation surfaces
+- evals/coach_engine.py compiles the production coach graph in process.
+- Route A uses checkpoint diffs + lineage_leaves and requires one correlated leaf.
+- Non-A document/reminder/Route-B cases require no Route-A leaf.
+- evals/agent_chunks.py maps only (source_name, metadata["id_"]) to checked-in chunks and hard-fails unresolved mappings.
+- Tagged cases cover document accept/edit/discard, reminder delivery/cap, and catalog ref hydration/literal rejection.
+
+Runner transcripts
+$ uv run python evals/run_agent.py --offline
+baseline report: evals/results/coach-agent-current-baseline.md
+candidate report: evals/results/coach-agent-current.md
+exit: 0
+
+$ uv run python evals/run_agent_multiturn.py --offline
+baseline report: evals/results/coach-agent-multiturn-current-baseline.md
+candidate report: evals/results/coach-agent-multiturn-current.md
+exit: 0
+
+$ uv run python evals/check_agent_parity.py
+PARITY PASS
+exit: 0
+
+Regression injection
+- Temporary candidate changed metrics.chunk_recall from 1.0 to 0.0.
+$ uv run python evals/check_agent_parity.py --candidate /tmp/coach-agent-corrupt.json
+PARITY FAIL: chunk_recall: baseline=1.0000 candidate=0.0000 tolerance=0.02
+exit: 1
+
+Verification
+$ uv run python -m pytest tests/test_agent_eval.py -q
+14 passed in 7.49s
+
+$ uv run ruff check <task files>
+All checks passed!
+
+$ uv run basedpyright <task files>
+0 errors, 21 warnings
+
+$ make test
+839 passed, 1 deselected, 4 warnings in 39.15s
+
+$ CoachState telemetry guard
+telemetry guard PASS: CoachState has no eval-only fields
+
+Parity policy
+- chunk_recall tolerance: 0.02
+- correctness/groundedness: median of 3, tolerance 0.05
+- safety metrics: monotone
+- every failure names the metric
+
+Coordination
+- Planned Make target names: eval-agent and eval-agent-multiturn.
+- Makefile intentionally unchanged pending coordination.
+- Plan checkbox intentionally unchanged.

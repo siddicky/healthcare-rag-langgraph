@@ -22,6 +22,24 @@ uv run python -m evals.run_baseline --example-id lipitor-003 --no-judges
 Prereqs: `.env` with `OPENAI_API_KEY`, `LANGSMITH_API_KEY`, `LANGSMITH_TRACING=true`;
 Weaviate running and ingested (`make weaviate ingest`).
 
+## In-process coach parity gate
+
+The coach-agent gate compiles the production graph in-process with isolated
+memory stores and deterministic offline gateway/retrieval fakes. It verifies
+Route-A child lineage, non-Route-A isolation, checked-in chunk identity,
+documents, reminders, catalog references, and the `mt-017` refusal boundary.
+
+```bash
+uv run python evals/run_agent.py --offline
+uv run python evals/run_agent_multiturn.py --offline
+uv run python evals/check_agent_parity.py
+```
+
+The intended future Make targets are `eval-agent` and
+`eval-agent-multiturn`; the Makefile is deliberately unchanged until those
+names are coordinated. Offline reports use deterministic fake judge seeds;
+deployed evaluation continues to use the real model gateway.
+
 ## What gets measured
 
 | family | metric | meaning |
