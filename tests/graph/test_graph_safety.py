@@ -1,7 +1,6 @@
 # noqa: SIZE_OK - Todo 6 requires one exhaustive graph safety regression module.
 from __future__ import annotations
 
-from collections.abc import AsyncIterator
 from typing import Literal, get_args
 
 import pytest
@@ -19,7 +18,6 @@ from healthcare_rag.graph.nodes.preprocess import (
 )
 from healthcare_rag.graph.nodes.safety import finalize, safety_gate
 from healthcare_rag.graph.state import RAGState
-from healthcare_rag.models.answers import RelevantHistoryContext
 from healthcare_rag.models.queries import ClarifiedQuery, DecomposedQuery
 from healthcare_rag.models.safety import SafetyAssessment, SafetyCategory
 from healthcare_rag.processors.safety import NUMERIC_DOSE
