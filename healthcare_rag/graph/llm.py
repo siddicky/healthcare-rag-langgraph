@@ -8,6 +8,7 @@ from typing import Annotated, Any, Final, Literal, Protocol, TypeVar
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolCall
 from langchain_core.messages.utils import count_tokens_approximately, trim_messages
 from langchain_openai import ChatOpenAI
+from openai import DefaultAsyncHttpxClient, DefaultHttpxClient
 from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError
 
 from healthcare_rag.graph.settings import GraphSettings
@@ -159,10 +160,23 @@ class LangChainLLMGateway:
                     model=model,
                     use_responses_api=False,
                     max_retries=3,
+                    http_client=DefaultHttpxClient(),
+                    http_async_client=DefaultAsyncHttpxClient(),
                     **params,
                 )
                 self._models[key] = cached
             return cached
+
+    async def aclose(self) -> None:
+        """Close HTTP clients retained by cached chat models."""
+        with self._lock:
+            models = tuple(self._models.values())
+            self._models.clear()
+        for model in models:
+            if model.root_async_client is not None:
+                await model.root_async_client.close()
+            if model.root_client is not None:
+                model.root_client.close()
 
     def _messages(self, stage: str, variables: dict[str, Any]) -> list[BaseMessage]:
         registry = self._prompts
