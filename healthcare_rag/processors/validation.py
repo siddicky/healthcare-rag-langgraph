@@ -1,12 +1,11 @@
 import logging
 import re
 from collections.abc import Awaitable, Callable
-from typing import Dict, List, Optional, Tuple
 
-from fuzzywuzzy import fuzz, process as fuzzy_process
+from fuzzywuzzy import process as fuzzy_process
 
+from ..models.answers import CitedAnswerResult, StatementWithCitations
 from ..models.retrieval import QueryDocument, QueryResultList
-from ..models.answers import CitedAnswerResult, StatementWithCitations, Citation
 from ..services.models import default_llm_model
 from .base import log_timing
 
@@ -36,7 +35,7 @@ class AnswerValidator:
 
     def _find_document_by_id(
         self, doc_id: str, retrieval_results: QueryResultList
-    ) -> Optional[QueryDocument]:
+    ) -> QueryDocument | None:
         """Finds a QueryDocument within the QueryResultList by its original ID."""
         for result in retrieval_results.results:
             for doc in result.docs:
@@ -59,7 +58,7 @@ class AnswerValidator:
         return match_result is not None
 
     def _resolve_citation_ids(
-        self, answer: CitedAnswerResult, prompt_id_map: Dict[str, str]
+        self, answer: CitedAnswerResult, prompt_id_map: dict[str, str]
     ) -> CitedAnswerResult:
         """
         Resolves temporary prompt IDs (e.g., 'doc_1') in citations back to
@@ -108,11 +107,7 @@ class AnswerValidator:
             f"Citation check summary: Total checked: {stats['total_checked']}, Individual citation failures: {stats['invalid_count']}"
         )
 
-        return (
-            " ".join(validated_statements)
-            if validated_statements
-            else self._get_fallback_message()
-        )
+        return self._join_statements(validated_statements)
 
     def _get_fallback_message(self):
         """Returns standard fallback message when validation fails."""
@@ -230,7 +225,20 @@ class AnswerValidator:
 
     def _clean_statement_text(self, statement_text):
         """Removes any old [doc_X] style markers from the statement text."""
-        return re.sub(r"\[doc_\d+\]", "", statement_text).strip()
+        return re.sub(r"[ \t]*\[doc_\d+\]", "", statement_text).strip(" \t")
+
+    def _join_statements(self, statements):
+        """Joins statements without inserting whitespace after a line boundary."""
+        if not statements:
+            return self._get_fallback_message()
+        answer = statements[0]
+        for statement in statements[1:]:
+            answer += (
+                statement
+                if answer.endswith("\n") or statement.startswith("\n")
+                else f" {statement}"
+            )
+        return answer
 
     def _build_citations_string(self, valid_prompt_ids):
         """Builds a formatted string of citation markers from valid prompt IDs."""
@@ -239,7 +247,7 @@ class AnswerValidator:
             
         # Sort prompt IDs naturally and deduplicate
         sorted_prompt_ids = sorted(
-            list(set(valid_prompt_ids)), key=lambda x: int(x.split("_")[1])
+            set(valid_prompt_ids), key=lambda x: int(x.split("_")[1])
         )
         return " ".join([f"[{pid}]" for pid in sorted_prompt_ids])
 
@@ -287,9 +295,9 @@ class AnswerValidator:
         plain_answer: str,
         retrieval_results: QueryResultList,
         formatted_docs: str,
-        prompt_id_map: Dict[str, str],
+        prompt_id_map: dict[str, str],
         quote_match_threshold: int = 85,
-    ) -> Tuple[Optional[CitedAnswerResult], Optional[str]]:
+    ) -> tuple[CitedAnswerResult | None, str | None]:
         """
         Structures the plain answer and validates citations using provided context.
 
@@ -330,6 +338,52 @@ class AnswerValidator:
             return None, None
 
         logger.info("Answer structured successfully. Proceeding to validation.")
+
+        citation_groups = list(
+            re.finditer(r"(?:[ \t]*\[doc_\d+\])+", plain_answer)
+        )
+        if not citation_groups:
+            logger.warning("Generated answer contained no citation markers.")
+            return structured_answer, self._get_fallback_message()
+        expected_citation_ids = [
+            citation_id
+            for group in citation_groups
+            for citation_id in re.findall(r"\[(doc_\d+)\]", group.group())
+        ]
+        structured_citations = [
+            citation
+            for statement in structured_answer.statements
+            for citation in statement.citations
+        ]
+        citations_by_id = {
+            citation.doc_id.strip("[]"): citation for citation in structured_citations
+        }
+        if set(citations_by_id) != set(expected_citation_ids):
+            logger.warning(
+                "Structured answer did not preserve the generated citation structure."
+            )
+            return structured_answer, self._get_fallback_message()
+
+        source_statements = []
+        cursor = 0
+        for group in citation_groups:
+            citation_ids = re.findall(r"\[(doc_\d+)\]", group.group())
+            punctuation = re.match(r"[.,;:!?]+", plain_answer[group.end() :])
+            punctuation_text = punctuation.group() if punctuation else ""
+            statement_end = group.end() + len(punctuation_text)
+            source_statements.append(
+                StatementWithCitations(
+                    text=plain_answer[cursor : group.start()].rstrip(" \t")
+                    + punctuation_text,
+                    citations=[
+                        citations_by_id[citation_id].model_copy(deep=True)
+                        for citation_id in citation_ids
+                    ],
+                    linebreaks="",
+                )
+            )
+            cursor = statement_end
+        structured_answer = CitedAnswerResult(statements=source_statements)
 
         # Step 2: Resolve prompt IDs to original IDs within the structured answer object
         resolved_structured_answer = self._resolve_citation_ids(
