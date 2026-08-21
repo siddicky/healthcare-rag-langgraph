@@ -260,6 +260,7 @@ class UploadRegistryRecord(StoreModel):
     expires_at: datetime
     status: Literal["uploading", "scanning", "extracting", "done", "error"]
     proposal: JsonObject | None = None
+    consumed: bool = False
 
 
 @final
@@ -547,7 +548,9 @@ async def put_op_if_absent(
     clean = _scrub_json(op.model_dump(mode="json"), _scanner(scanner))
     if not isinstance(clean, dict):
         raise StoreNamespaceError(_namespace(user_id, "ops"))
-    await store.aput(_namespace(user_id, "ops"), op.op_id, clean, index=False)
+    clean["op_id"] = op.op_id
+    validated = OpRecord.model_validate(clean).model_dump(mode="json")
+    await store.aput(_namespace(user_id, "ops"), op.op_id, validated, index=False)
     return True
 
 
@@ -557,7 +560,13 @@ async def put_op(
     op: OpRecord,
     scanner: PrivacyScanner | None = None,
 ) -> None:
-    await _put_model(store, user_id, "ops", op.op_id, op, scanner)
+    await guard_user_write(store, user_id)
+    clean = _scrub_json(op.model_dump(mode="json"), _scanner(scanner))
+    if not isinstance(clean, dict):
+        raise StoreNamespaceError(_namespace(user_id, "ops"))
+    clean["op_id"] = op.op_id
+    validated = OpRecord.model_validate(clean).model_dump(mode="json")
+    await store.aput(_namespace(user_id, "ops"), op.op_id, validated, index=False)
 
 
 async def create_reminder(

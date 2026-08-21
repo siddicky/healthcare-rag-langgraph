@@ -3,7 +3,7 @@ from __future__ import annotations
 import os
 import time
 from typing import Final, TypeAlias
-from uuid import UUID, uuid5
+from uuid import UUID
 
 import httpx
 from pydantic import JsonValue
@@ -12,19 +12,16 @@ from starlette.responses import JSONResponse, Response
 
 from .documents import (
     DOCUMENT_EXTRACTOR,
+    RESERVATION_NS,
     UploadRejected,
     read_multipart_upload,
+    reservation_id,
     scrub_proposal,
 )
 
 JSONValue: TypeAlias = JsonValue
-RESERVATION_NS: Final = UUID("6f503f96-3957-4c48-8554-32beec98fca2")
 UPLOAD_TTL_MINUTES: Final = 15
 UPLOAD_TTL_SECONDS: Final = UPLOAD_TTL_MINUTES * 60
-
-
-def reservation_id(upload_id: str) -> str:
-    return str(uuid5(RESERVATION_NS, upload_id))
 
 
 def internal_headers() -> dict[str, str]:

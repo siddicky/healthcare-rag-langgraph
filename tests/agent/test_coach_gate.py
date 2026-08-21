@@ -212,7 +212,7 @@ async def test_attachment_routes_to_document_without_clearing_attachment() -> No
 
     # Then
     assert command.update["route"] == "claim_document"
-    assert command.goto == "_pending_claim_document"
+    assert command.goto == "claim_document"
     assert "attachment_id" not in command.update
     assert calls == 0
 
@@ -355,8 +355,15 @@ async def test_classifier_failure_flag_is_isolated_across_concurrent_turns() -> 
 
 async def test_graph_schemas_expose_only_safe_output_and_never_checkpoint_inputs() -> None:
     # Given
-    graph = build_coach_graph().compile(checkpointer=InMemorySaver())
-    config = {"configurable": {"thread_id": "schema-thread"}}
+    graph = build_coach_graph().compile(
+        checkpointer=InMemorySaver(), store=InMemoryStore()
+    )
+    config = {
+        "configurable": {
+            "thread_id": "schema-thread",
+            "langgraph_auth_user": {"identity": "user-1", "role": "member"},
+        }
+    }
 
     # When
     result = await graph.ainvoke(

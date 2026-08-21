@@ -36,7 +36,7 @@ RouteTarget: TypeAlias = Literal[
     "rag_relay",
     "_pending_coach_agent",
     "_pending_erase_my_data",
-    "_pending_claim_document",
+    "claim_document",
     "_pending_reminder_delivery",
 ]
 
@@ -149,7 +149,7 @@ async def coach_gate(
         )
     if features["has_attachment"]:
         update["route"] = "claim_document"
-        return Command(update=update, goto="_pending_claim_document")
+        return Command(update=update, goto="claim_document")
     if red_flag_terms(question) or injection_flags(question) or identifier_recall_requested(question):
         update["route"] = "short_circuit"
         return Command(update=update, goto="_pending_short_circuit")
