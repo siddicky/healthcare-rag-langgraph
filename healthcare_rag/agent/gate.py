@@ -37,8 +37,9 @@ RouteTarget: TypeAlias = Literal[
     "_pending_coach_agent",
     "_pending_erase_my_data",
     "claim_document",
-    "_pending_reminder_delivery",
+    "reminder_delivery",
 ]
+
 
 def _fallback_assessment() -> SafetyAssessment:
     return SafetyAssessment(
@@ -56,7 +57,9 @@ class CoachSafetyGate(SafetyGate):
         self.classifier_failed: bool = False
 
     @override
-    async def _llm_assess(self, query: str, history_context: str = "") -> SafetyAssessment:
+    async def _llm_assess(
+        self, query: str, history_context: str = ""
+    ) -> SafetyAssessment:
         llm_call = self._llm_call
         if llm_call is None:
             self.classifier_failed = True
@@ -115,7 +118,9 @@ async def coach_gate(
     store: BaseStore | None = None,
 ) -> Command[RouteTarget]:
     question = state.get("question") or ""
-    features = compute_features(question, state.get("attachment_id"), _previous_context(state))
+    features = compute_features(
+        question, state.get("attachment_id"), _previous_context(state)
+    )
     scrubbed = scrub_phi(question)[0]
     update: CoachState = {
         "question": "",
@@ -127,10 +132,14 @@ async def coach_gate(
         configurable = config.get("configurable", {})
         thread_id = configurable.get("thread_id")
         principal = configurable.get("langgraph_auth_user")
-        member_context = isinstance(principal, Mapping) and principal.get("role") == "member"
+        member_context = (
+            isinstance(principal, Mapping) and principal.get("role") == "member"
+        )
         record = None
         if store is not None and not member_context:
-            record = await store.aget(("users", wake["user_id"], "reminders"), wake["reminder_id"])
+            record = await store.aget(
+                ("users", wake["user_id"], "reminders"), wake["reminder_id"]
+            )
         value = record.value if record is not None else {}
         valid = (
             isinstance(value, Mapping)
@@ -142,22 +151,31 @@ async def coach_gate(
             and hmac.compare_digest(value["wake_token"], wake["wake_token"])
         )
         update["cron_wake"] = None
+        update["reminder_wake"] = wake if valid else None
         update["route"] = "reminder_delivery" if valid else "short_circuit"
         return Command(
             update=update,
-            goto="_pending_reminder_delivery" if valid else "_pending_short_circuit",
+            goto="reminder_delivery" if valid else "_pending_short_circuit",
         )
     if features["has_attachment"]:
         update["route"] = "claim_document"
         return Command(update=update, goto="claim_document")
-    if red_flag_terms(question) or injection_flags(question) or identifier_recall_requested(question):
+    if (
+        red_flag_terms(question)
+        or injection_flags(question)
+        or identifier_recall_requested(question)
+    ):
         update["route"] = "short_circuit"
         return Command(update=update, goto="_pending_short_circuit")
     classifier = CoachSafetyGate(gateway=GATEWAY or _gateway_adapter)
     assessment = await classifier.assess(question)
     features["classifier_category"] = assessment.category
     features["classifier_failed"] = classifier.classifier_failed
-    if assessment.category in {"emergency_red_flag", "personal_medical_advice", "prompt_injection"}:
+    if assessment.category in {
+        "emergency_red_flag",
+        "personal_medical_advice",
+        "prompt_injection",
+    }:
         update["route"] = "short_circuit"
         return Command(update=update, goto="_pending_short_circuit")
     if features["classifier_failed"]:
@@ -173,12 +191,18 @@ async def coach_gate(
     if coaching:
         update["route"] = "coach_agent"
         return Command(update=update, goto="_pending_coach_agent")
-    if features["has_in_scope_drug"] or features["has_oos_drug"] or features["has_medical_cue"] or features["has_number_unit"]:
+    if (
+        features["has_in_scope_drug"]
+        or features["has_oos_drug"]
+        or features["has_medical_cue"]
+        or features["has_number_unit"]
+    ):
         update["route"] = "rag_relay"
         return Command(update=update, goto="rag_relay")
-    contextual_followup = features["prev_context"] in {"tool_card", "interrupt_pending"} and (
-        is_anaphoric_followup(question)
-    )
+    contextual_followup = features["prev_context"] in {
+        "tool_card",
+        "interrupt_pending",
+    } and (is_anaphoric_followup(question))
     if features["is_smalltalk"] or contextual_followup:
         update["route"] = "coach_agent"
         return Command(update=update, goto="_pending_coach_agent")

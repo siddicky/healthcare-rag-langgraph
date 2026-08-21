@@ -21,7 +21,9 @@ class PlannedGatewayFailure(RuntimeError):
     pass
 
 
-def _assessment(category: SafetyCategory = "in_scope_informational") -> SafetyAssessment:
+def _assessment(
+    category: SafetyCategory = "in_scope_informational",
+) -> SafetyAssessment:
     return SafetyAssessment(
         category=category,
         contains_phi=False,
@@ -42,7 +44,9 @@ def _gateway(category: SafetyCategory = "in_scope_informational") -> Gateway:
 def _isolate_gate(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(gate, "GATEWAY", _gateway())
     monkeypatch.setattr(gate, "scrub_phi", lambda text: (text, []))
-    monkeypatch.setattr("healthcare_rag.processors.safety.scrub_phi", lambda text: (text, []))
+    monkeypatch.setattr(
+        "healthcare_rag.processors.safety.scrub_phi", lambda text: (text, [])
+    )
 
 
 async def _route(
@@ -167,7 +171,9 @@ async def test_smalltalk_routes_to_b(question: str) -> None:
     assert target == "_pending_coach_agent"
 
 
-@pytest.mark.parametrize("question", ["Tell me more", "Can you help?", "Something unclear"])
+@pytest.mark.parametrize(
+    "question", ["Tell me more", "Can you help?", "Something unclear"]
+)
 async def test_ambiguous_default_routes_to_a(question: str) -> None:
     # Given/When
     route, target = await _route(question, category="ambiguous")
@@ -180,7 +186,11 @@ async def test_ambiguous_default_routes_to_a(question: str) -> None:
 async def test_anaphoric_followup_after_tool_card_routes_to_b() -> None:
     # Given/When
     command = await coach_gate(
-        {"question": "Can you change that?", "messages": [], "route": "interrupt_pending"},
+        {
+            "question": "Can you change that?",
+            "messages": [],
+            "route": "interrupt_pending",
+        },
         {"configurable": {"thread_id": "thread-1"}},
     )
 
@@ -256,11 +266,13 @@ async def test_valid_cron_wake_routes_to_delivery_without_classifier() -> None:
     # Then
     assert command.update["route"] == "reminder_delivery"
     assert command.update["cron_wake"] is None
-    assert command.goto == "_pending_reminder_delivery"
+    assert command.goto == "reminder_delivery"
     assert calls == 0
 
 
-async def test_member_context_cron_wake_fails_closed_without_store_registration() -> None:
+async def test_member_context_cron_wake_fails_closed_without_store_registration() -> (
+    None
+):
     # Given
     payload = {
         "reminder_id": "reminder-1",
@@ -353,7 +365,9 @@ async def test_classifier_failure_flag_is_isolated_across_concurrent_turns() -> 
     assert healthy.classifier_failed is False
 
 
-async def test_graph_schemas_expose_only_safe_output_and_never_checkpoint_inputs() -> None:
+async def test_graph_schemas_expose_only_safe_output_and_never_checkpoint_inputs() -> (
+    None
+):
     # Given
     graph = build_coach_graph().compile(
         checkpointer=InMemorySaver(), store=InMemoryStore()

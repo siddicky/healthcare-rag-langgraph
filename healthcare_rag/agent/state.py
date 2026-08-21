@@ -31,6 +31,7 @@ class CoachState(TypedDict, total=False):
     question: Annotated[str, UntrackedValue(str)]
     attachment_id: Annotated[str | None, UntrackedValue(str)]
     cron_wake: Annotated[CronWakePayload | None, UntrackedValue(dict)]
+    reminder_wake: Annotated[CronWakePayload | None, UntrackedValue(dict)]
     messages: Annotated[list[AnyMessage], add_messages]
     route: str
     follow_ups: list[str]
