@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
 from typing import Any
 
 import pytest
@@ -16,6 +15,7 @@ from healthcare_rag.models.answers import Citation, CitedAnswerResult, Statement
 from healthcare_rag.models.queries import DecomposedQuery, RetrievalEvaluation
 from healthcare_rag.models.retrieval import QueryDocument, QueryResult, QueryResultList
 from healthcare_rag.models.safety import SafetyAssessment
+from healthcare_rag.processors.safety_responses import personal_advice_response
 
 from .conftest import FakeGateway, FakeRetriever, ResourceInstaller
 
@@ -23,7 +23,6 @@ from .conftest import FakeGateway, FakeRetriever, ResourceInstaller
 def _assessment(
     category: str = "in_scope_informational",
     *,
-    reformulation: str | None = None,
     phi_spans: list[str] | None = None,
 ) -> SafetyAssessment:
     return SafetyAssessment.model_construct(
@@ -32,7 +31,6 @@ def _assessment(
         phi_spans=phi_spans or [],
         drug_mentioned="lipitor",
         rationale="scripted",
-        safe_reformulation=reformulation,
     )
 
 
@@ -120,7 +118,6 @@ def _pin_graph_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("HC_RAG_DISABLE_STAGES", "")
     monkeypatch.setenv("HC_RAG_DECOMPOSE_ONLY_COMPLEX", "true")
     monkeypatch.setenv("HC_RAG_MAX_SUBQUERIES", "3")
-    monkeypatch.setattr(safety, "PIPELINE", None)
 
 
 @pytest.mark.asyncio
@@ -223,31 +220,13 @@ async def test_insufficient_without_queries_generates_without_gap_sends(
     assert output["answer"] == "Lipitor information. [doc_1]"
 
 
-@dataclass(slots=True)
-class _AddendumPipeline:
-    answer: str
-
-    async def ainvoke(
-        self, _state: RAGState, _config: RunnableConfig | None = None
-    ) -> RAGState:
-        return {"validated": self.answer, "route": [], "branch_events": []}
-
-
 @pytest.mark.asyncio
-async def test_refusal_appends_safe_addendum_without_follow_ups(
-    install_resources: ResourceInstaller, monkeypatch: pytest.MonkeyPatch
+async def test_personal_advice_refusal_is_terminal(
+    install_resources: ResourceInstaller,
 ) -> None:
-    reformulation = "What adverse effects are listed for Lipitor?"
-    assessment = _assessment(
-        "personal_medical_advice", reformulation=reformulation
-    )
+    assessment = _assessment("personal_medical_advice")
     _gateway, retriever, _saver, graph = _install_graph(
         install_resources, assessment=assessment
-    )
-    monkeypatch.setattr(
-        safety,
-        "PIPELINE",
-        _AddendumPipeline("Fatigue is listed as an adverse reaction."),
     )
     config: RunnableConfig = {"configurable": {"thread_id": "refusal"}}
 
@@ -257,7 +236,7 @@ async def test_refusal_appends_safe_addendum_without_follow_ups(
     )
 
     assert retriever.calls == []
-    assert "Fatigue is listed as an adverse reaction." in output["answer"]
+    assert output["answer"] == personal_advice_response()
     assert output["follow_ups"] == []
 
 

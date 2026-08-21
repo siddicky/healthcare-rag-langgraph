@@ -17,7 +17,6 @@ NODE_EVALUATE: Final = "evaluate_retrieval"
 NODE_GENERATE: Final = "generate_answer"
 NODE_VALIDATE: Final = "validate_answer"
 NODE_FOLLOW_UPS: Final = "generate_follow_ups"
-NODE_ADDENDUM: Final = "answer_addendum"
 NODE_FINALIZE: Final = "finalize"
 
 _GAP_FILL_CAP: Final = 3
@@ -26,8 +25,6 @@ _GAP_FILL_CAP: Final = 3
 def route_after_gate(state: RAGState) -> list[str] | str:
     """Route refusals to their terminal path and safe queries to preprocessing."""
     if state.get("safety_response"):
-        if state.get("addendum_query"):
-            return NODE_ADDENDUM
         return NODE_FINALIZE
     return [NODE_CLARIFY, NODE_CONTEXT]
 

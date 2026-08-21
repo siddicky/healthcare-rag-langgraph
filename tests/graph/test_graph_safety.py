@@ -16,13 +16,13 @@ from healthcare_rag.graph.nodes.preprocess import (
     decompose_query,
     extract_conversation_context,
 )
-from healthcare_rag.graph.nodes.safety import answer_addendum, finalize, safety_gate
+from healthcare_rag.graph.nodes.safety import finalize, safety_gate
 from healthcare_rag.graph.state import RAGState
 from healthcare_rag.models.answers import RelevantHistoryContext
 from healthcare_rag.models.queries import ClarifiedQuery, DecomposedQuery
 from healthcare_rag.models.safety import SafetyAssessment, SafetyCategory
 from healthcare_rag.processors.safety import NUMERIC_DOSE
-from healthcare_rag.processors.safety_responses import ADDENDUM_HEADING, ALL_TEMPLATES
+from healthcare_rag.processors.safety_responses import ALL_TEMPLATES
 
 from .conftest import FakeLLMGateway
 
@@ -33,13 +33,11 @@ def _pin_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("HC_RAG_DISABLE_STAGES", "")
     monkeypatch.setenv("HC_RAG_DECOMPOSE_ONLY_COMPLEX", "true")
     monkeypatch.setenv("HC_RAG_MAX_SUBQUERIES", "3")
-    monkeypatch.setattr(safety, "PIPELINE", None)
 
 
 def _assessment(
     category: SafetyCategory = "in_scope_informational",
     *,
-    reformulation: str | None = None,
     rationale: str = "scripted",
     phi_spans: list[str] | None = None,
 ) -> SafetyAssessment:
@@ -49,7 +47,6 @@ def _assessment(
         phi_spans=phi_spans or [],
         drug_mentioned="none",
         rationale=rationale,
-        safe_reformulation=reformulation,
     )
 
 
@@ -100,77 +97,22 @@ async def test_short_circuit_finalizes_template_and_persists_scrubbed_turn(
     ]
 
 
-class _Pipeline:
-    def __init__(self, result: RAGState | Exception) -> None:
-        self.result = result
-        self.inputs: list[RAGState] = []
-
-    async def ainvoke(self, state: RAGState, _config: dict | None = None) -> RAGState:
-        self.inputs.append(state)
-        if isinstance(self.result, Exception):
-            raise self.result
-        return self.result
-
-
-@pytest.mark.parametrize(
-    ("sub_answer", "kept"),
-    [
-        ("Fatigue is listed as an adverse reaction.", True),
-        ("Reduce to 850 mg twice a day.", False),
-    ],
-)
-async def test_personal_advice_addendum_is_kept_only_when_safe(
+async def test_personal_advice_refusal_never_reenters_generation(
     monkeypatch: pytest.MonkeyPatch,
-    sub_answer: str,
-    kept: bool,
 ) -> None:
-    reformulation = "Is fatigue a reported adverse reaction to atorvastatin?"
     gateway = FakeLLMGateway(
-        safety_gate=[_assessment("personal_medical_advice", reformulation=reformulation)]
-    )
-    pipeline = _Pipeline(
-        {
-            "validated": sub_answer,
-            "route": ["sub"],
-            "branch_events": [],
-            "selected_branch_type": "initial",
-            "selected_branch_query": reformulation,
-        }
+        safety_gate=[_assessment("personal_medical_advice")]
     )
     monkeypatch.setattr(safety, "GATEWAY", gateway)
-    monkeypatch.setattr(safety, "PIPELINE", pipeline)
 
     gated = await safety_gate({"question": "Is my tiredness normal?", "messages": []})
-    with_addendum = await answer_addendum(gated)
-    finished = await finalize({**gated, **with_addendum})
+    finished = await finalize(gated)
 
-    assert bool(with_addendum["addendum_answer"]) is kept
-    assert (ADDENDUM_HEADING in finished["answer"]) is kept
-    assert not NUMERIC_DOSE.search(finished["answer"])
-
-
-async def test_addendum_failure_never_suppresses_refusal(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    reformulation = "Is fatigue reported with atorvastatin?"
-    monkeypatch.setattr(
-        safety,
-        "GATEWAY",
-        FakeLLMGateway(
-            safety_gate=[
-                _assessment("personal_medical_advice", reformulation=reformulation)
-            ]
-        ),
-    )
-    monkeypatch.setattr(safety, "PIPELINE", _Pipeline(RuntimeError("forced")))
-
-    gated = await safety_gate({"question": "Is my tiredness normal?", "messages": []})
-    addendum = await answer_addendum(gated)
-    finished = await finalize({**gated, **addendum})
-
-    assert addendum["addendum_answer"] is None
     assert finished["answer"] == gated["safety_response"]
     assert finished["follow_ups"] == []
+    assert gated["merged"] is None
+    assert gated["generation"] is None
+    assert gateway.calls["safety_gate"]
     assert [message.content for message in finished["messages"]] == [
         gated["scrubbed_question"],
         gated["safety_response"],
@@ -413,7 +355,6 @@ async def test_personal_advice_refusal_writes_boundary(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             )
         ]
     )
@@ -556,7 +497,6 @@ async def test_boundary_replay_short_circuit(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             )
         ]
     )
@@ -584,7 +524,8 @@ async def test_boundary_replay_short_circuit(
     assert result["safety"]["boundaries_active"] == 1
     assert "safety_gate:boundary:personal_advice" in result["route"]
     assert result["follow_ups"] == []
-    assert result["addendum_query"] is None
+    assert result["merged"] is None
+    assert result["generation"] is None
     assert result["refusal_boundaries"] == [first_boundary]
 
 
@@ -599,7 +540,6 @@ async def test_informational_followup_not_replayed(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             ),
             _assessment("in_scope_informational"),
         ]
@@ -635,7 +575,6 @@ async def test_full_gate_outcome_carries_boundary_fields(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             ),
             _assessment("personal_medical_advice"),
         ]
@@ -696,7 +635,6 @@ async def test_boundary_persists_and_replays_without_a_second_gate_call(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             )
         ]
     )
@@ -723,7 +661,6 @@ async def test_boundary_persists_and_replays_without_a_second_gate_call(
     assert replay["safety"]["llm_calls"] == 0
     assert replay["safety"]["response_kind"] == "boundary_replay"
     assert replay["follow_ups"] == []
-    assert replay["addendum_answer"] is None
     assert graph.get_state(config).values["refusal_boundaries"] == [stored]
     assert any(
         snapshot.values.get("refusal_boundaries") == [stored]
@@ -742,7 +679,6 @@ async def test_corrupted_boundary_is_inert_and_retained(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             ),
             _assessment("in_scope_informational"),
         ]
@@ -784,7 +720,6 @@ async def test_phi_canary_is_absent_from_all_checkpoint_surfaces(
                 phi_spans=["998877"],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             )
         ]
     )
@@ -900,7 +835,6 @@ async def test_personal_boundary_carves_out_information_and_suppresses_decision_
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             ),
             _assessment("in_scope_informational"),
             _assessment("in_scope_informational"),
@@ -958,7 +892,6 @@ async def test_knob_off_never_writes_boundary_and_retries_reask(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=None,
             ),
             _assessment("personal_medical_advice"),
         ]
@@ -1031,10 +964,9 @@ async def test_gate_off_retains_preseeded_boundary_without_replay_or_write(
     assert graph.get_state(config).values["refusal_boundaries"] == [boundary]
 
 
-async def test_addendum_refusal_writes_boundary_but_replay_has_no_addendum(
+async def test_terminal_refusal_writes_boundary_and_replays_without_generation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    reformulation = "What does the monograph say about metformin use?"
     gateway = FakeLLMGateway(
         safety_gate=[
             SafetyAssessment(
@@ -1043,13 +975,12 @@ async def test_addendum_refusal_writes_boundary_but_replay_has_no_addendum(
                 phi_spans=[],
                 drug_mentioned="metformin",
                 rationale="scripted personal advice",
-                safe_reformulation=reformulation,
             )
         ]
     )
     monkeypatch.setattr(safety, "GATEWAY", gateway)
     graph = _compile_safety_node_graph()
-    config: RunnableConfig = {"configurable": {"thread_id": "boundary-addendum"}}
+    config: RunnableConfig = {"configurable": {"thread_id": "boundary-terminal"}}
 
     first_updates = [
         part
@@ -1063,8 +994,9 @@ async def test_addendum_refusal_writes_boundary_but_replay_has_no_addendum(
     stored = graph.get_state(config).values["refusal_boundaries"][0]
 
     assert stored["topic"] == "metformin"
-    assert first["addendum_query"] == reformulation
     assert first["refusal_boundaries"] == [stored]
+    assert first["merged"] is None
+    assert first["generation"] is None
 
     before_reask = len(gateway.calls["safety_gate"])
     replay_updates = [
@@ -1083,5 +1015,5 @@ async def test_addendum_refusal_writes_boundary_but_replay_has_no_addendum(
     assert replay["safety_response"] == stored["response"]
     assert replay["safety_notices"] == []
     assert replay["safety"]["response_kind"] == "boundary_replay"
-    assert replay["addendum_query"] is None
-    assert replay["addendum_answer"] is None
+    assert replay["merged"] is None
+    assert replay["generation"] is None

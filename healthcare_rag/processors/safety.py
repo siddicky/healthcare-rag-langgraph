@@ -21,8 +21,7 @@ classification then uses two layers, OR-ed together, because they fail different
    This is the *floor* — it can only ever escalate the outcome, never relax it.
 2. **One LLM classification call** (``prompts/safety_gate.yaml.j2`` ->
    :class:`~healthcare_rag.models.safety.SafetyAssessment`, temperature 0, default
-   model). It catches the wording the regexes cannot enumerate and produces the
-   ``safe_reformulation`` that lets a refused question still be *useful*.
+   model). It catches the wording the regexes cannot enumerate.
 
 Merge precedence, highest first: emergency red flag > prompt injection > identifier
 recall > whatever the LLM said. ``contains_phi`` and identifier kinds come only from the
@@ -44,7 +43,6 @@ from ..models.safety import SafetyAssessment
 from ..services.models import default_llm_model
 from .base import log_timing
 from .safety_responses import (
-    ADDENDUM_HEADING,
     INJECTION_NOTICE,
     PHI_NOTICE,
     emergency_response,
@@ -313,12 +311,11 @@ def red_flag_terms(text: str) -> List[str]:
 
 
 # --------------------------------------------------------------------------- #
-# 5. The addendum rule                                                         #
+# 5. Refusal matching and response invariants                                  #
 # --------------------------------------------------------------------------- #
 
-#: A reformulated question that is itself about dosing gets **no** informational
-#: addendum. Reciting "the usual dose is X mg three times a day" to someone who just
-#: asked whether to double their own dose is the failure mode of F13 wearing a hat.
+#: Shared dosing cue used by the persisted refusal boundary to distinguish a
+#: renewed personal decision request from an informational monograph follow-up.
 DOSING_QUESTION = re.compile(
     r"\b(?:dose|doses|dosing|dosage|titrat\w*|how much|how many|mg\b|milligram|"
     r"maximum daily|max(?:imum)? dose|adjust\w* (?:the |my |his |her )?dose|double|"
@@ -326,25 +323,13 @@ DOSING_QUESTION = re.compile(
     re.IGNORECASE,
 )
 
-#: Second belt: even a non-dosing addendum is dropped if the generated text carries a
-#: specific number with a clinical unit. Mirrors ``evals.evaluators.NUMERIC_DOSE_PATTERN``.
+#: Static refusals must not carry a specific number with a clinical unit. Mirrors
+#: ``evals.evaluators.NUMERIC_DOSE_PATTERN`` and is asserted over every template.
 NUMERIC_DOSE = re.compile(
     r"\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|g|ml|mL|mmol/?L?|[uµ]mol/?L?|%|tablets?|"
     r"times? (?:a|per) day|hours?|hrs?|days?|weeks?)\b",
     re.IGNORECASE,
 )
-
-
-def addendum_allowed(reformulation: Optional[str]) -> bool:
-    """True when a refused personal question may still get a general-information addendum."""
-    return bool(reformulation and reformulation.strip()) and not DOSING_QUESTION.search(
-        reformulation or ""
-    )
-
-
-def addendum_is_safe(answer: Optional[str]) -> bool:
-    """True when a generated addendum carries no specific dose/threshold/frequency."""
-    return bool(answer and answer.strip()) and not NUMERIC_DOSE.search(answer or "")
 
 
 # --------------------------------------------------------------------------- #
@@ -362,7 +347,6 @@ class SafetyDecision:
     short_circuit: bool = False
     kind: str = "none"                       # which template (or "none" = run the pipeline)
     response: Optional[str] = None           # templated body, when short-circuiting
-    addendum_query: Optional[str] = None     # run through the pipeline and append, if safe
     notices: List[str] = field(default_factory=list)  # one-line prefixes (PHI / injection)
     llm_calls: int = 1
 
@@ -370,13 +354,11 @@ class SafetyDecision:
     def contains_phi(self) -> bool:
         return bool(self.phi_kinds) or self.assessment.contains_phi
 
-    def render(self, addendum: Optional[str] = None) -> str:
-        """Assemble notices + templated body (+ optional general-information addendum)."""
+    def render(self) -> str:
+        """Assemble notices and the templated response body."""
         parts: List[str] = list(self.notices)
         if self.response:
             parts.append(self.response)
-        if addendum:
-            parts.append(f"{ADDENDUM_HEADING}\n\n{addendum}")
         return "\n\n".join(p for p in parts if p)
 
     def prefix_notices(self, answer: str) -> str:
@@ -421,7 +403,6 @@ class SafetyGate:
             phi_spans=[],
             drug_mentioned="none",
             rationale="safety-gate LLM call failed; deterministic checks only",
-            safe_reformulation=None,
         )
         result = (
             await self._llm_call(
@@ -463,7 +444,6 @@ class SafetyGate:
             phi_spans=list(llm.phi_spans or []),
             drug_mentioned=llm.drug_mentioned,
             rationale=llm.rationale,
-            safe_reformulation=llm.safe_reformulation,
         )
 
     async def evaluate(self, query: str, history_context: str = "") -> SafetyDecision:
@@ -538,14 +518,11 @@ class SafetyGate:
             decision.response = identifier_recall_response()
             return decision
 
-        # --- personal medical advice: decline, optionally add general information ---
+        # --- personal medical advice: decline the individual decision ---
         if category == "personal_medical_advice":
             decision.short_circuit = True
             decision.kind = "personal_advice"
             decision.response = personal_advice_response()
-            if addendum_allowed(assessment.safe_reformulation):
-                reformulation, _ = scrub_phi(assessment.safe_reformulation or "")
-                decision.addendum_query = reformulation
             return decision
 
         # --- out of scope: say what we cover; no retrieval at all ---
@@ -563,16 +540,14 @@ class SafetyGate:
 
 
 __all__ = [
-    "SafetyGate",
-    "SafetyDecision",
-    "scrub_phi",
-    "contains_phi",
-    "injection_flags",
-    "strip_injection",
-    "identifier_recall_requested",
-    "red_flag_terms",
-    "addendum_allowed",
-    "addendum_is_safe",
     "DOSING_QUESTION",
     "NUMERIC_DOSE",
+    "SafetyDecision",
+    "SafetyGate",
+    "contains_phi",
+    "identifier_recall_requested",
+    "injection_flags",
+    "red_flag_terms",
+    "scrub_phi",
+    "strip_injection",
 ]

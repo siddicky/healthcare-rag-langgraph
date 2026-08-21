@@ -3,11 +3,9 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
-from importlib import import_module
-from typing import Protocol, override
+from typing import override
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
-from langchain_core.runnables import RunnableConfig
 from langgraph.types import Overwrite
 
 from healthcare_rag.graph.history import build_history_views
@@ -26,9 +24,8 @@ from healthcare_rag.processors.refusal_boundary import (
     load_boundaries,
     upsert_boundary,
 )
-from healthcare_rag.processors.safety import SafetyGate, addendum_is_safe, scrub_phi
+from healthcare_rag.processors.safety import SafetyGate, scrub_phi
 from healthcare_rag.processors.safety_responses import (
-    ADDENDUM_HEADING,
     PHI_NOTICE,
     emergency_response,
     injection_response,
@@ -45,15 +42,6 @@ KIND_TO_CATEGORY: dict[BoundaryKind, SafetyCategory] = {
 }
 
 
-class _Pipeline(Protocol):
-    async def ainvoke(
-        self,
-        state: RAGState,
-        config: RunnableConfig | None = None,
-    ) -> RAGState: ...
-
-
-PIPELINE: _Pipeline | None = None
 type SafetyUpdateValue = (
     JSONValue | Overwrite | list[str] | list[dict[str, JSONValue]]
 )
@@ -73,7 +61,6 @@ class LangChainSafetyGate(SafetyGate):
             phi_spans=[],
             drug_mentioned="none",
             rationale="safety-gate LLM call failed; deterministic checks only",
-            safe_reformulation=None,
         )
         llm_call = self._llm_call
         if llm_call is None:
@@ -89,20 +76,9 @@ class LangChainSafetyGate(SafetyGate):
         return result or default
 
 
-def _get_pipeline() -> _Pipeline:
-    pipeline = PIPELINE
-    if pipeline is None:
-        build_module = import_module("healthcare_rag.graph.build")
-        pipeline = build_module.build_pipeline(include_follow_ups=False).compile(
-            checkpointer=False
-        )
-        globals()["PIPELINE"] = pipeline
-    return pipeline
-
-
 async def safety_gate(state: RAGState) -> SafetyGateUpdate:
     question = state.get("question", "")
-    gate_on = safety_gate_enabled() and not state.get("skip_safety", False)
+    gate_on = safety_gate_enabled()
     settings = get_resources().settings
     messages: list[BaseMessage] = list(state.get("messages", []))
     history_context, processed_history = build_history_views(
@@ -124,8 +100,6 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
         "safety_kind": "none",
         "safety_response": "",
         "safety_notices": [],
-        "addendum_query": None,
-        "addendum_answer": None,
         "summary": None,
         "clarified": None,
         "decomposed": False,
@@ -270,60 +244,16 @@ async def safety_gate(state: RAGState) -> SafetyGateUpdate:
         "safety_kind": decision.kind,
         "safety_response": decision.response or "",
         "safety_notices": decision.notices,
-        "addendum_query": decision.addendum_query,
         "route": Overwrite([f"safety_gate:{decision.kind}"]),
-    }
-
-
-async def answer_addendum(
-    state: RAGState,
-    config: RunnableConfig | None = None,
-) -> RAGState:
-    aq = state.get("addendum_query")
-    if not aq:
-        return {"addendum_answer": None}
-    try:
-        sub = await _get_pipeline().ainvoke(
-            {
-                "question": aq,
-                "scrubbed_question": aq,
-                "working_query": aq,
-                "messages": [],
-                "skip_safety": True,
-                "user_id": "",
-            },
-            config,
-        )
-    except Exception:  # noqa: BLE001 - mandatory fail-safe refusal boundary.
-        logger.error("SAFETY_ADDENDUM_FAILED")
-        return {"addendum_answer": None}
-
-    addendum = sub.get("validated") or sub.get("answer")
-    if addendum and not addendum_is_safe(addendum):
-        logger.info("Safety addendum dropped because it contains a clinical quantity")
-        addendum = None
-    safety_outcome = dict(state.get("safety") or {})
-    safety_outcome["addendum_appended"] = bool(addendum)
-    return {
-        "addendum_answer": addendum,
-        "merged": sub.get("merged"),
-        "generation": sub.get("generation"),
-        "route": sub.get("route", []),
-        "branch_events": sub.get("branch_events", []),
-        "selected_branch_type": sub.get("selected_branch_type"),
-        "selected_branch_query": sub.get("selected_branch_query"),
-        "safety": safety_outcome,
     }
 
 
 async def finalize(state: RAGState) -> RAGState:
     safety_response = state.get("safety_response", "")
     if safety_response:
-        parts = [*state.get("safety_notices", []), safety_response]
-        addendum = state.get("addendum_answer")
-        if addendum:
-            parts.append(f"{ADDENDUM_HEADING}\n\n{addendum}")
-        answer = "\n\n".join(part for part in parts if part)
+        answer = "\n\n".join(
+            part for part in [*state.get("safety_notices", []), safety_response] if part
+        )
         follow_ups: list[str] = []
     else:
         answer = render_display_answer(

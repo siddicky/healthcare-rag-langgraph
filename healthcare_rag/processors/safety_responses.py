@@ -29,10 +29,6 @@ INJECTION_NOTICE = (
     "so I'll answer your question as the monograph assistant."
 )
 
-#: Heading used when a de-personalised version of a refused question can still be answered.
-ADDENDUM_HEADING = "General information from the monograph (not personal advice):"
-
-
 def emergency_response(*, overdose: bool = False) -> str:
     """Urgent-care redirect for red-flag symptoms.
 
@@ -119,5 +115,4 @@ ALL_TEMPLATES = (
     injection_response(),
     PHI_NOTICE,
     INJECTION_NOTICE,
-    ADDENDUM_HEADING,
 )

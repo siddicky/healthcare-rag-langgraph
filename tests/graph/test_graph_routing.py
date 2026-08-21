@@ -8,7 +8,6 @@ from healthcare_rag.graph.resources import (
     override as override_resources,
 )
 from healthcare_rag.graph.routers import (
-    NODE_ADDENDUM,
     NODE_EVALUATE,
     NODE_FINALIZE,
     NODE_FOLLOW_UPS,
@@ -34,15 +33,6 @@ def test_route_after_gate_fans_out_safe_queries() -> None:
         "clarify_query",
         "extract_conversation_context",
     ]
-
-
-def test_route_after_gate_routes_addendum_refusals() -> None:
-    state: RAGState = {
-        "safety_response": "refusal",
-        "addendum_query": "safe question",
-    }
-
-    assert route_after_gate(state) == NODE_ADDENDUM
 
 
 def test_route_after_gate_finalizes_plain_refusals() -> None:

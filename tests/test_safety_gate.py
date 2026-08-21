@@ -34,8 +34,6 @@ from healthcare_rag.processors import safety_responses as tpl
 from healthcare_rag.processors.safety import (
     NUMERIC_DOSE,
     SafetyGate,
-    addendum_allowed,
-    addendum_is_safe,
     contains_phi,
     identifier_recall_requested,
     injection_flags,
@@ -64,7 +62,6 @@ def assessment(
     contains_phi: bool = False,
     phi_spans: Optional[list[str]] = None,
     drug: str = "none",
-    reformulation: Optional[str] = None,
 ) -> SafetyAssessment:
     return SafetyAssessment(
         category=category,  # type: ignore[arg-type]
@@ -72,7 +69,6 @@ def assessment(
         phi_spans=phi_spans or [],
         drug_mentioned=drug,  # type: ignore[arg-type]
         rationale="stub",
-        safe_reformulation=reformulation,
     )
 
 
@@ -318,41 +314,7 @@ def test_personal_advice_template_says_why_and_names_a_human():
 
 
 # --------------------------------------------------------------------------- #
-# 5. The addendum rule                                                         #
-# --------------------------------------------------------------------------- #
-
-@pytest.mark.parametrize(
-    "reformulation, allowed",
-    [
-        ("What does the monograph say about metformin dose adjustment and maximum dose?", False),
-        ("How much metformin can be taken in a day?", False),
-        ("Should the dose be increased when control is lost?", False),
-        ("Is fatigue a reported adverse reaction to atorvastatin?", True),
-        ("What do the monographs say about use in pregnancy?", True),
-        (None, False),
-        ("", False),
-    ],
-)
-def test_addendum_is_refused_for_dosing_reformulations(reformulation, allowed):
-    assert addendum_allowed(reformulation) is allowed
-
-
-@pytest.mark.parametrize(
-    "answer, safe",
-    [
-        ("Atorvastatin is contraindicated in pregnancy.", True),
-        ("The usual dose is 850 mg two or three times a day.", False),
-        ("Take 2 tablets.", False),
-        ("", False),
-        (None, False),
-    ],
-)
-def test_addendum_is_dropped_when_the_answer_carries_numbers(answer, safe):
-    assert addendum_is_safe(answer) is safe
-
-
-# --------------------------------------------------------------------------- #
-# 6. Policy routing (stubbed LLM, real pre-checks + templates)                 #
+# 5. Policy routing (stubbed LLM, real pre-checks + templates)                 #
 # --------------------------------------------------------------------------- #
 
 async def test_in_scope_question_passes_through():
@@ -370,32 +332,21 @@ async def test_ambiguous_is_passed_to_the_clarify_stage():
 
 
 async def test_personal_dosing_question_is_refused_without_numbers():
-    gate = gate_for(
-        "personal_medical_advice",
-        reformulation="What does the monograph say about metformin dose adjustment and the maximum dose?",
-    )
+    gate = gate_for("personal_medical_advice")
     decision = await gate.evaluate(
         "My sugar was 14 this morning. Should I just double my metformin dose tonight?"
     )
     assert decision.short_circuit is True and decision.kind == "personal_advice"
-    # A dosing reformulation gets no informational addendum.
-    assert decision.addendum_query is None
     body = decision.render()
     assert no_numeric_dose(body), NUMERIC_DOSE.findall(body)
     assert "pharmacist" in body
 
 
-async def test_personal_non_dosing_question_keeps_a_reformulation_for_the_addendum():
-    gate = gate_for(
-        "personal_medical_advice",
-        reformulation="Is fatigue a reported adverse reaction to atorvastatin?",
-    )
+async def test_personal_non_dosing_advice_question_is_terminal():
+    gate = gate_for("personal_medical_advice")
     decision = await gate.evaluate("Is the tiredness I get on Lipitor normal for me?")
-    assert decision.short_circuit is True
-    assert decision.addendum_query == "Is fatigue a reported adverse reaction to atorvastatin?"
-    rendered = decision.render("Fatigue is listed as an adverse reaction.")
-    assert tpl.ADDENDUM_HEADING in rendered
-    assert rendered.index(tpl.ADDENDUM_HEADING) > rendered.index("I can't tell you")
+    assert decision.short_circuit is True and decision.kind == "personal_advice"
+    assert decision.render() == tpl.personal_advice_response()
 
 
 async def test_red_flag_beats_whatever_the_model_said():
@@ -483,7 +434,7 @@ async def test_phi_is_scrubbed_and_flagged_even_when_the_model_misses_it():
 
 
 async def test_phi_notice_and_refusal_are_combined():
-    gate = gate_for("personal_medical_advice", reformulation=None)
+    gate = gate_for("personal_medical_advice")
     decision = await gate.evaluate(
         "My name is John Smith, health card 1234-567-890. What dose of metformin should I take?"
     )

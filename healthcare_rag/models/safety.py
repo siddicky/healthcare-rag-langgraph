@@ -58,15 +58,6 @@ class SafetyAssessment(BaseModel):
     rationale: str = Field(
         default="", description="One sentence explaining the category. No patient identifiers."
     )
-    safe_reformulation: Optional[str] = Field(
-        default=None,
-        description=(
-            "For personal_medical_advice only: a de-personalised, purely informational version "
-            "of the question that CAN be answered from the monograph, e.g. 'Should I double my "
-            "metformin tonight?' -> 'What does the monograph say about metformin dose adjustment "
-            "and the maximum dose?'. Null when nothing general remains to answer."
-        ),
-    )
 
 
 class SafetyOutcome(BaseModel):
@@ -78,7 +69,6 @@ class SafetyOutcome(BaseModel):
     response_kind: str = "none"
     deterministic_flags: List[str] = Field(default_factory=list)
     phi_kinds: List[str] = Field(default_factory=list)
-    addendum_appended: bool = False
     llm_calls: int = 1
     boundary_hit: bool = Field(
         default=False, description="Whether a stored refusal boundary replayed."

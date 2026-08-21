@@ -192,7 +192,6 @@ async def test_safety_prompt_receives_sanitized_current_and_history(
                 phi_spans=[],
                 drug_mentioned="lipitor",
                 rationale="informational",
-                safe_reformulation=None,
             )
 
     gateway = CapturingGateway()

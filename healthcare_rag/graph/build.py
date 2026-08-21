@@ -17,9 +17,8 @@ from healthcare_rag.graph.nodes.preprocess import (
     extract_conversation_context,
 )
 from healthcare_rag.graph.nodes.retrieve import merge_retrievals, retrieve_documents
-from healthcare_rag.graph.nodes.safety import answer_addendum, finalize, safety_gate
+from healthcare_rag.graph.nodes.safety import finalize, safety_gate
 from healthcare_rag.graph.routers import (
-    NODE_ADDENDUM,
     NODE_CLARIFY,
     NODE_CONTEXT,
     NODE_DECOMPOSE,
@@ -44,7 +43,6 @@ class PipelineInput(TypedDict, total=False):
     question: str
     scrubbed_question: str
     working_query: str
-    skip_safety: bool
     user_id: str
     messages: list[AnyMessage]
 
@@ -130,15 +128,13 @@ def build_graph() -> PublicBuilder:
         output_schema=GraphOutput,
     )
     builder.add_node(NODE_SAFETY, safety_gate, input_schema=RAGState)
-    builder.add_node(NODE_ADDENDUM, answer_addendum, input_schema=RAGState)
     builder.add_node(NODE_FINALIZE, finalize, input_schema=RAGState)
     add_pipeline(builder, terminal=NODE_FINALIZE)
     builder.add_edge(START, NODE_SAFETY)
     builder.add_conditional_edges(
         NODE_SAFETY,
         route_after_gate,
-        [NODE_CLARIFY, NODE_CONTEXT, NODE_ADDENDUM, NODE_FINALIZE],
+        [NODE_CLARIFY, NODE_CONTEXT, NODE_FINALIZE],
     )
-    builder.add_edge(NODE_ADDENDUM, NODE_FINALIZE)
     builder.add_edge(NODE_FINALIZE, END)
     return builder

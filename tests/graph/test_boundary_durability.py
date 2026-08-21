@@ -34,7 +34,6 @@ async def test_sqlite_boundary_survives_reopen_without_phi_bytes(
             phi_spans=["998877"],
             drug_mentioned="metformin",
             rationale="scripted personal advice",
-            safe_reformulation=None,
         ),
     )
     config = {"configurable": {"thread_id": "boundary-sqlite"}}

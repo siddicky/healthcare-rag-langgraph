@@ -24,7 +24,6 @@ class RAGState(TypedDict, total=False):
     scrubbed_question: str
     working_query: str
     user_id: str
-    skip_safety: bool
     messages: Annotated[list[AnyMessage], add_messages]
     history_context: str
     processed_history: list[dict[str, JSONValue]]
@@ -33,8 +32,6 @@ class RAGState(TypedDict, total=False):
     safety_response: str
     safety_notices: list[str]
     refusal_boundaries: list[dict[str, JSONValue]]
-    addendum_query: str | None
-    addendum_answer: str | None
     summary: dict[str, JSONValue] | None
     clarified: str | None
     decomposed: bool

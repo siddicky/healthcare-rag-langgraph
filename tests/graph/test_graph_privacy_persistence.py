@@ -70,7 +70,6 @@ async def test_structured_citation_canaries_are_absent_from_updates_and_checkpoi
                 phi_spans=[],
                 drug_mentioned="lipitor",
                 rationale="informational",
-                safe_reformulation=None,
             ),
             "evaluate_retrieval": RetrievalEvaluation(
                 is_sufficient=True,
