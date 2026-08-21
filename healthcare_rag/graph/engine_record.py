@@ -6,10 +6,13 @@ from dataclasses import asdict, dataclass
 from typing import Any, Final
 
 from healthcare_rag.graph.settings import GraphSettings
-from healthcare_rag.graph.state import load_results
+from healthcare_rag.graph.state import JSONValue, load_results
 from healthcare_rag.processors.safety import scrub_phi
 
 EVENT_KIND_RANK: Final = {"clarify": 0, "retrieve": 1, "merge": 2}
+ROUTER_SENSITIVE_KEYS: Final = frozenset(
+    {"history", "input", "output", "prompt", "query", "question", "raw"}
+)
 
 
 @dataclass(frozen=True, slots=True)
@@ -25,6 +28,20 @@ class ResultContext:
     timing: TurnTiming
     settings: GraphSettings
     error: str | None
+
+
+def _safe_router_telemetry(value: JSONValue) -> JSONValue:
+    if isinstance(value, str):
+        return scrub_phi(value)[0]
+    if isinstance(value, list):
+        return [_safe_router_telemetry(item) for item in value]
+    if isinstance(value, dict):
+        return {
+            key: _safe_router_telemetry(item)
+            for key, item in value.items()
+            if not any(marker in key.lower() for marker in ROUTER_SENSITIVE_KEYS)
+        }
+    return value
 
 
 def fold_branches(
@@ -109,6 +126,9 @@ def build_result(
         "usage": summarize_usage(calls),
         "per_call_usage": [asdict(call) | {"cost_usd": call.cost_usd} for call in calls],
         "safety_outcome": state.get("safety"),
+        "query_router": _safe_router_telemetry(state["query_router"])
+        if state.get("query_router") is not None
+        else None,
         "error": context.error or ("PIPELINE_STATE_ERROR" if state.get("error") else None),
         "n_branches": len(folded),
         "branch_types": [branch for branch, _ in folded],

@@ -88,28 +88,16 @@ from __future__ import annotations
 
 import os
 
-from healthcare_rag.services.model_sampling import (
-    DEFAULT_LLM_MODEL as DEFAULT_LLM_MODEL,
-)
-from healthcare_rag.services.model_sampling import (
-    DEFAULT_REASONING_EFFORT as DEFAULT_REASONING_EFFORT,
-)
-from healthcare_rag.services.model_sampling import (
-    DEFAULT_VALIDATOR_MODEL as DEFAULT_VALIDATOR_MODEL,
-)
-from healthcare_rag.services.model_sampling import (
-    default_llm_model as default_llm_model,
-)
-from healthcare_rag.services.model_sampling import (
-    default_reasoning_effort as default_reasoning_effort,
-)
-from healthcare_rag.services.model_sampling import (
-    default_validator_model as default_validator_model,
-)
-from healthcare_rag.services.model_sampling import (
-    is_reasoning_model as is_reasoning_model,
-)
-from healthcare_rag.services.model_sampling import sampling_params as sampling_params
+from healthcare_rag.services import model_sampling
+
+DEFAULT_LLM_MODEL = model_sampling.DEFAULT_LLM_MODEL
+DEFAULT_REASONING_EFFORT = model_sampling.DEFAULT_REASONING_EFFORT
+DEFAULT_VALIDATOR_MODEL = model_sampling.DEFAULT_VALIDATOR_MODEL
+default_llm_model = model_sampling.default_llm_model
+default_reasoning_effort = model_sampling.default_reasoning_effort
+default_validator_model = model_sampling.default_validator_model
+is_reasoning_model = model_sampling.is_reasoning_model
+sampling_params = model_sampling.sampling_params
 
 VALID_STAGES = {"safety", "clarify", "decompose", "evaluate", "validate", "followups"}
 
@@ -186,6 +174,28 @@ def safety_gate_enabled() -> bool:
 
 def refusal_boundary_enabled() -> bool:
     return _env_bool("HC_RAG_REFUSAL_BOUNDARY", True)
+
+
+DEFAULT_QUERY_RESPONSE_ARM, DEFAULT_SAFETY_CLASSIFIER = "current", "llm"
+VALID_QUERY_RESPONSE_ARMS = frozenset({"current", "deterministic", "tool"})
+VALID_SAFETY_CLASSIFIERS = frozenset({"llm", "semantic_router"})
+
+
+def _enum_env(name: str, default: str, allowed: frozenset[str]) -> str:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    if value not in allowed:
+        raise ValueError(f"{name} must be one of {sorted(allowed)}, got {value!r}")
+    return value
+
+
+def query_response_arm() -> str:
+    return _enum_env("HC_RAG_QUERY_RESPONSE_ARM", DEFAULT_QUERY_RESPONSE_ARM, VALID_QUERY_RESPONSE_ARMS)
+
+
+def safety_classifier_backend() -> str:
+    return _enum_env("HC_RAG_SAFETY_CLASSIFIER", DEFAULT_SAFETY_CLASSIFIER, VALID_SAFETY_CLASSIFIERS)
 
 
 # --------------------------------------------------------------------------- #

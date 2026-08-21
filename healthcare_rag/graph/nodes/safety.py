@@ -10,10 +10,7 @@ from langgraph.types import Command, Overwrite
 
 from healthcare_rag.graph.history import build_history_views
 from healthcare_rag.graph.llm import LangChainLLMGateway
-from healthcare_rag.graph.nodes.safety_classifier import (
-    LangChainSafetyGate as LangChainSafetyGate,
-)
-from healthcare_rag.graph.nodes.safety_finalize import finalize as finalize
+from healthcare_rag.graph.nodes import safety_classifier, safety_finalize
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.routers import GateTarget, route_after_gate
 from healthcare_rag.graph.state import JSONValue, RAGState
@@ -36,6 +33,9 @@ from healthcare_rag.processors.safety_responses import (
     personal_advice_response,
 )
 from healthcare_rag.services.models import refusal_boundary_enabled, safety_gate_enabled
+
+LangChainSafetyGate = safety_classifier.LangChainSafetyGate
+finalize = safety_finalize.finalize
 
 logger = logging.getLogger("MedicalRAG")
 GATEWAY: LangChainLLMGateway | None = None
@@ -92,6 +92,9 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         "safety_kind": "none",
         "safety_response": "",
         "safety_notices": [],
+        "direct_response": None,
+        "response_action": None,
+        "query_router": None,
         "summary": None,
         "clarified": None,
         "decomposed": False,
@@ -148,6 +151,9 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
                     deterministic_flags=[f"boundary_hit:{hit.kind}:{hit.topic}"],
                     phi_kinds=phi_kinds,
                     llm_calls=0,
+                    classifier_backend="none",
+                    classifier_calls=0,
+                    embedding_calls=0,
                     boundary_hit=True,
                     boundaries_active=len(valid),
                 ).model_dump(mode="json"),
@@ -225,6 +231,11 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         deterministic_flags=decision.flags,
         phi_kinds=decision.phi_kinds,
         llm_calls=decision.llm_calls,
+        benign_social=decision.assessment.benign_social,
+        classifier_backend="llm",
+        classifier_calls=decision.llm_calls,
+        embedding_calls=0,
+        classifier_latency_s=round(latency, 3),
         boundary_hit=False,
         boundaries_active=len(valid),
         gate_latency_s=round(latency, 3),

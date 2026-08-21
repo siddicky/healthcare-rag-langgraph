@@ -23,8 +23,8 @@ from healthcare_rag.graph.history import LegacyTurn, seed_messages
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.monitor import QueryMonitor
-from healthcare_rag.processors.safety import scrub_phi
 from healthcare_rag.processors.privacy import PrivacyScanError
+from healthcare_rag.processors.safety import scrub_phi
 
 __all__ = ["Engine", "GraphEngine", "UsageRecorder", "build_engine", "fold_branches"]
 
@@ -249,6 +249,8 @@ class GraphEngine:
             "reranker": self.settings.reranker,
             "rerank_candidates": self.settings.rerank_candidates,
             "rerank_top_k": self.settings.rerank_top_k,
+            "query_response_arm": self.settings.query_response_arm,
+            "safety_classifier": self.settings.safety_classifier,
         }
 
     async def aclose(self) -> None:

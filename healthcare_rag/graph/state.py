@@ -31,6 +31,9 @@ class RAGState(TypedDict, total=False):
     safety_kind: str
     safety_response: str
     safety_notices: list[str]
+    direct_response: str | None
+    response_action: str | None
+    query_router: dict[str, JSONValue] | None
     refusal_boundaries: list[dict[str, JSONValue]]
     summary: dict[str, JSONValue] | None
     clarified: str | None

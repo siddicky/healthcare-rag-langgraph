@@ -17,12 +17,14 @@ from healthcare_rag.services.models import (
     pinecone_alpha,
     pinecone_index_name,
     pinecone_sparse_model,
+    query_response_arm,
+    refusal_boundary_enabled,
     rerank_candidates,
     rerank_model,
     rerank_top_k,
     reranker_backend,
-    refusal_boundary_enabled,
     retriever_backend,
+    safety_classifier_backend,
     safety_gate_enabled,
 )
 
@@ -57,6 +59,8 @@ class GraphSettings:
     pinecone_api_key: str = ""
     pinecone_alpha: float = 0.65
     embedding_model: str = "text-embedding-3-small"
+    query_response_arm: str = "current"
+    safety_classifier: str = "llm"
 
     _TRUTHY: ClassVar[frozenset[str]] = frozenset({"1", "true", "yes", "on"})
     _FALSY: ClassVar[frozenset[str]] = frozenset({"0", "false", "no", "off"})
@@ -114,4 +118,6 @@ class GraphSettings:
             pinecone_api_key=os.getenv("PINECONE_API_KEY", ""),
             pinecone_alpha=pinecone_alpha(),
             embedding_model=embedding_model(),
+            query_response_arm=query_response_arm(),
+            safety_classifier=safety_classifier_backend(),
         )

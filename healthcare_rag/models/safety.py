@@ -9,7 +9,7 @@ into its result dict — it is never sent to a model.
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import List, Literal
 
 from pydantic import BaseModel, Field
 
@@ -58,6 +58,7 @@ class SafetyAssessment(BaseModel):
     rationale: str = Field(
         default="", description="One sentence explaining the category. No patient identifiers."
     )
+    benign_social: bool = False
 
 
 class SafetyOutcome(BaseModel):
@@ -70,11 +71,17 @@ class SafetyOutcome(BaseModel):
     deterministic_flags: List[str] = Field(default_factory=list)
     phi_kinds: List[str] = Field(default_factory=list)
     llm_calls: int = 1
+    benign_social: bool = False
+    classifier_backend: str = "none"
+    classifier_calls: int = 0
+    embedding_calls: int = 0
+    classifier_fallback: str | None = None
+    classifier_latency_s: float | None = None
     boundary_hit: bool = Field(
         default=False, description="Whether a stored refusal boundary replayed."
     )
     boundaries_active: int = Field(
         default=0, description="Number of valid refusal boundaries active."
     )
-    gate_latency_s: Optional[float] = None
+    gate_latency_s: float | None = None
     rationale: str = ""
