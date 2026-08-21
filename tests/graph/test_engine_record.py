@@ -128,7 +128,8 @@ async def test_graph_engine_when_running_simple_turn_returns_legacy_key_set(
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    find_spec("langgraph.checkpoint.sqlite.aio") is None,
+    find_spec("langgraph.checkpoint.sqlite") is None
+    or find_spec("langgraph.checkpoint.sqlite.aio") is None,
     reason="graph-sqlite optional dependency is not installed",
 )
 async def test_sqlite_engine_when_reopened_preserves_turn_messages(
@@ -211,7 +212,7 @@ def test_redact_root_inputs_when_scrubber_fails_returns_empty(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def fail(_question: str) -> tuple[str, list[str]]:
-        raise RuntimeError("scrubber failed")
+        raise RuntimeError("scrubber failed")  # noqa: GENERIC_ERR_OK - synthetic fault.
 
     monkeypatch.setattr("healthcare_rag.graph.engine.scrub_phi", fail)
     assert _redact_root_inputs({"question": "John Smith MRN 12345"}) == {}

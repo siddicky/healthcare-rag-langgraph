@@ -22,6 +22,7 @@ from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.state import RAGState, RetrieveInput
 
 NODE_SAFETY: Final = "safety_gate"
+NODE_QUERY_OR_RESPOND: Final = "generate_query_or_respond"
 NODE_CLARIFY: Final = "clarify_query"
 NODE_CONTEXT: Final = "extract_conversation_context"
 NODE_DECOMPOSE: Final = "decompose_query"
@@ -38,6 +39,7 @@ _GAP_FILL_CAP: Final = 3
 # Router target types. The string values must equal the NODE_* constants above
 # (pinned by tests); Literal cannot reference the constants directly.
 GateTerminalTarget = Literal["finalize"]
+GateQueryTarget = Literal["generate_query_or_respond"]
 GateFanOutTarget = Literal["clarify_query", "extract_conversation_context"]
 MergeTarget = Literal["evaluate_retrieval", "generate_answer"]
 EvaluateTarget = Literal["generate_answer"]
@@ -48,10 +50,12 @@ DecomposeTarget = Literal["retrieve_documents"]
 # reads the targets when the argument's origin is ``Literal``, so a branch with two
 # shapes of destination is spelled as one *nested* Literal (which flattens) rather
 # than as a union of literals.
-GateTarget = Literal[GateTerminalTarget, GateFanOutTarget]
+GateTarget = Literal[GateTerminalTarget, GateQueryTarget, GateFanOutTarget]
+QueryOrRespondTarget = Literal[GateTerminalTarget, GateFanOutTarget]
 EvaluateCommandTarget = Literal[EvaluateTarget, DecomposeTarget]
 NodeName = Literal[
     "safety_gate",
+    "generate_query_or_respond",
     "clarify_query",
     "extract_conversation_context",
     "decompose_query",
@@ -67,7 +71,7 @@ NodeName = Literal[
 
 def route_after_gate(
     state: RAGState,
-) -> GateTerminalTarget | list[GateFanOutTarget]:
+) -> GateTerminalTarget | GateQueryTarget | list[GateFanOutTarget]:
     """Route refusals to their terminal path and safe queries to preprocessing.
 
     A refusal goes to one terminal node; a safe query fans out to both
@@ -75,6 +79,22 @@ def route_after_gate(
     of its ``Command[GateTarget]``.
     """
     if state.get("safety_response"):
+        return "finalize"
+    if state.get("direct_response"):
+        return "finalize"
+    safety = state.get("safety") or {}
+    if state.get("response_action") == "query_or_respond" or (
+        get_resources().settings.query_response_arm == "tool"
+        and safety.get("category") == "in_scope_informational"
+    ):
+        return "generate_query_or_respond"
+    return ["clarify_query", "extract_conversation_context"]
+
+
+def route_after_query_or_respond(
+    state: RAGState,
+) -> GateTerminalTarget | list[GateFanOutTarget]:
+    if state.get("direct_response"):
         return "finalize"
     return ["clarify_query", "extract_conversation_context"]
 
@@ -109,9 +129,7 @@ def route_after_decompose(state: RAGState) -> list[Send]:
                     branch=f"decomposed_{index - 1}",
                 ),
             )
-            for index, query in enumerate(
-                state.get("sub_queries", [])[:cap], start=1
-            )
+            for index, query in enumerate(state.get("sub_queries", [])[:cap], start=1)
         )
     return sends
 
@@ -134,11 +152,11 @@ def route_after_evaluate(state: RAGState) -> list[Send] | EvaluateTarget:
     if not state.get("gap_pending"):
         return "generate_answer"
     evaluation = state.get("evaluation") or {}
-    match evaluation.get("additional_queries"):
+    match evaluation.get("additional_queries"):  # noqa: MATCH_OK - untrusted JSON.
         case list() as queries:
             string_queries: list[str] = []
             for query in queries:
-                match query:
+                match query:  # noqa: MATCH_OK - non-string JSON is discarded.
                     case str() as text:
                         string_queries.append(text)
                     case _:

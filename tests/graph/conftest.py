@@ -8,7 +8,7 @@ from typing import Any, Protocol
 import pytest
 from langchain_core.messages import ToolCall
 
-from healthcare_rag.graph.llm import LangChainLLMGateway
+from healthcare_rag.graph.llm import LangChainLLMGateway, QueryOrRespondDecision
 from healthcare_rag.graph.resources import Resources, override
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.models.retrieval import QueryResultList
@@ -20,6 +20,7 @@ class FakeGateway(LangChainLLMGateway):
     completion_results: dict[str, str] = field(default_factory=dict)
     tool_calls: list[ToolCall] = field(default_factory=list)
     route_error: Exception | None = None
+    query_decision: QueryOrRespondDecision | None = None
     calls: list[dict[str, Any]] = field(default_factory=list)
 
     async def astructured(
@@ -65,6 +66,21 @@ class FakeGateway(LangChainLLMGateway):
         if self.route_error is not None:
             raise self.route_error
         return self.tool_calls
+
+    async def aquery_or_respond(
+        self,
+        history: list[Any],
+        current_query: str,
+    ) -> QueryOrRespondDecision:
+        self.calls.append(
+            {
+                "method": "query_or_respond",
+                "history": history,
+                "query": current_query,
+            }
+        )
+        assert self.query_decision is not None
+        return self.query_decision
 
 
 class FakeLLMGateway(LangChainLLMGateway):

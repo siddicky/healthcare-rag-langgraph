@@ -66,7 +66,12 @@ def fold_branches(
         branch = str(event.get("branch", ""))
         if branch:
             statuses[branch] = str(event.get("status", "FAILED"))
-    if validated is None and not refusal and not validate_disabled and selected in statuses:
+    if (
+        validated is None
+        and not refusal
+        and not validate_disabled
+        and selected in statuses
+    ):
         statuses[selected] = "FAILED"
     return list(statuses.items())
 
@@ -79,8 +84,12 @@ def build_result(
     """Project persisted graph state without exposing the input question channel."""
     from evals.usage import summarize_usage
 
+    refusal = bool(state.get("safety_response"))
+    direct_response = (
+        None if refusal else scrub_phi(state.get("direct_response") or "")[0] or None
+    )
     contexts: list[dict[str, Any]] = []
-    if merged_data := state.get("merged"):
+    if not refusal and direct_response is None and (merged_data := state.get("merged")):
         for result in load_results(merged_data).results:
             for document in result.docs:
                 metadata = document.metadata or {}
@@ -95,16 +104,44 @@ def build_result(
                     }
                 )
     generation = state.get("generation") or {}
-    folded = fold_branches(
-        state.get("branch_events", []),
-        state.get("selected_branch_type"),
-        state.get("validated"),
-        refusal=bool(state.get("safety_response")),
-        validate_disabled="validate" in context.settings.disabled_stages,
+    folded = (
+        []
+        if refusal or direct_response is not None
+        else fold_branches(
+            state.get("branch_events", []),
+            state.get("selected_branch_type"),
+            state.get("validated"),
+            refusal=False,
+            validate_disabled="validate" in context.settings.disabled_stages,
+        )
     )
-    answer = scrub_phi(state.get("answer") or "")[0] or None
-    raw_answer = scrub_phi(str(generation.get("plain_answer") or ""))[0] or None
-    follow_ups = [scrub_phi(item)[0] for item in state.get("follow_ups") or []]
+    answer_source = (
+        "\n\n".join(
+            part
+            for part in [
+                *(state.get("safety_notices") or []),
+                state.get("safety_response") or "",
+            ]
+            if part
+        )
+        if refusal
+        else state.get("answer") or ""
+    )
+    answer = scrub_phi(answer_source)[0] or None
+    raw_answer = (
+        None
+        if refusal
+        else (
+            direct_response
+            or scrub_phi(str(generation.get("plain_answer") or ""))[0]
+            or None
+        )
+    )
+    follow_ups = (
+        []
+        if refusal
+        else [scrub_phi(item)[0] for item in state.get("follow_ups") or []]
+    )
     selected_query = scrub_phi(state.get("selected_branch_query") or "")[0] or None
     first = context.timing.first_answer or context.timing.finalized
     record = {
@@ -113,8 +150,12 @@ def build_result(
         "raw_answer": raw_answer,
         "follow_ups": follow_ups,
         "contexts": contexts,
-        "retrieved_chunk_ids": [c["chunk_id"] for c in contexts if c["chunk_id"] is not None],
-        "retrieved_pages": sorted({page for c in contexts for page in c["page_numbers"]}),
+        "retrieved_chunk_ids": [
+            c["chunk_id"] for c in contexts if c["chunk_id"] is not None
+        ],
+        "retrieved_pages": sorted(
+            {page for c in contexts for page in c["page_numbers"]}
+        ),
         "retrieved_sources": sorted({c["source"] for c in contexts}),
         "latency_s": round(
             (context.timing.finalized or context.timing.ended) - context.timing.started,
@@ -124,17 +165,28 @@ def build_result(
             round(first - context.timing.started, 3) if first is not None else None
         ),
         "usage": summarize_usage(calls),
-        "per_call_usage": [asdict(call) | {"cost_usd": call.cost_usd} for call in calls],
+        "per_call_usage": [
+            asdict(call) | {"cost_usd": call.cost_usd} for call in calls
+        ],
         "safety_outcome": state.get("safety"),
         "query_router": _safe_router_telemetry(state["query_router"])
-        if state.get("query_router") is not None
+        if not refusal and state.get("query_router") is not None
         else None,
-        "error": context.error or ("PIPELINE_STATE_ERROR" if state.get("error") else None),
+        "error": context.error
+        or ("PIPELINE_STATE_ERROR" if state.get("error") else None),
         "n_branches": len(folded),
         "branch_types": [branch for branch, _ in folded],
         "branch_statuses": [status for _, status in folded],
-        "selected_branch_type": state.get("selected_branch_type"),
-        "selected_branch_query": selected_query,
+        "selected_branch_type": (
+            None
+            if refusal or direct_response is not None
+            else state.get("selected_branch_type")
+        ),
+        "selected_branch_query": None
+        if refusal or direct_response is not None
+        else selected_query,
     }
+    if direct_response is not None:
+        record["response_action"] = state.get("response_action")
     used_history = bool((state.get("summary") or {}).get("required_context", False))
     return record, used_history

@@ -2,21 +2,21 @@ from dataclasses import replace
 
 from langgraph.types import Send
 
-from healthcare_rag.graph.resources import (
-    Resources,
-    get as get_resources,
-    override as override_resources,
-)
+from healthcare_rag.graph.resources import Resources
+from healthcare_rag.graph.resources import get as get_resources
+from healthcare_rag.graph.resources import override as override_resources
 from healthcare_rag.graph.routers import (
     NODE_EVALUATE,
     NODE_FINALIZE,
     NODE_FOLLOW_UPS,
     NODE_GENERATE,
+    NODE_QUERY_OR_RESPOND,
     NODE_RETRIEVE,
     route_after_decompose,
     route_after_evaluate,
     route_after_gate,
     route_after_merge,
+    route_after_query_or_respond,
     route_after_validate,
 )
 from healthcare_rag.graph.state import RAGState
@@ -39,6 +39,32 @@ def test_route_after_gate_finalizes_plain_refusals() -> None:
     state: RAGState = {"safety_response": "refusal"}
 
     assert route_after_gate(state) == NODE_FINALIZE
+
+
+def test_route_after_gate_finalizes_deterministic_direct_response() -> None:
+    state: RAGState = {
+        "direct_response": "Hello.",
+        "response_action": "direct",
+    }
+
+    assert route_after_gate(state) == NODE_FINALIZE
+
+
+def test_route_after_gate_sends_tool_social_turn_to_query_or_respond() -> None:
+    state: RAGState = {"response_action": "query_or_respond"}
+
+    assert route_after_gate(state) == NODE_QUERY_OR_RESPOND
+
+
+def test_route_after_query_or_respond_finalizes_direct_decision() -> None:
+    assert route_after_query_or_respond({"direct_response": "Hello."}) == NODE_FINALIZE
+
+
+def test_route_after_query_or_respond_rejoins_preprocessing_for_retrieval() -> None:
+    assert route_after_query_or_respond({"response_action": "retrieve"}) == [
+        "clarify_query",
+        "extract_conversation_context",
+    ]
 
 
 def test_route_after_decompose_always_sends_initial_parent() -> None:
@@ -187,9 +213,7 @@ def test_route_after_evaluate_sends_capped_gap_round_metadata() -> None:
     sends = route_after_evaluate(
         {
             "gap_pending": True,
-            "evaluation": {
-                "additional_queries": ["one", "two", "three", "four"]
-            },
+            "evaluation": {"additional_queries": ["one", "two", "three", "four"]},
         }
     )
 

@@ -6,6 +6,7 @@ config:
 graph TD;
 	__start__([<p>__start__</p>]):::first
 	safety_gate(safety_gate)
+	generate_query_or_respond(generate_query_or_respond)
 	finalize(finalize)
 	clarify_query(clarify_query)
 	extract_conversation_context(extract_conversation_context)
@@ -25,12 +26,16 @@ graph TD;
 	extract_conversation_context --> decompose_query;
 	generate_answer --> validate_answer;
 	generate_follow_ups --> finalize;
+	generate_query_or_respond -.-> clarify_query;
+	generate_query_or_respond -.-> extract_conversation_context;
+	generate_query_or_respond -.-> finalize;
 	merge_retrievals -.-> evaluate_retrieval;
 	merge_retrievals -.-> generate_answer;
 	retrieve_documents --> merge_retrievals;
 	safety_gate -.-> clarify_query;
 	safety_gate -.-> extract_conversation_context;
 	safety_gate -.-> finalize;
+	safety_gate -.-> generate_query_or_respond;
 	validate_answer -.-> finalize;
 	validate_answer -.-> generate_follow_ups;
 	finalize --> __end__;

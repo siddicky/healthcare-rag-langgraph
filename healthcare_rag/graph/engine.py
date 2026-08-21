@@ -28,9 +28,10 @@ from healthcare_rag.processors.safety import scrub_phi
 
 __all__ = ["Engine", "GraphEngine", "UsageRecorder", "build_engine", "fold_branches"]
 
+
 class Engine(Protocol):
     async def __aenter__(self) -> Self: ...
-    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None: ...
+    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None: ...  # noqa: PYI036
     async def seed_history(self, thread_id: str, turns: list[LegacyTurn]) -> None: ...
     async def run_turn(
         self, thread_id: str, question: str, monitor: QueryMonitor | None = None
@@ -47,7 +48,7 @@ def _redact_root_inputs(inputs: dict[str, Any]) -> dict[str, str]:
     """Fail closed because LangSmith otherwise retains the original arguments."""
     try:
         return {"question": scrub_phi(inputs["question"])[0]}
-    except Exception:  # noqa: BLE001 - mandated fail-closed tracing boundary.
+    except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK - fail-closed tracing boundary.
         return {}
 
 
@@ -70,7 +71,9 @@ class UsageRecorder(AsyncCallbackHandler):
         **kwargs: Any,
     ) -> None:
         del prompts, parent_run_id, tags, kwargs
-        model = str((metadata or {}).get("ls_model_name") or serialized.get("name") or "?")
+        model = str(
+            (metadata or {}).get("ls_model_name") or serialized.get("name") or "?"
+        )
         self._started[run_id] = (time.perf_counter(), model)
 
     async def on_llm_end(
@@ -98,8 +101,12 @@ class UsageRecorder(AsyncCallbackHandler):
         self.calls.append(
             LLMCallUsage(
                 model=model,
-                prompt_tokens=int(usage.get("input_tokens") or usage.get("prompt_tokens") or 0),
-                completion_tokens=int(usage.get("output_tokens") or usage.get("completion_tokens") or 0),
+                prompt_tokens=int(
+                    usage.get("input_tokens") or usage.get("prompt_tokens") or 0
+                ),
+                completion_tokens=int(
+                    usage.get("output_tokens") or usage.get("completion_tokens") or 0
+                ),
                 cached_prompt_tokens=int(details.get("cache_read") or 0),
                 latency_s=time.perf_counter() - started,
                 kind="create",
@@ -121,7 +128,7 @@ class GraphEngine:
             await self._initialize()
         return self
 
-    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:  # noqa: PYI036
         del exc_type, exc, traceback
         await self.aclose()
 
@@ -134,7 +141,9 @@ class GraphEngine:
             except ModuleNotFoundError as exc:
                 message = "SQLite checkpointing requires: pip install healthcare-rag[graph-sqlite]"
                 raise RuntimeError(message) from exc
-            self._sqlite_context = module.AsyncSqliteSaver.from_conn_string(uri.removeprefix("sqlite:"))
+            self._sqlite_context = module.AsyncSqliteSaver.from_conn_string(
+                uri.removeprefix("sqlite:")
+            )
             saver = await self._sqlite_context.__aenter__()
             await saver.setup()
         else:
@@ -189,13 +198,18 @@ class GraphEngine:
                         first_answer = time.perf_counter()
                         if monitor is not None and not refusal:
                             generation = update.get("generation") or {}
-                            monitor.set_raw_answer(str(generation.get("plain_answer") or ""))
+                            monitor.set_raw_answer(
+                                str(generation.get("plain_answer") or "")
+                            )
                     if node == "finalize":
                         finalized = time.perf_counter()
                         if monitor is not None:
+                            if update.get("direct_response") and not refusal:
+                                first_answer = first_answer or finalized
+                                monitor.set_raw_answer(update.get("direct_response"))
                             monitor.set_final_answer(update.get("answer"))
                             monitor.set_follow_up_questions(update.get("follow_ups"))
-        except Exception as exc:  # noqa: BLE001 - top-level raw-free request boundary.
+        except Exception as exc:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK - top-level raw-free request boundary.
             if isinstance(exc, PrivacyScanError):
                 privacy_failed = True
                 error = str(exc)
@@ -209,7 +223,7 @@ class GraphEngine:
             try:
                 snapshot = await self.compiled.aget_state(config)
                 state = snapshot.values
-            except Exception:  # noqa: BROAD_EXCEPT_OK - raw-free state boundary.
+            except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK - raw-free state boundary.
                 error = error or "PIPELINE_STATE_READ_FAILED"
                 state = {}
                 if monitor is not None:

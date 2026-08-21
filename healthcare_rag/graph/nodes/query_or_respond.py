@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from langchain_core.messages import BaseMessage
+from langgraph.types import Command
 from pydantic import TypeAdapter, ValidationError
 
 from healthcare_rag.graph.llm import (
@@ -9,6 +10,10 @@ from healthcare_rag.graph.llm import (
     RouterAction,
 )
 from healthcare_rag.graph.resources import get as get_resources
+from healthcare_rag.graph.routers import (
+    QueryOrRespondTarget,
+    route_after_query_or_respond,
+)
 from healthcare_rag.graph.state import JSONValue, RAGState
 from healthcare_rag.models.safety import SocialIntent
 from healthcare_rag.processors.social_responses import social_response
@@ -107,3 +112,9 @@ async def generate_query_or_respond(state: RAGState) -> RAGState:
         "response_action": "retrieve",
         "query_router": _telemetry(decision, "retrieve", fallback_reason),
     }
+
+
+async def route_query_or_respond(state: RAGState) -> Command[QueryOrRespondTarget]:
+    update = await generate_query_or_respond(state)
+    next_state: RAGState = {**state, **update}
+    return Command(update=update, goto=route_after_query_or_respond(next_state))

@@ -35,9 +35,9 @@ def test_original_safety_node_coroutine_and_signature_contracts() -> None:
 
 def test_classifier_old_and_new_import_paths_have_identical_objects() -> None:
     assert safety.LangChainSafetyGate is safety_classifier.LangChainSafetyGate
-    assert str(inspect.signature(safety_classifier.LangChainSafetyGate._llm_assess)) == (
-        "(self, query: 'str', history_context: 'str' = '') -> 'SafetyAssessment'"
-    )
+    assert str(
+        inspect.signature(safety_classifier.LangChainSafetyGate._llm_assess)
+    ) == ("(self, query: 'str', history_context: 'str' = '') -> 'SafetyAssessment'")
 
 
 def test_finalizer_old_and_new_import_paths_have_identical_objects() -> None:
@@ -72,14 +72,46 @@ async def test_finalize_refusal_has_no_followups_and_persists_displayed_turn() -
 
     assert result.get("answer") == "Identifiers removed.\n\nPlease ask your prescriber."
     assert result.get("follow_ups") == []
-    assert result.get("selected_branch_query") == "Should I change my metformin?"
+    assert result.get("selected_branch_query") is None
     assert [message.content for message in result.get("messages", [])] == [
         "Should I change my metformin?",
         "Identifiers removed.\n\nPlease ask your prescriber.",
     ]
 
 
-async def test_finalize_validated_answer_persists_displayed_turn_and_followups() -> None:
+async def test_finalize_refusal_clears_conflicting_direct_routing_state() -> None:
+    result = await safety.finalize(
+        {
+            "scrubbed_question": "Should I change treatment?",
+            "safety_response": "REFUSAL_WINS",
+            "direct_response": "DIRECT_MUST_NOT_PERSIST",
+            "response_action": "direct",
+            "query_router": {"effective_action": "direct"},
+            "follow_ups": ["STALE_FOLLOWUP"],
+            "selected_branch_type": "stale",
+            "selected_branch_query": "stale query",
+        }
+    )
+
+    assert result.get("answer") == "REFUSAL_WINS"
+    assert result.get("follow_ups") == []
+    assert {
+        "direct_response",
+        "response_action",
+        "query_router",
+        "selected_branch_type",
+        "selected_branch_query",
+    } <= result.keys()
+    assert result.get("direct_response") is None
+    assert result.get("response_action") is None
+    assert result.get("query_router") is None
+    assert result.get("selected_branch_type") is None
+    assert result.get("selected_branch_query") is None
+
+
+async def test_finalize_validated_answer_persists_displayed_turn_and_followups() -> (
+    None
+):
     result = await safety.finalize(
         {
             "scrubbed_question": "What does the monograph say?",
@@ -96,6 +128,29 @@ async def test_finalize_validated_answer_persists_displayed_turn_and_followups()
     assert [message.content for message in result.get("messages", [])] == [
         "What does the monograph say?",
         "Safety notice.\n\nSupported answer.",
+    ]
+
+
+async def test_finalize_direct_response_has_priority_and_clears_medical_channels() -> (
+    None
+):
+    result = await safety.finalize(
+        {
+            "scrubbed_question": "Hello",
+            "direct_response": "Hello back.",
+            "validated": "stale medical answer",
+            "follow_ups": ["stale follow-up"],
+            "merged": [{"stale": True}],
+            "branch_events": [{"branch": "stale", "status": "SUCCEEDED"}],
+        }
+    )
+
+    assert result.get("answer") == "Hello back."
+    assert result.get("follow_ups") == []
+    assert result.get("merged") is None
+    assert [message.content for message in result.get("messages", [])] == [
+        "Hello",
+        "Hello back.",
     ]
 
 

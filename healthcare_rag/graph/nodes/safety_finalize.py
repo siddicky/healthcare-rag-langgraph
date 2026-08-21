@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from langchain_core.messages import AIMessage, HumanMessage
 
@@ -11,11 +11,15 @@ from healthcare_rag.processors.safety import scrub_phi
 
 async def finalize(state: RAGState) -> RAGState:
     safety_response = state.get("safety_response", "")
+    direct_response = state.get("direct_response")
     if safety_response:
         answer = "\n\n".join(
             part for part in [*state.get("safety_notices", []), safety_response] if part
         )
         follow_ups: list[str] = []
+    elif direct_response:
+        answer = direct_response
+        follow_ups = []
     else:
         answer = render_display_answer(
             state.get("validated"),
@@ -34,8 +38,29 @@ async def finalize(state: RAGState) -> RAGState:
         "follow_ups": follow_ups,
         "selected_branch_query": selected_branch_query,
     }
+    if safety_response:
+        update.update(
+            {
+                "direct_response": None,
+                "response_action": None,
+                "query_router": None,
+                "selected_branch_type": None,
+                "selected_branch_query": None,
+            }
+        )
+    elif direct_response:
+        update.update(
+            {
+                "direct_response": answer or None,
+                "merged": None,
+                "generation": None,
+                "validated": None,
+                "selected_branch_type": None,
+                "selected_branch_query": None,
+            }
+        )
     if answer:
-        timestamp = datetime.now(timezone.utc).isoformat()
+        timestamp = datetime.now(UTC).isoformat()
         update["messages"] = [
             HumanMessage(
                 content=state.get("scrubbed_question", ""),
