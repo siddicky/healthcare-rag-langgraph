@@ -4,6 +4,13 @@
     "healthcare_rag": "./healthcare_rag/graph/__init__.py:graph",
     "coach": "./healthcare_rag/agent/__init__.py:coach"
   },
+  "store": {
+    "index": {
+      "embed": "openai:text-embedding-3-small",
+      "dims": 1536,
+      "fields": ["$"]
+    }
+  },
   "env": ".env",
   "python_version": "3.12",
   "dockerfile_lines": [
