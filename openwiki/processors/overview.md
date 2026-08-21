@@ -23,13 +23,15 @@ openwiki:
 | `clarify_query` | `clarify_query` (`nodes/preprocess.py`) | `clarify_query.yaml.j2` | `ClarifiedQuery` | default, unset; skipped without history context or when disabled |
 | `decompose_query` | `decompose_query` (`nodes/preprocess.py`) | `decompose_query.yaml.j2` | `DecomposedQuery` | default, unset; complexity-gated and capped |
 | `extract_conversation_context` | `extract_conversation_context` (`nodes/preprocess.py`) | `context_extraction.yaml.j2` | `RelevantHistoryContext` | default, 0.1; no history returns `required_context=False`, empty snippets |
-| retrieval routing | `retrieve_documents` (`nodes/retrieve.py`) | no template | LangChain `ToolCall[]` via `aroute_tools` + `build_routing_tools` | default; then Weaviate hybrid search. See [retrieval](../retrieval/weaviate-and-ingestion.md) |
+| retrieval routing | `retrieve_documents` (`nodes/retrieve.py`) | no template | LangChain `ToolCall[]` via `aroute_tools` + `build_routing_tools` | default; then the selected retrieval arm's search. See [retrieval](../retrieval/weaviate-and-ingestion.md) and [retrieval arms](../retrieval/retrieval-arms.md) |
+| `pageindex_select` | inside `pageindex_search` (`processors/pageindex_retrieval.py`) | `pageindex_select.yaml.j2` | `PageIndexSelection` | default, unset; only on the pageindex arm; fail-soft to an empty selection |
+| `query_or_respond` | `generate_query_or_respond` (`nodes/query_or_respond.py`) | `query_or_respond.yaml.j2` | tool call via `aquery_or_respond` → `QueryOrRespondDecision` (no `RESPONSE_MODELS` entry — the decision is parsed from a bound tool call, not structured output) | default; only when `HC_RAG_QUERY_RESPONSE_ARM=tool`; direct content must pass the [direct-output policy](../safety/privacy-sanitizer.md) |
 | `evaluate_retrieval` | `evaluate_retrieval` (`nodes/evaluate.py`) | `retrieval_evaluation.yaml.j2` | `RetrievalEvaluation` | default, 0.1; drives the one gap-fill round |
 | `generate_answer` | `generate_answer` (`nodes/generate.py`) | `answer_generation.yaml.j2` | plain string (`acomplete`) | default, 0.1; plus `formatted_docs`/`prompt_id_map` from `format_documents_for_prompt` |
 | `validate_answer` | `validate_answer` (`nodes/generate.py`) | `answer_structuring.yaml.j2` | `CitedAnswerResult` (via `AnswerValidator`) | **validator**, 0.0; quote threshold 85. See [validation](validation.md) |
 | `generate_follow_ups` | `generate_follow_ups` (`nodes/generate.py`) | `follow_up_questions.yaml.j2` | `FollowUpQuestions` | default, unset; runs only with a validated answer and `user_id` |
 
-`healthcare_rag/processors/` now holds the reusable logic the nodes call (`safety.py`, `refusal_boundary.py`, `validation.py`, `retrieval.py`, `generation.py`, `pdf_chunker.py`, `safety_responses.py`); `base.py` only provides the `log_timing` decorator. The old `PromptManager`/`LLMParserService`/processor-class layer is gone.
+`healthcare_rag/processors/` now holds the reusable logic the nodes call (`safety.py`, `safety_responses.py`, `social_responses.py` (benign-social direct text), `privacy.py` + `privacy_patterns.py` (Presidio sanitizer), `direct_output_policy.py` (tool-arm answer gating), `refusal_boundary.py`, `validation.py`, `retrieval.py`, `pageindex_retrieval.py`, `pinecone_retrieval.py`, `rerank.py`, `generation.py`, `pdf_chunker.py`); `base.py` only provides the `log_timing` decorator. The old `PromptManager`/`LLMParserService`/processor-class layer is gone.
 
 ## Contracts and change rules
 

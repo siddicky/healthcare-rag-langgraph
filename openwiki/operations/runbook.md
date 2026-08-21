@@ -10,7 +10,7 @@ tags: [operations, setup, weaviate]
 ## First run
 
 1. Install `uv`, Docker, and Docker Compose. Use Python **3.11 or newer**; the project metadata requires `>=3.11` because models use `typing.Self` (`pyproject.toml#L1-L16`).
-2. Put only required values in local `.env`: `OPENAI_API_KEY` is required. Optionally set `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`, model variables, and LangSmith variables. Never commit or document secret values.
+2. Put only required values in local `.env`: `OPENAI_API_KEY` is required. Optionally set `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`, model variables, LangSmith variables, and `PINECONE_API_KEY` only if you use the pinecone arm or reranker. Never commit or document secret values.
 3. Run `make venv`. It intentionally creates Python 3.12 and installs `.[evals,dev,graph-sqlite]` via uv (`Makefile#L11-L13`). Do **not** use `requirements.txt`: it is a large frozen list whose pins conflict with the declared constrained dependencies and is known unsatisfiable for this project brief.
 4. Run `make weaviate`; it starts Compose and polls `http://127.0.0.1:8080/v1/.well-known/ready`.
 5. Run `make ingest`, then `make run` for `python -m healthcare_rag`.
@@ -23,9 +23,12 @@ The CLI shows a raw preliminary response after up to 30 seconds and later a veri
 |---|---|
 | `make venv` | create `.venv` (Python 3.12), install app + evals + dev + graph-sqlite extras |
 | `make weaviate` | start and wait for local Weaviate |
-| `make ingest` | destructive rebuild from checked-in chunks |
+| `make ingest` | destructive rebuild from checked-in chunks (Weaviate) |
+| `make ingest-pinecone` | rebuild the Pinecone index from the same chunks (needs `PINECONE_API_KEY` + `OPENAI_API_KEY`) |
+| `make index-pageindex` | build cached PageIndex trees in an isolated throwaway env (pageindex needs openai>=2, incompatible with `.venv`; ~$0.10) |
+| `make container-build` / `make container-ingest` / `make container-run` | build/run the app image with the pinned Presidio/spaCy model baked in (`docker compose --profile app`) |
 | `make run` | interactive CLI |
-| `make test` | offline pytest: evaluator calibration, graph runtime suite (`tests/graph/`), safety gate, and parity gate; no network |
+| `make test` | offline pytest: evaluator calibration, privacy/routing/graph suites, parity gate; no network |
 | `make test-judges` | LLM-judge calibration tests, `-m judge`, need `OPENAI_API_KEY` (~$0.10) |
 | `make calibrate` | print evaluator calibration report |
 | `make dataset-sync` / `make dataset-sync-multiturn` | upsert golden / multi-turn datasets to LangSmith |
@@ -36,6 +39,7 @@ The CLI shows a raw preliminary response after up to 30 seconds and later a veri
 | `make eval-ablations` | stage-ablation experiments (no-validate/no-evaluate/no-decompose) |
 | `make eval-multiturn` / `make eval-multiturn-smoke` | multi-turn conversation eval (full / 2-conversation no-judge) |
 | `make compare EXPS="a b c"` | side-by-side experiment comparison by category |
+| `make routing-gate-query-smoke` / `make routing-gate-safety-smoke` | fixture smoke of the routing A/B gates ([routing evaluations](../observability/routing-evals.md)) |
 | `make journey` | rebuild `docs/journey.html` from `docs/journey.json` |
 | `make wiki-init` / `make wiki-update` | regenerate / refresh these OpenWiki docs |
 
@@ -47,5 +51,4 @@ Compose exposes HTTP 8080 and gRPC 50051, stores data in named `weaviate_data`, 
 
 For PDF rechunking, install the `ingest` extra and run `uv run python healthcare_rag/processors/pdf_chunker.py --source <allowed-pdf-path>` or the ingestion CLI. Regeneration changes expected chunk IDs/pages, so update the golden dataset/evals in the same change; do not inspect or copy PDF contents into documentation.
 
-**Broad validation only when needed:** run full judge eval after corpus/model/prompt safety changes. For ordinary code changes use `make eval-smoke` or a filtered deterministic baseline first. 
-anges use `make eval-smoke` or a filtered deterministic baseline first. 
+**Broad validation only when needed:** run full judge eval after corpus/model/prompt safety changes. For ordinary code changes use `make eval-smoke` or a filtered deterministic baseline first.

@@ -93,6 +93,12 @@ pre-node stream events cannot be retroactively sanitized by graph code.
 | `ambiguous` | Normal pipeline — the existing clarify stage already handles under-specified queries. | yes | yes |
 | *any* + `contains_phi` | Recognized identifiers are replaced with `[REDACTED_…]` **before** the text reaches the safety LLM, retrieval, downstream prompts, updates, monitor fields, results, or history, and the reply is prefixed with one line: *"I've disregarded the personal identifiers in your message; please don't share them here."* | — | — |
 
+`benign_social` is a separate annotation, not a seventh safety category. It is
+true only for a standalone greeting, thanks, goodbye, or capability/scope
+question with no medical or general-knowledge request; its category remains
+`out_of_scope`. Mixed social/medical messages are not benign social and retain
+their medical safety classification.
+
 A request to read identifiers back ("remind me what my health card number was", "just the
 last three digits") is refused with its own template. There is genuinely nothing to read
 back — the identifiers were removed on the way in.
@@ -205,9 +211,46 @@ classifier.
 | `HC_RAG_SAFETY_GATE` | `true` | `false` disables safety classification only; identifier sanitization remains active |
 | `HC_RAG_DISABLE_STAGES` | *(empty)* | add `safety` for the same classification ablation; identifier sanitization remains active |
 | `HC_RAG_REFUSAL_BOUNDARY` | `true` | persist qualifying gate refusals per thread and replay them deterministically on matching re-asks; `false` restores exactly the pre-boundary behavior; implied off whenever the safety gate is off |
+| `HC_RAG_QUERY_RESPONSE_ARM` | `current` | `current` preserves the existing scope response for benign social turns; `deterministic` emits fixed social text; `tool` invokes the query-or-respond node. Direct response is never medical. |
+| `HC_RAG_SAFETY_CLASSIFIER` | `llm` | Keep this default. `semantic_router` is not currently usable: `semantic-router==0.1.16` has a dependency conflict with unchanged `openai>=1.76,<2` and `python-dotenv>=1.1`. |
 
 All are read in `healthcare_rag/services/models.py` (`safety_gate_enabled()`,
-`refusal_boundary_enabled()`).
+`refusal_boundary_enabled()`, `query_response_arm()`, and
+`safety_classifier_backend()`).
+
+## Routing-arm safety boundary and experiment status
+
+The production defaults remain `HC_RAG_QUERY_RESPONSE_ARM=current` and
+`HC_RAG_SAFETY_CLASSIFIER=llm`.
+
+The three query-response arms apply only after the safety gate has classified
+and scrubbed the turn. `current` leaves a benign social turn on the established
+out-of-scope scope response. `deterministic` can return fixed scrubbed text for
+only greeting, thanks, goodbye, and capability/scope. `tool` can evaluate that
+same benign-social turn; a malformed or non-direct social decision falls back
+to the fixed social response, while non-social turns continue through retrieval.
+
+Direct response is never medical. In-scope medical, mixed social/medical,
+ambiguous clinical, out-of-scope knowledge, personal-advice, emergency,
+identifier-recall, and prompt-injection turns cannot use the direct-response
+channel. They remain subject to the safety gate, terminal refusals where
+applicable, retrieval, and citation validation. This does not change the PHI
+sanitization, persisted-refusal, or citation guarantees described above.
+
+The query lane is **INCONCLUSIVE**: its sealed judge calibration passed 22 of
+24 fixtures. No paired or paid query run was attempted, so there are no
+query-arm metrics, deltas, cost, latency, or experiment URLs. The source
+artifacts are [`evals/results/query-or-respond.md`](../evals/results/query-or-respond.md)
+and [`query-or-respond.json`](../evals/results/query-or-respond.json).
+
+The semantic safety lane is separately **INCONCLUSIVE** for a missing
+dependency. Exact `semantic-router==0.1.16` conflicts with unchanged
+`openai>=1.76,<2` and `python-dotenv>=1.1`; it is not a selectable successful
+backend. No adapter, configuration, calibration, stage, or paid semantic run
+was attempted. The dependency was not installed, imported, or exercised, and
+there are no semantic metrics. See
+[`evals/results/semantic-safety.md`](../evals/results/semantic-safety.md) and
+[`semantic-safety.json`](../evals/results/semantic-safety.json).
 
 ## Cost and latency
 

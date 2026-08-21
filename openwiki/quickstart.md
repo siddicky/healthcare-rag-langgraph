@@ -18,6 +18,7 @@ This repository is an async RAG assistant over Lipitor and Metformin monograph c
 - [Models and runtime state](configuration/models-and-runtime.md) — environment, GPT reasoning compatibility, stage switches, checkpointed history.
 - [Runbook](operations/runbook.md) — setup, Docker, ingestion, CLI, LangGraph dev server, recovery.
 - [Tracing and evaluations](observability/evaluations.md) — LangSmith plus single-/multi-turn regression workflows and the parity gate.
+- [Routing gates](observability/routing-evals.md) — paired query/safety arm comparison gates; smoke commands and why both lanes are INCONCLUSIVE today.
 - [Safety gate](safety/gate.md) — runtime pre-pipeline guard: PHI scrubbing, classification, templated refusals, persisted refusal-boundary replay.
 - [Safety posture](safety/posture.md) — safeguards, gaps, and required safety evidence.
 
@@ -36,6 +37,7 @@ This repository is an async RAG assistant over Lipitor and Metformin monograph c
 | operate local stack/rebuild data | [Runbook](operations/runbook.md) | Makefile, Compose, vector loader | ready probe, narrow retrieval eval |
 | change medical safety/privacy behavior | [Safety gate](safety/gate.md), [Safety posture](safety/posture.md) | `safety_gate` node, `SafetyGate.evaluate`, `scrub_phi`, `safety_responses.py`, `safety_gate_enabled` | `make test` (`tests/test_safety_gate.py`, `tests/graph/test_graph_safety.py`); filtered safety eval + multi-turn safety run |
 | change refusal persistence/replay | [Safety gate](safety/gate.md) | `RefusalBoundary`, `boundary_hit`, `upsert_boundary`, `refusal_boundary_enabled` | `make test` (`tests/test_refusal_boundary.py`, `tests/graph/test_graph_safety.py`, `tests/graph/test_boundary_durability.py`); multi-turn safety eval |
+| change routing-gate verdicts or arm adapters | [Routing gates](observability/routing-evals.md) | `evaluate_query`/`evaluate_safety`, `run_arm`, `HC_RAG_ROUTING_ARM_ADAPTER` | `make test` (`tests/test_routing_gate.py`, `test_routing_gate_runtime.py`); `make routing-gate-query-smoke routing-gate-safety-smoke` |
 
 ## First local command sequence
 
