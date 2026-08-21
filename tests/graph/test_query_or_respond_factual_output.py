@@ -38,6 +38,8 @@ from .query_or_respond_fakes import _install, _state
         "I'd be glad to discuss atorvastatin uses metformin.",
         "I can provide information about metformin treats diabetes.",
         "I'm here to help with metformin uses atorvastatin.",
+        "I'm happy to help, metformin treats diabetes.",
+        "We're happy to help — atorvastatin uses metformin.",
     ],
 )
 async def test_social_factual_medical_prose_uses_deterministic_fallback(
@@ -127,6 +129,26 @@ async def test_social_factual_medical_prose_uses_deterministic_fallback(
         (
             "capability",
             "I can answer questions about metformin interactions from the monograph.",
+        ),
+        (
+            "capability",
+            "We're here to provide information about metformin side effects from the monograph.",
+        ),
+        (
+            "capability",
+            "I'm happy to help, with questions about metformin interactions.",
+        ),
+        (
+            "capability",
+            "We're happy to help — with questions about Lipitor warnings.",
+        ),
+        (
+            "capability",
+            "I'd be glad to assist, with questions on metformin warnings.",
+        ),
+        (
+            "capability",
+            "We're here to help — with questions about Lipitor interactions.",
         ),
         ("greeting", "That pillbox looks useful."),
     ],

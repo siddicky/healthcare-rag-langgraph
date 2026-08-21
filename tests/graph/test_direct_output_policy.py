@@ -87,6 +87,11 @@ def test_clinical_unit_transformations_are_rejected(content: str) -> None:
         "We'd be happy to provide information from the product monographs.",
         "I can discuss atorvastatin warnings from the monograph.",
         "I can answer questions about metformin interactions from the monograph.",
+        "We're here to provide information about metformin side effects from the monograph.",
+        "I'm happy to help, with questions about metformin interactions.",
+        "We're happy to help — with questions about Lipitor warnings.",
+        "I'd be glad to assist, with questions on metformin warnings.",
+        "We're here to help — with questions about Lipitor interactions.",
         "Do not hesitate to ask another question.",
         "You can ask about the monographs.",
         "Never mind, thanks.",
@@ -132,6 +137,8 @@ def test_benign_whole_token_controls_are_allowed(content: str) -> None:
         "I'd be glad to discuss atorvastatin uses metformin.",
         "I can provide information about metformin treats diabetes.",
         "I'm here to help with metformin uses atorvastatin.",
+        "I'm happy to help, metformin treats diabetes.",
+        "We're happy to help — atorvastatin uses metformin.",
     ],
 )
 def test_factual_medical_prose_is_rejected(content: str) -> None:

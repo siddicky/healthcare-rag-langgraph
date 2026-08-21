@@ -43,7 +43,7 @@ _CAPABILITY_SENTENCE: Final = re.compile(
     r"|feel\s+free\s+to\s+ask"
     r"|do\s+not\s+hesitate\s+to\s+ask"
     r"|consider\s+asking"
-    r")(?:\s+(?P<scope>.+))?"
+    r")(?:(?:\s*,\s+|\s+—\s+|\s+)(?P<scope>.+))?"
 )
 _DRUG_SCOPE: Final = (
     r"(?:lipitor(?:\s*\(\s*atorvastatin\s*\))?|atorvastatin|metformin)"
@@ -62,13 +62,16 @@ _CATEGORY_LIST: Final = (
 _MONOGRAPH_TOPIC: Final = (
     rf"{_MONOGRAPH_SCOPE}(?:\s*,\s*including\s+{_CATEGORY_LIST})?"
 )
-_CAPABILITY_TOPIC: Final = (
+_ORDERED_CAPABILITY_TOPIC: Final = (
     rf"(?:{_MONOGRAPH_TOPIC}"
     rf"|{_DRUG_SCOPE}\s+{_CAPABILITY_CATEGORY}"
     rf"(?:\s+from\s+{_MONOGRAPH_SCOPE})?"
     rf"|{_CAPABILITY_CATEGORY}(?:\s+in\s+general)?"
-    rf"(?:\s+from\s+{_MONOGRAPH_SCOPE})?"
-    rf"|information\s+(?:about|from|on)\s+{_MONOGRAPH_TOPIC})"
+    rf"(?:\s+from\s+{_MONOGRAPH_SCOPE})?)"
+)
+_CAPABILITY_TOPIC: Final = (
+    rf"(?:{_ORDERED_CAPABILITY_TOPIC}"
+    rf"|information\s+(?:about|from|on)\s+{_ORDERED_CAPABILITY_TOPIC})"
 )
 _QUESTION_SCOPE: Final = (
     r"(?:(?:a|an|another|any|your)\s+)?questions?"
