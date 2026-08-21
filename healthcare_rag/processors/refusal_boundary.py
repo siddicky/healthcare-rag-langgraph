@@ -63,11 +63,12 @@ _CONTINUATION = re.compile(
     re.IGNORECASE,
 )
 _INFORMATIONAL = re.compile(
-    r"the monograph|product monograph|prescribing information|patient information|the label|" +
+    r"the monograph|product monograph|prescribing information|patient information|" +
+    r"product information|general information|non-personal information|in general\b|the label|" +
     r"per the (monograph|label|document)|" +
     r"(inside|within|under|over|above|below|exceed\w*) (the |a |that )?" +
     r"(limit|maximum|max(imum)? (daily )?dose|recommended|range|stated)|" +
-    r"what('s| is| are) the (usual|maximum|max|recommended|typical|normal|listed|documented)|" +
+    r"what(?:['’]?s| is| are) the (usual|maximum|max|recommended|typical|normal|listed|documented)|" +
     r"does the (monograph|document)|is [^.?!]{0,30} a (listed|reported|known|documented)|" +
     r"how is [^.?!]{0,30} (dosed|given|titrated)|" +
     r"(how|what) (are|is|do|does) [^.?!]{0,40}? " +
