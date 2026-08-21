@@ -77,6 +77,8 @@ def test_clinical_unit_transformations_are_rejected(content: str) -> None:
         "Ask me anything about the Lipitor monograph.",
         "I can answer questions about the Lipitor monograph.",
         "Feel free to ask another question.",
+        "I am able to discuss any question about product monographs.",
+        "We could help with your questions on metformin interactions.",
         "Do not hesitate to ask another question.",
         "You can ask about the monographs.",
         "Never mind, thanks.",
@@ -114,6 +116,10 @@ def test_benign_whole_token_controls_are_allowed(content: str) -> None:
         "Happy to answer diabetes is a chronic condition.",
         "Feel free to ask metformin treats diabetes.",
         "I can answer insulin lowers glucose.",
+        "Happy to answer atorvastatin uses metformin.",
+        "Feel free to ask metformin uses atorvastatin.",
+        "I can discuss lipitor interactions metformin.",
+        "We could help with metformin uses atorvastatin.",
     ],
 )
 def test_factual_medical_prose_is_rejected(content: str) -> None:

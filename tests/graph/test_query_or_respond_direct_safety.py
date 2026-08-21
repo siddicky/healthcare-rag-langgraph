@@ -170,6 +170,14 @@ async def test_social_clinical_direct_content_uses_deterministic_fallback(
         ("capability", "Ask me anything about the Lipitor monograph."),
         ("capability", "I can answer questions about the Lipitor monograph."),
         ("capability", "Feel free to ask another question."),
+        (
+            "capability",
+            "I am able to discuss any question about product monographs.",
+        ),
+        (
+            "capability",
+            "We could help with your questions on metformin interactions.",
+        ),
         ("greeting", "That pillbox looks useful."),
     ],
 )

@@ -30,6 +30,10 @@ from .query_or_respond_fakes import _install, _state
         "Happy to answer diabetes is a chronic condition.",
         "Feel free to ask metformin treats diabetes.",
         "I can answer insulin lowers glucose.",
+        "Happy to answer atorvastatin uses metformin.",
+        "Feel free to ask metformin uses atorvastatin.",
+        "I can discuss lipitor interactions metformin.",
+        "We could help with metformin uses atorvastatin.",
     ],
 )
 async def test_social_factual_medical_prose_uses_deterministic_fallback(

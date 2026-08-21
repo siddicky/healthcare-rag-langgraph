@@ -39,42 +39,42 @@ _CAPABILITY_SENTENCE: Final = re.compile(
     r"|consider\s+asking"
     r")(?:\s+(?P<scope>.+))?"
 )
-_CAPABILITY_SCOPE_WORDS: Final = frozenset(
-    {
-        "a",
-        "about",
-        "and",
-        "another",
-        "any",
-        "anything",
-        "atorvastatin",
-        "dosing",
-        "effects",
-        "from",
-        "general",
-        "grounded",
-        "in",
-        "including",
-        "information",
-        "interactions",
-        "lipitor",
-        "me",
-        "metformin",
-        "monitoring",
-        "monograph",
-        "monographs",
-        "on",
-        "or",
-        "product",
-        "question",
-        "questions",
-        "side",
-        "the",
-        "uses",
-        "warnings",
-        "with",
-        "your",
-    }
+_DRUG_SCOPE: Final = (
+    r"(?:lipitor(?:\s*\(\s*atorvastatin\s*\))?|atorvastatin|metformin)"
+)
+_DRUG_LIST_SCOPE: Final = rf"{_DRUG_SCOPE}(?:\s+(?:and|or)\s+{_DRUG_SCOPE})*"
+_MONOGRAPH_SCOPE: Final = (
+    rf"(?:the\s+)?(?:{_DRUG_LIST_SCOPE}\s+)?(?:product\s+)?monographs?"
+)
+_CAPABILITY_CATEGORY: Final = (
+    r"(?:dosing|effects|interactions|monitoring|uses|warnings|side\s+effects)"
+)
+_CATEGORY_LIST: Final = (
+    rf"{_CAPABILITY_CATEGORY}(?:\s*,\s*{_CAPABILITY_CATEGORY})*"
+    rf"(?:\s*,?\s+and\s+{_CAPABILITY_CATEGORY})?"
+)
+_MONOGRAPH_TOPIC: Final = (
+    rf"{_MONOGRAPH_SCOPE}(?:\s*,\s*including\s+{_CATEGORY_LIST})?"
+)
+_CAPABILITY_TOPIC: Final = (
+    rf"(?:{_MONOGRAPH_TOPIC}"
+    rf"|{_DRUG_SCOPE}\s+{_CAPABILITY_CATEGORY}"
+    rf"|{_CAPABILITY_CATEGORY}(?:\s+in\s+general)?"
+    rf"(?:\s+from\s+{_MONOGRAPH_SCOPE})?"
+    rf"|information\s+(?:about|from|on)\s+{_MONOGRAPH_TOPIC})"
+)
+_QUESTION_SCOPE: Final = (
+    r"(?:(?:a|an|another|any|your)\s+)?questions?"
+    rf"(?:\s+(?:(?:about|on)\s+{_CAPABILITY_TOPIC}"
+    rf"|grounded\s+in\s+{_MONOGRAPH_SCOPE}))?"
+)
+_CAPABILITY_SCOPE: Final = re.compile(
+    rf"(?:{_QUESTION_SCOPE}"
+    rf"|(?:me\s+)?anything(?:\s+(?:about|on)\s+{_CAPABILITY_TOPIC})?"
+    rf"|me"
+    rf"|(?:me\s+)?(?:about|on)\s+{_CAPABILITY_TOPIC}"
+    rf"|with\s+(?:{_QUESTION_SCOPE}|{_CAPABILITY_TOPIC})"
+    rf"|{_CAPABILITY_TOPIC})"
 )
 _WHOLE_TOKEN_CONTROLS: Final = frozenset(
     {
@@ -230,10 +230,8 @@ def _is_social_output(normalized: str) -> bool:
         if capability is None:
             return False
         scope = capability.group("scope")
-        if scope is not None:
-            scope_tokens = frozenset(_TOKEN.findall(scope))
-            if not scope_tokens.issubset(_CAPABILITY_SCOPE_WORDS):
-                return False
+        if scope is not None and _CAPABILITY_SCOPE.fullmatch(scope) is None:
+            return False
     return True
 
 
