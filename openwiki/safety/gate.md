@@ -6,9 +6,9 @@ tags: [safety, gate, pii, prompt-injection]
 openwiki:
   roles: [architecture, domain, testing]
   change_kinds: [lifecycle, public-api]
-  source_paths: [healthcare_rag/processors/safety.py, healthcare_rag/processors/safety_responses.py, prompts/safety_gate.yaml.j2, healthcare_rag/models/safety.py, healthcare_rag/graph/nodes/safety.py]
-  symbols: [SafetyGate, SafetyDecision, scrub_phi, SafetyAssessment, SafetyOutcome, assess_safety]
-  test_paths: [tests/test_safety_gate.py]
+  source_paths: [healthcare_rag/processors/safety.py, healthcare_rag/processors/safety_responses.py, healthcare_rag/processors/refusal_boundary.py, prompts/safety_gate.yaml.j2, healthcare_rag/models/safety.py, healthcare_rag/graph/nodes/safety.py]
+  symbols: [SafetyGate, SafetyDecision, scrub_phi, SafetyAssessment, SafetyOutcome, assess_safety, RefusalBoundary, boundary_hit, upsert_boundary]
+  test_paths: [tests/test_safety_gate.py, tests/test_refusal_boundary.py, tests/graph/test_graph_safety.py, tests/graph/test_boundary_durability.py]
   invariants: [Deterministic pre-checks can only escalate a decision, never relax it., A refusal template never contains a number with a clinical unit., The scrubbed query is what reaches retrieval, prompts, and history persistence.]
   validation_commands: [make test]
 ---
@@ -20,9 +20,9 @@ Every query passes the `safety_gate` graph node **before** retrieval or generati
 ## Design: two layers, OR-ed
 
 1. **Deterministic pre-checks** (no network, `healthcare_rag/processors/safety.py`): regexes for PHI (`_PHI_PATTERNS`: email, health card, MRN, DOB, phone, postal, address, cued names), instruction-override attempts (`injection_flags`), requests to recite identifiers back (`identifier_recall_requested`), and first-person emergency red flags (`red_flag_terms`). These are a **floor** — they can only escalate an outcome (force `emergency_red_flag`/`prompt_injection`, set `contains_phi`), never downgrade what the model chose.
-2. **One LLM classification call** (`prompts/safety_gate.yaml.j2` → `SafetyAssessment` in `healthcare_rag/models/safety.py`, temperature 0, default model): one of `in_scope_informational`, `personal_medical_advice`, `emergency_red_flag`, `out_of_scope`, `prompt_injection`, `ambiguous`, plus `phi_spans`, `drug_mentioned`, and a `safe_reformulation`. If this call fails, the deterministic layer still decides (fail-open only for classification, exactly what the pre-gate pipeline did).
+2. **One LLM classification call** (`prompts/safety_gate.yaml.j2` → `SafetyAssessment` in `healthcare_rag/models/safety.py`, temperature 0, default model): one of `in_scope_informational`, `personal_medical_advice`, `emergency_red_flag`, `out_of_scope`, `prompt_injection`, `ambiguous`, plus `phi_spans` and `drug_mentioned`. If this call fails, the deterministic layer still decides (fail-open only for classification, exactly what the pre-gate pipeline did).
 
-`SafetyGate.assess` merges both (`#L560-L592`); `SafetyGate.evaluate` returns a `SafetyDecision` carrying the scrubbed query, template choice, addendum query, and one-line notices (`#L594-L620`, `#L494-L526`).
+`SafetyGate.assess` merges both; `SafetyGate.evaluate` returns a `SafetyDecision` carrying the scrubbed query, template choice, and one-line notices.
 
 ```mermaid
 flowchart TD
@@ -34,15 +34,12 @@ flowchart TD
   S --> C{"category?"}
   C -->|emergency / personal advice / out-of-scope / injection| T["templated refusal + redirect, follow-ups = []"]
   C -->|in scope / ambiguous| N["pipeline on the SCRUBBED query"]
-  T --> A{"safe_reformulation survives dosing + numeric checks?"}
-  A -->|yes| AD["append general-information addendum via sub-pipeline"]
-  A -->|no| R["refusal alone"]
 ```
 
 ## Scrubbing and short-circuit wiring
 
 - `scrub_phi(text, extra_spans)` replaces identifiers with `[REDACTED_<KIND>]` tokens, merging model-reported `phi_spans` (tried raw, HTML-escaped, and unescaped, because Jinja autoescaping shows the model `O&#39;Brien`) with regex hits, keeping the longest of overlapping spans (`#L149-L218`). A denylist stops drug/patient words from ever being redacted.
-- The `safety_gate` node first derives history views from the checkpointed messages: when the gate is on, every message is scrubbed (`build_history_views`), then token-capped (`HC_RAG_HISTORY_MAX_TOKENS`) and paired into the processed-history and context windows (`healthcare_rag/graph/history.py`). The node then **resets all downstream state** for the turn (retrievals, branch events, route, generation, validation, etc., via `Overwrite`) so nothing leaks from a prior turn on a checkpointed thread, and finally runs `LangChainSafetyGate.evaluate` (`graph/nodes/safety.py`). On short-circuit, `finalize` joins notices + template (+ addendum) with `follow_ups = []` deliberately — suggesting follow-ups under a refusal undoes the refusal; the engine sets the monitor's raw-answer event so a UI does not stall.
+- The `safety_gate` node first derives history views from the checkpointed messages: when the gate is on, every message is scrubbed (`build_history_views`), then token-capped (`HC_RAG_HISTORY_MAX_TOKENS`) and paired into the processed-history and context windows (`healthcare_rag/graph/history.py`). The node then **resets all downstream state** for the turn (retrievals, branch events, route, generation, validation, etc., via `Overwrite`) so nothing leaks from a prior turn on a checkpointed thread, then runs `LangChainSafetyGate.evaluate` (`graph/nodes/safety.py`). On short-circuit, `finalize` joins notices + template with `follow_ups = []` deliberately; the refusal never re-enters retrieval or generation.
 - Non-short-circuited queries run the pipeline on the scrubbed query (`working_query = decision.scrubbed_query`); one-line notices ("identifiers disregarded", "instructions unchanged") are prefixed to the final answer by `render_display_answer` at finalize.
 - Observability: the `safety` state field (`SafetyOutcome`) records category, `contains_phi`, `short_circuited`, response kind, deterministic flags, PHI kinds, LLM-call count, gate latency, and a scrubbed rationale; `build_result` copies it into each eval result row as `safety_outcome` (`graph/nodes/safety.py`; `graph/engine_record.py`).
 
@@ -50,19 +47,27 @@ flowchart TD
 
 Responses are plain strings in `healthcare_rag/processors/safety_responses.py` — no LLM, no retrieval: `emergency_response` (urgent-care redirect, optionally poison control; no monograph content), `personal_advice_response`, `out_of_scope_response`, `identifier_recall_response`, plus `PHI_NOTICE`/`INJECTION_NOTICE` prefixes. Hard rule: **no template contains a specific number with a clinical unit** — `tests/test_safety_gate.py::test_no_template_contains_a_specific_dose` asserts this over every template, mirroring the `evals.evaluators.numeric_advice_leak` grader.
 
-## General-information addendum
+## Terminal refusals and informational follow-ups
 
-For `personal_medical_advice`, the classifier's `safe_reformulation` may be answered and appended under `ADDENDUM_HEADING`, subject to two gates (`healthcare_rag/processors/safety.py#L459-L487`): the reformulation must not itself be a dosing question (`DOSING_QUESTION`), and the generated answer must not contain a dose-shaped number (`addendum_is_safe` / `NUMERIC_DOSE`). The graph node `answer_addendum` runs it through a throw-away compiled sub-pipeline with `skip_safety = True` and an empty user id, so it never touches the user's checkpoint; retrieval/route/branch state is copied back for tracing (`graph/nodes/safety.py`).
+`personal_medical_advice` refusals are terminal for the current turn. A later explicitly informational question remains answerable because the refusal-boundary matcher carves out document-sourced wording and sends that new turn through the full safety gate and normal RAG pipeline.
 
 ## Prompt injection: one extra pass
 
 `persona_override`, `unrestricted_mode`, `system_prompt_exfil`, `fiction_harm` are refused outright. Only `ignore_instructions` is salvageable: the override wording is stripped (`strip_injection`) and the residual text goes through the gate exactly once more. Recursion is capped at one extra pass, so the worst case is two classification calls.
 
+## Refusal boundaries: persisted refusals and deterministic replay
+
+`HC_RAG_REFUSAL_BOUNDARY` (default `true`; `refusal_boundary_enabled()` in `services/models.py`, read live each turn) makes the gate persist qualifying refusals into checkpoint state (`RAGState.refusal_boundaries`) and replay them without a second LLM call (`healthcare_rag/processors/refusal_boundary.py`; `graph/nodes/safety.py#L134-L223`):
+
+- **Write path:** after a gate refusal of kind `personal_advice`, `emergency`, or `injection`, the node builds a `RefusalBoundary` (kind, topic `lipitor|metformin|both|none|other`, a **byte-exact allowed template** from `allowed_responses(kind)` — the classifier's own text is never persisted, a fallback template is substituted otherwise — UTC `created_ts`, `template_version`). `upsert_boundary` replaces the matching key and appends; emergency distinguishes the overdose variant.
+- **Read path:** next turn, before the LLM call, `boundary_hit(scrubbed_query, boundaries)` matches under exclusive cue precedence — emergency red flags first, then unsalvageable injection flags, then first-person dosing/decision cues — and only if the query is not informational (`_INFORMATIONAL` carve-out) and its topic matches (anaphoric ≤15-word or referent queries inherit the stored topic; `both`↔single-drug cross-match). A hit short-circuits with `response_kind="boundary_replay"`, `llm_calls=0`, route `safety_gate:boundary:<kind>`, and the stored template.
+- **Safety valves:** corrupted or stale-version boundaries are inert but retained (`RefusalBoundary.from_state` returns `None`; `from_state` rejects any response not in the current allowed set). Gate off (`HC_RAG_SAFETY_GATE=false`) never writes and never replays. Corrupt state cannot widen behavior — only the fixed template set can ever be emitted.
+- **Concurrency limit:** same-thread concurrent turns are unsupported by design; the CLI and eval harness are sequential (`refusal_boundary.py` module docstring, known limit L4 for cue-less re-asks).
+
+Focused tests: `tests/test_refusal_boundary.py` (pure matching/upsert/topic semantics), `tests/graph/test_graph_safety.py` boundary suite (write/replay/carve-out/knob-off/gate-off/corrupted/variant mismatch), `tests/graph/test_boundary_durability.py` (SQLite checkpoint survives reopen with no raw PHI bytes), and `tests/graph/test_settings.py` for the flag parsing.
+
 ## Flags and linear path
 
-`HC_RAG_SAFETY_GATE` (default `true`) or `HC_RAG_DISABLE_STAGES=safety` turns the gate off for before/after ablations (`safety_gate_enabled` in `healthcare_rag/services/models.py`); with the gate off (or `skip_safety`) the node skips scrubbing/classification and passes the raw question through as the working query.
+`HC_RAG_SAFETY_GATE` (default `true`) or `HC_RAG_DISABLE_STAGES=safety` turns classification off for before/after ablations (`safety_gate_enabled` in `healthcare_rag/services/models.py`); identifier scrubbing remains active and the scrubbed question becomes the working query.
 
-**Change guidance:** edit patterns or templates in `safety.py`/`safety_responses.py`, keep every deterministic check escalate-only, and validate with `make test` (`tests/test_safety_gate.py` covers PHI detection/idempotence, injection, red flags, template content, and gate policy cases; `tests/graph/test_graph_safety.py` covers the graph wiring — per-turn reset, short-circuit routing, addendum append/drop, ablation switch). Then measure with [evaluations](../observability/evaluations.md): `make eval-nojudge PREFIX=safety-change`, full judge run, and multi-turn safety — watch `safe_redirect`/`numeric_advice_leak`/`pii_persistence` improve while `correctness`/`groundedness`/`chunk_recall` stay flat. Known limits (regex floor not fence, first-person red flags, LangSmith holding scrubbed text, residual drift) are tracked in [safety posture](posture.md).
-ft) are tracked in [safety posture](posture.md).
-xt, residual drift) are tracked in [safety posture](posture.md).
-ft) are tracked in [safety posture](posture.md).
+**Change guidance:** edit patterns or templates in `safety.py`/`safety_responses.py` (and remember `refusal_boundary.py`'s `_ALLOWED_RESPONSES` and `TEMPLATE_VERSION` must be bumped/kept in sync when a template string changes — old boundaries go inert by design), keep every deterministic check escalate-only, and validate with `make test` (`tests/test_safety_gate.py` covers PHI detection/idempotence, injection, red flags, template content, and gate policy cases; `tests/graph/test_graph_safety.py` covers the graph wiring, terminal refusals, ablation switch, and boundary write/replay). Then measure with [evaluations](../observability/evaluations.md): `make eval-nojudge PREFIX=safety-change`, full judge run, and multi-turn safety — watch `safe_redirect`/`numeric_advice_leak`/`pii_persistence` improve while `correctness`/`groundedness`/`chunk_recall` stay flat. Known limits (regex floor not fence, first-person red flags, LangSmith holding scrubbed text, residual drift) are tracked in [safety posture](posture.md).

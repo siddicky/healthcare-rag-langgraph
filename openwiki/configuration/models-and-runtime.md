@@ -14,6 +14,7 @@ tags: [configuration, models, runtime]
 | Variable | Default | Owner |
 |---|---|---|
 | `HC_RAG_SAFETY_GATE` | `true` | when true, every query passes the [runtime safety gate](../safety/gate.md) before the pipeline: PHI is scrubbed and personal-advice/emergency/out-of-scope/injection messages get templated refusals; `false` (or `safety` in `HC_RAG_DISABLE_STAGES`) runs un-gated for before/after ablations. `safety_gate_enabled()` reads both (`services/models.py#L173-L179`) |
+| `HC_RAG_REFUSAL_BOUNDARY` | `true` | persist qualifying gate refusals per thread and replay them deterministically on matching re-asks ([safety gate](../safety/gate.md)); the settings snapshot is telemetry only — the runtime reads this flag live each turn |
 | `HC_RAG_LLM_MODEL` | `gpt-5.6-luna` | router, preprocessing, context, retrieval evaluation, generation, follow-ups, and the safety gate's classification call |
 | `HC_RAG_VALIDATOR_MODEL` | `gpt-5.6-terra` | answer structuring and citation validation |
 | `HC_RAG_REASONING_EFFORT` | `none` | GPT-5.x / o-series `reasoning_effort` |

@@ -18,7 +18,7 @@ This repository is an async RAG assistant over Lipitor and Metformin monograph c
 - [Models and runtime state](configuration/models-and-runtime.md) — environment, GPT reasoning compatibility, stage switches, checkpointed history.
 - [Runbook](operations/runbook.md) — setup, Docker, ingestion, CLI, LangGraph dev server, recovery.
 - [Tracing and evaluations](observability/evaluations.md) — LangSmith plus single-/multi-turn regression workflows and the parity gate.
-- [Safety gate](safety/gate.md) — runtime pre-pipeline guard: PHI scrubbing, classification, templated refusals.
+- [Safety gate](safety/gate.md) — runtime pre-pipeline guard: PHI scrubbing, classification, templated refusals, persisted refusal-boundary replay.
 - [Safety posture](safety/posture.md) — safeguards, gaps, and required safety evidence.
 
 ## Route a change
@@ -35,6 +35,7 @@ This repository is an async RAG assistant over Lipitor and Metformin monograph c
 | refactor without intended behavior change | [Evaluations](observability/evaluations.md) | `build_result`, parity gate | `make test` (`tests/test_parity_gate.py`) — graph refactors must reproduce sealed baselines |
 | operate local stack/rebuild data | [Runbook](operations/runbook.md) | Makefile, Compose, vector loader | ready probe, narrow retrieval eval |
 | change medical safety/privacy behavior | [Safety gate](safety/gate.md), [Safety posture](safety/posture.md) | `safety_gate` node, `SafetyGate.evaluate`, `scrub_phi`, `safety_responses.py`, `safety_gate_enabled` | `make test` (`tests/test_safety_gate.py`, `tests/graph/test_graph_safety.py`); filtered safety eval + multi-turn safety run |
+| change refusal persistence/replay | [Safety gate](safety/gate.md) | `RefusalBoundary`, `boundary_hit`, `upsert_boundary`, `refusal_boundary_enabled` | `make test` (`tests/test_refusal_boundary.py`, `tests/graph/test_graph_safety.py`, `tests/graph/test_boundary_durability.py`); multi-turn safety eval |
 
 ## First local command sequence
 
@@ -49,4 +50,4 @@ Use Python >=3.11; `make venv` selects 3.12. `make ingest` deletes every existin
 
 ## Boundaries and backlog
 
-No source area is intentionally deferred. Existing production conversation files, PDFs, eval result artifacts, environment files, and other ignored paths are intentionally not inspected/documented because they may contain sensitive, generated, or excluded content. The offline pytest suite (`make test`, `tests/`) regression-tests the eval graders (`test_evaluators.py`), the full LangGraph runtime (`tests/graph/` — build, routing, flow, safety, history, state, branch folding, prompt fidelity, routing tools, union, engine record, evals-engine contract), and the parity gate (`test_parity_gate.py`, `test_seal_clean.py`); the eval harnesses remain the primary validation path for end-to-end runtime behavior. Design rationale and experiment history live in `docs/journey.json` (`make journey` rebuilds `docs/journey.html`).
+No source area is intentionally deferred. Existing production conversation files, PDFs, eval result artifacts, environment files, and other ignored paths are intentionally not inspected/documented because they may contain sensitive, generated, or excluded content. The offline pytest suite (`make test`, `tests/`) regression-tests the eval graders (`test_evaluators.py`), the full LangGraph runtime (`tests/graph/` — build, routing, flow, safety, boundary durability, history, state, branch folding, prompt fidelity, routing tools, union, engine record, evals-engine contract), the persisted-refusal layer (`test_refusal_boundary.py`), and the parity gate (`test_parity_gate.py`, `test_seal_clean.py`); the eval harnesses remain the primary validation path for end-to-end runtime behavior. Design rationale and experiment history live in `docs/journey.json` (`make journey` rebuilds `docs/journey.html`).

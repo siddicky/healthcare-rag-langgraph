@@ -19,11 +19,10 @@ The runtime is a LangGraph `StateGraph` — the speculative orchestrator (`healt
 
 ## Graph topology
 
-`build_graph()` (`healthcare_rag/graph/build.py`) composes the public graph from `add_pipeline` plus three terminal-side nodes: `safety_gate`, `answer_addendum`, `finalize`. Node names are canonical constants in `healthcare_rag/graph/routers.py` (`NODE_SAFETY`, `NODE_CLARIFY`, `NODE_CONTEXT`, `NODE_DECOMPOSE`, `NODE_RETRIEVE`, `NODE_MERGE`, `NODE_EVALUATE`, `NODE_GENERATE`, `NODE_VALIDATE`, `NODE_FOLLOW_UPS`, `NODE_ADDENDUM`, `NODE_FINALIZE`).
+`build_graph()` (`healthcare_rag/graph/build.py`) composes the public graph from `add_pipeline` plus the terminal-side nodes `safety_gate` and `finalize`. Node names are canonical constants in `healthcare_rag/graph/routers.py` (`NODE_SAFETY`, `NODE_CLARIFY`, `NODE_CONTEXT`, `NODE_DECOMPOSE`, `NODE_RETRIEVE`, `NODE_MERGE`, `NODE_EVALUATE`, `NODE_GENERATE`, `NODE_VALIDATE`, `NODE_FOLLOW_UPS`, `NODE_FINALIZE`).
 
 ```mermaid
 flowchart TD
-  S["safety_gate: scrub PHI, classify"] -->|"refusal"| AD["answer_addendum (optional safe reformulation)"]
   S -->|"refusal"| F["finalize"]
   S -->|"in scope / ambiguous"| C["clarify_query"]
   S -->|"in scope / ambiguous"| X["extract_conversation_context"]
@@ -39,14 +38,13 @@ flowchart TD
   V --> FU["generate_follow_ups"]
   V --> FU2["finalize"]
   FU --> F
-  AD --> F
 ```
 
 Caption: one safety pass, parallel preprocessing, capped retrieval fan-out via LangGraph `Send`, at most one gap-fill round, then generate → validate → follow-ups → finalize.
 
 ### Routing rules (`graph/routers.py`)
 
-* `route_after_gate`: a refusal with an `addendum_query` routes to `answer_addendum` then `finalize`; otherwise refusal goes straight to `finalize`; safe queries fan in to `[clarify_query, extract_conversation_context]`, which both edge into `decompose_query`.
+* `route_after_gate`: a refusal goes straight to `finalize`; safe queries fan in to `[clarify_query, extract_conversation_context]`, which both edge into `decompose_query`.
 * `route_after_decompose`: always `Send`s the parent (working) query to `retrieve_documents`; if `decomposed`, it also sends up to `_MAX_FAN_OUT = 3` sub-queries (hard-coded; `HC_RAG_MAX_SUBQUERIES` gates decomposition itself, see [models and runtime](../configuration/models-and-runtime.md)). There is no supersession — all retrievals append into state.
 * `route_after_merge`: after a gap-fill merge (`gap_filled`) skip re-evaluation and go to `generate_answer`; otherwise `evaluate_retrieval`.
 * `route_after_evaluate`: if `gap_pending` (evaluation said `is_sufficient=False`, `gap_round == 0`, and nonempty `additional_queries` capped at 3), `Send` the gap-fill queries back to `retrieve_documents` with `phase=1, kind="gap_fill"`; otherwise `generate_answer`. Only **one** gap-fill round ever runs.
@@ -54,19 +52,18 @@ Caption: one safety pass, parallel preprocessing, capped retrieval fan-out via L
 
 ### Nodes
 
-* **`safety_gate`** (`graph/nodes/safety.py`): wraps `SafetyGate.evaluate` via `LangChainSafetyGate` (LLM adapter is fail-soft). Emits a full per-turn **reset** of all downstream state (including `Overwrite([])` for `retrievals`, `route`, `branch_events`) so a checkpointed thread cannot leak stale results from a previous turn, then the scrubbed query, `SafetyOutcome`, refusal template, notices, and addendum query. Full policy on the [safety gate](../safety/gate.md) page.
-* **`answer_addendum`**: runs the refusal's `safe_reformulation` through a compiled **sub-pipeline** (`build_pipeline(include_follow_ups=False)`, `skip_safety=True`, empty user id) and appends its validated answer only if `addendum_is_safe` (no clinical quantity); copies retrieval/branch/route state back for tracing.
+* **`safety_gate`** (`graph/nodes/safety.py`): wraps `SafetyGate.evaluate` via `LangChainSafetyGate` (LLM adapter is fail-soft). Emits a full per-turn **reset** of all downstream state (including `Overwrite([])` for `retrievals`, `route`, `branch_events`) so a checkpointed thread cannot leak stale results from a previous turn, then the scrubbed query, `SafetyOutcome`, refusal template, and notices. When `HC_RAG_REFUSAL_BOUNDARY` is on, a matching persisted refusal in `refusal_boundaries` short-circuits **before** any LLM call (`boundary_replay`), and new qualifying refusals are upserted into that state field. Full policy on the [safety gate](../safety/gate.md) page.
 * **`extract_conversation_context`** / **`clarify_query`** / **`decompose_query`** (`graph/nodes/preprocess.py`): typed structured calls with fail-soft defaults. Clarify only runs with history context and records a `clarified` branch event when the text changes; decompose applies the complexity gate and `HC_RAG_MAX_SUBQUERIES` cap.
 * **`retrieve_documents`** (`graph/nodes/retrieve.py`): routes the query with `gateway.aroute_tools` (fail-soft), runs `hybrid_search` per tool call with up to 3 attempts (1 s/2 s backoff on `WeaviateBaseError`), `union_results` dedupes by `doc_id`, and appends an envelope (`phase`/`kind`/`index`/`branch`/results) to `retrievals`. Non-gap-fill retrievals also append `branch_events` (COMPLETED/FAILED). See [retrieval](../retrieval/weaviate-and-ingestion.md).
 * **`merge_retrievals`**: sorts envelopes by `(phase, kind rank, index)` (`initial/clarified < decomposed < gap_fill`) and merges into `merged`; sets `gap_filled` when a phase-1 merge added documents.
 * **`generate_answer`**: no merged documents → fixed fallback `"I'm sorry, I don't know the answer to that question."`; otherwise one plain completion with the conversation summary context, producing `plain_answer`, `formatted_docs`, `prompt_id_map`.
 * **`validate_answer`**: `validate` disabled in `HC_RAG_DISABLE_STAGES` → passes the raw answer through; otherwise runs `AnswerValidator.structure_and_validate_async` (threshold 85) inside try/except — validation must never fail open, exceptions yield `(None, None)`. See [answer validation](../processors/validation.md).
 * **`generate_follow_ups`**: only when a validated answer and `user_id` exist; disabled or failure yields `[]`.
-* **`finalize`**: refusal answers join notices + template + optional addendum with `follow_ups = []`; normal answers are `render_display_answer(validated, notices)` (notices prefixed). Appends the `HumanMessage`/`AIMessage` pair (with ISO `ts`) to `messages` **only when the answer is nonempty** — that pair is the persisted conversation.
+* **`finalize`**: refusal answers join notices + template with `follow_ups = []`; normal answers are `render_display_answer(validated, notices)` (notices prefixed). Appends the `HumanMessage`/`AIMessage` pair (with ISO `ts`) to `messages` **only when the answer is nonempty** — that pair is the persisted conversation.
 
 ## State and engine
 
-`RAGState` (`graph/state.py`) is JSON-native; the exceptions are `messages` (LangGraph `add_messages` channel) and the append-only `retrievals`/`route`/`branch_events` reducers. `RetrieveInput` is the per-`Send` retrieval payload.
+`RAGState` (`graph/state.py`) is JSON-native; the exceptions are `messages` (LangGraph `add_messages` channel) and the append-only `retrievals`/`route`/`branch_events` reducers. `refusal_boundaries` holds serialized persisted refusals (see [safety gate](../safety/gate.md)). `RetrieveInput` is the per-`Send` retrieval payload.
 
 `GraphEngine` (`graph/engine.py`):
 

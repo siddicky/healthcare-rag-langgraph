@@ -58,7 +58,6 @@ config:
 graph TD;
 	__start__([<p>__start__</p>]):::first
 	safety_gate(safety_gate)
-	answer_addendum(answer_addendum)
 	finalize(finalize)
 	clarify_query(clarify_query)
 	extract_conversation_context(extract_conversation_context)
@@ -71,7 +70,6 @@ graph TD;
 	generate_follow_ups(generate_follow_ups)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> safety_gate;
-	answer_addendum --> finalize;
 	clarify_query --> decompose_query;
 	decompose_query -.-> retrieve_documents;
 	evaluate_retrieval -.-> generate_answer;
@@ -82,7 +80,6 @@ graph TD;
 	merge_retrievals -.-> evaluate_retrieval;
 	merge_retrievals -.-> generate_answer;
 	retrieve_documents --> merge_retrievals;
-	safety_gate -.-> answer_addendum;
 	safety_gate -.-> clarify_query;
 	safety_gate -.-> extract_conversation_context;
 	safety_gate -.-> finalize;
@@ -112,7 +109,7 @@ This project utilizes the following core technologies:
 
 The runtime is a custom LangGraph `StateGraph` (`healthcare_rag/graph/`) whose node names are the pipeline stages and whose conditional edges are the runtime self-evaluators:
 
-*   **`safety_gate` →** the process-owned Presidio/deterministic sanitizer scans the current query and history before safety classification. Emergency / personal-advice / out-of-scope / prompt-injection messages short-circuit straight to `finalize` with a templated response (see `docs/safety.md`); a safe reformulation of a personal question may take the `answer_addendum` path. Identifier sanitization remains active during safety-classification ablations.
+*   **`safety_gate` →** the process-owned Presidio/deterministic sanitizer scans the current query and history before safety classification. Emergency / personal-advice / out-of-scope / prompt-injection messages short-circuit straight to `finalize` with a terminal templated response (see `docs/safety.md`). Identifier sanitization remains active during safety-classification ablations.
 *   **`decompose_query` →** simple queries retrieve once; complex queries fan out via LangGraph `Send` — the parent (possibly clarified) query **plus** up to `HC_RAG_MAX_SUBQUERIES` sub-queries retrieve in parallel, and `merge_retrievals` de-duplicates their documents by `doc_id` into one merged set. There is deliberately **no speculative racing**: one answer and one validation per turn, on the original query (the measured "synthesis" behaviour).
 *   **`evaluate_retrieval` →** one sufficiency check on the merged documents; an insufficient round fans out ≤3 gap-fill retrievals, after which the graph routes straight to generation (no second evaluation).
 *   **`validate_answer` →** citation validation (below); a structuring failure writes no answer rather than failing open.

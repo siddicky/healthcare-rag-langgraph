@@ -85,7 +85,7 @@ What it does:
 Knobs: `HC_RAG_SAFETY_GATE` (default true) or `HC_RAG_DISABLE_STAGES=safety` to run
 un-gated for an ablation. Templates live in
 `healthcare_rag/processors/safety_responses.py`; the classification prompt is
-`healthcare_rag/prompts/safety_gate.yaml.j2`. The policy, the addendum rule, the
+`healthcare_rag/prompts/safety_gate.yaml.j2`. The terminal-refusal policy, the
 graph PHI posture and the known limits are written up in **`docs/safety.md`** —
 read that before changing behaviour.
 

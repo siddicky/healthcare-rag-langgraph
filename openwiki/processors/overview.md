@@ -29,7 +29,7 @@ openwiki:
 | `validate_answer` | `validate_answer` (`nodes/generate.py`) | `answer_structuring.yaml.j2` | `CitedAnswerResult` (via `AnswerValidator`) | **validator**, 0.0; quote threshold 85. See [validation](validation.md) |
 | `generate_follow_ups` | `generate_follow_ups` (`nodes/generate.py`) | `follow_up_questions.yaml.j2` | `FollowUpQuestions` | default, unset; runs only with a validated answer and `user_id` |
 
-`healthcare_rag/processors/` now holds the reusable logic the nodes call (`safety.py`, `validation.py`, `retrieval.py`, `generation.py`, `pdf_chunker.py`, `safety_responses.py`); `base.py` only provides the `log_timing` decorator. The old `PromptManager`/`LLMParserService`/processor-class layer is gone.
+`healthcare_rag/processors/` now holds the reusable logic the nodes call (`safety.py`, `refusal_boundary.py`, `validation.py`, `retrieval.py`, `generation.py`, `pdf_chunker.py`, `safety_responses.py`); `base.py` only provides the `log_timing` decorator. The old `PromptManager`/`LLMParserService`/processor-class layer is gone.
 
 ## Contracts and change rules
 

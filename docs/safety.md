@@ -86,7 +86,7 @@ pre-node stream events cannot be retroactively sanitized by graph code.
 | category | behaviour | retrieval | follow-ups |
 |---|---|---|---|
 | `emergency_red_flag` | **Redirect.** Urgent-care / ED / poison-control redirect, one line acknowledging the symptom, an offer to explain the monograph *after* care is sought. No monograph content, no numbers. | none | none |
-| `personal_medical_advice` | **Refuse.** Declines the individual decision, says *why* (other conditions, other medicines, kidney/liver function, recent bloodwork), and names a human: prescriber, pharmacist, diabetes nurse. Optionally + a general-information addendum (see below). | only for the addendum | none |
+| `personal_medical_advice` | **Refuse.** Declines the individual decision, says *why* (other conditions, other medicines, kidney/liver function, recent bloodwork), and names a human: prescriber, pharmacist, diabetes nurse. The refusal is terminal for that turn. | none | none |
 | `out_of_scope` | **Decline helpfully.** States what is covered (the two monographs), that other drugs/topics are not, and points to a pharmacist or clinician. | none | none |
 | `prompt_injection` | **Refuse the override**, then re-assess the underlying question once (see below). | depends on the second pass | none if refused |
 | `in_scope_informational` | Normal pipeline, on the scrubbed query. | yes | yes |
@@ -104,33 +104,13 @@ monograph doses at someone who just asked a personal dosing question is the fail
 phrase blocklist cannot see, and it is what `evals.evaluators.numeric_advice_leak` scores.
 Every template is asserted against that pattern in `tests/test_safety_gate.py`.
 
-## The general-information addendum
+## Terminal refusals and informational follow-ups
 
-A refusal that gives the user nothing is a worse product than it needs to be. When the
-classifier can produce a `safe_reformulation` — a de-personalised version of the question
-that the monograph *can* answer — that reformulation is run through the normal pipeline
-and appended under an explicit heading:
-
-```
-General information from the monograph (not personal advice):
-```
-
-Two gates decide whether it survives, in this order:
-
-1. **Is the reformulation itself a dosing question?** ("dose", "how much", "mg",
-   "titrate", "maximum", "double", "hold", "skip", …) → **no addendum.** "Should I double
-   my metformin tonight?" reformulates to a dose question, so it gets the refusal alone.
-   "Is the tiredness I get on Lipitor normal?" reformulates to "is fatigue a reported
-   adverse reaction?", which is a fact, not an instruction — addendum allowed.
-2. **Does the produced answer contain a number with a clinical unit?** → **addendum
-   dropped**, even if rule 1 passed. Belt and braces, because the reformulation is written
-   by a model and the answer is written by another one.
-
-Emergency responses never carry an addendum at all.
-
-In practice the addendum is a fallback rather than the common path: the classifier usually
-routes "is X a known side effect for me?" phrasings to `in_scope_informational`, where the
-full pipeline answers them properly with citations.
+A short-circuited refusal is the complete response for that turn. It never re-enters
+retrieval or generation, so personalized questions cannot acquire monograph instructions
+after the refusal template. A later, explicitly informational question remains answerable:
+the persisted refusal boundary sends document-sourced wording such as "what does the
+monograph say?" through the full safety gate and normal pipeline as a new turn.
 
 ## Prompt injection: one extra pass, not a loop
 
@@ -162,7 +142,7 @@ classifier.
 * **What is stored.** Five fields: the refusal kind, a derived drug topic, the
   byte-exact static template body for that kind, a UTC timestamp, and a template
   version. Nothing else is ever persisted: no raw user text, no PHI spans, no
-  model rationale, no safe reformulation. On every read the stored body must be
+  model rationale. On every read the stored body must be
   byte-equal to a template the current code allows for its kind
   (`healthcare_rag/processors/safety_responses.py`); an entry that fails that
   check is inert. `identifier_recall` and `out_of_scope` refusals are never
@@ -184,8 +164,8 @@ classifier.
   injection > personal). A stored personal refusal can never serve a
   red-flag or override query, and a salvageable-only override always takes the
   existing one-pass salvage path rather than a replay.
-* **A replay** returns the stored template byte-identically: no LLM call, no
-  addendum, `follow_ups == []`. The outcome records
+* **A replay** returns the stored template byte-identically: no LLM call or
+  retrieval, and `follow_ups == []`. The outcome records
   `response_kind="boundary_replay"`, `llm_calls=0`, `boundary_hit=true` and
   `boundaries_active=<n>`, and the route is `safety_gate:boundary:<kind>`. The
   final rendered answer may still gain the current-turn PHI notice line; the
@@ -236,8 +216,6 @@ Measured on the worktree smoke, 2026-08-18 (gpt-5.6-luna, `reasoning_effort=none
 * one extra classification call per query: **1.2–1.6 s**, ~$0.0001.
 * short-circuited queries get **cheaper and faster**, not slower: the whole pipeline is
   skipped, so a refusal costs ~$0.0001–0.0003 at ~1.3 s instead of ~$0.02–0.03 at ~15 s.
-* a `personal_medical_advice` refusal that keeps an addendum pays for one extra pipeline
-  run, so it lands in the normal answer range.
 
 ## Known limits
 
