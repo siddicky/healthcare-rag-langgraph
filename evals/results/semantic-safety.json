@@ -1,0 +1,44 @@
+{
+  "schema": "semantic-safety-dependency-outcome.v1",
+  "verdict": "INCONCLUSIVE",
+  "reason": "missing dependency",
+  "dependency": {
+    "package": "semantic-router==0.1.16",
+    "unchanged_project_bounds": {
+      "openai": ">=1.76,<2",
+      "python-dotenv": ">=1.1"
+    }
+  },
+  "defaults": {
+    "HC_RAG_QUERY_RESPONSE_ARM": "current",
+    "HC_RAG_SAFETY_CLASSIFIER": "llm"
+  },
+  "adapter_implemented": false,
+  "calibration_attempted": false,
+  "stage_1_attempted": false,
+  "stage_2_attempted": false,
+  "paid_measurement_attempted": false,
+  "candidate_execution": {
+    "installed": false,
+    "imported": false,
+    "exercised": false
+  },
+  "metrics": [],
+  "deltas": [],
+  "cost": [],
+  "latency": [],
+  "experiment_urls": [],
+  "thresholds": [],
+  "runtime_hashes": [],
+  "runtime_results": [],
+  "reference_results": [],
+  "candidate_results": [],
+  "evidence_links": [
+    ".omo/evidence/task-9-repeated-failure-diagnosis.md",
+    ".omo/evidence/task-9-dependency-blocker.log",
+    ".omo/evidence/task-9-stop-verification-2.log",
+    ".omo/evidence/task-9-third-dependency-verification.log",
+    ".omo/evidence/task-10-evaluate-query-response-and-semantic-safety-routing.log",
+    ".omo/evidence/task-13-evaluate-query-response-and-semantic-safety-routing.json"
+  ]
+}
