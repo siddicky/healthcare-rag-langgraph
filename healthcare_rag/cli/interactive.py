@@ -148,6 +148,8 @@ async def interactive_main():
                 print("\n❌ An error occurred: PIPELINE_EXECUTION_FAILED")
                 logger.error("PIPELINE_EXECUTION_FAILED")
 
+    except EOFError:
+        print("\nInput closed. Ending session...")
     except KeyboardInterrupt:
         print("\n\nSession interrupted by user. Shutting down...")
     finally:
