@@ -551,6 +551,15 @@ async def put_op_if_absent(
     return True
 
 
+async def put_op(
+    store: BaseStore,
+    user_id: str,
+    op: OpRecord,
+    scanner: PrivacyScanner | None = None,
+) -> None:
+    await _put_model(store, user_id, "ops", op.op_id, op, scanner)
+
+
 async def create_reminder(
     store: BaseStore,
     user_id: str,
