@@ -13,7 +13,12 @@ from weaviate.exceptions import WeaviateBaseError
 
 from healthcare_rag.graph.resources import get
 from healthcare_rag.graph.routers import MergeTarget, route_after_merge
-from healthcare_rag.graph.state import RAGState, RetrieveInput, dump_results, load_results
+from healthcare_rag.graph.state import (
+    RAGState,
+    RetrieveInput,
+    dump_results,
+    load_results,
+)
 from healthcare_rag.models.retrieval import QueryResultList
 from healthcare_rag.processors.pageindex_retrieval import pageindex_search
 from healthcare_rag.processors.pinecone_retrieval import pinecone_search
