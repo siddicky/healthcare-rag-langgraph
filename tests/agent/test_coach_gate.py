@@ -105,7 +105,7 @@ async def test_medical_content_and_residue_route_to_a(question: str) -> None:
 
     # Then
     assert route == "rag_relay"
-    assert target == "_pending_rag_relay"
+    assert target == "rag_relay"
 
 
 @pytest.mark.parametrize(
@@ -154,7 +154,7 @@ async def test_unexplained_mixed_medical_tokens_route_to_a(question: str) -> Non
 
     # Then
     assert route == "rag_relay"
-    assert target == "_pending_rag_relay"
+    assert target == "rag_relay"
 
 
 @pytest.mark.parametrize("question", ["Hello", "Thanks", "How are you?"])
@@ -174,7 +174,7 @@ async def test_ambiguous_default_routes_to_a(question: str) -> None:
 
     # Then
     assert route == "rag_relay"
-    assert target == "_pending_rag_relay"
+    assert target == "rag_relay"
 
 
 async def test_anaphoric_followup_after_tool_card_routes_to_b() -> None:

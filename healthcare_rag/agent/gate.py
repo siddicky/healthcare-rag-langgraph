@@ -33,7 +33,7 @@ GATEWAY: SafetyLLMCall | None = None
 
 RouteTarget: TypeAlias = Literal[
     "_pending_short_circuit",
-    "_pending_rag_relay",
+    "rag_relay",
     "_pending_coach_agent",
     "_pending_erase_my_data",
     "_pending_claim_document",
@@ -169,13 +169,13 @@ async def coach_gate(
     coaching = features["coaching_parse"] != "none"
     if coaching and has_unexplained_medical_token(question, features):
         update["route"] = "rag_relay"
-        return Command(update=update, goto="_pending_rag_relay")
+        return Command(update=update, goto="rag_relay")
     if coaching:
         update["route"] = "coach_agent"
         return Command(update=update, goto="_pending_coach_agent")
     if features["has_in_scope_drug"] or features["has_oos_drug"] or features["has_medical_cue"] or features["has_number_unit"]:
         update["route"] = "rag_relay"
-        return Command(update=update, goto="_pending_rag_relay")
+        return Command(update=update, goto="rag_relay")
     contextual_followup = features["prev_context"] in {"tool_card", "interrupt_pending"} and (
         is_anaphoric_followup(question)
     )
@@ -183,4 +183,4 @@ async def coach_gate(
         update["route"] = "coach_agent"
         return Command(update=update, goto="_pending_coach_agent")
     update["route"] = "rag_relay"
-    return Command(update=update, goto="_pending_rag_relay")
+    return Command(update=update, goto="rag_relay")
