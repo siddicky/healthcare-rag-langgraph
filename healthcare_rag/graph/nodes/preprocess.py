@@ -163,5 +163,5 @@ def _decompose_command(
     """Apply the decomposition update and fan out from the state it produces."""
     return Command(
         update=update,
-        goto=route_after_decompose(cast(RAGState, {**state, **update})),
+        goto=route_after_decompose(cast(RAGState, cast(object, {**state, **update}))),
     )

@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from typing import Any
+from typing import Any, cast
 
 from langgraph.types import Command
 
 from healthcare_rag.graph.resources import get
 from healthcare_rag.graph.routers import EvaluateCommandTarget, route_after_evaluate
-from healthcare_rag.graph.state import load_results
+from healthcare_rag.graph.state import RAGState, load_results
 from healthcare_rag.models.queries import RetrievalEvaluation
 from healthcare_rag.processors.safety import scrub_phi
 
@@ -90,4 +90,7 @@ def _evaluate_command(
     update: dict[str, Any],
 ) -> Command[EvaluateCommandTarget]:
     """Apply the evaluation update and route on the state it produces."""
-    return Command(update=update, goto=route_after_evaluate({**state, **update}))
+    return Command(
+        update=update,
+        goto=route_after_evaluate(cast(RAGState, cast(object, {**state, **update}))),
+    )

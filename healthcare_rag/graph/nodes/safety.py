@@ -61,7 +61,7 @@ def _gate_command(
     """
     return Command(
         update=update,
-        goto=route_after_gate(cast(RAGState, {**state, **update})),
+        goto=route_after_gate(cast(RAGState, cast(object, {**state, **update}))),
     )
 
 

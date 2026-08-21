@@ -92,5 +92,5 @@ def test_routers_return_declared_literals() -> None:
     assert routers.route_after_merge({"gap_filled": True}) == "generate_answer"
     assert routers.route_after_merge({}) == "evaluate_retrieval"
     assert routers.route_after_evaluate({}) == "generate_answer"
-    assert routers.route_after_validate({"validated": True}) == "generate_follow_ups"
+    assert routers.route_after_validate({"validated": "an answer"}) == "generate_follow_ups"
     assert routers.route_after_validate({}) == "finalize"

@@ -3,7 +3,7 @@ from __future__ import annotations
 import inspect
 import logging
 from collections.abc import Callable
-from typing import Any, Final
+from typing import Any, Final, cast
 
 import anyio
 from langgraph.types import Command
@@ -13,7 +13,7 @@ from weaviate.exceptions import WeaviateBaseError
 
 from healthcare_rag.graph.resources import get
 from healthcare_rag.graph.routers import MergeTarget, route_after_merge
-from healthcare_rag.graph.state import RetrieveInput, dump_results, load_results
+from healthcare_rag.graph.state import RAGState, RetrieveInput, dump_results, load_results
 from healthcare_rag.models.retrieval import QueryResultList
 from healthcare_rag.processors.pageindex_retrieval import pageindex_search
 from healthcare_rag.processors.pinecone_retrieval import pinecone_search
@@ -210,4 +210,7 @@ async def merge_retrievals(state: dict[str, Any]) -> Command[MergeTarget]:
             }
         ],
     }
-    return Command(update=update, goto=route_after_merge({**state, **update}))
+    return Command(
+        update=update,
+        goto=route_after_merge(cast(RAGState, cast(object, {**state, **update}))),
+    )
