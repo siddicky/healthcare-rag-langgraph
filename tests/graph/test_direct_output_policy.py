@@ -75,6 +75,8 @@ def test_clinical_unit_transformations_are_rejected(content: str) -> None:
         "Feel free to ask me about Metformin monographs.",
         "Glad to help with questions about the product monographs.",
         "Ask me anything about the Lipitor monograph.",
+        "I can answer questions about the Lipitor monograph.",
+        "Feel free to ask another question.",
         "Do not hesitate to ask another question.",
         "You can ask about the monographs.",
         "Never mind, thanks.",
@@ -108,6 +110,10 @@ def test_benign_whole_token_controls_are_allowed(content: str) -> None:
         "Hypertension damages blood vessels.",
         "Antibiotics treat bacterial infections.",
         "Thanks! Insulin lowers blood sugar.",
+        "I can explain diabetes causes blindness.",
+        "Happy to answer diabetes is a chronic condition.",
+        "Feel free to ask metformin treats diabetes.",
+        "I can answer insulin lowers glucose.",
     ],
 )
 def test_factual_medical_prose_is_rejected(content: str) -> None:

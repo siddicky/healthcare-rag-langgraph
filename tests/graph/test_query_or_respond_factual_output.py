@@ -26,6 +26,10 @@ from .query_or_respond_fakes import _install, _state
         "Hypertension damages blood vessels.",
         "Antibiotics treat bacterial infections.",
         "Thanks! Insulin lowers blood sugar.",
+        "I can explain diabetes causes blindness.",
+        "Happy to answer diabetes is a chronic condition.",
+        "Feel free to ask metformin treats diabetes.",
+        "I can answer insulin lowers glucose.",
     ],
 )
 async def test_social_factual_medical_prose_uses_deterministic_fallback(

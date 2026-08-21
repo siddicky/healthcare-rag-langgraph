@@ -16,7 +16,7 @@ GeneratedOutputDenial = Literal[
 
 _TOKEN: Final = re.compile(r"[^\W_]+(?:['’][^\W_]+)?|%", re.UNICODE)
 _SENTENCE_BOUNDARY: Final = re.compile(r"[.!?;:\n]+")
-_SOCIAL_SENTENCE: Final = re.compile(
+_SOCIAL_ONLY_SENTENCE: Final = re.compile(
     r"(?:"
     r"(?:hello|hi|hey)(?:\s+(?:again|everyone|there))?"
     r"|(?:good\s+(?:afternoon|evening|morning))"
@@ -25,18 +25,56 @@ _SOCIAL_SENTENCE: Final = re.compile(
     r"|(?:thank\s+you|thanks)(?:\s+(?:again|so\s+much|very\s+much))?"
     r"|(?:you(?:'re|\s+are)\s+welcome)(?:\s+anytime)?"
     r"|never\s+mind(?:\s*,?\s*thanks)?"
-    r"|(?:happy|glad)\s+to\s+(?:answer|assist|help)(?:\s+.+)?"
-    r"|(?:i|we)\s+(?:am|are|can|could)\s+"
-    r"(?:answer|assist|discuss|explain|help)(?:\s+.+)?"
-    r"|you\s+(?:can|may)\s+ask(?:\s+.+)?"
-    r"|ask(?:\s+.+)?"
-    r"|feel\s+free\s+to\s+ask(?:\s+.+)?"
-    r"|do\s+not\s+hesitate\s+to\s+ask(?:\s+.+)?"
-    r"|consider\s+asking(?:\s+.+)?"
     r")"
 )
-_EMBEDDED_CLAUSE_MARKERS: Final = frozenset(
-    {"because", "how", "that", "when", "where", "which", "while", "why"}
+_CAPABILITY_SENTENCE: Final = re.compile(
+    r"(?:"
+    r"(?:happy|glad)\s+to\s+(?:answer|assist|help)"
+    r"|(?:i|we)\s+(?:(?:can|could)\s+|(?:am|are)\s+able\s+to\s+)"
+    r"(?:answer|assist|discuss|explain|help)"
+    r"|you\s+(?:can|may)\s+ask"
+    r"|ask"
+    r"|feel\s+free\s+to\s+ask"
+    r"|do\s+not\s+hesitate\s+to\s+ask"
+    r"|consider\s+asking"
+    r")(?:\s+(?P<scope>.+))?"
+)
+_CAPABILITY_SCOPE_WORDS: Final = frozenset(
+    {
+        "a",
+        "about",
+        "and",
+        "another",
+        "any",
+        "anything",
+        "atorvastatin",
+        "dosing",
+        "effects",
+        "from",
+        "general",
+        "grounded",
+        "in",
+        "including",
+        "information",
+        "interactions",
+        "lipitor",
+        "me",
+        "metformin",
+        "monitoring",
+        "monograph",
+        "monographs",
+        "on",
+        "or",
+        "product",
+        "question",
+        "questions",
+        "side",
+        "the",
+        "uses",
+        "warnings",
+        "with",
+        "your",
+    }
 )
 _WHOLE_TOKEN_CONTROLS: Final = frozenset(
     {
@@ -186,11 +224,16 @@ def _is_social_output(normalized: str) -> bool:
     for sentence in sentences:
         if sentence in _WHOLE_TOKEN_CONTROLS:
             continue
-        tokens = frozenset(_TOKEN.findall(sentence))
-        if _EMBEDDED_CLAUSE_MARKERS.intersection(tokens):
+        if _SOCIAL_ONLY_SENTENCE.fullmatch(sentence) is not None:
+            continue
+        capability = _CAPABILITY_SENTENCE.fullmatch(sentence)
+        if capability is None:
             return False
-        if _SOCIAL_SENTENCE.fullmatch(sentence) is None:
-            return False
+        scope = capability.group("scope")
+        if scope is not None:
+            scope_tokens = frozenset(_TOKEN.findall(scope))
+            if not scope_tokens.issubset(_CAPABILITY_SCOPE_WORDS):
+                return False
     return True
 
 
