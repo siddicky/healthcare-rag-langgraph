@@ -1,17 +1,25 @@
 "use client";
 
-import { useEffect, useMemo, useRef } from "react";
+import { Fragment, useEffect, useMemo, useRef } from "react";
 import type { DataEnvelope } from "@/catalog/envelopes";
 import { parseDataEnvelope } from "@/catalog/envelopes";
+import type { DispatchHandlers } from "@/catalog/dispatch";
 import { CatalogTree } from "@/catalog/render";
 import { CalendarChangeCard } from "@/components/generative-ui/CalendarChangeCard";
 import { DocumentIngestCard } from "@/components/generative-ui/DocumentIngestCard";
+import { MemoryExtractionCard } from "@/components/generative-ui/MemoryExtractionCard";
+import { ReminderCard } from "@/components/generative-ui/ReminderCard";
 import { CalendarChangePayloadSchema } from "@/chat/model";
 import {
+  aiDisplayText,
   composeTreesForTurn,
   isAiMessage,
   isToolMessage,
   messageText,
+  parseComponentCard,
+  parseMemoryConfirmation,
+  parseReminderDelivery,
+  reminderActionTurn,
   type TurnModel,
   type WireMessage,
 } from "@/chat/model";
@@ -62,7 +70,7 @@ function ToolEnvelopeCards({ message }: { message: WireMessage }) {
 }
 
 function AiBubble({ message }: { message: WireMessage }) {
-  const text = messageText(message.content);
+  const text = aiDisplayText(message.content);
   if (text === "") return null;
   return (
     <div className="bubble-row assistant">
@@ -72,7 +80,56 @@ function AiBubble({ message }: { message: WireMessage }) {
   );
 }
 
-function TurnView({ turn }: { turn: TurnModel }) {
+/** Stream-surface cards riding an AI message (fixed-contract, not composable). */
+function AiMessageCards({ message, onReminderAction }: { message: WireMessage; onReminderAction?: (text: string) => void }) {
+  const confirmation = parseMemoryConfirmation(message.content);
+  if (confirmation !== null) {
+    return (
+      <div className="widget-wrap" data-testid="memory-confirmation">
+        <MemoryExtractionCard sourceLabel={confirmation.data.sourceLabel} resolvedFields={confirmation.data.fields} />
+      </div>
+    );
+  }
+  const delivery = parseReminderDelivery(message.content);
+  if (delivery !== null) {
+    if (delivery.card === null) {
+      chatTelemetry({ kind: "unknown_interrupt", detail: "reminder-delivery" });
+      return null;
+    }
+    const card = delivery.card;
+    const dispatch = onReminderAction ?? (() => {});
+    return (
+      <div className="widget-wrap" data-testid="reminder-card">
+        <ReminderCard
+          title={card.title}
+          schedule={card.schedule}
+          nextRun={card.nextRun}
+          weekday={card.weekday}
+          time={card.time}
+          active={card.active}
+          onToggle={(next) => dispatch(reminderActionTurn(next ? "resume" : "pause", card.title))}
+          onScheduleChange={(schedule) => dispatch(reminderActionTurn("move", card.title, schedule))}
+          onCancel={() => dispatch(reminderActionTurn("cancel", card.title))}
+        />
+      </div>
+    );
+  }
+  const componentCard = parseComponentCard(message.content);
+  if (componentCard !== null) {
+    chatTelemetry({ kind: "unknown_interrupt", detail: componentCard.component });
+  }
+  return null;
+}
+
+function TurnView({
+  turn,
+  onReminderAction,
+  dispatchHandlers,
+}: {
+  turn: TurnModel;
+  onReminderAction?: (text: string) => void;
+  dispatchHandlers?: DispatchHandlers;
+}) {
   const humanText = turn.human !== null ? messageText(turn.human.content) : "";
   const trees = composeTreesForTurn(turn);
   const scopeId = turn.scopeId ?? "";
@@ -84,11 +141,14 @@ function TurnView({ turn }: { turn: TurnModel }) {
         </div>
       )}
       {turn.messages.filter(isAiMessage).map((message) => (
-        <AiBubble key={messageKey(message)} message={message} />
+        <Fragment key={messageKey(message)}>
+          <AiBubble message={message} />
+          <AiMessageCards message={message} onReminderAction={onReminderAction} />
+        </Fragment>
       ))}
       {trees.map(({ callId, tree }) => (
         <div className="widget-wrap" key={callId} data-testid="compose-tree">
-          <CatalogTree tree={tree} envelopes={turn.envelopes} turnScopeId={scopeId} handlers={{}} />
+          <CatalogTree tree={tree} envelopes={turn.envelopes} turnScopeId={scopeId} handlers={dispatchHandlers ?? {}} />
         </div>
       ))}
       {turn.messages.filter(isToolMessage).map((message) => (
@@ -110,6 +170,10 @@ export interface MessageListProps {
   onApprove: (resume: ResumePayload) => void;
   latestAiMessageId: string | null;
   actionBar?: React.ReactNode;
+  /** Full-mode ReminderCard actions dispatch new chat turns in the member's phrasing. */
+  onReminderAction?: (text: string) => void;
+  /** Handlers for composed-tree dispatch ids (catalog Button actions). */
+  dispatchHandlers?: DispatchHandlers;
 }
 
 export function MessageList({
@@ -120,6 +184,8 @@ export function MessageList({
   onApprove,
   latestAiMessageId,
   actionBar,
+  onReminderAction,
+  dispatchHandlers,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const rendered = useMemo(() => turns.map((turn) => turn.key).join("|"), [turns]);
@@ -136,7 +202,7 @@ export function MessageList({
       <div className="thread-inner">
         {turns.map((turn, index) => (
           <div key={turn.key}>
-            <TurnView turn={turn} />
+            <TurnView turn={turn} onReminderAction={onReminderAction} dispatchHandlers={dispatchHandlers} />
             {index === turns.length - 1 && latestAiMessageId !== null && actionBar}
           </div>
         ))}

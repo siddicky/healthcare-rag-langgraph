@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef } from "react";
+import type { DispatchActionId, DispatchHandlers } from "@/catalog/dispatch";
 import { isAiMessage } from "@/chat/model";
 import { OPENERS, UPLOAD_OPENER } from "@/chat/coachProtocol";
 import { useCoachChat, type CoachChatDeps } from "@/chat/useCoachChat";
@@ -8,6 +9,16 @@ import { ActionBar } from "./ActionBar";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
 import { ThreadSidebar } from "./ThreadSidebar";
+
+/** Composed-tree Button dispatches become NEW natural-language turns. */
+const DISPATCH_ACTION_TURNS: Partial<Record<DispatchActionId, string>> = {
+  log_weight: "Log today's weight",
+  log_injection: "Log my injection",
+  view_schedule: "What's on my calendar this month?",
+  change_schedule: "I want to change one of my scheduled events",
+  set_reminder: "Set a reminder for me",
+  cancel_reminder: "Cancel one of my reminders",
+};
 
 export function ChatShell({
   deps,
@@ -20,6 +31,18 @@ export function ChatShell({
 }) {
   const chat = useCoachChat(deps);
   const openerFileRef = useRef<HTMLInputElement | null>(null);
+
+  const dispatchHandlers: DispatchHandlers = {
+    ...Object.fromEntries(
+      Object.entries(DISPATCH_ACTION_TURNS).map(([action, turn]) => [
+        action,
+        () => {
+          if (turn !== undefined) void chat.send(turn);
+        },
+      ]),
+    ),
+    upload_document: () => openerFileRef.current?.click(),
+  };
 
   const aiMessages = chat.turns.flatMap((turn) => turn.messages.filter(isAiMessage));
   const latestAi = aiMessages.length > 0 ? aiMessages[aiMessages.length - 1] : undefined;
@@ -106,6 +129,8 @@ export function ChatShell({
             busy={chat.busy}
             onApprove={(resume) => void chat.approveInterrupt(resume)}
             latestAiMessageId={latestAiMessageId}
+            onReminderAction={(text) => void chat.send(text)}
+            dispatchHandlers={dispatchHandlers}
             actionBar={
               <ActionBar
                 showRegenerate={chat.regenerateGate.eligible}

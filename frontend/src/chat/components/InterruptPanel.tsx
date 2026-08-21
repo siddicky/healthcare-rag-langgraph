@@ -67,40 +67,31 @@ export function InterruptPanel({
   );
 }
 
-const ReminderEntrySchema = z.object({
+const ReminderListItemSchema = z.object({
+  reminder_id: z.string(),
   title: z.string(),
-  schedule: z.string(),
-  weekday: z.string().optional(),
-  time: z.string().optional(),
+  scheduleLabel: z.string(),
   nextRun: z.string().optional(),
   active: z.boolean().optional(),
 });
 
-type ReminderEntry = z.infer<typeof ReminderEntrySchema>;
+type ReminderListItem = z.infer<typeof ReminderListItemSchema>;
 
 /**
- * ReminderCard(s) from a `reminders:list` DATA envelope. Tolerates the
- * single-card object, the bare array, and the `{reminders: [...]}` wrapper;
- * anything else renders nothing + telemetry instead of crashing.
+ * Compact ReminderCard(s) from a `reminders:list` DATA envelope
+ * (`{items: [{reminder_id, title, scheduleLabel, nextRun?, active}]}` —
+ * reminders.py `_listing_data`). Read-only: no handlers, a dense list.
  */
 export function ReminderEnvelopeCards({ data }: { data: unknown }) {
-  let entries: unknown[];
-  if (Array.isArray(data)) {
-    entries = data;
-  } else if (
-    typeof data === "object" &&
-    data !== null &&
-    Array.isArray((data as Record<string, unknown>).reminders)
-  ) {
-    entries = (data as Record<string, unknown>).reminders as unknown[];
-  } else if (typeof data === "object" && data !== null) {
-    entries = [data];
-  } else {
-    chatTelemetry({ kind: "unknown_interrupt", detail: "reminders:list" });
-    return null;
-  }
-  const parsed = entries
-    .map((entry) => ReminderEntrySchema.safeParse(entry))
+  const items: unknown[] = Array.isArray(data)
+    ? data
+    : typeof data === "object" &&
+        data !== null &&
+        Array.isArray((data as Record<string, unknown>).items)
+      ? ((data as Record<string, unknown>).items as unknown[])
+      : [];
+  const parsed = items
+    .map((entry) => ReminderListItemSchema.safeParse(entry))
     .filter((result) => result.success)
     .map((result) => result.data);
   if (parsed.length === 0) {
@@ -108,21 +99,19 @@ export function ReminderEnvelopeCards({ data }: { data: unknown }) {
     return null;
   }
   return (
-    <>
-      {parsed.map((reminder: ReminderEntry) => (
-        <div className="widget-wrap" key={`${reminder.title}:${reminder.schedule}`}>
+    <div data-testid="reminder-list">
+      {parsed.map((reminder: ReminderListItem) => (
+        <div className="widget-wrap" key={reminder.reminder_id}>
           <ReminderCard
             title={reminder.title}
-            schedule={reminder.schedule}
+            schedule={reminder.scheduleLabel}
             nextRun={reminder.nextRun}
-            weekday={reminder.weekday}
-            time={reminder.time}
             active={reminder.active}
             compact
           />
         </div>
       ))}
-    </>
+    </div>
   );
 }
 

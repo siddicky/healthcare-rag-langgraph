@@ -281,3 +281,115 @@ export function firstInterruptValue(interrupts: unknown): unknown {
   if ("value" in first) return (first as Record<string, unknown>).value;
   return null;
 }
+
+// ---------------------------------------------------------------------------
+// Card-bearing AI message content (stream surfaces for the fixed-contract
+// cards). Code-assembled AI messages carry either a reminder delivery
+// ("literal line\n{DATA envelope with a reminder:* block}") or a pure-JSON
+// component confirmation; neither ever renders its raw JSON.
+// ---------------------------------------------------------------------------
+
+export const ReminderCardPayloadSchema = z.object({
+  title: z.string(),
+  schedule: z.string(),
+  weekday: z.string(),
+  time: z.string(),
+  active: z.boolean(),
+  nextRun: z.string().optional(),
+});
+
+export type ReminderCardPayload = z.infer<typeof ReminderCardPayloadSchema>;
+
+export interface ReminderDelivery {
+  /** The code-assembled literal line (the bubble text). */
+  literal: string;
+  /** null when the envelope matched but its data is not a valid card. */
+  card: ReminderCardPayload | null;
+}
+
+/**
+ * The reminder_delivery node's message: a fixed literal, a newline, then the
+ * ReminderCard DATA envelope (block_id `reminder:<reminder_id>`).
+ */
+export function parseReminderDelivery(content: unknown): ReminderDelivery | null {
+  if (typeof content !== "string") return null;
+  const newline = content.indexOf("\n");
+  if (newline === -1) return null;
+  const envelope = parseDataEnvelope(content.slice(newline + 1));
+  if (envelope === null || !envelope.block_id.startsWith("reminder:")) return null;
+  const card = ReminderCardPayloadSchema.safeParse(envelope.data);
+  return { literal: content.slice(0, newline), card: card.success ? card.data : null };
+}
+
+export const ResolvedMemoryFieldSchema = z.object({
+  key: z.string(),
+  label: z.string(),
+  value: z.string(),
+  needsReview: z.boolean().optional(),
+  status: z.enum(["saved", "discarded"]),
+  notice: z.string().optional(),
+});
+
+export const MemoryConfirmationSchema = z.object({
+  component: z.literal("MemoryExtractionCard"),
+  data: z.object({
+    sourceLabel: z.string(),
+    fields: z.array(ResolvedMemoryFieldSchema),
+  }),
+});
+
+export type ResolvedMemoryField = z.infer<typeof ResolvedMemoryFieldSchema>;
+export type MemoryConfirmation = z.infer<typeof MemoryConfirmationSchema>;
+
+/** The review_document confirmation: pure JSON `{component, data}`. */
+export function parseMemoryConfirmation(content: unknown): MemoryConfirmation | null {
+  const component = parseComponentCard(content);
+  if (component === null || component.component !== "MemoryExtractionCard") return null;
+  const result = MemoryConfirmationSchema.safeParse(JSON.parse(typeof content === "string" ? content : ""));
+  return result.success ? result.data : null;
+}
+
+/** Any pure-JSON `{component: <string>, …}` AI content — never rendered as text. */
+export function parseComponentCard(content: unknown): { component: string } | null {
+  if (typeof content !== "string" || !content.startsWith("{")) return null;
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    return null;
+  }
+  if (typeof parsed !== "object" || parsed === null) return null;
+  const component = (parsed as Record<string, unknown>).component;
+  return typeof component === "string" ? { component } : null;
+}
+
+/**
+ * Bubble text for an AI message: card JSON never renders — a reminder
+ * delivery shows its literal line, a component confirmation shows nothing.
+ */
+export function aiDisplayText(content: unknown): string {
+  if (parseComponentCard(content) !== null) return "";
+  const delivery = parseReminderDelivery(content);
+  if (delivery !== null) return delivery.literal;
+  return messageText(content);
+}
+
+/** Natural-language NEW turns dispatched by full-mode ReminderCard actions. */
+export type ReminderActionKind = "pause" | "resume" | "move" | "cancel";
+
+export function reminderActionTurn(
+  kind: ReminderActionKind,
+  title: string,
+  schedule?: { weekday: string; timeLabel: string },
+): string {
+  switch (kind) {
+    case "pause":
+      return `Pause my ${title} reminder`;
+    case "resume":
+      return `Resume my ${title} reminder`;
+    case "move":
+      return `Move my ${title} reminder to ${schedule?.weekday} at ${schedule?.timeLabel}`;
+    case "cancel":
+      return `Cancel my ${title} reminder`;
+  }
+}

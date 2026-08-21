@@ -94,11 +94,13 @@ export function useCoachChat(deps: CoachChatDeps) {
   const activeThreadRef = useRef<string | null>(null);
   const eraseStartedRef = useRef(false);
   const uploadRef = useRef<UploadUi>({ phase: "idle" });
+  const pendingInterruptRef = useRef<unknown | null>(null);
   const mountedRef = useRef(true);
 
   messagesRef.current = messages;
   activeThreadRef.current = activeThreadId;
   uploadRef.current = upload;
+  pendingInterruptRef.current = pendingInterrupt;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -110,6 +112,11 @@ export function useCoachChat(deps: CoachChatDeps) {
   const commitMessages = useCallback((next: WireMessage[]) => {
     messagesRef.current = next;
     if (mountedRef.current) setMessages(next);
+  }, []);
+
+  const commitPendingInterrupt = useCallback((value: unknown | null): void => {
+    pendingInterruptRef.current = value;
+    if (mountedRef.current) setPendingInterrupt(value);
   }, []);
 
   const turns: TurnModel[] = useMemo(() => buildTurns(messages), [messages]);
@@ -170,7 +177,7 @@ export function useCoachChat(deps: CoachChatDeps) {
         if (mountedRef.current) {
           setActiveThreadId(null);
           commitMessages([]);
-          setPendingInterrupt(null);
+          commitPendingInterrupt(null);
           setUpload({ phase: "idle" });
           setErase({ status: "done" });
           setError(null);
@@ -188,7 +195,7 @@ export function useCoachChat(deps: CoachChatDeps) {
         );
       }
     },
-    [commitMessages, deps.api, deps.poll.erase, deps.sleep, refreshThreads],
+    [commitMessages, commitPendingInterrupt, deps.api, deps.poll.erase, deps.sleep, refreshThreads],
   );
 
   const maybeStartErase = useCallback(
@@ -205,19 +212,19 @@ export function useCoachChat(deps: CoachChatDeps) {
       const projected = await deps.api.getThreadState(threadId);
       const wire = toWireMessages(projected.values.messages);
       commitMessages(wire);
-      setPendingInterrupt(firstInterruptValue(projected.interrupts));
+      commitPendingInterrupt(firstInterruptValue(projected.interrupts));
       setActiveThreadId(threadId);
       maybeStartErase(wire, threadId);
     },
-    [commitMessages, deps.api, maybeStartErase],
+    [commitMessages, commitPendingInterrupt, deps.api, maybeStartErase],
   );
 
   const runStream = useCallback(
     async (
       threadId: string,
       payload: { input: RunInput } | { command: { resume: ResumePayload } },
-    ): Promise<void> => {
-      if (busyRef.current) return;
+    ): Promise<boolean> => {
+      if (busyRef.current) return false;
       busyRef.current = true;
       setBusy(true);
       setError(null);
@@ -225,9 +232,10 @@ export function useCoachChat(deps: CoachChatDeps) {
         const parts = deps.stream.streamRun(threadId, payload);
         await consumeRunStream(parts, messagesRef.current, (delta) => {
           commitMessages(delta.messages);
-          if (delta.interruptValue !== null) setPendingInterrupt(delta.interruptValue);
+          if (delta.interruptValue !== null) commitPendingInterrupt(delta.interruptValue);
         });
         maybeStartErase(messagesRef.current, threadId);
+        return true;
       } catch (streamError) {
         if (mountedRef.current) {
           setError(
@@ -236,12 +244,13 @@ export function useCoachChat(deps: CoachChatDeps) {
               : "That message didn't go through. Please try again.",
           );
         }
+        return false;
       } finally {
         busyRef.current = false;
         if (mountedRef.current) setBusy(false);
       }
     },
-    [commitMessages, deps.stream, maybeStartErase],
+    [commitMessages, commitPendingInterrupt, deps.stream, maybeStartErase],
   );
 
   const ensureThread = useCallback(async (): Promise<string> => {
@@ -336,10 +345,12 @@ export function useCoachChat(deps: CoachChatDeps) {
     async (resume: ResumePayload): Promise<void> => {
       const threadId = activeThreadRef.current;
       if (threadId === null || busyRef.current) return;
-      setPendingInterrupt(null);
-      await runStream(threadId, { command: { resume } });
+      const current = pendingInterruptRef.current;
+      commitPendingInterrupt(null);
+      const clean = await runStream(threadId, { command: { resume } });
+      if (!clean && current !== null) commitPendingInterrupt(current);
     },
-    [runStream],
+    [commitPendingInterrupt, runStream],
   );
 
   const waitTerminalThen = useCallback(
@@ -402,10 +413,10 @@ export function useCoachChat(deps: CoachChatDeps) {
     setActiveThreadId(null);
     activeThreadRef.current = null;
     commitMessages([]);
-    setPendingInterrupt(null);
+    commitPendingInterrupt(null);
     setUpload({ phase: "idle" });
     setError(null);
-  }, [commitMessages]);
+  }, [commitMessages, commitPendingInterrupt]);
 
   const selectThread = useCallback(
     async (threadId: string): Promise<void> => {
