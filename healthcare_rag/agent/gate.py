@@ -32,6 +32,7 @@ from .features import (
     has_unexplained_medical_token,
     is_anaphoric_followup,
 )
+from .memory import principal_mapping
 from .state import CoachState, PreviousContext
 
 CLASSIFIER_TIMEOUT_SECONDS: Final = 5.0
@@ -137,9 +138,9 @@ async def coach_gate(
     if wake is not None:
         configurable = config.get("configurable", {})
         thread_id = configurable.get("thread_id")
-        principal = configurable.get("langgraph_auth_user")
+        principal = principal_mapping(configurable.get("langgraph_auth_user"))
         member_context = (
-            isinstance(principal, Mapping) and principal.get("role") == "member"
+            principal is not None and principal.get("role") == "member"
         )
         record = None
         if store is not None and not member_context:

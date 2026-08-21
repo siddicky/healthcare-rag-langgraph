@@ -11,7 +11,7 @@ InjectionTracker's required props hydrate fully through refs.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from typing import Annotated, ClassVar, Final, final, override
@@ -23,6 +23,7 @@ from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
 from pydantic import BaseModel, ConfigDict, ValidationError
 
+from healthcare_rag.agent.memory import principal_mapping
 from healthcare_rag.agent.store_data import (
     InjectionLogEntry,
     JsonObject,
@@ -93,8 +94,10 @@ class LogInjectionArgs(BaseModel):
 
 
 def _authenticated_user_id(config: RunnableConfig) -> str:
-    principal = config.get("configurable", {}).get("langgraph_auth_user")
-    if not isinstance(principal, Mapping):
+    principal = principal_mapping(
+        config.get("configurable", {}).get("langgraph_auth_user")
+    )
+    if principal is None:
         raise InjectionIdentityError
     try:
         identity = _AuthPrincipal.model_validate(principal).identity

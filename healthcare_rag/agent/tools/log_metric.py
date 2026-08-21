@@ -11,7 +11,7 @@ today and the owner is the authenticated principal.
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import UTC, date, datetime
 from enum import StrEnum
@@ -25,6 +25,7 @@ from langgraph.store.base import BaseStore
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
 from healthcare_rag.agent import store_data
+from healthcare_rag.agent.memory import principal_mapping
 from healthcare_rag.agent.store_data import MetricEntry, make_envelope
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.processors.privacy import PrivacyScanError
@@ -83,8 +84,10 @@ class MetricScopeError(Exception):
 
 
 def _authenticated_user_id(config: RunnableConfig) -> str:
-    principal = config.get("configurable", {}).get("langgraph_auth_user")
-    if not isinstance(principal, Mapping):
+    principal = principal_mapping(
+        config.get("configurable", {}).get("langgraph_auth_user")
+    )
+    if principal is None:
         raise MetricIdentityError
     try:
         identity = _AuthPrincipal.model_validate(principal).identity

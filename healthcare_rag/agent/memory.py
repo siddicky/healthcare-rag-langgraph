@@ -40,9 +40,32 @@ class MemoryIdentityError(Exception):
         return self.code
 
 
+def principal_mapping(principal: object) -> Mapping[str, object] | None:
+    """Normalize ``configurable.langgraph_auth_user`` for identity/role reads.
+
+    In-process tests pass a plain dict; the Agent Server wraps the auth
+    handler's dict in ``langgraph_api.auth.custom.ProxyUser`` (attribute
+    access, not a ``Mapping``), so both shapes must parse. Attribute reads
+    are used for wrapped principals because ``ProxyUser.get`` drops custom
+    keys like ``role`` while ``getattr`` proxies them.
+    """
+    if isinstance(principal, Mapping):
+        return principal
+    identity = getattr(principal, "identity", None)
+    if not isinstance(identity, str) or not identity:
+        return None
+    attributes: dict[str, object] = {"identity": identity}
+    role = getattr(principal, "role", None)
+    if role is not None:
+        attributes["role"] = role
+    return attributes
+
+
 def authenticated_user_id(config: RunnableConfig) -> str:
-    principal = config.get("configurable", {}).get("langgraph_auth_user")
-    if not isinstance(principal, Mapping):
+    principal = principal_mapping(
+        config.get("configurable", {}).get("langgraph_auth_user")
+    )
+    if principal is None:
         raise MemoryIdentityError
     try:
         identity = _AuthPrincipal.model_validate(principal).identity
@@ -109,6 +132,7 @@ __all__ = [
     "MemoryIdentityError",
     "authenticated_user_id",
     "dynamic_prompt",
+    "principal_mapping",
     "remember_fact",
     "sanitize_memory_field",
 ]

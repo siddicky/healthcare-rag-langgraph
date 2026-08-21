@@ -10,6 +10,7 @@ from langgraph.store.base import BaseStore
 from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
+from healthcare_rag.agent.memory import principal_mapping
 from healthcare_rag.agent.state import CoachState
 from healthcare_rag.agent.store_data import (
     ApprovalEvent,
@@ -72,7 +73,7 @@ def _runtime_ids(
     runtime: ToolRuntime[None, CoachState],
 ) -> tuple[str, str, str, str, BaseStore]:
     configurable = runtime.config.get("configurable", {})
-    principal = configurable.get("langgraph_auth_user")
+    principal = principal_mapping(configurable.get("langgraph_auth_user"))
     try:
         user_id = AuthPrincipal.model_validate(principal).identity
     except ValidationError as error:

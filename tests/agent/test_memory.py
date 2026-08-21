@@ -277,3 +277,41 @@ async def test_store_failure_returns_error_and_writes_nothing(
 
     # Then
     assert result == "Memory not saved: storage unavailable."
+
+
+def test_principal_mapping_accepts_platform_proxy_user_shape() -> None:
+    """The Agent Server wraps auth dicts in an attribute-proxy (ProxyUser)."""
+    # Given
+    class ProxyPrincipal:
+        identity = "member-u1"
+        role = "member"
+
+    # When
+    mapped = memory.principal_mapping(ProxyPrincipal())
+
+    # Then
+    assert mapped == {"identity": "member-u1", "role": "member"}
+
+
+def test_principal_mapping_rejects_principal_without_identity() -> None:
+    # Given
+    class Anonymous:
+        display_name = "anon"
+
+    # Then
+    assert memory.principal_mapping(Anonymous()) is None
+    assert memory.principal_mapping(None) is None
+
+
+def test_authenticated_user_id_reads_proxy_principal() -> None:
+    # Given
+    class ProxyPrincipal:
+        identity = "member-u1"
+        role = "member"
+
+    config: RunnableConfig = {
+        "configurable": {"langgraph_auth_user": ProxyPrincipal()}
+    }
+
+    # Then
+    assert memory.authenticated_user_id(config) == "member-u1"

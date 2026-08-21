@@ -13,7 +13,6 @@ from __future__ import annotations
 
 import calendar
 import re
-from collections.abc import Mapping
 from typing import Annotated, ClassVar, Final, Literal
 
 from langchain_core.runnables import RunnableConfig
@@ -22,7 +21,7 @@ from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
-from healthcare_rag.agent.memory import MemoryIdentityError
+from healthcare_rag.agent.memory import MemoryIdentityError, principal_mapping
 from healthcare_rag.agent.store_data import (
     JsonObject,
     ScheduleEntry,
@@ -58,8 +57,10 @@ class _AuthPrincipal(BaseModel):
 
 
 def _authenticated_user_id(config: RunnableConfig) -> str:
-    principal = config.get("configurable", {}).get("langgraph_auth_user")
-    if not isinstance(principal, Mapping):
+    principal = principal_mapping(
+        config.get("configurable", {}).get("langgraph_auth_user")
+    )
+    if principal is None:
         raise MemoryIdentityError
     try:
         identity = _AuthPrincipal.model_validate(principal).identity
