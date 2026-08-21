@@ -87,6 +87,7 @@ Model history
 from __future__ import annotations
 
 import os
+from typing import Literal, TypeAlias
 
 from healthcare_rag.services import model_sampling
 
@@ -108,7 +109,9 @@ def disabled_stages() -> frozenset[str]:
     stages = {s.strip().lower() for s in raw.split(",") if s.strip()}
     unknown = stages - VALID_STAGES
     if unknown:
-        raise ValueError(f"HC_RAG_DISABLE_STAGES has unknown stage(s) {sorted(unknown)}; valid: {sorted(VALID_STAGES)}")
+        raise ValueError(
+            f"HC_RAG_DISABLE_STAGES has unknown stage(s) {sorted(unknown)}; valid: {sorted(VALID_STAGES)}"
+        )
     return frozenset(stages)
 
 
@@ -137,7 +140,9 @@ def _env_bool(name: str, default: bool) -> bool:
         return False
     if val == "":
         return default
-    raise ValueError(f"{name} must be a boolean (one of {sorted(_TRUTHY | _FALSY)}), got {raw!r}")
+    raise ValueError(
+        f"{name} must be a boolean (one of {sorted(_TRUTHY | _FALSY)}), got {raw!r}"
+    )
 
 
 def max_subqueries() -> int:
@@ -148,7 +153,9 @@ def max_subqueries() -> int:
     try:
         value = int(raw.strip())
     except ValueError:
-        raise ValueError(f"HC_RAG_MAX_SUBQUERIES must be an integer, got {raw!r}") from None
+        raise ValueError(
+            f"HC_RAG_MAX_SUBQUERIES must be an integer, got {raw!r}"
+        ) from None
     if value < 1:
         raise ValueError(f"HC_RAG_MAX_SUBQUERIES must be >= 1, got {value}")
     return value
@@ -163,6 +170,7 @@ def decompose_only_complex() -> bool:
 # Safety gate                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 def safety_gate_enabled() -> bool:
     """True when the runtime safety gate runs before the pipeline.
 
@@ -176,7 +184,10 @@ def refusal_boundary_enabled() -> bool:
     return _env_bool("HC_RAG_REFUSAL_BOUNDARY", True)
 
 
-DEFAULT_QUERY_RESPONSE_ARM, DEFAULT_SAFETY_CLASSIFIER = "current", "llm"
+QueryResponseArm: TypeAlias = Literal["current", "deterministic", "tool"]
+
+DEFAULT_QUERY_RESPONSE_ARM: QueryResponseArm = "current"
+DEFAULT_SAFETY_CLASSIFIER = "llm"
 VALID_QUERY_RESPONSE_ARMS = frozenset({"current", "deterministic", "tool"})
 VALID_SAFETY_CLASSIFIERS = frozenset({"llm", "semantic_router"})
 
@@ -190,12 +201,23 @@ def _enum_env(name: str, default: str, allowed: frozenset[str]) -> str:
     return value
 
 
-def query_response_arm() -> str:
-    return _enum_env("HC_RAG_QUERY_RESPONSE_ARM", DEFAULT_QUERY_RESPONSE_ARM, VALID_QUERY_RESPONSE_ARMS)
+def query_response_arm() -> QueryResponseArm:
+    value = os.getenv("HC_RAG_QUERY_RESPONSE_ARM", DEFAULT_QUERY_RESPONSE_ARM)
+    match value:
+        case "current" | "deterministic" | "tool":
+            return value
+        case _:
+            message = (
+                "HC_RAG_QUERY_RESPONSE_ARM must be one of "
+                f"{sorted(VALID_QUERY_RESPONSE_ARMS)}, got {value!r}"
+            )
+            raise ValueError(message)
 
 
 def safety_classifier_backend() -> str:
-    return _enum_env("HC_RAG_SAFETY_CLASSIFIER", DEFAULT_SAFETY_CLASSIFIER, VALID_SAFETY_CLASSIFIERS)
+    return _enum_env(
+        "HC_RAG_SAFETY_CLASSIFIER", DEFAULT_SAFETY_CLASSIFIER, VALID_SAFETY_CLASSIFIERS
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -248,7 +270,9 @@ def pageindex_max_nodes() -> int:
 
 def pageindex_max_chunks() -> int:
     """Hard cap on how many chunks the selected page ranges may expand to."""
-    return _env_positive_int("HC_RAG_PAGEINDEX_MAX_CHUNKS", DEFAULT_PAGEINDEX_MAX_CHUNKS)
+    return _env_positive_int(
+        "HC_RAG_PAGEINDEX_MAX_CHUNKS", DEFAULT_PAGEINDEX_MAX_CHUNKS
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -326,9 +350,13 @@ def pinecone_alpha() -> float:
     try:
         value = float(raw.strip())
     except ValueError:
-        raise ValueError(f"HC_RAG_PINECONE_ALPHA must be a number, got {raw!r}") from None
+        raise ValueError(
+            f"HC_RAG_PINECONE_ALPHA must be a number, got {raw!r}"
+        ) from None
     if not 0.0 <= value <= 1.0:
-        raise ValueError(f"HC_RAG_PINECONE_ALPHA must be between 0.0 and 1.0, got {value}")
+        raise ValueError(
+            f"HC_RAG_PINECONE_ALPHA must be between 0.0 and 1.0, got {value}"
+        )
     return value
 
 

@@ -35,9 +35,8 @@ from __future__ import annotations
 
 import logging
 import re
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass, field
-from typing import List, Optional, Sequence, Tuple
 
 from ..models.safety import SafetyAssessment
 from ..services.models import default_llm_model
@@ -55,7 +54,7 @@ from .safety_responses import (
 logger = logging.getLogger("MedicalRAG")
 
 
-def scrub_phi(text: str, extra_spans: Sequence[str] = ()) -> Tuple[str, List[str]]:
+def scrub_phi(text: str, extra_spans: Sequence[str] = ()) -> tuple[str, list[str]]:
     """Replace personal identifiers in ``text`` with ``[REDACTED_<KIND>]`` tokens.
 
     Args:
@@ -85,7 +84,7 @@ def contains_phi(text: str) -> bool:
 # 2. Prompt injection                                                          #
 # --------------------------------------------------------------------------- #
 
-_INJECTION_PATTERNS: Tuple[Tuple[str, "re.Pattern[str]"], ...] = (
+_INJECTION_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (
         "ignore_instructions",
         re.compile(
@@ -154,9 +153,9 @@ _INJECTION_PATTERNS: Tuple[Tuple[str, "re.Pattern[str]"], ...] = (
 SALVAGEABLE_INJECTION_FLAGS = frozenset({"ignore_instructions"})
 
 
-def injection_flags(text: str) -> List[str]:
+def injection_flags(text: str) -> list[str]:
     """Names of the instruction-override patterns matched by ``text`` (deduplicated)."""
-    hits: List[str] = []
+    hits: list[str] = []
     for name, pattern in _INJECTION_PATTERNS:
         if pattern.search(text or "") and name not in hits:
             hits.append(name)
@@ -170,7 +169,9 @@ def strip_injection(text: str) -> str:
         out = pattern.sub(" ", out)
     # Tidy the leftovers ("  and tell me..." -> "tell me...").
     out = re.sub(r"\s+", " ", out).strip()
-    out = re.sub(r"^(?:and|then|also|but|so|,|\.|;|:)\s+", "", out, flags=re.IGNORECASE).strip()
+    out = re.sub(
+        r"^(?:and|then|also|but|so|,|\.|;|:)\s+", "", out, flags=re.IGNORECASE
+    ).strip()
     return out
 
 
@@ -178,7 +179,7 @@ def strip_injection(text: str) -> str:
 # 3. Requests to recite identifiers back                                       #
 # --------------------------------------------------------------------------- #
 
-_IDENTIFIER_RECALL_PATTERNS: Tuple["re.Pattern[str]", ...] = (
+_IDENTIFIER_RECALL_PATTERNS: tuple[re.Pattern[str], ...] = (
     re.compile(
         r"\b(?:remind me(?: of| what)?|what (?:was|is|were)|tell me|give me(?: back)?|"
         r"repeat|read (?:it |them )?back|recite|confirm)\b[^.?!]{0,60}?"
@@ -208,9 +209,11 @@ def identifier_recall_requested(text: str) -> bool:
 #: A red flag only fires when the message is about the speaker (or someone they are
 #: describing in the first person). "Is chest pain a listed side effect of Lipitor?" is
 #: an informational question and must still be answered from the monograph.
-_FIRST_PERSON = re.compile(r"\b(?:i|i'?m|im|i'?ve|ive|i'?d|my|me|myself|we|our)\b", re.IGNORECASE)
+_FIRST_PERSON = re.compile(
+    r"\b(?:i|i'?m|im|i'?ve|ive|i'?d|my|me|myself|we|our)\b", re.IGNORECASE
+)
 
-_RED_FLAG_PATTERNS: Tuple[Tuple[str, "re.Pattern[str]"], ...] = (
+_RED_FLAG_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
     (
         "chest_pain",
         re.compile(
@@ -284,7 +287,7 @@ _VOMITING = re.compile(
 )
 
 
-def red_flag_terms(text: str) -> List[str]:
+def red_flag_terms(text: str) -> list[str]:
     """Emergency red flags in ``text``.
 
     Every rule requires a first-person marker, so a purely informational question about
@@ -299,7 +302,7 @@ def red_flag_terms(text: str) -> List[str]:
     body = text or ""
     if not _FIRST_PERSON.search(body):
         return []
-    hits: List[str] = []
+    hits: list[str] = []
     for name, pattern in _RED_FLAG_PATTERNS:
         if pattern.search(body) and name not in hits:
             hits.append(name)
@@ -336,18 +339,21 @@ NUMERIC_DOSE = re.compile(
 # 6. Decision object                                                           #
 # --------------------------------------------------------------------------- #
 
+
 @dataclass
 class SafetyDecision:
     """What the caller should do with one user message."""
 
     assessment: SafetyAssessment
     scrubbed_query: str
-    phi_kinds: List[str] = field(default_factory=list)
-    flags: List[str] = field(default_factory=list)
+    phi_kinds: list[str] = field(default_factory=list)
+    flags: list[str] = field(default_factory=list)
     short_circuit: bool = False
-    kind: str = "none"                       # which template (or "none" = run the pipeline)
-    response: Optional[str] = None           # templated body, when short-circuiting
-    notices: List[str] = field(default_factory=list)  # one-line prefixes (PHI / injection)
+    kind: str = "none"  # which template (or "none" = run the pipeline)
+    response: str | None = None  # templated body, when short-circuiting
+    notices: list[str] = field(
+        default_factory=list
+    )  # one-line prefixes (PHI / injection)
     llm_calls: int = 1
 
     @property
@@ -356,7 +362,7 @@ class SafetyDecision:
 
     def render(self) -> str:
         """Assemble notices and the templated response body."""
-        parts: List[str] = list(self.notices)
+        parts: list[str] = list(self.notices)
         if self.response:
             parts.append(self.response)
         return "\n\n".join(p for p in parts if p)
@@ -395,7 +401,9 @@ class SafetyGate:
         self.llm_model: str = llm_model or default_llm_model()
         self._llm_call: SafetyLLMCall | None = llm_call or gateway
 
-    async def _llm_assess(self, query: str, history_context: str = "") -> SafetyAssessment:
+    async def _llm_assess(
+        self, query: str, history_context: str = ""
+    ) -> SafetyAssessment:
         """The single structured-output call. Isolated so tests can stub it."""
         default = SafetyAssessment(
             category="ambiguous",
@@ -438,12 +446,19 @@ class SafetyGate:
         elif det_injection and category != "emergency_red_flag":
             category = "prompt_injection"
 
+        accepted_social_intent = (
+            llm.social_intent
+            if llm.benign_social and category == "out_of_scope"
+            else None
+        )
         return SafetyAssessment(
             category=category,
             contains_phi=bool(phi_kinds),
             phi_spans=list(llm.phi_spans or []),
             drug_mentioned=llm.drug_mentioned,
             rationale=llm.rationale,
+            benign_social=accepted_social_intent is not None,
+            social_intent=accepted_social_intent,
         )
 
     async def evaluate(self, query: str, history_context: str = "") -> SafetyDecision:
@@ -454,14 +469,14 @@ class SafetyGate:
         self, query: str, history_context: str, injection_pass: bool
     ) -> SafetyDecision:
         assessment = await self.assess(query, history_context)
-        flags: List[str] = []
+        flags: list[str] = []
         flags += [f"red_flag:{f}" for f in red_flag_terms(query)]
         flags += [f"injection:{f}" for f in injection_flags(query)]
         if identifier_recall_requested(query):
             flags.append("identifier_recall")
 
         scrubbed, phi_kinds = scrub_phi(query)
-        notices: List[str] = []
+        notices: list[str] = []
         if phi_kinds:
             notices.append(PHI_NOTICE)
 
@@ -493,12 +508,16 @@ class SafetyGate:
                 return decision
             inner = await self._evaluate(residual, history_context, injection_pass=True)
             inner.llm_calls = decision.llm_calls + inner.llm_calls
-            inner.flags = decision.flags + [f for f in inner.flags if f not in decision.flags]
+            inner.flags = decision.flags + [
+                f for f in inner.flags if f not in decision.flags
+            ]
             # Keep the identifiers found in the *original* message redacted.
             merged_notices = [INJECTION_NOTICE]
             if decision.notices and PHI_NOTICE not in inner.notices:
                 merged_notices.insert(0, PHI_NOTICE)
-            inner.notices = merged_notices + [n for n in inner.notices if n != INJECTION_NOTICE]
+            inner.notices = merged_notices + [
+                n for n in inner.notices if n != INJECTION_NOTICE
+            ]
             inner.phi_kinds = list(dict.fromkeys(decision.phi_kinds + inner.phi_kinds))
             return inner
 

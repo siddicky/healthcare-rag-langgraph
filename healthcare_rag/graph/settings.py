@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from typing import ClassVar
 
 from healthcare_rag.services.models import (
+    QueryResponseArm,
     decompose_only_complex,
     default_llm_model,
     default_reasoning_effort,
@@ -59,7 +60,7 @@ class GraphSettings:
     pinecone_api_key: str = ""
     pinecone_alpha: float = 0.65
     embedding_model: str = "text-embedding-3-small"
-    query_response_arm: str = "current"
+    query_response_arm: QueryResponseArm = "current"
     safety_classifier: str = "llm"
 
     _TRUTHY: ClassVar[frozenset[str]] = frozenset({"1", "true", "yes", "on"})
@@ -72,7 +73,9 @@ class GraphSettings:
         try:
             history_max_tokens = int(raw_tokens)
         except ValueError:
-            message = f"HC_RAG_HISTORY_MAX_TOKENS must be an integer, got {raw_tokens!r}"
+            message = (
+                f"HC_RAG_HISTORY_MAX_TOKENS must be an integer, got {raw_tokens!r}"
+            )
             raise ValueError(message) from None
 
         raw_strict = os.getenv("HC_RAG_STRUCTURED_STRICT")
