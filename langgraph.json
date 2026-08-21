@@ -1,7 +1,8 @@
 {
   "dependencies": ["."],
   "graphs": {
-    "healthcare_rag": "./healthcare_rag/graph/__init__.py:graph"
+    "healthcare_rag": "./healthcare_rag/graph/__init__.py:graph",
+    "coach": "./healthcare_rag/agent/__init__.py:coach"
   },
   "env": ".env",
   "python_version": "3.12",
