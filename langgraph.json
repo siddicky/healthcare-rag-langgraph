@@ -11,6 +11,17 @@
       "fields": ["$"]
     }
   },
+  "auth": {
+    "path": "./healthcare_rag/agent/auth.py:auth",
+    "disable_studio_auth": true
+  },
+  "http": {
+    "app": "./healthcare_rag/agent/http_app.py:app",
+    "middleware_order": "auth_first",
+    "enable_custom_route_auth": true,
+    "disable_mcp": true,
+    "disable_a2a": true
+  },
   "env": ".env",
   "python_version": "3.12",
   "dockerfile_lines": [
