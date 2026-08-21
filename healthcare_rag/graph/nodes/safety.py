@@ -3,14 +3,17 @@ from __future__ import annotations
 import logging
 import time
 from datetime import datetime, timezone
-from typing import cast, override
+from typing import cast
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage
 from langgraph.types import Command, Overwrite
 
 from healthcare_rag.graph.history import build_history_views
 from healthcare_rag.graph.llm import LangChainLLMGateway
-from healthcare_rag.graph.nodes import render_display_answer
+from healthcare_rag.graph.nodes.safety_classifier import (
+    LangChainSafetyGate as LangChainSafetyGate,
+)
+from healthcare_rag.graph.nodes.safety_finalize import finalize as finalize
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.routers import GateTarget, route_after_gate
 from healthcare_rag.graph.state import JSONValue, RAGState
@@ -25,7 +28,7 @@ from healthcare_rag.processors.refusal_boundary import (
     load_boundaries,
     upsert_boundary,
 )
-from healthcare_rag.processors.safety import SafetyGate, scrub_phi
+from healthcare_rag.processors.safety import scrub_phi
 from healthcare_rag.processors.safety_responses import (
     PHI_NOTICE,
     emergency_response,
@@ -63,34 +66,6 @@ def _gate_command(
         update=update,
         goto=route_after_gate(cast(RAGState, cast(object, {**state, **update}))),
     )
-
-
-class LangChainSafetyGate(SafetyGate):
-    @override
-    async def _llm_assess(
-        self,
-        query: str,
-        history_context: str = "",
-    ) -> SafetyAssessment:
-        default = SafetyAssessment(
-            category="ambiguous",
-            contains_phi=False,
-            phi_spans=[],
-            drug_mentioned="none",
-            rationale="safety-gate LLM call failed; deterministic checks only",
-        )
-        llm_call = self._llm_call
-        if llm_call is None:
-            return default
-        result = await llm_call(
-            prompt_name="safety_gate",
-            temperature=0.0,
-            response_format=SafetyAssessment,
-            default_response=default,
-            user_query=query,
-            conversation_context=history_context or "",
-        )
-        return result or default
 
 
 async def safety_gate(state: RAGState) -> Command[GateTarget]:
@@ -266,40 +241,3 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         "safety_notices": decision.notices,
         "route": Overwrite([f"safety_gate:{decision.kind}"]),
     })
-
-
-async def finalize(state: RAGState) -> RAGState:
-    safety_response = state.get("safety_response", "")
-    if safety_response:
-        answer = "\n\n".join(
-            part for part in [*state.get("safety_notices", []), safety_response] if part
-        )
-        follow_ups: list[str] = []
-    else:
-        answer = render_display_answer(
-            state.get("validated"),
-            state.get("safety_notices", []),
-        )
-        follow_ups = state.get("follow_ups", [])
-
-    answer = scrub_phi(answer)[0]
-    follow_ups = [scrub_phi(question)[0] for question in follow_ups]
-    selected_branch_query = state.get("selected_branch_query")
-    if selected_branch_query is None:
-        selected_branch_query = state.get("working_query")
-    selected_branch_query = scrub_phi(selected_branch_query or "")[0] or None
-    update: RAGState = {
-        "answer": answer or None,
-        "follow_ups": follow_ups,
-        "selected_branch_query": selected_branch_query,
-    }
-    if answer:
-        timestamp = datetime.now(timezone.utc).isoformat()
-        update["messages"] = [
-            HumanMessage(
-                content=state.get("scrubbed_question", ""),
-                additional_kwargs={"ts": timestamp},
-            ),
-            AIMessage(content=answer, additional_kwargs={"ts": timestamp}),
-        ]
-    return update
