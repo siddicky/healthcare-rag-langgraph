@@ -70,6 +70,7 @@ def test_clinical_unit_transformations_are_rejected(content: str) -> None:
         "Goodbye.",
         "I can help with dosing in general from the monographs.",
         "I can discuss Lipitor and metformin monographs.",
+        "I can answer questions about Lipitor and metformin product monographs.",
         "Do not hesitate to ask another question.",
         "You can ask about the monographs.",
         "Never mind, thanks.",
@@ -84,6 +85,27 @@ def test_benign_whole_token_controls_are_allowed(content: str) -> None:
 
     assert decision.content == content
     assert decision.denial_reason is None
+
+
+@pytest.mark.parametrize(
+    "content",
+    [
+        "Metformin treats diabetes.",
+        "Lipitor lowers cholesterol.",
+        "Metformin is used for diabetes.",
+        "Lipitor can cause muscle pain.",
+        "Hello. Metformin treats diabetes.",
+        "I can explain information about how Metformin treats diabetes.",
+    ],
+)
+def test_factual_medical_prose_is_rejected(content: str) -> None:
+    # Given: model prose that states a medical fact rather than a social response.
+    # When: the untrusted model output crosses the deterministic policy boundary.
+    decision = evaluate_generated_output(content)
+
+    # Then: no factual medical text is eligible for direct display.
+    assert decision.content == ""
+    assert decision.denial_reason == "clinical_direct_content"
 
 
 def test_prompt_injection_is_rejected() -> None:
