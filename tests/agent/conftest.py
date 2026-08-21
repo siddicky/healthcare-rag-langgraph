@@ -9,7 +9,7 @@ import time
 from collections.abc import Callable, Iterator
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
-from typing import ClassVar, Final
+from typing import ClassVar, Final, override
 
 import httpx
 import pytest
@@ -21,8 +21,9 @@ class _FixtureHandler(BaseHTTPRequestHandler):
     feedback_requests: ClassVar[list[tuple[dict[str, str], dict[str, object]]]] = []
     extraction_calls: ClassVar[int] = 0
 
-    def log_message(self, _format: str, *_args: object) -> None:
-        return
+    @override
+    def log_message(self, format: str, *args: object) -> None:
+        del format, args
 
     def _json(self, status: int, payload: dict[str, object]) -> None:
         encoded = json.dumps(payload).encode()
@@ -33,6 +34,14 @@ class _FixtureHandler(BaseHTTPRequestHandler):
         self.wfile.write(encoded)
 
     def do_GET(self) -> None:
+        if self.path.startswith("/feedback?"):
+            encoded = b"[]"
+            self.send_response(200)
+            self.send_header("content-type", "application/json")
+            self.send_header("content-length", str(len(encoded)))
+            self.end_headers()
+            self.wfile.write(encoded)
+            return
         if self.path == "/auth/v1/user":
             authorization = self.headers.get("authorization", "")
             identity = authorization.removeprefix("Bearer ")

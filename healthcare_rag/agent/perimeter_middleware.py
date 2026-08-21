@@ -105,6 +105,8 @@ class MemberPerimeterMiddleware(BaseHTTPMiddleware):
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
         role = user.get("role")
         if role == "internal":
+            if request.url.path == "/coach/internal/version":
+                return await call_next(request)
             if request.url.path.startswith("/coach/"):
                 return JSONResponse({"detail": "Forbidden"}, status_code=403)
             return await call_next(request)
