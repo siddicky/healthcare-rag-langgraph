@@ -40,6 +40,20 @@ from .query_or_respond_fakes import _install, _state
         "I'm here to help with metformin uses atorvastatin.",
         "I'm happy to help, metformin treats diabetes.",
         "We're happy to help — atorvastatin uses metformin.",
+        "Medical prose must be discarded.",
+        "Safe social response.",
+        "That pillbox looks useful.",
+        "The tabletops are clean.",
+        "This is milligrammatical wordplay.",
+        "Hello, metformin treats diabetes.",
+        "Thanks, take metformin.",
+        "Happy to help, metformin treats diabetes.",
+        "Hello, thanks, metformin treats diabetes.",
+        "Hello,take care.",
+        "Hello, .",
+        "Hello: take care.",
+        "Hello; take care.",
+        "Hello — take care.",
     ],
 )
 async def test_social_factual_medical_prose_uses_deterministic_fallback(
@@ -150,7 +164,18 @@ async def test_social_factual_medical_prose_uses_deterministic_fallback(
             "capability",
             "We're here to help — with questions about Lipitor interactions.",
         ),
-        ("greeting", "That pillbox looks useful."),
+        ("goodbye", "Goodbye, take care!"),
+        ("thanks", "Thanks, happy to help."),
+        ("greeting", "Hello, happy to help."),
+        ("goodbye", "Bye for now, thanks again."),
+        (
+            "greeting",
+            "Hello, I'm happy to help, with questions about metformin interactions.",
+        ),
+        (
+            "thanks",
+            "Thanks, we're here to provide information about metformin side effects from the monograph.",
+        ),
     ],
 )
 async def test_social_direct_content_preserves_allowed_intents(

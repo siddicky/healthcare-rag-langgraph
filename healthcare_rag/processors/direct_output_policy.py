@@ -15,7 +15,7 @@ GeneratedOutputDenial = Literal[
 ]
 
 _TOKEN: Final = re.compile(r"[^\W_]+(?:['’][^\W_]+)?|%", re.UNICODE)
-_SENTENCE_BOUNDARY: Final = re.compile(r"[.!?;:\n]+")
+_SENTENCE_BOUNDARY: Final = re.compile(r"[.!?\n]+")
 _SOCIAL_ONLY_SENTENCE: Final = re.compile(
     r"(?:"
     r"(?:hello|hi|hey)(?:\s+(?:again|everyone|there))?"
@@ -85,15 +85,6 @@ _CAPABILITY_SCOPE: Final = re.compile(
     rf"|(?:me\s+)?(?:about|on)\s+{_CAPABILITY_TOPIC}"
     rf"|with\s+(?:{_QUESTION_SCOPE}|{_CAPABILITY_TOPIC})"
     rf"|{_CAPABILITY_TOPIC})"
-)
-_WHOLE_TOKEN_CONTROLS: Final = frozenset(
-    {
-        "medical prose must be discarded",
-        "safe social response",
-        "that pillbox looks useful",
-        "the tabletops are clean",
-        "this is milligrammatical wordplay",
-    }
 )
 _CLINICAL_UNITS: Final = frozenset(
     {
@@ -223,6 +214,14 @@ def _has_clinical_instruction(tokens: tuple[str, ...]) -> bool:
     )
 
 
+def _is_capability_atom(text: str) -> bool:
+    capability = _CAPABILITY_SENTENCE.fullmatch(text)
+    if capability is None:
+        return False
+    scope = capability.group("scope")
+    return scope is None or _CAPABILITY_SCOPE.fullmatch(scope) is not None
+
+
 def _is_social_output(normalized: str) -> bool:
     sentences = tuple(
         sentence.strip()
@@ -232,15 +231,17 @@ def _is_social_output(normalized: str) -> bool:
     if not sentences:
         return False
     for sentence in sentences:
-        if sentence in _WHOLE_TOKEN_CONTROLS:
-            continue
         if _SOCIAL_ONLY_SENTENCE.fullmatch(sentence) is not None:
             continue
-        capability = _CAPABILITY_SENTENCE.fullmatch(sentence)
-        if capability is None:
+        if _is_capability_atom(sentence):
+            continue
+        atoms = re.split(r",\s+", sentence, maxsplit=1)
+        if len(atoms) != 2 or _SOCIAL_ONLY_SENTENCE.fullmatch(atoms[0]) is None:
             return False
-        scope = capability.group("scope")
-        if scope is not None and _CAPABILITY_SCOPE.fullmatch(scope) is None:
+        right = atoms[1]
+        if _SOCIAL_ONLY_SENTENCE.fullmatch(right) is None and not _is_capability_atom(
+            right
+        ):
             return False
     return True
 

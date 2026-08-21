@@ -113,7 +113,7 @@ async def test_medical_valid_tool_uses_sanitized_tool_query(
     [
         (
             AIMessage(content="medical prose must be discarded"),
-            "medical_free_text",
+            "clinical_direct_content",
             "direct",
         ),
         (

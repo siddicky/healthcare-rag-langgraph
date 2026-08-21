@@ -14,7 +14,7 @@ async def test_gateway_binds_exact_tool_options_and_scrubbed_capped_messages(
 ) -> None:
     # Given
     canary = "person@example.com"
-    response = AIMessage(content="safe social response")
+    response = AIMessage(content="Happy to help.")
     gateway, model = _gateway(monkeypatch, response, history_max_tokens=30)
     history: list[BaseMessage] = [
         HumanMessage(content=f"old-marker {canary} " + "old " * 80),
@@ -28,7 +28,7 @@ async def test_gateway_binds_exact_tool_options_and_scrubbed_capped_messages(
 
     # Then
     assert result.action == "direct"
-    assert result.direct_content == "safe social response"
+    assert result.direct_content == "Happy to help."
     assert result.fallback_reason is None
     assert model.tools == [
         {
