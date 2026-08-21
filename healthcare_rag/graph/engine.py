@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from importlib import import_module, metadata
-from typing import Any, Protocol, Self
+from typing import Any, Protocol, Self, override
 from uuid import UUID
 
 from langchain_core.callbacks import AsyncCallbackHandler
@@ -26,7 +27,29 @@ from healthcare_rag.monitor import QueryMonitor
 from healthcare_rag.processors.privacy import PrivacyScanError
 from healthcare_rag.processors.safety import scrub_phi
 
-__all__ = ["Engine", "GraphEngine", "UsageRecorder", "build_engine", "fold_branches"]
+__all__ = [
+    "Engine",
+    "GraphEngine",
+    "SafetyClassifierUnavailableError",
+    "UsageRecorder",
+    "build_engine",
+    "fold_branches",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class SafetyClassifierUnavailableError(RuntimeError):
+    """Selected safety-classifier backend cannot be executed by this build."""
+
+    backend: str
+
+    @override
+    def __str__(self) -> str:
+        return (
+            f"Safety classifier backend {self.backend!r} is unavailable: "
+            "the compatible optional extra is not installed. "
+            "Set HC_RAG_SAFETY_CLASSIFIER=llm."
+        )
 
 
 class Engine(Protocol):
@@ -119,6 +142,10 @@ class GraphEngine:
 
     def __init__(self, settings: GraphSettings | None = None) -> None:
         self.settings = settings or GraphSettings.from_env()
+        if self.settings.safety_classifier == "semantic_router":
+            raise SafetyClassifierUnavailableError(
+                backend=self.settings.safety_classifier
+            )
         self.compiled: Any = None
         self._sqlite_context: Any = None
         self._history_usage: dict[str, bool] = {}

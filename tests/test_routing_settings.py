@@ -6,7 +6,7 @@ from typing import get_args
 
 import pytest
 
-from healthcare_rag.graph.engine import GraphEngine
+from healthcare_rag.graph.engine import GraphEngine, SafetyClassifierUnavailableError
 from healthcare_rag.graph.engine_record import ResultContext, TurnTiming, build_result
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.graph.state import GraphOutput, RAGState
@@ -60,11 +60,30 @@ def test_routing_arms_when_unset_default_to_current_and_llm(
     assert settings.safety_classifier == "llm"
 
 
+def test_engine_when_semantic_router_is_selected_fails_before_construction(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    monkeypatch.setenv("HC_RAG_SAFETY_CLASSIFIER", "semantic_router")
+    settings = GraphSettings.from_env()
+
+    # When
+    with pytest.raises(SafetyClassifierUnavailableError) as error:
+        _ = GraphEngine(settings)
+
+    # Then
+    assert str(error.value) == (
+        "Safety classifier backend 'semantic_router' is unavailable: "
+        "the compatible optional extra is not installed. "
+        "Set HC_RAG_SAFETY_CLASSIFIER=llm."
+    )
+
+
 @pytest.mark.parametrize(
     ("response_arm", "classifier"),
     [("deterministic", "semantic_router"), ("tool", "llm")],
 )
-def test_routing_arms_when_valid_round_trip_in_graph_description(
+def test_routing_arms_when_valid_round_trip_in_settings(
     monkeypatch: pytest.MonkeyPatch,
     response_arm: str,
     classifier: str,
@@ -74,11 +93,11 @@ def test_routing_arms_when_valid_round_trip_in_graph_description(
     monkeypatch.setenv("HC_RAG_SAFETY_CLASSIFIER", classifier)
 
     # When
-    description = GraphEngine(GraphSettings.from_env()).describe()
+    settings = GraphSettings.from_env()
 
     # Then
-    assert description["query_response_arm"] == response_arm
-    assert description["safety_classifier"] == classifier
+    assert settings.query_response_arm == response_arm
+    assert settings.safety_classifier == classifier
 
 
 @pytest.mark.parametrize(
