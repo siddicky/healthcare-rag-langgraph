@@ -275,6 +275,9 @@ def _coordinator_capability() -> _EraseCapability:
     return _ERASE_CAPABILITY
 
 
+coordinator_capability = _coordinator_capability
+
+
 def _namespace(user_id: str, collection: str) -> Namespace:
     namespace = ("users", user_id, collection)
     validate_user_namespace(namespace, user_id)

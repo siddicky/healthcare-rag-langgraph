@@ -534,12 +534,16 @@ async def _deployment_client() -> AsyncGenerator[CronClient]:
         )
 
 
+deployment_client = _deployment_client
+
+
 __all__ = [
     "cancel_reminder",
     "cancel_reminder_impl",
     "cleanup_user_crons",
     "create_reminder",
     "create_reminder_impl",
+    "deployment_client",
     "edit_reminder",
     "edit_reminder_impl",
     "reminder_delivery",

@@ -10,6 +10,7 @@ from langgraph.store.base import BaseStore
 from langgraph.types import interrupt
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
+from healthcare_rag.agent.state import CoachState
 from healthcare_rag.agent.store_data import (
     ApprovalEvent,
     OpRecord,
@@ -24,7 +25,6 @@ from healthcare_rag.agent.store_data import (
     resolve_target,
     schedule_state,
 )
-from healthcare_rag.agent.state import CoachState
 
 from ._change_schedule_contract import (
     AddRequest,

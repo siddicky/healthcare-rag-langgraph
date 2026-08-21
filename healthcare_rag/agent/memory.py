@@ -16,6 +16,8 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.processors.privacy import PrivacyScanError
 
+from .store_data import put_user_record
+
 MemoryKind = Literal["profile", "episodic"]
 
 _PRIVACY_REFUSAL = "Memory not saved: privacy checks failed."
@@ -76,8 +78,10 @@ async def remember_fact_impl(
     if clean is None:
         return _PRIVACY_REFUSAL
     try:
-        await store.aput(
-            ("users", user_identity, kind),
+        await put_user_record(
+            store,
+            user_identity,
+            kind,
             str(uuid4()),
             {"fact": clean, "kind": kind},
         )

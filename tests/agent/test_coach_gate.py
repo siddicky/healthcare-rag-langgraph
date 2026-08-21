@@ -82,7 +82,7 @@ async def test_safety_decisions_route_to_s(
 
     # Then
     assert route == "short_circuit"
-    assert target == "_pending_short_circuit"
+    assert target == "short_circuit"
 
 
 async def test_erasure_routes_before_coaching() -> None:
@@ -91,7 +91,7 @@ async def test_erasure_routes_before_coaching() -> None:
 
     # Then
     assert route == "erase_my_data"
-    assert target == "_pending_erase_my_data"
+    assert target == "erase_my_data"
 
 
 @pytest.mark.parametrize(
@@ -135,7 +135,7 @@ async def test_explained_coaching_intents_route_to_b(
     # Then
     assert gate.compute_features(question)["coaching_parse"] == expected_parse
     assert route == "coach_agent"
-    assert target == "_pending_coach_agent"
+    assert target == "coach_agent"
 
 
 @pytest.mark.parametrize(
@@ -168,7 +168,7 @@ async def test_smalltalk_routes_to_b(question: str) -> None:
 
     # Then
     assert route == "coach_agent"
-    assert target == "_pending_coach_agent"
+    assert target == "coach_agent"
 
 
 @pytest.mark.parametrize(
@@ -196,7 +196,7 @@ async def test_anaphoric_followup_after_tool_card_routes_to_b() -> None:
 
     # Then
     assert command.update["route"] == "coach_agent"
-    assert command.goto == "_pending_coach_agent"
+    assert command.goto == "coach_agent"
 
 
 async def test_attachment_routes_to_document_without_clearing_attachment() -> None:
@@ -297,7 +297,7 @@ async def test_member_context_cron_wake_fails_closed_without_store_registration(
     # Then
     assert command.update["route"] == "short_circuit"
     assert command.update["cron_wake"] is None
-    assert command.goto == "_pending_short_circuit"
+    assert command.goto == "short_circuit"
 
 
 @pytest.mark.parametrize("mode", ["exception", "timeout", "none"])
@@ -344,7 +344,7 @@ async def test_classifier_failure_routes_fail_closed() -> None:
 
     # Then
     assert command.update["route"] == "short_circuit"
-    assert command.goto == "_pending_short_circuit"
+    assert command.goto == "short_circuit"
 
 
 async def test_classifier_failure_flag_is_isolated_across_concurrent_turns() -> None:

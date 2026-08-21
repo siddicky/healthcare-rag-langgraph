@@ -8,10 +8,14 @@ from langgraph.graph.state import StateGraph as StateGraphType
 from langgraph.store.base import BaseStore
 from langgraph.types import Command
 
+from .coach_agent import coach_agent
 from .documents import claim_document, review_document
+from .erase import erase_my_data
+from .finalize import finalize_coach
 from .gate import RouteTarget, coach_gate
 from .rag_relay import rag_relay
 from .reminders import reminder_delivery
+from .short_circuit import short_circuit
 from .state import CoachInput, CoachOutput, CoachState
 
 CoachBuilder: TypeAlias = StateGraphType[CoachState, None, CoachInput, CoachOutput]
@@ -21,11 +25,6 @@ async def _coach_gate_with_store(
     state: CoachState, config: RunnableConfig, *, store: BaseStore
 ) -> Command[RouteTarget]:
     return await coach_gate(state, config, store=store)
-
-
-def _pending_route(state: CoachState) -> CoachState:
-    del state
-    return {}
 
 
 def build_coach_graph() -> CoachBuilder:
@@ -41,17 +40,20 @@ def build_coach_graph() -> CoachBuilder:
     _ = builder.add_node(
         "reminder_delivery", reminder_delivery, input_schema=CoachState
     )
-    _ = builder.add_edge("rag_relay", END)
-    _ = builder.add_edge("review_document", END)
-    _ = builder.add_edge("reminder_delivery", END)
-    pending: tuple[RouteTarget, ...] = (
-        "_pending_short_circuit",
-        "_pending_coach_agent",
-        "_pending_erase_my_data",
-    )
-    for node_name in pending:
-        _ = builder.add_node(node_name, _pending_route, input_schema=CoachState)
-        _ = builder.add_edge(node_name, END)
+    _ = builder.add_node("short_circuit", short_circuit, input_schema=CoachState)
+    _ = builder.add_node("coach_agent", coach_agent, input_schema=CoachState)
+    _ = builder.add_node("erase_my_data", erase_my_data, input_schema=CoachState)
+    _ = builder.add_node("finalize", finalize_coach, input_schema=CoachState)
+    for node_name in (
+        "rag_relay",
+        "review_document",
+        "reminder_delivery",
+        "short_circuit",
+        "coach_agent",
+        "erase_my_data",
+    ):
+        _ = builder.add_edge(node_name, "finalize")
+    _ = builder.add_edge("finalize", END)
     _ = builder.add_edge(START, "coach_gate")
     return builder
 

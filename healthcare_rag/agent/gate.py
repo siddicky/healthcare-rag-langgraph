@@ -20,6 +20,12 @@ from healthcare_rag.processors.safety import (
     red_flag_terms,
     scrub_phi,
 )
+from healthcare_rag.processors.safety_responses import (
+    emergency_response,
+    injection_response,
+    out_of_scope_response,
+    personal_advice_response,
+)
 
 from .features import (
     compute_features,
@@ -32,10 +38,10 @@ CLASSIFIER_TIMEOUT_SECONDS: Final = 5.0
 GATEWAY: SafetyLLMCall | None = None
 
 RouteTarget: TypeAlias = Literal[
-    "_pending_short_circuit",
+    "short_circuit",
     "rag_relay",
-    "_pending_coach_agent",
-    "_pending_erase_my_data",
+    "coach_agent",
+    "erase_my_data",
     "claim_document",
     "reminder_delivery",
 ]
@@ -155,7 +161,7 @@ async def coach_gate(
         update["route"] = "reminder_delivery" if valid else "short_circuit"
         return Command(
             update=update,
-            goto="reminder_delivery" if valid else "_pending_short_circuit",
+            goto="reminder_delivery" if valid else "short_circuit",
         )
     if features["has_attachment"]:
         update["route"] = "claim_document"
@@ -166,7 +172,7 @@ async def coach_gate(
         or identifier_recall_requested(question)
     ):
         update["route"] = "short_circuit"
-        return Command(update=update, goto="_pending_short_circuit")
+        return Command(update=update, goto="short_circuit")
     classifier = CoachSafetyGate(gateway=GATEWAY or _gateway_adapter)
     assessment = await classifier.assess(question)
     features["classifier_category"] = assessment.category
@@ -176,21 +182,28 @@ async def coach_gate(
         "personal_medical_advice",
         "prompt_injection",
     }:
+        body = {
+            "emergency_red_flag": emergency_response(),
+            "personal_medical_advice": personal_advice_response(),
+            "prompt_injection": injection_response(),
+        }[assessment.category]
+        update["messages"].append(AIMessage(content=body))
         update["route"] = "short_circuit"
-        return Command(update=update, goto="_pending_short_circuit")
+        return Command(update=update, goto="short_circuit")
     if features["classifier_failed"]:
+        update["messages"].append(AIMessage(content=out_of_scope_response()))
         update["route"] = "short_circuit"
-        return Command(update=update, goto="_pending_short_circuit")
+        return Command(update=update, goto="short_circuit")
     if features["is_erase_request"]:
         update["route"] = "erase_my_data"
-        return Command(update=update, goto="_pending_erase_my_data")
+        return Command(update=update, goto="erase_my_data")
     coaching = features["coaching_parse"] != "none"
     if coaching and has_unexplained_medical_token(question, features):
         update["route"] = "rag_relay"
         return Command(update=update, goto="rag_relay")
     if coaching:
         update["route"] = "coach_agent"
-        return Command(update=update, goto="_pending_coach_agent")
+        return Command(update=update, goto="coach_agent")
     if (
         features["has_in_scope_drug"]
         or features["has_oos_drug"]
@@ -205,6 +218,6 @@ async def coach_gate(
     } and (is_anaphoric_followup(question))
     if features["is_smalltalk"] or contextual_followup:
         update["route"] = "coach_agent"
-        return Command(update=update, goto="_pending_coach_agent")
+        return Command(update=update, goto="coach_agent")
     update["route"] = "rag_relay"
     return Command(update=update, goto="rag_relay")
