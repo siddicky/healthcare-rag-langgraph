@@ -1,0 +1,48 @@
+# Fly.io companion app for the Weaviate vector store
+# Separate Fly app — one fly.toml per app — so this file is deployed with:
+#   fly deploy --config deploy/fly.weaviate-prod.toml --image cr.weaviate.io/semitechnologies/weaviate:1.30.2
+# or via `fly machines run` with the same image/env/volume. See docs/deploy.md
+# Bootstrap section for the exact one-time commands.
+
+app = "hc-rag-weaviate-prod"
+primary_region = "iad"
+
+# Weaviate image is fixed by the runbook. Do not float the tag.
+# The deploy command supplies --image; this file documents the expected image.
+
+[env]
+QUERY_DEFAULTS_LIMIT = "25"
+AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED = "true"
+PERSISTENCE_DATA_PATH = "/var/lib/weaviate"
+ENABLE_API_BASED_MODULES = "true"
+CLUSTER_HOSTNAME = "node1"
+
+# Private-network access from the server app:
+#   WEAVIATE_HOST=hc-rag-weaviate-prod.internal
+#   WEAVIATE_PORT=8080
+# (gRPC 50051 is also listening but the server's HTTP path uses 8080.)
+
+[http_service]
+internal_port = 8080
+force_https = false
+auto_start_machines = true
+auto_stop_machines = false
+min_machines_running = 1
+processes = ["app"]
+
+[[http_service.checks]]
+grace_period = "15s"
+interval = "15s"
+method = "GET"
+path = "/v1/.well-known/ready"
+timeout = "5s"
+type = "http"
+
+[[mounts]]
+source = "weaviate_data"
+destination = "/var/lib/weaviate"
+initial_size = "1GB"
+
+# No [build] section — image is cr.weaviate.io/semitechnologies/weaviate:1.30.2
+# Volume `weaviate_data` is the only persistent volume in the system.
+# All other server state (threads/runs/store/crons) is in-memory and wipes on restart.

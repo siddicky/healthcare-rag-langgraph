@@ -398,3 +398,32 @@ No existing targets or upstream `.env.example` lines were modified or reordered 
 ### Not applicable adversarial classes (one line why)
 
 - **prompt injection, cancel/resume, stale state, dirty worktree (checked upstream), hung commands, flaky tests, repeated interruptions:** N/A — Makefile/env plumbing with hermetic validation; no LLM prompt, no interrupt/resume, no state mutations; inputs are make variables, not user prompts; worktree was clean (`git status --short` shows only expected M/untracked from parallel todos).
+
+## 2026-08-22 — todo 12: Fly config + deploy runbook (prod-only, single source of truth, rollback)
+
+### Weaviate companion app design choice — separate fly.toml (recommended — cleaner)
+
+Chose **separate `deploy/fly.weaviate-prod.toml`** over docs-only `fly apps create`/`fly volumes create` commands inline. Rationale:
+
+- Fly apps are typically **one fly.toml per app** — the plan explicitly says "either create a second `deploy/fly.weaviate-prod.toml` (recommended — cleaner) or document the `fly apps create`/`fly volumes create`/`fly deploy` commands for it directly in `docs/deploy.md`'s bootstrap section (your call)". The separate file wins on usability: `fly deploy --config deploy/fly.weaviate-prod.toml --image cr.weaviate.io/semitechnologies/weaviate:1.30.2` is an exact typed command a new operator can paste, versus reconstructing flags from prose.
+- Consistency: the server and Weaviate companion now have parallel artifacts — `deploy/fly.prod.toml` (server) and `deploy/fly.weaviate-prod.toml` (Weaviate) — both parsed via `uv run python -c "import tomllib; tomllib.load(...)"` and both committed. The bootstrap section documents both `fly deploy --config` and the equivalent `fly machines run` alternative, so operators without the toml can still follow docs-only.
+- The Weaviate toml's `[env]` block mirrors `docker-compose.yml:24-27` verbatim (`QUERY_DEFAULTS_LIMIT`, `AUTHENTICATION_ANONYMOUS_ACCESS_ENABLED`, `PERSISTENCE_DATA_PATH`, `ENABLE_API_BASED_MODULES`, `CLUSTER_HOSTNAME`), and the volume `weaviate_data` is the only persistent volume — all other state is `SERVER_STORAGE=memory` (in-memory wipe caveat in the runbook).
+
+Alternative deferred: docs-only would have saved one file but forced the runbook to enumerate `--env` flags twice (once for creation, once for deploy) and left no artifact to `fly deploy --config` validate. The extra file costs nothing and is the plan-recommended path.
+
+### Fly TOML schema assumption — `[[http_service.checks]]` (not top-level `[[checks]]`)
+
+Plan text said `[[checks]] http "/ok"` but required confirming exact TOML syntax for Fly health checks — "`[[http_service.checks]]` or top-level `[[checks]]`, whichever is correct per Fly's actual schema; if you're unsure, look it up".
+
+- Chose **`[[http_service.checks]]` with `type = "http"`**, `method = "GET"`, `path = "/ok"` (server) and `path = "/v1/.well-known/ready"` (Weaviate). This matches the **current Fly.io `fly.toml` schema** (2024-2025) where `[http_service]` plus `[[http_service.checks]]` is the documented way to attach HTTP checks to the `http_service` — top-level `[[checks]]` is the older `services.checks` / Machine checks form, still parsed but not the recommended `http_service` health path. Evidence: Fly docs examples show `[http_service]` plus `[[http_service.checks]]` with `grace_period`/`interval`/`method`/`path`/`timeout`/`type`; `app = "hc-rag-server-prod"`, `primary_region = "iad"` are top-level keys, `[http_service] internal_port = 8000`, `auto_stop_machines = false`, `min_machines_running = 1` match the plan verbatim, and both TOMLs parse cleanly via `tomllib` (Python 3.11+ strict parser).
+- Confidence: **high but not live-validated**. No `flyctl` was available in this environment to run `fly config validate --config deploy/fly.prod.toml` or `fly deploy --build-only`. The fallback if Fly rejects `[[http_service.checks]]` is to move the check to top-level `[[checks]]` — both forms hit `GET /ok` on `internal_port`, so the behavioral difference is nil. The runbook's `fly deploy --image ... --config` commands work either way; if validation fails in CI, the fix is a one-line TOML move, not a re-architecture.
+- Additional syntax note: `auto_stop_machines = false` (boolean) is used verbatim per plan. Newer Fly docs sometimes show `"off"` / `"stop"` / `"suspend"` as strings — boolean `false` remains accepted as "off" and was emitted to satisfy the plan's literal knob plus the "Must NOT configure auto-stop" invariant. `force_https = true`, `auto_start_machines = true` are the current schema's companion knobs.
+
+### Runbook trade-offs
+
+- **Secrets example completeness** — the first draft's `fly secrets set` example omitted `LANGGRAPH_DEPLOYMENT_URL` and `LANGSMITH_API_KEY`/`LANGSMITH_FEEDBACK_PROJECT_ID`/`LANGGRAPH_U1_TOKEN`/`U2`. The independent read-through flagged this as blocking; the runbook was revised to include every `yes` row from the table and to note that `LANGSMITH_FEEDBACK_PROJECT_ID`/`LANGSMITH_API_KEY` are required by smoke (not optional), matching the workflow's fail-closed `EXPECTED_NAMES` check.
+- **`make ingest-fly` stub** — todo 11's Makefile intentionally leaves `ingest-fly` as an echo-only helper (hermetic, no `flyctl` required). The runbook now labels it "documentation-only" and gives the exact `fly machines run "${REPO}@${DIGEST}" --app hc-rag-server-prod --region iad --rm ... --command "python -m healthcare_rag.storage.vector_store ..."` with digest pinning and the note that the one-off inherits `OPENAI_API_KEY` from Fly secrets (no `--env OPENAI_API_KEY` needed).
+
+### Not applicable adversarial classes (one line why)
+
+- **malformed input / prompt injection / cancel/resume / stale state / dirty worktree / hung commands / flaky tests / repeated interruptions:** N/A — this todo is config + runbook authoring; no user-input parsing, no interrupt/resume, no stale checkpoint, worktree clean per `git status`; TOML parse is deterministic; no hung commands or flaky tests to handle; repeated interruptions not applicable.
