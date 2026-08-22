@@ -18,18 +18,26 @@ from typing import ClassVar, Final, Literal, TypeAlias, assert_never
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from pydantic_core import PydanticCustomError
 
+from .refusal_topics import (
+    BoundaryTopic,
+    derive_boundary_topic,
+    query_topic,
+)
 from .safety import (
     DOSING_QUESTION,
     SALVAGEABLE_INJECTION_FLAGS,
-    _FIRST_PERSON,
     injection_flags,
     red_flag_terms,
 )
-from .safety_responses import emergency_response, injection_response, personal_advice_response
+from .safety_responses import (
+    emergency_response,
+    injection_response,
+    personal_advice_response,
+)
+from .safety_signals import _FIRST_PERSON
 
 JSONValue: TypeAlias = str | int | float | bool | None | list["JSONValue"] | dict[str, "JSONValue"]
 BoundaryKind: TypeAlias = Literal["personal_advice", "emergency", "injection"]
-BoundaryTopic: TypeAlias = Literal["lipitor", "metformin", "both", "none", "other"]
 BoundaryKey: TypeAlias = tuple[str, str] | tuple[str, str, str]
 
 TEMPLATE_VERSION: Final = 1
@@ -41,17 +49,6 @@ _ALLOWED_RESPONSES: Final[Mapping[BoundaryKind, frozenset[str]]] = MappingProxyT
         "injection": frozenset({injection_response()}),
     }
 )
-
-_LIPITOR = re.compile(r"\b(?:lipitor|atorvastatin)\b", re.IGNORECASE)
-_METFORMIN = re.compile(r"\b(?:metformin|glucophage)\b", re.IGNORECASE)
-_OUT_OF_SCOPE_DRUGS: Final = frozenset(
-    {
-        "insulin", "warfarin", "aspirin", "ibuprofen", "acetaminophen", "tylenol", "advil",
-        "lisinopril", "amlodipine", "levothyroxine", "omeprazole", "gabapentin",
-        "hydrochlorothiazide", "ozempic", "semaglutide", "jardiance", "sitagliptin", "januvia",
-    }
-)
-_OTHER_DRUG = re.compile(rf"\b(?:{'|'.join(sorted(_OUT_OF_SCOPE_DRUGS))})\b", re.IGNORECASE)
 
 _REFERENT = re.compile(
     r"\b(it|that|this|them|those|the (dose|pill|tablet|amount|max|maximum|limit))\b",
@@ -110,7 +107,7 @@ class RefusalBoundary(BaseModel):
     def _created_ts_is_utc(cls, value: str) -> str:
         del cls
         try:
-            parsed = datetime.fromisoformat(value.replace("Z", "+00:00"))
+            parsed = datetime.fromisoformat(value)
         except ValueError as error:
             raise PydanticCustomError("utc_datetime", "created_ts must be ISO-8601 UTC") from error
         if parsed.utcoffset() != timedelta(0):
@@ -144,19 +141,6 @@ class RefusalBoundary(BaseModel):
 def allowed_responses(kind: BoundaryKind) -> frozenset[str]:
     """Return byte-exact templates permitted for a boundary kind."""
     return _ALLOWED_RESPONSES[kind]
-
-
-def query_topic(text: str) -> BoundaryTopic:
-    """Classify explicit drug words using the pinned deterministic lexicons."""
-    lipitor = bool(_LIPITOR.search(text))
-    metformin = bool(_METFORMIN.search(text))
-    if lipitor and metformin:
-        return "both"
-    if lipitor:
-        return "lipitor"
-    if metformin:
-        return "metformin"
-    return "other" if _OTHER_DRUG.search(text) else "none"
 
 
 def _ANAPHORIC(text: str) -> bool:
@@ -267,23 +251,21 @@ def upsert_boundary(raw: list[dict[str, JSONValue]], new: RefusalBoundary) -> li
     return [*retained, new.to_state()]
 
 
-def derive_boundary_topic(scrubbed_query: str, assessment_drug: str) -> BoundaryTopic:
-    """Prefer an explicit query drug, then a supported assessment drug."""
-    topic = query_topic(scrubbed_query)
-    match topic:
-        case "lipitor" | "metformin" | "both" | "other":
-            return topic
-        case "none":
-            pass
-        case unreachable:
-            assert_never(unreachable)
-    match assessment_drug:
-        case "lipitor" | "metformin" | "both":
-            return assessment_drug
-        case _:
-            return "none"
-
-
 def load_boundaries(raw: list[dict[str, JSONValue]]) -> list[RefusalBoundary]:
     """Load only valid boundaries without mutating raw checkpoint state."""
     return [boundary for entry in raw if (boundary := RefusalBoundary.from_state(entry)) is not None]
+
+
+__all__ = [
+    "TEMPLATE_VERSION",
+    "BoundaryKind",
+    "BoundaryTopic",
+    "JSONValue",
+    "RefusalBoundary",
+    "allowed_responses",
+    "boundary_hit",
+    "derive_boundary_topic",
+    "load_boundaries",
+    "query_topic",
+    "upsert_boundary",
+]

@@ -34,14 +34,13 @@ Everything the caller needs is in :class:`SafetyDecision`. Templates live in
 from __future__ import annotations
 
 import logging
-import re
-from collections.abc import Awaitable, Callable, Sequence
+from collections.abc import Awaitable, Callable
 from dataclasses import dataclass, field
 
 from ..models.safety import SafetyAssessment
 from ..services.models import default_llm_model
 from .base import log_timing
-from .safety_patterns import NUMERIC_DOSE, injection_flags, strip_injection
+from .safety_patterns import NUMERIC_DOSE
 from .safety_responses import (
     INJECTION_NOTICE,
     PHI_NOTICE,
@@ -51,202 +50,18 @@ from .safety_responses import (
     out_of_scope_response,
     personal_advice_response,
 )
+from .safety_signals import (
+    DOSING_QUESTION,
+    SALVAGEABLE_INJECTION_FLAGS,
+    contains_phi,
+    identifier_recall_requested,
+    injection_flags,
+    red_flag_terms,
+    scrub_phi,
+    strip_injection,
+)
 
 logger = logging.getLogger("MedicalRAG")
-
-
-def scrub_phi(text: str, extra_spans: Sequence[str] = ()) -> tuple[str, list[str]]:
-    """Replace personal identifiers in ``text`` with ``[REDACTED_<KIND>]`` tokens.
-
-    Args:
-        text: the raw message.
-        extra_spans: retained for call compatibility and intentionally ignored; model
-            output never receives text-mutation authority.
-
-    Returns:
-        ``(clean_text, found)`` where ``found`` lists the identifier kinds removed,
-        in order of appearance. ``found`` is empty when nothing was redacted.
-    """
-    del extra_spans
-    if not text:
-        return text, []
-    from healthcare_rag.graph.resources import get
-
-    scan = get().privacy.scan(text)
-    return scan.text, list(scan.kinds)
-
-
-def contains_phi(text: str) -> bool:
-    """True when the deterministic layer finds any personal identifier in ``text``."""
-    return bool(scrub_phi(text)[1])
-
-
-# --------------------------------------------------------------------------- #
-# 2. Prompt injection                                                          #
-# --------------------------------------------------------------------------- #
-
-#: The only override pattern worth unpacking: "ignore your instructions and <real
-#: question>" often wraps something the assistant can legitimately answer. Every other
-#: pattern (persona installation, unrestricted/developer mode, system-prompt
-#: exfiltration, harm laundered through fiction) has no salvageable question inside it,
-#: so it is refused outright rather than re-assessed.
-SALVAGEABLE_INJECTION_FLAGS = frozenset({"ignore_instructions"})
-
-
-# --------------------------------------------------------------------------- #
-# 3. Requests to recite identifiers back                                       #
-# --------------------------------------------------------------------------- #
-
-_IDENTIFIER_RECALL_PATTERNS: tuple[re.Pattern[str], ...] = (
-    re.compile(
-        r"\b(?:remind me(?: of| what)?|what (?:was|is|were)|tell me|give me(?: back)?|"
-        r"repeat|read (?:it |them )?back|recite|confirm)\b[^.?!]{0,60}?"
-        r"\b(?:health card|hc number|mrn|medical record|chart number|dob|date of birth|"
-        r"phone number|address|email|identifiers?|my details|his details|her details|"
-        r"my number|his number|her number|the number)\b",
-        re.IGNORECASE,
-    ),
-    re.compile(r"\blast (?:three|3|four|4|two|2) digits\b", re.IGNORECASE),
-    re.compile(
-        r"\b(?:you had it|you knew it|you have it|i told you (?:it|that|them)|just repeat it|"
-        r"repeat it back|say it back)\b",
-        re.IGNORECASE,
-    ),
-)
-
-
-def identifier_recall_requested(text: str) -> bool:
-    """True when the user is asking the assistant to read personal identifiers back."""
-    return any(p.search(text or "") for p in _IDENTIFIER_RECALL_PATTERNS)
-
-
-# --------------------------------------------------------------------------- #
-# 4. Emergency red flags                                                       #
-# --------------------------------------------------------------------------- #
-
-#: A red flag only fires when the message is about the speaker (or someone they are
-#: describing in the first person). "Is chest pain a listed side effect of Lipitor?" is
-#: an informational question and must still be answered from the monograph.
-_FIRST_PERSON = re.compile(
-    r"\b(?:i|i'?m|im|i'?ve|ive|i'?d|my|me|myself|we|our)\b", re.IGNORECASE
-)
-
-_RED_FLAG_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    (
-        "chest_pain",
-        re.compile(
-            r"\b(?:chest (?:pain|pains|hurts?|hurting|tightness|pressure|discomfort|heaviness)|"
-            r"pain (?:in|across) (?:my |the )?chest|crushing (?:pain|chest))\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "breathing_difficulty",
-        re.compile(
-            r"\b(?:trouble breathing|difficulty breathing|hard (?:to|time) breath\w*|"
-            r"can'?t breathe|cannot breathe|short(?:ness)? of breath|"
-            r"can'?t catch (?:my )?breath|struggling to breathe|gasping for)\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "dark_urine",
-        re.compile(
-            r"(?:\b(?:brown|dark|cola|tea|red[- ]?brown)[- ]?(?:colou?red\s+)?(?:urine|pee)\b"
-            r"|\b(?:urine|pee|wee)\b[^.?!]{0,30}?\b(?:gone|turned|is|has become|the colou?r of)\b"
-            r"[^.?!]{0,20}?\b(?:brown|dark|cola|tea)\b)",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "confusion",
-        re.compile(
-            r"\b(?:feel|feeling|felt|getting|got|become|becoming|been|am|'m|is|seems?|gone)\s+"
-            r"(?:very |really |quite |increasingly |more |a bit )?"
-            r"(?:confused|disoriented|delirious)\b(?!\s+(?:about|by|over|regarding|as to|with))",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "allergic_swelling",
-        re.compile(
-            r"\b(?:swelling of (?:my |the )?(?:face|lips|tongue|throat|mouth)|"
-            r"(?:my |the )?(?:face|lips|tongue|throat) (?:is |are |has |have )?(?:swollen|swelling)|"
-            r"anaphyla\w*|trouble swallowing|throat closing|hives all over)\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "possible_overdose",
-        re.compile(
-            r"\b(?:overdosed|took an overdose)\b|"
-            r"\b(?:took|taken|swallowed|had)\b[^.?!]{0,40}?"
-            r"\b(?:whole bottle|too many (?:pills|tablets)|all (?:my|the) (?:pills|tablets)|overdose)\b",
-            re.IGNORECASE,
-        ),
-    ),
-)
-
-_MUSCLE_SYMPTOM = re.compile(
-    r"\b(?:muscle (?:weakness|pain|aches?|tenderness|soreness)|"
-    r"weak(?:ness)? in (?:my )?(?:legs|arms|thighs|muscles)|thighs? feel weak|"
-    r"myopathy|rhabdomyolysis|rhabdo)\b",
-    re.IGNORECASE,
-)
-_SEVERE_ABDOMINAL = re.compile(
-    r"\b(?:severe|bad|terrible|intense|worst|excruciating|awful)\b[^.?!]{0,30}?"
-    r"\b(?:abdominal|stomach|belly|tummy)\s+(?:pain|ache|cramps?)",
-    re.IGNORECASE,
-)
-_VOMITING = re.compile(
-    r"\b(?:vomit\w*|throwing up|threw up|being sick|can'?t keep (?:anything|fluids) down|"
-    r"not keeping fluids down)\b",
-    re.IGNORECASE,
-)
-
-
-def red_flag_terms(text: str) -> list[str]:
-    """Emergency red flags in ``text``.
-
-    Every rule requires a first-person marker, so a purely informational question about
-    the same symptom ("Does the monograph list chest pain as a side effect?") is not
-    escalated — over-escalating would trade one safety metric for the factual ones.
-
-    Two rules go slightly beyond a single term list, on purpose:
-      * *dark urine* fires on its own (the monograph itself calls brown urine a
-        stop-the-drug-and-get-help sign), and also in combination with muscle weakness;
-      * *severe abdominal pain* only fires together with vomiting.
-    """
-    body = text or ""
-    if not _FIRST_PERSON.search(body):
-        return []
-    hits: list[str] = []
-    for name, pattern in _RED_FLAG_PATTERNS:
-        if pattern.search(body) and name not in hits:
-            hits.append(name)
-    if "dark_urine" in hits and _MUSCLE_SYMPTOM.search(body):
-        hits.append("dark_urine_with_muscle_weakness")
-    if _SEVERE_ABDOMINAL.search(body) and _VOMITING.search(body):
-        hits.append("severe_abdominal_pain_with_vomiting")
-    return hits
-
-
-# --------------------------------------------------------------------------- #
-# 5. Refusal matching and response invariants                                  #
-# --------------------------------------------------------------------------- #
-
-#: Shared dosing cue used by the persisted refusal boundary to distinguish a
-#: renewed personal decision request from an informational monograph follow-up.
-DOSING_QUESTION = re.compile(
-    r"\b(?:dose|doses|dosing|dosage|titrat\w*|how much|how many|mg\b|milligram|"
-    r"maximum daily|max(?:imum)? dose|adjust\w* (?:the |my |his |her )?dose|double|"
-    r"increase|decrease|reduce|split|half a tablet|skip|hold|stop taking|start taking)\b",
-    re.IGNORECASE,
-)
-
-# --------------------------------------------------------------------------- #
-# 6. Decision object                                                           #
-# --------------------------------------------------------------------------- #
 
 
 @dataclass
