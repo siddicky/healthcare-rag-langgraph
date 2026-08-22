@@ -122,6 +122,19 @@ def test_benign_whole_token_controls_are_allowed(content: str) -> None:
     assert decision.denial_reason is None
 
 
+@pytest.mark.parametrize("content", ["Have a good day!", "Have good days!"])
+def test_social_farewells_with_context_sensitive_day_units_are_allowed(
+    content: str,
+) -> None:
+    # Given: a social farewell whose temporal word has no clinical context.
+    # When: the untrusted model output crosses the deterministic policy boundary.
+    decision = _evaluate(content)
+
+    # Then: ordinary social content remains eligible for direct display.
+    assert decision.content == content
+    assert decision.denial_reason is None
+
+
 @pytest.mark.parametrize(
     "content",
     [

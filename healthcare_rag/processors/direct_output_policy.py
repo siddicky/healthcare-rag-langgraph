@@ -22,6 +22,7 @@ _SOCIAL_ONLY_SENTENCE: Final = re.compile(
     r"|(?:good\s+(?:afternoon|evening|morning))"
     r"|(?:goodbye|bye)(?:\s+(?:for\s+now|take\s+care))?"
     r"|take\s+care"
+    r"|have\s+(?:a\s+good\s+day|good\s+days)"
     r"|(?:thank\s+you|thanks)(?:\s+(?:again|so\s+much|very\s+much))?"
     r"|(?:you(?:'re|\s+are)\s+welcome)(?:\s+anytime)?"
     r"|never\s+mind(?:\s*,?\s*thanks)?"
@@ -105,6 +106,7 @@ _CLINICAL_UNITS: Final = frozenset(
         "weeks",
     }
 )
+_CONTEXT_SENSITIVE_UNITS: Final = frozenset({"day", "days"})
 _CLINICAL_ACTIONS: Final = frozenset(
     {
         "advise",
@@ -250,7 +252,10 @@ def evaluate_generated_output(
     normalized, tokens = _normalized_tokens(text)
     if injection_flags(normalized):
         return GeneratedOutputPolicyDecision("", "unsafe_direct_content")
-    has_unit = NUMERIC_DOSE.search(normalized) or _CLINICAL_UNITS.intersection(tokens)
+    has_unit = bool(
+        NUMERIC_DOSE.search(normalized)
+        or (_CLINICAL_UNITS - _CONTEXT_SENSITIVE_UNITS).intersection(tokens)
+    )
     if has_unit or _has_clinical_instruction(tokens):
         return GeneratedOutputPolicyDecision("", "clinical_direct_content")
     scan = privacy.scan(text)
