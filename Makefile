@@ -13,7 +13,8 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
         ingest-pinecone \
         eval-multiturn eval-multiturn-smoke eval-agent eval-agent-multiturn deployed-smoke forget-member \
         dataset-sync dataset-sync-multiturn \
-        routing-gate-query-smoke routing-gate-safety-smoke wiki-init wiki-update
+        routing-gate-query-smoke routing-gate-safety-smoke wiki-init wiki-update \
+        server-dev server-test parity server-image container-server-smoke ingest-fly release
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -125,3 +126,31 @@ wiki-update: ## Refresh OpenWiki docs after code changes
 
 journey: ## Rebuild docs/journey.html from docs/journey.json
 	$(PY) docs/build_journey_html.py
+
+server-dev: ## Run the OSS Agent Server locally (port 2024, local-dev auth bypass; SERVER_RELOAD=1 for reload)
+	SERVER_PORT=2024 SERVER_LOCAL_DEV=1 $(PY) -m server
+	# SERVER_RELOAD=1 is not yet wired in server/__main__.py — follow-up to add uvicorn --reload via env if needed
+
+server-test: ## Run server unit tests
+	$(PY) -m pytest -q tests/server
+
+parity: ## Run oracle contract suite (ORACLE=1) — see tests/server/oracle/README.md for one-time pinned-venv setup
+	ORACLE=1 $(PY) -m pytest -q tests/server/contract
+
+server-image: ## Build the OSS server image (hc-rag-server:dev)
+	docker build -f server/Dockerfile -t hc-rag-server:dev .
+
+container-server-smoke: ## Smoke the compose server stack (/ok probe)
+	docker compose -f docker-compose.server.yml up -d && sleep 5 && curl -sf http://127.0.0.1:8000/ok && docker compose -f docker-compose.server.yml down -v
+
+ingest-fly: ## Ingest checked-in chunks into prod Weaviate via Fly machine (see docs/deploy.md)
+	# See docs/deploy.md for full context once written
+	@echo "fly machines run ingest against prod Weaviate — see docs/deploy.md for the exact command and required env (FLY_API_TOKEN, WEAVIATE_HOST=hc-rag-weaviate-prod.internal)"
+	@echo "Example: fly machines run --app hc-rag-server-prod -e WEAVIATE_HOST=hc-rag-weaviate-prod.internal ghcr.io/<repo>/hc-rag-server:latest python -m healthcare_rag.storage.vector_store --delete-all --collection Lipitor data/chunks_lipitor.json --collection Metformin data/chunks_metformin.json"
+
+release: ## Validate TAG=vX.Y.Z and print the exact release push commands (hermetic, no push)
+	@if [ -z "$(TAG)" ]; then echo "usage: make release TAG=vX.Y.Z  (e.g. make release TAG=v1.2.3)"; echo "  TAG must match ^v[0-9]+\.[0-9]+\.[0-9]+$$ (e.g. v1.2.3, v0.1.0-rc)"; exit 1; fi
+	@if ! echo "$(TAG)" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z._-]+)?$$'; then echo "error: TAG='$(TAG)' must match ^v[0-9]+\.[0-9]+\.[0-9]+$$ (e.g. v1.2.3)"; echo "usage: make release TAG=vX.Y.Z"; exit 1; fi
+	@echo "Would run (hermetic — human pushes):"
+	@echo "  git tag -s $(TAG) -m \"release $(TAG)\""
+	@echo "  git push origin $(TAG)"
