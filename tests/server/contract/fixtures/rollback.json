@@ -1,0 +1,38 @@
+{
+  "fixture_id": "rollback queued+running",
+  "oracle": "langgraph-api==0.12.6 inmem",
+  "sources": [
+    "scripts/langgraph_smoke.py:237-247",
+    "todo 4 decisions.md rollback section"
+  ],
+  "observed": {
+    "queued_rollback": {
+      "description": "Cancel a queued (pending) run with action=rollback before it starts",
+      "request": "POST /threads/{id}/runs/{run_id}/cancel {action: rollback, wait: true}",
+      "result_status": "interrupted",
+      "record_kept": true,
+      "note": "Documented contract says rollback DELETES the run; installed 0.12.6 does NOT delete a never-started queued run — it survives as interrupted (verified 2026-08-19, user-approved deviation in langgraph_smoke.py:237-247). OSS must match the OBSERVED behavior (keep with interrupted), not the docs."
+    },
+    "running_rollback": {
+      "description": "Cancel a running run with rollback",
+      "request": "POST /threads/{id}/runs/{run_id}/cancel {action: rollback, wait: true}",
+      "result_status": "interrupted",
+      "record_kept": true,
+      "checkpoint": "pre-run snapshot restored via aupdate_state; if no prior state then checkpointer thread deleted",
+      "note": "todo 4 implements aupdate_state restore + thread deletion for empty history; todo 8 must re-verify checkpoint history semantics whether new checkpoint vs rewind"
+    },
+    "after_rollback": {
+      "thread_usable": true,
+      "description": "Thread accepts a fresh run after rollback (langgraph_smoke.py:251-258)"
+    },
+    "interrupt_action_exists": false,
+    "only_rollback_is_observed": true
+  },
+  "accepted_deviation": "Keeping interrupted instead of deleting queued run is an ACCEPTED deviation matching langgraph_smoke.py:237-247 precedent — the installed oracle itself diverges from docs. OSS mirrors the oracle observation. Re-assert deletion after server upgrade if upstream changes.",
+  "assertions_for_oss": [
+    "Queued run cancelled with rollback → status interrupted, record still GET-able",
+    "Running run cancelled with rollback → status interrupted, checkpoint restored",
+    "Cancelled run is terminal (in TERMINAL_STATUSES)",
+    "Thread accepts new runs after rollback"
+  ]
+}

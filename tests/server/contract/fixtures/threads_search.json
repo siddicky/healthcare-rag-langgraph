@@ -1,0 +1,31 @@
+{
+  "fixture_id": "threads-search select/sort params",
+  "oracle": "langgraph-api==0.12.6",
+  "sources": ["scripts/deployed_smoke.py:326-328,491-492", "todo 3 decisions.md search section"],
+  "observed": {
+    "endpoint": "POST /threads/search {metadata?, limit, offset, select?, sort_by?, sort_order?}",
+    "params": {
+      "metadata": "filter dict AND-merged with policy scope (policy wins)",
+      "limit": "1-100 default 10",
+      "offset": ">=0 default 0",
+      "select": "list of projection keys — only those keys per item",
+      "sort_by": "thread_id | created_at | updated_at",
+      "sort_order": "asc | desc"
+    },
+    "filtering": "AND of requested metadata + scope filter; uses same $eq/$contains as auth helper",
+    "sorting_slicing": "after filtering; benign even if harness sends unexpected select fields",
+    "invalid": {
+      "unknown_sort_by": 422,
+      "unknown_sort_order": 422,
+      "missing_body": 422,
+      "note": "empty body treated as {}"
+    }
+  },
+  "assertions_for_oss": [
+    "POST with select returns only requested keys",
+    "sort_by/sort_order produce ordered results",
+    "invalid sort_by → 422",
+    "metadata filter + scope filter AND correctly",
+    "offset/limit pagination works"
+  ]
+}

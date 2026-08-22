@@ -8,7 +8,33 @@ from uuid import UUID, uuid4
 
 logger = logging.getLogger("MedicalRAG")
 
+import json as _json
+
 from langgraph_sdk import Auth
+
+
+def _to_jsonable(obj: object) -> object:
+    if obj is None or isinstance(obj, (bool, int, float, str)):
+        return obj
+    if isinstance(obj, dict):
+        return {str(k): _to_jsonable(v) for k, v in obj.items()}  # type: ignore[arg-type]
+    if isinstance(obj, (list, tuple, set)):
+        return [_to_jsonable(v) for v in obj]  # type: ignore[arg-type]
+    if hasattr(obj, "model_dump"):
+        try:
+            return _to_jsonable(obj.model_dump(mode="json"))  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    if hasattr(obj, "dict"):
+        try:
+            return _to_jsonable(obj.dict())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    try:
+        _json.dumps(obj)
+        return obj
+    except Exception:
+        return str(obj)
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
@@ -525,10 +551,9 @@ async def get_thread_state(request: Request) -> Response:
         "config": getattr(tup, "config", None),
         "interrupts": values.get("interrupts", []) if isinstance(values, dict) else [],
     }
-    # Also include metadata if present
     if hasattr(tup, "metadata"):
         payload["metadata"] = tup.metadata
-    return JSONResponse(payload)
+    return JSONResponse(_to_jsonable(payload))  # type: ignore[arg-type]
 
 
 async def copy_thread(request: Request) -> Response:

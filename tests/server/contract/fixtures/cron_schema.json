@@ -1,0 +1,59 @@
+{
+  "fixture_id": "cron response schema",
+  "oracle": "langgraph-api==0.12.6",
+  "sources": [
+    "scripts/deployed_smoke.py:599-709",
+    "healthcare_rag/agent/cron_client.py:30-39",
+    ".omo/notepads todo 6 decisions"
+  ],
+  "observed": {
+    "create_response_fields": [
+      "cron_id",
+      "thread_id",
+      "end_time",
+      "schedule",
+      "created_at",
+      "updated_at",
+      "payload",
+      "next_run_date",
+      "metadata",
+      "enabled"
+    ],
+    "required_field_assertions": {
+      "schedule": "cron string e.g. '0 9 * * 1' — asserted deployed_smoke.py:601",
+      "next_run_date": "aware UTC ISO string when enabled, null when disabled — deployed_smoke.py:603, todo 6 note: disabled → null",
+      "enabled": "bool — deployed_smoke.py:611-616",
+      "payload.input": "dict containing cron_wake etc. — deployed_smoke.py:630-638",
+      "cron_id": "UUID string — deployed_smoke.py:657-664",
+      "metadata": "dict including user-supplied keys — deployed_smoke.py:697-701",
+      "thread_id": "nullable string — stateless vs thread-scoped; present for thread crons",
+      "end_time": "nullable ISO or null",
+      "created_at": "ISO timestamp",
+      "updated_at": "ISO timestamp"
+    },
+    "field_types": {
+      "cron_id": "str",
+      "thread_id": "str|null",
+      "schedule": "str cron 5-field",
+      "next_run_date": "str|null ISO8601 UTC-aware",
+      "payload": "dict",
+      "metadata": "dict",
+      "enabled": "bool",
+      "created_at": "str ISO8601",
+      "updated_at": "str ISO8601",
+      "end_time": "str|null"
+    },
+    "search_response_shape": "bare list (not {items: []}) — todo 6 note; CronClient accepts either but smoke calls list_body",
+    "delete_status": 204,
+    "disabled_next_run_date": null
+  },
+  "unexpected_fields": "No extra undocumented fields; timezone accepted on create but not emitted in response (todo 6 note: stored internally, not serialized)",
+  "assertions_for_oss": [
+    "POST /runs/crons returns exactly the field set above",
+    "next_run_date is valid ISO8601 when enabled",
+    "next_run_date null when enabled=false",
+    "search returns list",
+    "invalid cron expression or bad IANA tz → 422",
+    "PATCH enable/disable toggles next_run_date accordingly"
+  ]
+}

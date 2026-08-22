@@ -1,0 +1,35 @@
+{
+  "fixture_id": "if_exists mode names and semantics",
+  "oracle": "langgraph-api==0.12.6 — names verified via SDK and uploaded reservation flow",
+  "sources": ["healthcare_rag/agent/uploads.py:76-90", "todo 3 decisions.md"],
+  "observed": {
+    "modes": ["raise", "do_nothing", "reuse", "overwrite"],
+    "raise": {
+      "status_when_exists": 409,
+      "body": "{\"detail\":\"Thread already exists\"}",
+      "when_absent": "create 201/200"
+    },
+    "do_nothing": {
+      "when_exists": "200 return existing record unchanged (no metadata update, no updated_at bump)",
+      "alias_reuse": "reuse behaves identically — both accepted to avoid harness failure"
+    },
+    "overwrite": {
+      "when_exists": "200 replace metadata/top-level keys, updated_at=now, recompute expires_at from ttl if supplied else clear; preserve created_at",
+      "when_absent": "create anew"
+    },
+    "no_mode_with_existing_id": {
+      "status": 409,
+      "note": "Same as raise — prevents silent overwrite when caller forgot mode"
+    },
+    "invalid_mode": 422,
+    "invalid_uuid": 422,
+    "invalid_ttl": 422
+  },
+  "assertions_for_oss": [
+    "raise with existing id → 409",
+    "do_nothing/reuse with existing id → 200 existing record",
+    "overwrite with existing id → 200 updated record",
+    "no if_exists with existing id → 409",
+    "invalid values → 422"
+  ]
+}

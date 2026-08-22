@@ -126,7 +126,10 @@ async def join_run(request: Request) -> Response:
 
 
 def _frame(event: str, data: JSONValue) -> bytes:
-    compact = json.dumps(data, separators=(",", ":"))
+    try:
+        compact = json.dumps(data, separators=(",", ":"), default=str)
+    except Exception:
+        compact = json.dumps(str(data), separators=(",", ":"))
     return f"event: {event}\ndata: {compact}\n\n".encode()
 
 
@@ -165,7 +168,17 @@ async def join_stream(request: Request) -> Response:
 async def cancel_run(request: Request) -> Response:
     try:
         engine, thread_id, run_id = _lookup(request)
-        parsed = CancelRequest.model_validate(await request.json())
+        try:
+            body = await request.json()
+        except Exception:
+            body = {}
+        if not body:
+            qp = request.query_params
+            body = {
+                "action": qp.get("action", "rollback"),
+                "wait": qp.get("wait") in ("1", "true", "True"),
+            }
+        parsed = CancelRequest.model_validate(body)
         await engine.cancel(thread_id, run_id, parsed)
     except RunMissing:
         return JSONResponse({"detail": "Run not found"}, status_code=404)

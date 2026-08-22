@@ -1,0 +1,80 @@
+name: Server Parity
+
+on:
+  pull_request:
+    paths:
+      - "server/**"
+      - "healthcare_rag/agent/**"
+      - "tests/server/**"
+      - "tests/server/oracle/**"
+      - "langgraph.json"
+      - ".github/workflows/server-parity.yml"
+  push:
+    branches: [main]
+    paths:
+      - "server/**"
+      - "healthcare_rag/agent/**"
+      - "tests/server/**"
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@19b4d1e990bec64818914c40230bde93a0de300b # v7
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Run server unit tests
+        run: uv run pytest tests/server -q --ignore=tests/server/contract -q
+
+  oss-contract:
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@19b4d1e990bec64818914c40230bde93a0de300b
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: uv sync --frozen
+      - name: Run OSS contract suite
+        run: uv run pytest tests/server/contract -q -k "not oracle" --tb=short
+      - name: License source scan
+        run: uv run pytest tests/server/test_license_boundary.py::test_source_scan_no_forbidden_imports -q
+      - name: Dependency allowlist
+        run: uv run pytest tests/server/test_license_boundary.py::test_dependency_license_allowlist -q
+      - name: SBOM probe (image absent check)
+        run: uv run pytest tests/server/test_license_boundary.py::test_sbom_real_langgraph_api_absent_from_production_image -q
+
+  oracle:
+    runs-on: ubuntu-latest
+    needs: unit
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - name: Set up uv
+        uses: astral-sh/setup-uv@19b4d1e990bec64818914c40230bde93a0de300b
+        with:
+          python-version: "3.12"
+      - name: Install main deps
+        run: uv sync --frozen
+      - name: Build pinned oracle venv
+        run: |
+          uv venv tests/server/oracle/.venv --python 3.12
+          uv pip install --no-config --python tests/server/oracle/.venv/bin/python -r tests/server/oracle/requirements.txt
+          uv pip install --no-config --python tests/server/oracle/.venv/bin/python -e . --no-build-isolation
+          tests/server/oracle/.venv/bin/python -c "import langgraph_api; assert langgraph_api.__version__ == '0.12.6', langgraph_api.__version__"
+          tests/server/oracle/.venv/bin/python -c "import importlib.metadata; print(importlib.metadata.version('langgraph-cli'))"
+      - name: Run oracle contract suite
+        run: ORACLE=1 uv run pytest tests/server/contract -q --tb=short
+        env:
+          OPENAI_API_KEY: dummy

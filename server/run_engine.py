@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json as _json
 from collections import deque
 from collections.abc import AsyncIterator, Mapping
 from dataclasses import dataclass, field
@@ -19,6 +20,30 @@ JSONValue: TypeAlias = JsonValue
 QUEUE_LIMIT: Final = 100
 
 
+def _to_jsonable(obj: object) -> object:
+    if obj is None or isinstance(obj, (bool, int, float, str)):
+        return obj
+    if isinstance(obj, dict):
+        return {str(k): _to_jsonable(v) for k, v in obj.items()}  # type: ignore[arg-type]
+    if isinstance(obj, (list, tuple, set)):
+        return [_to_jsonable(v) for v in obj]  # type: ignore[arg-type]
+    if hasattr(obj, "model_dump"):
+        try:
+            return _to_jsonable(obj.model_dump(mode="json"))  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    if hasattr(obj, "dict"):
+        try:
+            return _to_jsonable(obj.dict())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    try:
+        _json.dumps(obj)
+        return obj
+    except Exception:
+        return str(obj)
+
+
 class ResumeCommand(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
     resume: JSONValue
@@ -30,14 +55,22 @@ class RunRequest(BaseModel):
     input: dict[str, JSONValue] | None = None
     command: ResumeCommand | None = None
     config: dict[str, JSONValue] = Field(default_factory=dict)
-    stream_mode: list[Literal["updates", "custom"]] = Field(
-        default_factory=lambda: ["updates", "custom"]
-    )
+    stream_mode: list[Literal["updates", "custom", "values"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
     stream_subgraphs: Literal[False] = False
     stream_resumable: Literal[False] = False
     durability: Literal["exit"] = "exit"
     if_not_exists: Literal["reject"] = "reject"
     multitask_strategy: Literal["reject", "enqueue", "interrupt"] = "reject"
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_stream_mode(cls, data: object) -> object:
+        if isinstance(data, dict) and "stream_mode" in data:
+            sm = data["stream_mode"]
+            if isinstance(sm, str):
+                data = dict(data)
+                data["stream_mode"] = [sm]
+        return data
 
     @model_validator(mode="after")
     def exactly_one_payload(self) -> RunRequest:
@@ -198,12 +231,12 @@ class RunEngine:
                     stream_mode=["updates", "custom"],
                     durability="exit",
                 ):
-                    runtime.events.append((mode, data))
+                    runtime.events.append((mode, _to_jsonable(data)))  # type: ignore[arg-type]
                     runtime.changed.set()
                     runtime.changed = anyio.Event()
             cancelled = scope.cancel_called
             final = await graph.aget_state(graph_config)
-            runtime.output = dict(final.values)
+            runtime.output = _to_jsonable(dict(final.values))  # type: ignore[arg-type]
             record["status"] = "interrupted" if final.next else "success"
         except anyio.get_cancelled_exc_class():
             cancelled = True

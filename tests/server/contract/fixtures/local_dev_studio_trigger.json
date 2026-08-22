@@ -1,0 +1,37 @@
+{
+  "fixture_id": "local-dev StudioUser trigger (fixture #1)",
+  "oracle": "langgraph-api==0.12.6 langgraph dev with LANGSMITH_LANGGRAPH_API_VARIANT=local_dev",
+  "observed": {
+    "unauthenticated_without_local_dev": {
+      "description": "GET /info or any protected endpoint without credential, SERVER_LOCAL_DEV unset/default",
+      "headers": {},
+      "status": 401,
+      "body_contains": "Unauthorized"
+    },
+    "credential_less_with_local_dev": {
+      "description": "Same request with SERVER_LOCAL_DEV=1 (oracle local_dev variant) — custom auth 401 mapped to StudioUser(langgraph-studio-user)",
+      "headers": {},
+      "status": 200,
+      "principal": {"identity": "langgraph-studio-user", "kind": "StudioUser"},
+      "note": "Oracle implements StudioNoopAuthBackend for x-auth-scheme: langsmith; the OSS mapping triggers on ANY 401 when local_dev=1 (broader, documented as parity-risk in decisions.md todo-2). Fixture records that credential-less request MUST reach the graph with full access when local_dev is on, regardless of x-api-key presence."
+    },
+    "x_api_key_only_without_local_dev": {
+      "description": "Only x-api-key present, no authorization bearer — still 401 with local_dev off",
+      "headers": {"x-api-key": "dummy"},
+      "status": 401
+    },
+    "x_api_key_only_with_local_dev": {
+      "description": "Only x-api-key present with local_dev on — still maps to StudioUser (OSS does not check x-auth-scheme header)",
+      "headers": {"x-api-key": "dummy"},
+      "status": 200,
+      "principal": {"identity": "langgraph-studio-user", "kind": "StudioUser"},
+      "accepted_deviation": "Oracle only maps when x-auth-scheme: langsmith; OSS maps on any 401. Broader mapping does not restrict access (it grants Studio where oracle would 401 on non-langsmith scheme) but matches the credential-less langgraph_smoke.py path which sends no x-api-key. Recorded as intentional; re-verify if scheme-specific gating matters."
+    }
+  },
+  "assertions_for_oss": [
+    "local_dev=False + no credential → 401 on protected endpoints",
+    "local_dev=True + no credential → 200 with StudioUser principal, full graph access",
+    "local_dev=True + x-api-key only → 200 (OSS) vs 401 (oracle strict) — accepted deviation, documented above",
+    "/ok and /info are public regardless (oracle 401 for /info observed but OSS keeps public — accepted because plan mandates public)"
+  ]
+}
