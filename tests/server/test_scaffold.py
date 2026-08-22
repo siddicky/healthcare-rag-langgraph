@@ -1,9 +1,18 @@
 from __future__ import annotations
 
 import os
+from typing import Protocol, runtime_checkable
 
 import httpx
 import pytest
+from langgraph.checkpoint.base import BaseCheckpointSaver
+from langgraph.store.base import BaseStore
+
+
+@runtime_checkable
+class StorageAttachedGraph(Protocol):
+    checkpointer: BaseCheckpointSaver[str] | None
+    store: BaseStore | None
 
 
 def test_server_storage_bogus_raises():
@@ -60,25 +69,48 @@ def test_info_and_ok_public():
     anyio.run(_run)
 
 
-def test_manifest_501_and_404():
+def test_manifest_501_and_404(monkeypatch: pytest.MonkeyPatch):
     async def _run():
         from server.app import create_app
 
-        app = create_app()
-        transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
-        async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-            async with app.router.lifespan_context(app):  # type: ignore[attr-defined]
-                # 501 paths
-                for path in ["/metrics", "/store/namespaces/search", "/webhooks", "/assistants"]:
-                    r = await client.get(path)
-                    assert r.status_code == 501, f"{path} expected 501 got {r.status_code}"
-                # MCP/A2A mounted as 404/405
+        protected_paths = [
+            "/metrics",
+            "/store/namespaces/search",
+            "/webhooks",
+            "/assistants",
+        ]
+        monkeypatch.delenv("SERVER_LOCAL_DEV", raising=False)
+        protected_app = create_app()
+        protected_transport = httpx.ASGITransport(app=protected_app)  # type: ignore[arg-type]
+        async with httpx.AsyncClient(
+            transport=protected_transport, base_url="http://test"
+        ) as client:
+            async with protected_app.router.lifespan_context(protected_app):  # type: ignore[attr-defined]
+                for path in protected_paths:
+                    response = await client.get(path)
+                    assert response.status_code == 401, (
+                        f"{path} expected auth-first 401 got {response.status_code}"
+                    )
+
+        monkeypatch.setenv("SERVER_LOCAL_DEV", "1")
+        studio_app = create_app()
+        studio_transport = httpx.ASGITransport(app=studio_app)  # type: ignore[arg-type]
+        async with httpx.AsyncClient(
+            transport=studio_transport, base_url="http://test"
+        ) as client:
+            async with studio_app.router.lifespan_context(studio_app):  # type: ignore[attr-defined]
+                for path in protected_paths:
+                    response = await client.get(path)
+                    assert response.status_code == 501, (
+                        f"{path} expected authenticated 501 got {response.status_code}"
+                    )
                 for method, path in [("GET", "/mcp"), ("POST", "/a2a/coach")]:
-                    r = await client.request(method, path)
-                    assert r.status_code in (404, 405), f"{path} expected 404/405 got {r.status_code}"
-                # unknown
-                r = await client.get("/unknown_xyz_123")
-                assert r.status_code == 404
+                    response = await client.request(method, path)
+                    assert response.status_code in (404, 405), (
+                        f"{path} expected authenticated 404/405 got {response.status_code}"
+                    )
+                response = await client.get("/unknown_xyz_123")
+                assert response.status_code == 404
 
     import anyio
 
@@ -98,6 +130,7 @@ def test_graph_storage_attachment_mutation():
 
         # attached graphs must have checkpointer and store
         for name, g in attached.items():
+            assert isinstance(g, StorageAttachedGraph), name
             assert g.checkpointer is storage.saver
             assert g.store is storage.store
 
@@ -113,6 +146,7 @@ def test_graph_storage_attachment_mutation():
 
         # Prove skip-attachment fails: raw graph has no checkpointer
         for g in raw.values():
+            assert isinstance(g, StorageAttachedGraph)
             assert g.checkpointer is None
 
         # Prove attached graph persists via checkpointer
@@ -122,7 +156,11 @@ def test_graph_storage_attachment_mutation():
         # Write via attached graph's checkpointer
         # Simulate: attached graph should allow aget_state after invoke
         # We just verify checkpointer identity difference suffices as mutation proof
-        assert attached["healthcare_rag"].checkpointer is not raw["healthcare_rag"].checkpointer
+        attached_graph = attached["healthcare_rag"]
+        raw_graph = raw["healthcare_rag"]
+        assert isinstance(attached_graph, StorageAttachedGraph)
+        assert isinstance(raw_graph, StorageAttachedGraph)
+        assert attached_graph.checkpointer is not raw_graph.checkpointer
 
     import anyio
 

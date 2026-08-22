@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 from contextlib import asynccontextmanager
 
 from starlette.applications import Starlette
@@ -7,6 +8,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
 
+from server.auth import AuthMiddleware, AuthPolicyEngine, load_auth_instance
 from server.config import ServerConfig, load_config
 from server.graphs import attach_graphs, load_raw_graphs
 from server.manifest import UNIMPLEMENTED_PATHS, UNIMPLEMENTED_PREFIXES
@@ -76,10 +78,13 @@ async def _not_found_endpoint(request: Request) -> PlainTextResponse:
 
 def create_app(config: ServerConfig | None = None) -> Starlette:
     cfg = config or load_config()
+    auth_instance = load_auth_instance(cfg.auth_path)
+    auth_engine = AuthPolicyEngine(auth_instance)
     readiness = ReadinessState()
     # Register subsystems that exist now
     readiness.register("config")
     readiness.register("graphs")
+    readiness.register("auth")
     # Placeholders for future todos — registered but not required for this todo's test
     # They start as not-ready; is_ready() will be False until set. For THIS todo we
     # keep them out of the required set so create_app() + lifespan can become ready.
@@ -101,16 +106,15 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
             storage = create_storage(cfg)
             app.state.storage = storage  # type: ignore[attr-defined]
             # saver/store setup if they have async setup
-            saver = storage.saver
-            if hasattr(saver, "asetup"):
-                await saver.asetup()  # type: ignore[union-attr]
-            elif hasattr(saver, "setup"):
-                saver.setup()  # type: ignore[union-attr]
-            store = storage.store
-            if hasattr(store, "asetup"):
-                await store.asetup()  # type: ignore[union-attr]
-            elif hasattr(store, "setup"):
-                store.setup()  # type: ignore[union-attr]
+            for component in (storage.saver, storage.store):
+                async_setup = getattr(component, "asetup", None)
+                sync_setup = getattr(component, "setup", None)
+                if callable(async_setup):
+                    setup_result = async_setup()
+                    if inspect.isawaitable(setup_result):
+                        await setup_result
+                elif callable(sync_setup):
+                    sync_setup()
 
             raw = load_raw_graphs(cfg)
             graphs = attach_graphs(raw, storage)
@@ -119,6 +123,7 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
 
             readiness.set_ready("config")
             readiness.set_ready("graphs")
+            readiness.set_ready("auth")
             # If downstream todos have registered extra checks, they remain False until those subsystems set_ready
             yield
         finally:
@@ -150,8 +155,13 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
 
     routes.append(SRoute("/{path:path}", manifest_catch, methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS", "HEAD"]))
 
-    app = Starlette(routes=routes, lifespan=lifespan)
+    app = Starlette(
+        routes=routes,
+        lifespan=lifespan,
+        middleware=[AuthMiddleware.as_starlette(auth_instance, cfg.local_dev)],
+    )
     # Attach for pre-lifespan access (is_ready checks)
     app.state.readiness = readiness  # type: ignore[attr-defined]
     app.state.config = cfg  # type: ignore[attr-defined]
+    app.state.auth_engine = auth_engine  # type: ignore[attr-defined]
     return app
