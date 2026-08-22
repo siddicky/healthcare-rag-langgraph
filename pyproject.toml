@@ -6,7 +6,12 @@ readme = "README.md"
 requires-python = ">=3.11,<3.15"
 dependencies = [
     "openai>=1.76,<2",
-    "weaviate-client>=4.14,<5",
+    # Capped below 4.16.3: from that release weaviate-client requires
+    # grpcio<1.80, which is disjoint with langgraph-api>=0.9's grpcio>=1.80.
+    # Since weaviate-client ships into the deployment image (dependencies: ["."]),
+    # the cap is what keeps the image build resolvable on the pinned api_version.
+    # Revisit during the Weaviate Cloud migration.
+    "weaviate-client>=4.14,<4.16.3",
     # Pinecone A/B retrieval arm + the Inference reranker. Sync client only:
     # it is driven from anyio worker threads, so no aiohttp/asyncio extra is needed.
     "pinecone>=7,<10",

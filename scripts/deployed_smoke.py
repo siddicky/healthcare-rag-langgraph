@@ -35,7 +35,7 @@ from langsmith import Client as LangSmithClient
 from pydantic import JsonValue, TypeAdapter
 
 JSONValue: TypeAlias = JsonValue
-EXPECTED_API_VERSION: Final = "0.8.7"
+EXPECTED_API_VERSION: Final = "0.13.0"
 ASSISTANT_ID: Final = "coach"
 DOCUMENT_QUESTION: Final = "Please review this document."
 ERASE_MARKER: Final = "erase_confirmation_v1"
