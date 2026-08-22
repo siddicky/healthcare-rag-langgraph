@@ -1,9 +1,7 @@
 import asyncio
 import logging
-import uuid
-from typing import List, Optional, Tuple, Dict, Any
-import sys
 import time
+import uuid
 
 from ..graph.engine import Engine, build_engine
 from ..monitor import QueryMonitor
@@ -51,7 +49,7 @@ def print_banner():
     """
     print(banner)
 
-async def interactive_main():
+async def interactive_main() -> int:
     """Main function for interactive CLI mode."""
 
     print_banner()
@@ -61,7 +59,7 @@ async def interactive_main():
         print("✓ Medical RAG System Initialized Successfully")
     except Exception:
         print("✗ Error initializing system: PRIVACY_OR_RUNTIME_INITIALIZATION_FAILED")
-        return
+        return 1
 
     # Use a consistent user ID for the whole session
     session_id = f"cli_user_{uuid.uuid4().hex[:8]}"
@@ -114,7 +112,7 @@ async def interactive_main():
                     # Restart status display
                     if status_task.done():
                         status_task = asyncio.create_task(monitor.display_progress())
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 # No raw answer within timeout, just wait for final
                 pass
             
@@ -162,14 +160,16 @@ async def interactive_main():
             except Exception:
                 print("✗ Error while closing connection: RUNTIME_CLOSE_FAILED")
 
-def main():
+    return 0
+
+def main() -> int:
     """Entry point for the CLI."""
     try:
-        asyncio.run(interactive_main())
+        return asyncio.run(interactive_main())
     except Exception:
         print("\n❌ Fatal error: RUNTIME_FATAL_ERROR")
-        logging.critical("RUNTIME_FATAL_ERROR")
-        sys.exit(1)
+        logger.critical("RUNTIME_FATAL_ERROR")
+        return 1
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

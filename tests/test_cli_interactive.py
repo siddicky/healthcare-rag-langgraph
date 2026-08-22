@@ -1,6 +1,9 @@
 from __future__ import annotations
 
 import builtins
+import os
+import subprocess
+import sys
 from dataclasses import dataclass
 
 import pytest
@@ -26,6 +29,32 @@ def _quit_input(_: str) -> str:
 
 def _interrupted_input(_: str) -> str:
     raise KeyboardInterrupt
+
+
+@pytest.mark.parametrize("module_name", ("healthcare_rag", "healthcare_rag.cli.interactive"))
+def test_module_entries_return_nonzero_for_invalid_initialization_config(
+    module_name: str,
+) -> None:
+    environment = os.environ | {
+        "HC_RAG_QUERY_RESPONSE_ARM": "bogus",
+        "LANGSMITH_TRACING": "false",
+    }
+
+    completed = subprocess.run(
+        [sys.executable, "-m", module_name],
+        input="",
+        capture_output=True,
+        env=environment,
+        text=True,
+        timeout=30,
+        check=False,
+    )
+
+    output = completed.stdout + completed.stderr
+    assert completed.returncode != 0
+    assert "PRIVACY_OR_RUNTIME_INITIALIZATION_FAILED" in output
+    assert "bogus" not in output
+    assert "Traceback" not in output
 
 
 @pytest.mark.asyncio
