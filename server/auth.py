@@ -14,7 +14,14 @@ from starlette.types import ASGIApp, Receive, Scope, Send
 
 Resource: TypeAlias = Literal["runs", "threads", "crons", "assistants", "store"]
 Action: TypeAlias = Literal[
-    "create", "read", "update", "delete", "search", "create_run", "put", "get",
+    "create",
+    "read",
+    "update",
+    "delete",
+    "search",
+    "create_run",
+    "put",
+    "get",
     "list_namespaces",
 ]
 PrincipalValue: TypeAlias = str | bool | Sequence[str]
@@ -33,8 +40,6 @@ class AuthConfigurationError(Exception):
 
 
 class ScopeUser(Mapping[str, PrincipalValue]):
-    """Authenticated principal compatible with Starlette and the member perimeter."""
-
     __slots__ = ("_data",)
 
     def __init__(self, data: Mapping[str, PrincipalValue]) -> None:
@@ -78,8 +83,6 @@ class ScopeUser(Mapping[str, PrincipalValue]):
 
 
 class AuthPolicyEngine:
-    """Invoke the SDK Auth registries with Agent Server dispatch precedence."""
-
     __slots__ = ("auth",)
 
     def __init__(self, auth: Auth) -> None:
@@ -94,7 +97,6 @@ class AuthPolicyEngine:
         user: ScopeUser,
         value: MutableMapping[str, Any],
     ) -> ScopeFilter | None:
-        """Run the most-specific policy, honoring mutation and filter results."""
         ctx = PolicyContext(
             permissions=user.permissions,
             user=user,
@@ -145,14 +147,12 @@ class PolicyContext:
 def merge_scope_filter(
     requested: Mapping[str, Any] | None, scope_filter: Mapping[str, Any]
 ) -> ScopeFilter:
-    """AND-merge a policy filter, with policy keys taking precedence."""
     return {**(requested or {}), **scope_filter}
 
 
 def require_scope_match(
     metadata: Mapping[str, Any], scope_filter: Mapping[str, Any]
 ) -> None:
-    """Hide a specific resource unless all policy filter terms match."""
     for key, expected in scope_filter.items():
         actual = metadata.get(key)
         if not _filter_term_matches(actual, expected):
@@ -175,8 +175,6 @@ def _filter_term_matches(actual: Any, expected: Any) -> bool:
 
 
 class AuthMiddleware:
-    """Authenticate every non-public HTTP request before inner middleware."""
-
     __slots__ = ("app", "engine", "local_dev")
 
     def __init__(self, app: ASGIApp, auth: Auth, local_dev: bool = False) -> None:
@@ -194,9 +192,9 @@ class AuthMiddleware:
             return
         user = await self._authenticate(scope)
         if user is None:
-            await JSONResponse(
-                {"detail": "Unauthorized"}, status_code=401
-            )(scope, receive, send)
+            await JSONResponse({"detail": "Unauthorized"}, status_code=401)(
+                scope, receive, send
+            )
             return
         scope["user"] = user
         scope["auth"] = AuthCredentials(list(user.permissions))
@@ -219,22 +217,20 @@ class AuthMiddleware:
             if self.local_dev and exc.status_code == 401:
                 return _studio_user()
             return None
-        except (RuntimeError, ValueError, TypeError, KeyError, AttributeError, UnicodeError):
+        except (
+            RuntimeError,
+            ValueError,
+            TypeError,
+            KeyError,
+            AttributeError,
+            UnicodeError,
+        ):
             return None
         return _scope_user(principal)
 
 
 def _studio_user() -> ScopeUser:
-    studio = Auth.types.StudioUser(STUDIO_IDENTITY)
-    return ScopeUser(
-        {
-            "identity": studio.identity,
-            "display_name": studio.display_name,
-            "is_authenticated": studio.is_authenticated,
-            "permissions": studio.permissions,
-            "kind": "StudioUser",
-        }
-    )
+    return ScopeUser({"identity": STUDIO_IDENTITY, "kind": "StudioUser"})
 
 
 def _scope_user(principal: Any) -> ScopeUser | None:
@@ -276,7 +272,6 @@ def _scope_user(principal: Any) -> ScopeUser | None:
 
 
 def load_auth_instance(path: str | None) -> Auth:
-    """Load the configured Auth instance through its importable module path."""
     if path is None or ":" not in path:
         raise AuthConfigurationError("Auth path must be configured as module.py:name")
     module_path, attribute = path.rsplit(":", 1)
@@ -285,13 +280,3 @@ def load_auth_instance(path: str | None) -> Auth:
     if not isinstance(loaded, Auth):
         raise AuthConfigurationError("Configured auth object is not an Auth instance")
     return loaded
-
-
-__all__ = [
-    "AuthMiddleware",
-    "AuthPolicyEngine",
-    "ScopeUser",
-    "load_auth_instance",
-    "merge_scope_filter",
-    "require_scope_match",
-]

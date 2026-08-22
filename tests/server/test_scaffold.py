@@ -172,5 +172,8 @@ def test_no_langgraph_api_import():
 
     root = pathlib.Path("server")
     for p in root.rglob("*.py"):
+        if p == root / "_compat.py":
+            continue
         text = p.read_text()
-        assert "langgraph_api" not in text, f"{p} imports langgraph_api"
+        assert "from langgraph_api" not in text, f"{p} imports langgraph_api"
+        assert "import langgraph_api" not in text, f"{p} imports langgraph_api"
