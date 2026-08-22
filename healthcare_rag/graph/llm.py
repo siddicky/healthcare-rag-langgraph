@@ -4,7 +4,6 @@ import logging
 from threading import Lock
 from typing import Any, Literal, Protocol, TypeVar
 
-from anyio import to_thread
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolCall
 from langchain_core.messages.utils import count_tokens_approximately, trim_messages
 from langchain_openai import ChatOpenAI
@@ -170,7 +169,7 @@ class LangChainLLMGateway:
         """Return one query-or-respond decision from the centralized default model."""
         try:
             capped_history = trim_messages(
-                await to_thread.run_sync(project_history, history, self._privacy),
+                project_history(history, self._privacy),
                 strategy="last",
                 token_counter=count_tokens_approximately,
                 max_tokens=self.settings.history_max_tokens,
@@ -180,11 +179,7 @@ class LangChainLLMGateway:
             messages = [
                 *self._messages("query_or_respond", {}),
                 *capped_history,
-                HumanMessage(
-                    content=await to_thread.run_sync(
-                        scrub_router_text, current_query, self._privacy
-                    )
-                ),
+                HumanMessage(content=scrub_router_text(current_query, self._privacy)),
             ]
             model = self.chat_model("default").bind_tools(
                 [QUERY_OR_RESPOND_TOOL],
@@ -200,6 +195,6 @@ class LangChainLLMGateway:
             return QueryOrRespondDecision(None, "", None, "model_error", 0)
         if not isinstance(response, AIMessage):
             return QueryOrRespondDecision(None, "", None, "malformed_response", 0)
-        return await to_thread.run_sync(
-            query_or_respond_decision, response, self._privacy, evaluate_generated_output
+        return query_or_respond_decision(
+            response, self._privacy, evaluate_generated_output
         )

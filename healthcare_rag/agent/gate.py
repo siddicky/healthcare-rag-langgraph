@@ -15,10 +15,10 @@ from healthcare_rag.models.safety import SafetyAssessment
 from healthcare_rag.processors.safety import (
     SafetyGate,
     SafetyLLMCall,
-    ascrub_phi,
     identifier_recall_requested,
     injection_flags,
     red_flag_terms,
+    scrub_phi,
 )
 from healthcare_rag.processors.safety_responses import (
     emergency_response,
@@ -128,7 +128,7 @@ async def coach_gate(
     features = compute_features(
         question, state.get("attachment_id"), _previous_context(state)
     )
-    scrubbed = (await ascrub_phi(question))[0]
+    scrubbed = scrub_phi(question)[0]
     update: CoachState = {
         "question": "",
         "messages": [HumanMessage(content=scrubbed)] if scrubbed else [],

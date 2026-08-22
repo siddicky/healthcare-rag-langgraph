@@ -10,7 +10,6 @@ from pathlib import PurePath
 from typing import ClassVar, Final, Literal, Protocol, TypeAlias, override
 from uuid import UUID, uuid5
 
-from anyio import to_thread
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.store.base import BaseStore
@@ -382,11 +381,7 @@ async def review_document(
     resolved_fields: list[JsonValue] = []
     for index, field in enumerate(payload.fields):
         value = edits.get(field.key, field.value)
-        clean = (
-            await to_thread.run_sync(sanitize_memory_field, value)
-            if decision.accept
-            else None
-        )
+        clean = sanitize_memory_field(value) if decision.accept else None
         saved = clean is not None
         if saved:
             memory_id = hashlib.sha256(

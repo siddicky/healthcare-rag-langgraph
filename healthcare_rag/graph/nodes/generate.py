@@ -10,8 +10,8 @@ from healthcare_rag.graph.state import load_results
 from healthcare_rag.models.answers import CitedAnswerResult
 from healthcare_rag.models.misc import FollowUpQuestions
 from healthcare_rag.processors.generation import format_documents_for_prompt
-from healthcare_rag.processors.safety import ascrub_phi
 from healthcare_rag.processors.validation import AnswerValidator
+from healthcare_rag.processors.safety import scrub_phi
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -40,7 +40,7 @@ async def generate_answer(state: dict[str, Any]) -> dict[str, Any]:
         retrieval_results=formatted_docs,
         user_question=state["working_query"],
     )
-    plain_answer = (await ascrub_phi(model_answer))[0]
+    plain_answer = scrub_phi(model_answer)[0]
     return {
         "generation": {
             "plain_answer": plain_answer,
@@ -55,7 +55,7 @@ async def validate_answer(state: dict[str, Any]) -> dict[str, Any]:
     generation = state.get("generation") or {}
     plain_answer = str(generation.get("plain_answer") or "")
     if "validate" in resources.settings.disabled_stages:
-        return {"validated": (await ascrub_phi(plain_answer))[0]}
+        return {"validated": scrub_phi(plain_answer)[0]}
 
     merged_data = state.get("merged")
     if not merged_data:
@@ -92,15 +92,13 @@ async def validate_answer(state: dict[str, Any]) -> dict[str, Any]:
     structured_data = structured.model_dump(mode="json") if structured else None
     if structured_data:
         for statement in structured_data["statements"]:
-            statement["text"] = (await ascrub_phi(str(statement.get("text") or "")))[0]
+            statement["text"] = scrub_phi(str(statement.get("text") or ""))[0]
             for citation in statement.get("citations", []):
                 for field in ("doc_id", "source_name", "quote"):
-                    citation[field] = (
-                        await ascrub_phi(str(citation.get(field) or ""))
-                    )[0]
+                    citation[field] = scrub_phi(str(citation.get(field) or ""))[0]
     return {
         "structured": structured_data,
-        "validated": (await ascrub_phi(validated or ""))[0] or None,
+        "validated": scrub_phi(validated or "")[0] or None,
     }
 
 
@@ -132,8 +130,7 @@ async def generate_follow_ups(state: dict[str, Any]) -> dict[str, Any]:
             response = default
         return {
             "follow_ups": [
-                (await ascrub_phi(question))[0]
-                for question in (response or default).questions
+                scrub_phi(question)[0] for question in (response or default).questions
             ]
         }
     except Exception:  # noqa: BROAD_EXCEPT_OK - preserves the legacy unexpected-error sentinel.

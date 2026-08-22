@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from typing import Annotated, ClassVar, Literal, final, override
 from uuid import uuid4
 
-from anyio import to_thread
 from langchain_core.runnables import RunnableConfig
 from langchain_core.tools import tool
 from langgraph.prebuilt import InjectedStore
@@ -98,7 +97,7 @@ async def remember_fact_impl(
     """Save one profile or episodic fact after privacy sanitization."""
     del user_id
     user_identity = authenticated_user_id(config)
-    clean = await to_thread.run_sync(sanitize_memory_field, fact)
+    clean = sanitize_memory_field(fact)
     if clean is None:
         return _PRIVACY_REFUSAL
     try:

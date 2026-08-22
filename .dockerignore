@@ -16,10 +16,6 @@ scratch
 tests
 tmp
 venv
-# the privacy service is its own deployable (services/privacy); keep it and any
-# nested virtualenv out of the graph image
-services
-**/.venv
 zzscratches
 *.egg-info
 *.log

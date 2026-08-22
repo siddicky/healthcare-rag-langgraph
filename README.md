@@ -111,7 +111,7 @@ This project utilizes the following core technologies:
 
 The runtime is a custom LangGraph `StateGraph` (`healthcare_rag/graph/`) whose node names are the pipeline stages and whose conditional edges are the runtime self-evaluators:
 
-*   **`safety_gate` →** the identifier sanitizer (deterministic patterns in-process, Presidio spans from the `services/privacy` HTTP service) scans the current query and history before safety classification. Emergency / personal-advice / out-of-scope / prompt-injection messages short-circuit straight to `finalize` with a terminal templated response (see `docs/safety.md`). Identifier sanitization remains active during safety-classification ablations.
+*   **`safety_gate` →** the process-owned Presidio/deterministic sanitizer scans the current query and history before safety classification. Emergency / personal-advice / out-of-scope / prompt-injection messages short-circuit straight to `finalize` with a terminal templated response (see `docs/safety.md`). Identifier sanitization remains active during safety-classification ablations.
 *   **`decompose_query` →** simple queries retrieve once; complex queries fan out via LangGraph `Send` — the parent (possibly clarified) query **plus** up to `HC_RAG_MAX_SUBQUERIES` sub-queries retrieve in parallel, and `merge_retrievals` de-duplicates their documents by `doc_id` into one merged set. There is deliberately **no speculative racing**: one answer and one validation per turn, on the original query (the measured "synthesis" behaviour).
 *   **`evaluate_retrieval` →** one sufficiency check on the merged documents; an insufficient round fans out ≤3 gap-fill retrievals, after which the graph routes straight to generation (no second evaluation).
 *   **`validate_answer` →** citation validation (below); a structuring failure writes no answer rather than failing open.
@@ -122,11 +122,10 @@ Conversation memory lives in the graph's checkpointer keyed by an opaque `thread
 `make dev` serves the graph on the local LangGraph Agent Server (Studio-compatible) and `scripts/langgraph_smoke.py` exercises threads, two-turn history carry-over, streaming and queued-run cancellation against it.
 `langgraph.json` loads the gitignored `.env` for `langgraph dev`; `langgraph deploy`
 uploads those variables as deployment secrets rather than baking them into the
-image. The deployment image does **not** carry Presidio or spaCy: identifier
-scans are HTTP calls to the separately deployed `services/privacy` app
-(`make privacy-deploy`; point `PRIVACY_SERVICE_URL` / `PRIVACY_SERVICE_TOKEN`
-at it). Both Agent Server surfaces remain limited to synthetic, non-sensitive
-input as described in `docs/safety.md`.
+image. The generated deployment image installs the pinned Presidio/spaCy model
+through the root package declared in `dependencies`. Both Agent Server surfaces
+remain limited to synthetic, non-sensitive input as described in
+`docs/safety.md`.
 
 ---
 
@@ -205,15 +204,15 @@ To run the same GraphEngine CLI entirely from containers, keep the API keys in
 the required, gitignored `.env` and use the opt-in `app` Compose profile:
 
 ```bash
-make container-build            # build the app image (no Presidio inside)
+make container-build            # build app + baked Presidio/spaCy model
 make container-ingest           # start Weaviate and load the checked-in chunks
 make container-run              # interactive CLI in the app container
 ```
 
-The privacy engine (`presidio-analyzer==2.2.364`, spaCy 3.8.15,
-`en_core_web_sm` 3.8.0) is its own FastAPI app under `services/privacy`; run it
-with `make privacy-dev` and point `PRIVACY_SERVICE_URL` in `.env` at it. The app
-container never loads the model. The Compose app profile forces LangSmith tracing
+The image installs the locked `presidio-analyzer==2.2.364`, spaCy 3.8.15 and
+`en_core_web_sm` 3.8.0 during the build, then verifies the privacy analyzer can
+initialize. Runtime model downloads are neither needed nor permitted by the
+read-only, non-root container. The Compose app profile forces LangSmith tracing
 off for identifier-bearing CLI input and reaches Weaviate over the internal
 Compose network; the existing `make weaviate` workflow remains unchanged.
 

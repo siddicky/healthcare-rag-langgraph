@@ -19,7 +19,6 @@ from typing import (
 )
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
-from anyio import to_thread
 from langgraph.store.base import BaseStore, Item, SearchItem
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, field_validator
 
@@ -328,9 +327,7 @@ async def _put_model(
     scanner: PrivacyScanner | None,
 ) -> None:
     await guard_user_write(store, user_id)
-    clean = await to_thread.run_sync(
-        _scrub_json, model.model_dump(mode="json"), _scanner(scanner)
-    )
+    clean = _scrub_json(model.model_dump(mode="json"), _scanner(scanner))
     if not isinstance(clean, dict):
         raise StoreNamespaceError(_namespace(user_id, collection))
     validated = type(model).model_validate(clean).model_dump(mode="json")
@@ -526,9 +523,7 @@ async def append_event(
             "decision_ts": datetime.now(UTC),
         }
     )
-    clean = await to_thread.run_sync(
-        _scrub_json, server_event.model_dump(mode="json"), _scanner(scanner)
-    )
+    clean = _scrub_json(server_event.model_dump(mode="json"), _scanner(scanner))
     if not isinstance(clean, dict):
         raise StoreNamespaceError(_namespace(user_id, "events"))
     await store.aput(
@@ -554,9 +549,7 @@ async def put_op_if_absent(
     await guard_user_write(store, user_id)
     if await store.aget(_namespace(user_id, "ops"), op.op_id) is not None:
         return False
-    clean = await to_thread.run_sync(
-        _scrub_json, op.model_dump(mode="json"), _scanner(scanner)
-    )
+    clean = _scrub_json(op.model_dump(mode="json"), _scanner(scanner))
     if not isinstance(clean, dict):
         raise StoreNamespaceError(_namespace(user_id, "ops"))
     clean["op_id"] = op.op_id
@@ -572,9 +565,7 @@ async def put_op(
     scanner: PrivacyScanner | None = None,
 ) -> None:
     await guard_user_write(store, user_id)
-    clean = await to_thread.run_sync(
-        _scrub_json, op.model_dump(mode="json"), _scanner(scanner)
-    )
+    clean = _scrub_json(op.model_dump(mode="json"), _scanner(scanner))
     if not isinstance(clean, dict):
         raise StoreNamespaceError(_namespace(user_id, "ops"))
     clean["op_id"] = op.op_id
@@ -771,7 +762,7 @@ async def put_user_record(
     scanner: PrivacyScanner | None = None,
 ) -> None:
     await guard_user_write(store, user_id)
-    clean = await to_thread.run_sync(_scrub_json, value, _scanner(scanner))
+    clean = _scrub_json(value, _scanner(scanner))
     if not isinstance(clean, dict):
         raise StoreNamespaceError(_namespace(user_id, collection))
     await store.aput(_namespace(user_id, collection), key, clean, index=False)

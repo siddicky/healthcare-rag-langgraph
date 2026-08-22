@@ -6,8 +6,6 @@ import re
 from collections.abc import Sequence
 from typing import Final
 
-from anyio import to_thread
-
 from .safety_patterns import injection_flags, strip_injection
 
 SALVAGEABLE_INJECTION_FLAGS: Final = frozenset({"ignore_instructions"})
@@ -123,11 +121,6 @@ def scrub_phi(text: str, extra_spans: Sequence[str] = ()) -> tuple[str, list[str
     return scan.text, list(scan.kinds)
 
 
-async def ascrub_phi(text: str, extra_spans: Sequence[str] = ()) -> tuple[str, list[str]]:
-    """``scrub_phi`` for async callers; the scan is a network call, so it runs in a thread."""
-    return await to_thread.run_sync(scrub_phi, text, extra_spans)
-
-
 def contains_phi(text: str) -> bool:
     """Return whether the deterministic sanitizer finds an identifier."""
     return bool(scrub_phi(text)[1])
@@ -157,7 +150,6 @@ def red_flag_terms(text: str) -> list[str]:
 __all__ = [
     "DOSING_QUESTION",
     "SALVAGEABLE_INJECTION_FLAGS",
-    "ascrub_phi",
     "contains_phi",
     "identifier_recall_requested",
     "injection_flags",

@@ -34,7 +34,7 @@ from healthcare_rag.agent.store_data import (
     next_dose,
 )
 from healthcare_rag.graph.resources import get as get_resources
-from healthcare_rag.processors.privacy import PrivacyScanError, ascan
+from healthcare_rag.processors.privacy import PrivacyScanError
 
 BLOCK_ID: Final = "weekstrip:injection"
 STORE_REFUSAL: Final = "Injection not logged: storage unavailable."
@@ -164,8 +164,8 @@ async def log_injection_impl(
     thread_id, human_msg_id = _turn_scope(config)
     privacy = get_resources().privacy
     try:
-        clean_medication = (await ascan(privacy, medication_name)).text
-        clean_dose = (await ascan(privacy, dose_label)).text
+        clean_medication = privacy.scan(medication_name).text
+        clean_dose = privacy.scan(dose_label).text
     except PrivacyScanError:
         return PRIVACY_REFUSAL
     server_today = (today or _server_today)()

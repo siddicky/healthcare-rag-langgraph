@@ -203,10 +203,10 @@ async def test_nested_child_carries_history_per_parent_thread_without_bleed(
         )
 
     monkeypatch.setattr(gate, "GATEWAY", classify)
-    async def no_scrub(text: str) -> tuple[str, list[str]]:
+    def no_scrub(text: str) -> tuple[str, list[str]]:
         return text, []
 
-    monkeypatch.setattr(gate, "ascrub_phi", no_scrub)
+    monkeypatch.setattr(gate, "scrub_phi", no_scrub)
     monkeypatch.setattr(relay_module, "child", _memory_child())
     graph = build_coach_graph().compile(checkpointer=InMemorySaver())
     config_a: RunnableConfig = {"configurable": {"thread_id": "thread-a"}}

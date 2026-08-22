@@ -9,7 +9,7 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
 	python healthcare_rag/storage/pageindex_index.py
 
 .PHONY: journey help venv weaviate ingest run container-build container-ingest container-run \
-        privacy-dev privacy-test privacy-deploy dev test test-judges calibrate eval-smoke eval eval-nojudge index-pageindex \
+        dev test test-judges calibrate eval-smoke eval eval-nojudge index-pageindex \
         ingest-pinecone \
         eval-multiturn eval-multiturn-smoke eval-agent eval-agent-multiturn deployed-smoke forget-member \
         dataset-sync dataset-sync-multiturn \
@@ -20,7 +20,7 @@ help:
 
 venv: ## Create .venv (Python 3.12) and install app + evals + dev + graph-sqlite deps
 	$(UV) venv --python 3.12 .venv
-	$(UV) pip install --python $(PY) -e ".[evals,dev,graph-sqlite]" -e services/privacy
+	$(UV) pip install --python $(PY) -e ".[evals,dev,graph-sqlite]"
 
 weaviate: ## Start Weaviate (docker compose) and wait until ready
 	docker compose up -d
@@ -43,7 +43,7 @@ index-pageindex: ## Build the cached PageIndex trees for both monographs (isolat
 run: ## Interactive CLI
 	$(PY) -m healthcare_rag
 
-container-build: ## Build the app image (privacy scans go to PRIVACY_SERVICE_URL)
+container-build: ## Build the app image with the pinned Presidio/spaCy model baked in
 	docker compose --profile app build healthcare-rag
 
 container-ingest: weaviate ## (Re)ingest checked-in chunks from the app image
@@ -57,19 +57,6 @@ container-run: weaviate ## Run the privacy-safe interactive CLI from the app ima
 
 dev: ## Start the local LangGraph Agent Server
 	.venv/bin/langgraph dev
-
-PRIVACY_DIR := services/privacy
-
-privacy-dev: ## Serve the presidio privacy service locally on :8001 (PRIVACY_SERVICE_TOKEN from .env)
-	cd $(PRIVACY_DIR) && $(UV) sync --extra dev && \
-	set -a && . ../../.env && set +a && \
-	$(UV) run fastapi dev privacy_service/main.py --port 8001
-
-privacy-test: ## Run the privacy service's own tests
-	cd $(PRIVACY_DIR) && $(UV) sync --extra dev && $(UV) run pytest
-
-privacy-deploy: ## Deploy the privacy service to FastAPI Cloud (run `fastapi login` once first)
-	cd $(PRIVACY_DIR) && $(UV) sync --extra dev && $(UV) run fastapi deploy
 
 test: ## Offline tests (evaluator calibration, deterministic subset)
 	$(PY) -m pytest -q

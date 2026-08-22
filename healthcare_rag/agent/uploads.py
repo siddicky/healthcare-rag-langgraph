@@ -6,12 +6,9 @@ from typing import Final, TypeAlias
 from uuid import UUID
 
 import httpx
-from anyio import to_thread
 from pydantic import JsonValue
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
-
-from healthcare_rag.processors.privacy import PrivacyScanError
 
 from .documents import (
     DOCUMENT_EXTRACTOR,
@@ -135,9 +132,7 @@ async def post_upload(request: Request) -> Response:
             namespace, reservation, record, index=False, ttl=UPLOAD_TTL_MINUTES
         )
         proposal = await DOCUMENT_EXTRACTOR(bytes(buffer), upload.mime_type)
-        record["proposal"] = await to_thread.run_sync(
-            scrub_proposal, proposal, upload.extension, len(buffer)
-        )
+        record["proposal"] = scrub_proposal(proposal, upload.extension, len(buffer))
         record["status"] = "done"
         record["consumed"] = False
         await store.aput(
@@ -154,7 +149,7 @@ async def post_upload(request: Request) -> Response:
         return JSONResponse(
             {"detail": exc.reason, "stage": "error"}, status_code=exc.status_code
         )
-    except (PrivacyScanError, httpx.HTTPError, RuntimeError, TypeError, ValueError):
+    except (httpx.HTTPError, RuntimeError, TypeError, ValueError):
         if reserved:
             record["status"] = "error"
             _ = record.pop("proposal", None)

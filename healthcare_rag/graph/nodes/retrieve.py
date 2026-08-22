@@ -27,7 +27,7 @@ from healthcare_rag.processors.retrieval import (
     hybrid_search,
     union_results,
 )
-from healthcare_rag.processors.safety import ascrub_phi
+from healthcare_rag.processors.safety import scrub_phi
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -84,7 +84,7 @@ _RETRY_DELAYS: Final = (1.0, 2.0)
 
 async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
     resources = get()
-    query = (await ascrub_phi(state["query"]))[0]
+    query = scrub_phi(state["query"])[0]
     try:
         tool_calls = await resources.gateway.aroute_tools(query)
     except Exception:  # noqa: BROAD_EXCEPT_OK - routing is a fail-soft external boundary.
@@ -109,9 +109,7 @@ async def retrieve_documents(state: RetrieveInput) -> dict[str, Any]:
 
     for tool_call in tool_calls:
         collection_name = tool_call["name"].removeprefix("query_").capitalize()
-        routed_query = (
-            await ascrub_phi(str(tool_call["args"].get("query", query)))
-        )[0]
+        routed_query = scrub_phi(str(tool_call["args"].get("query", query)))[0]
 
         # Loop variables are bound as defaults: the closure is awaited within
         # this iteration, but binding keeps that guarantee local and explicit.

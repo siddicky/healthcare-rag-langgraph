@@ -43,7 +43,6 @@ its pins are mutually incompatible; `pyproject.toml` is the dependency source.
 | query monitor (CLI progress/events) | `healthcare_rag/monitor.py` |
 | processors (LLM steps used by the nodes) | `healthcare_rag/processors/*.py` + `healthcare_rag/prompts/*.yaml.j2` |
 | safety gate + response templates | `healthcare_rag/processors/safety.py`, `safety_responses.py`, `healthcare_rag/prompts/safety_gate.yaml.j2`, `docs/safety.md` |
-| identifier sanitizer (client) + privacy service (Presidio/spaCy over HTTP) | `healthcare_rag/processors/privacy.py` (client, fail-closed), `services/privacy/` (FastAPI app, `make privacy-deploy`; needs `PRIVACY_SERVICE_URL` + `PRIVACY_SERVICE_TOKEN`) |
 | retrieval / Weaviate schema & ingestion | `healthcare_rag/processors/retrieval.py`, `healthcare_rag/storage/vector_store.py` |
 | PageIndex retrieval arm (A/B, off by default) | `healthcare_rag/processors/pageindex_retrieval.py`, `healthcare_rag/storage/pageindex_index.py`, `data/pageindex_tree_*.json` |
 | Pinecone retrieval arm + reranker (A/B, off by default) | `healthcare_rag/processors/pinecone_retrieval.py`, `healthcare_rag/processors/rerank.py`, `healthcare_rag/storage/pinecone_store.py` (`make ingest-pinecone`) |
@@ -121,20 +120,6 @@ false-positive lock-in, an over-matching boundary refusing legitimate follow-ups
   "finalize" is `finalize` in the public graph and `END` in `build_pipeline`).
   The Literal targets are pinned by `tests/graph/test_router_typing.py`, and a
   `X | Y` union of Literals inside `Command[...]` renders no edges — nest them.
-- Presidio/spaCy never ship in the graph image. `PrivacySanitizer` is an HTTP
-  client for `services/privacy`; with `PRIVACY_SERVICE_URL`/`_TOKEN` unset every
-  scan fails closed (`privacy_error`). Tests serve it once per session on a loopback
-  port (`tests/conftest.py`, uvicorn thread), so `make venv` installs it editable.
-  The three version pins live in `services/privacy/pyproject.toml` and are
-  mirrored as constants in `privacy.py`; move them together.
-- Because every scan is now a network round-trip, **async code must not call
-  `scrub_phi` / `privacy.scan` directly** — use `ascrub_phi` (from
-  `healthcare_rag.processors.safety`) or `ascan(scanner, text)` (from
-  `healthcare_rag.processors.privacy`), which run the scan in a worker thread.
-  Sync callers keep `scrub_phi`/`scan`. `langgraph dev` runs blockbuster and
-  turns a blocking scan on the event loop into a hard 500 (the deployed Postgres
-  runtime does not, but stalls its loop instead). Tests that isolate the gate
-  monkeypatch `ascrub_phi`, not `scrub_phi`.
 - Weaviate compose uses `restart: on-failure:0`; if it exits cleanly it stays
   down — `make weaviate` again.
 - Chunk ids are stored as `id_` in Weaviate (`id` is reserved).

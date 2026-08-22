@@ -8,7 +8,7 @@ from healthcare_rag.graph.resources import get
 from healthcare_rag.graph.routers import EvaluateCommandTarget, route_after_evaluate
 from healthcare_rag.graph.state import RAGState, load_results
 from healthcare_rag.models.queries import RetrievalEvaluation
-from healthcare_rag.processors.safety import ascrub_phi
+from healthcare_rag.processors.safety import scrub_phi
 
 
 async def evaluate_retrieval(state: dict[str, Any]) -> Command[EvaluateCommandTarget]:
@@ -63,15 +63,14 @@ async def evaluate_retrieval(state: dict[str, Any]) -> Command[EvaluateCommandTa
         sources=", ".join(sources),
     ) or default
     additional_queries = [
-        (await ascrub_phi(query))[0]
-        for query in (evaluation.additional_queries or [])[:3]
+        scrub_phi(query)[0] for query in (evaluation.additional_queries or [])[:3]
     ]
     gap_pending = (
         not evaluation.is_sufficient and gap_round == 0 and bool(additional_queries)
     )
     evaluation_data = evaluation.model_dump(mode="json")
-    evaluation_data["missing_information"] = (
-        await ascrub_phi(str(evaluation_data.get("missing_information") or ""))
+    evaluation_data["missing_information"] = scrub_phi(
+        str(evaluation_data.get("missing_information") or "")
     )[0]
     if evaluation.additional_queries:
         evaluation_data["additional_queries"] = additional_queries
