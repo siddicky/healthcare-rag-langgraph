@@ -67,3 +67,41 @@ def test_anonymous_request_is_still_unauthorized() -> None:
     client = _client(None)
 
     assert client.post("/assistants/search", json={}).status_code == 401
+
+
+class _User(dict):
+    """Mapping + `.identity`, the two surfaces the handlers read on a principal."""
+
+    @property
+    def identity(self) -> str:
+        return str(self["identity"])
+
+
+def _ctx(user):
+    from types import SimpleNamespace
+
+    return SimpleNamespace(user=user)
+
+
+async def test_studio_principal_is_allowed_by_every_authorization_handler() -> None:
+    from healthcare_rag.agent import auth as auth_module
+
+    studio = _ctx(StudioUser("langsmith-user-1", is_authenticated=True))
+
+    assert await auth_module.deny_all(studio, {}) is None  # assistants.search falls here
+    assert await auth_module.create_thread(studio, {}) is None
+    assert await auth_module._thread_scope(studio, {}) is None
+    assert await auth_module.delete_thread(studio, {}) is None
+    assert await auth_module.read_coach_assistant(studio, {}) is None
+    assert await auth_module._cron_scope(studio, {}) is None
+
+
+async def test_member_authorization_is_unchanged_by_the_studio_allowance() -> None:
+    from healthcare_rag.agent import auth as auth_module
+
+    member = _ctx(_User(identity="member-1", role="member"))
+    anonymous = _ctx(_User(identity="nobody"))
+
+    assert await auth_module.deny_all(member, {}) is False
+    assert await auth_module._thread_scope(member, {}) == {"user_id": "member-1"}
+    assert await auth_module._thread_scope(anonymous, {}) is False
