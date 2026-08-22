@@ -55,6 +55,14 @@ export function applyStreamPart(
   }
   const data = part.data;
   if (typeof data !== "object" || data === null) return { messages: [...messages], interruptValue: null };
+  // The Agent Server delivers interrupts inside the updates stream as a
+  // `{"__interrupt__": [...]}` data payload — not as a separate event.
+  if ("__interrupt__" in data) {
+    return {
+      messages: [...messages],
+      interruptValue: firstInterruptValue((data as Record<string, unknown>).__interrupt__),
+    };
+  }
   let next = [...messages];
   for (const [node, update] of Object.entries(data as Record<string, unknown>)) {
     if (!isRenderedNode(node)) {

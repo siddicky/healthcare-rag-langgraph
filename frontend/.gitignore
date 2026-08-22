@@ -13,6 +13,9 @@
 # testing
 /coverage
 
+# playwright hermetic-run scratch (runfile, pid, server logs, test-results)
+/e2e/.tmp
+
 # next.js
 /.next/
 /out/
