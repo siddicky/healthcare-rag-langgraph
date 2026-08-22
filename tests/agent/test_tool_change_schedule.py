@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import re
 from dataclasses import dataclass
 from datetime import UTC, date, datetime, timedelta
 from pathlib import Path
@@ -318,10 +317,10 @@ async def test_interrupt_is_scrubbed_and_byte_equal_to_persisted_card() -> None:
 
 async def test_calendar_card_fields_match_design_contract() -> None:
     # Given
-    prompt = Path(
-        "Nymble Health Design System/components/generative-ui/CalendarChangeCard.prompt.md"
-    ).read_text()
-    prompt_fields = set(re.findall(r"(eventLabel|fromLabel|toLabel|reason)=", prompt))
+    contract = json.loads(
+        Path("tests/fixtures/calendar_change_card_contract.json").read_text()
+    )
+    prompt_fields = set(contract["interrupt_props"])
     harness = _harness(thread_id="card-contract")
 
     # When
@@ -342,7 +341,7 @@ async def test_calendar_card_fields_match_design_contract() -> None:
     )
 
     # Then
-    assert set(pending) == prompt_fields | {"status"}
+    assert set(pending) == prompt_fields | set(contract["post_decision_props"])
 
 
 async def test_target_resolution_fails_closed_and_freezes_unique_entry() -> None:
