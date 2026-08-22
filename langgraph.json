@@ -23,7 +23,7 @@
     "disable_a2a": true
   },
   "env": ".env",
-  "api_version": "0.13.0",
+  "api_version": "0.12.6",
   "python_version": "3.12",
   "dockerfile_lines": [
     "ENV PRESIDIO_DEVICE=cpu",
