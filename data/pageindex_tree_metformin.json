@@ -1,0 +1,277 @@
+{
+  "source_pdf": "docs/metformin.pdf",
+  "collection": "Metformin",
+  "index_model": "openai/gpt-5.6-luna",
+  "mode": "flash",
+  "page_count": 31,
+  "generated_at": "2026-08-20T12:13:34+00:00",
+  "tree": [
+    {
+      "node_id": "0000",
+      "title": "ACTIONS AND CLINICAL PHARMACOLOGY",
+      "start_index": 2,
+      "end_index": 3,
+      "summary": "This product monograph introduces TEVA-METFORMIN 500 mg and 850 mg tablets as an oral antihyperglycemic biguanide. It describes metformin’s insulin-dependent glucose-lowering action, lack of usual hypoglycemia or pancreatic beta-cell effects, proposed mechanism, absorption, distribution, renal excretion, elimination half-lives, steady-state concentrations, and potential drug interactions. It also summarizes a single-dose bioavailability comparison of TEVA-METFORMIN 500 mg with GLUCOPHAGE 500 mg, including exposure, peak concentration, Tmax, half-life, and relative bioavailability results, and concludes with an Indications heading whose content is not included.",
+      "nodes": []
+    },
+    {
+      "node_id": "0001",
+      "title": "INDICATIONS",
+      "start_index": 3,
+      "end_index": 4,
+      "summary": "The text describes metformin's renal elimination, half-lives, lack of metabolism, tissue distribution, steady-state plasma levels, and potential drug interactions. It summarizes a single-dose bioavailability comparison of 500 mg TEVA-METFORMIN and GLUCOPHAGE tablets, reporting comparable pharmacokinetic results. It then states the drug's indication for appropriately selected patients with type 2 diabetes, including potential value in obesity, and lists contraindications involving type 1 diabetes, acidosis, renal or hepatic dysfunction, treated heart failure, excessive alcohol use, and temporary use around intravascular iodinated-contrast imaging.",
+      "nodes": []
+    },
+    {
+      "node_id": "0002",
+      "title": "CONTRAINDICATIONS",
+      "start_index": 4,
+      "end_index": 5,
+      "summary": "The text describes TEVA-METFORMIN as a treatment for appropriately selected, stable Type II diabetes, including potential benefit in obese patients, and lists extensive contraindications involving Type I or unstable diabetes, acidosis, renal or hepatic impairment, heart failure, alcohol use, hypoxemia, acute stress, dehydration, contrast imaging, pregnancy, and hypersensitivity. It emphasizes rare but frequently fatal metformin-associated lactic acidosis, defines its laboratory features, gives its incidence, and identifies renal insufficiency, hypoperfusion, hypoxemia, comorbid illness, and polypharmacy—especially unstable treated heart failure—as major risk factors.",
+      "nodes": []
+    },
+    {
+      "node_id": "0003",
+      "title": "WARNINGS",
+      "start_index": 5,
+      "end_index": 9,
+      "summary": "The section warns about contraindications and circumstances requiring interruption of TEVA-METFORMIN, particularly acute illness, dehydration, hypoxemia, acidosis, contrast procedures, surgery, hypersensitivity, pregnancy, and significant renal impairment. It emphasizes the rare but potentially fatal risk of metformin-associated lactic acidosis, its risk factors, renal monitoring, symptom recognition, immediate discontinuation, hospital treatment, and possible hemodialysis. It also discusses cardiovascular-mortality concerns associated with oral antidiabetic drugs based on the UGDP study, advises informing patients about risks and alternatives, clarifies that metformin supplements diet and does not prevent diabetic complications, and outlines precautions including hypoglycemia education, monitoring for diabetic complications, and careful use in older adults.",
+      "nodes": [
+        {
+          "node_id": "0004",
+          "title": "Lactic acidosis:",
+          "start_index": 5,
+          "end_index": 7,
+          "summary": "The text lists situations in which TEVA-METFORMIN should be avoided or is contraindicated, including hypoxemia, cardiovascular collapse, severe illness or dehydration, hypersensitivity and pregnancy. Its main warning concerns rare, serious and potentially fatal metformin-associated lactic acidosis, emphasizing risk factors such as renal or hepatic impairment, heart failure, hypoperfusion, hypoxemia, age, alcohol use and acute illness; it recommends renal monitoring, temporary treatment interruption around contrast procedures and surgery, recognition of nonspecific symptoms, immediate discontinuation and hospital treatment with possible hemodialysis. It also describes a warning about increased cardiovascular mortality with oral antidiabetic drugs, based on the UGDP study findings for tolbutamide and phenformin.",
+          "nodes": []
+        },
+        {
+          "node_id": "0005",
+          "title": "Increased risk of cardiovascular mortality:",
+          "start_index": 7,
+          "end_index": 9,
+          "summary": "The text describes the recognition and emergency management of metformin-associated lactic acidosis, including immediate discontinuation, supportive care, and hemodialysis. It discusses cardiovascular-mortality concerns based on the UGDP study, the need to inform patients about risks and alternatives, and clarifies that metformin complements rather than replaces dietary therapy or prevents diabetic complications. It outlines situations requiring discontinuation, including acute serious illness, acidosis, vomiting, and iodinated-contrast procedures. Precautions include careful patient selection, hypoglycemia education, regular monitoring for diabetic complications, and especially assessment of renal function, with avoidance in significant renal impairment and cautious dosing and monitoring in older adults.",
+          "nodes": []
+        }
+      ]
+    },
+    {
+      "node_id": "0006",
+      "title": "PRECAUTIONS",
+      "start_index": 9,
+      "end_index": 17,
+      "summary": "The section presents comprehensive precautions for TEVA-METFORMIN, emphasizing careful patient selection, dietary and dose management, hypoglycemia counseling, regular follow-up, and strict renal-function assessment, particularly in older adults. It describes temporary discontinuation during vomiting, severe gastrointestinal illness, surgery or procedures, acute hypoxic or unstable conditions, and impaired renal function, with restarting only after recovery and normal renal function. Metformin should be avoided in significant renal impairment and hepatic disease, and excessive alcohol should be avoided because of lactic-acidosis risk. Long-term therapy requires glucose, glycosylated hemoglobin, hematologic, vitamin B12/folate, and renal monitoring, with urgent evaluation for ketoacidosis or lactic acidosis and cessation of treatment if acidosis occurs. The section also covers hypoglycemia, loss of glycemic control during acute stress, secondary treatment failure and use of insulin, pregnancy and lactation, unestablished pediatric use, and cautious geriatric use. It reviews interactions with sulfonylureas, cationic and renally secreted drugs, hyperglycemia-inducing medicines, anticoagulants, and several specific agents, as well as the rarity and prevention of lactic acidosis. Finally, it addresses common gastrointestinal adverse effects and their prevention and management.",
+      "nodes": [
+        {
+          "node_id": "0007",
+          "title": "Patient Selection and Follow-up:",
+          "start_index": 9,
+          "end_index": 9,
+          "summary": "The text outlines precautions for TEVA-METFORMIN, including peri-procedural discontinuation and delayed restarting pending normal renal function, careful patient selection, dietary and dose management, hypoglycemia counseling with sulfonylureas, regular follow-up, cautious handling of vomiting, monitoring of diabetes complications, and strict renal-function assessment. Metformin is contraindicated with elevated serum creatinine, while elderly patients require cautious low-dose titration, regular renal monitoring, and generally should not receive the maximum dose; renal function should be checked before treatment and every six months thereafter.",
+          "nodes": []
+        },
+        {
+          "node_id": "0008",
+          "title": "Monitoring of renal function:",
+          "start_index": 9,
+          "end_index": 10,
+          "summary": "The text provides precautions for metformin use, emphasizing careful patient selection, dietary and dose management, hypoglycemia counseling with sulfonylureas, regular follow-up, and monitoring for complications. It gives instructions for temporary discontinuation during vomiting, surgery, hypoxic or cardiovascular events, and around procedures, with restart dependent on recovered oral intake and normal renal function. It stresses renal-function-based prescribing and monitoring, caution with interacting medications, and avoidance of excessive alcohol because of lactic-acidosis risk.",
+          "nodes": []
+        },
+        {
+          "node_id": "0009",
+          "title": "TEVA-METFORMIN Safety Precautions and Temporary Discontinuation",
+          "start_index": 10,
+          "end_index": 10,
+          "summary": "The text outlines TEVA-METFORMIN precautions involving renal-function monitoring, cautious use with medications that may affect renal function or metformin disposition, prompt discontinuation during hypoxic or hemodynamically unstable conditions, temporary cessation around surgical procedures, and avoidance of excessive alcohol because it increases the risk of abnormal lactate metabolism.",
+          "nodes": []
+        },
+        {
+          "node_id": "0010",
+          "title": "Alcohol intake:",
+          "start_index": 10,
+          "end_index": 11,
+          "summary": "The text outlines precautions for TEVA-METFORMIN involving renal monitoring and cautious use with interacting drugs; immediate discontinuation during hypoxic states or renal impairment; perioperative suspension; avoidance of excessive alcohol and generally avoidance in hepatic disease; monitoring for vitamin B12, folate, and hematologic abnormalities; and urgent evaluation for ketoacidosis or lactic acidosis when a previously controlled diabetic develops illness or abnormal laboratory findings, with metformin stopped if acidosis is confirmed.",
+          "nodes": []
+        },
+        {
+          "node_id": "0011",
+          "title": "Impaired hepatic function:",
+          "start_index": 11,
+          "end_index": 11,
+          "summary": "The text advises avoiding TEVA-METFORMIN in hepatic disease because of lactic acidosis risk, monitoring vitamin B12 and folic acid periodically during long-term therapy, and performing annual hematologic assessments. It describes a usually asymptomatic, rarely anemic, reversible reduction in vitamin B12 levels affecting about 7% of patients, with increased risk in those with poor vitamin B12 or calcium intake or absorption. Any previously controlled diabetic who develops unexplained illness or abnormal laboratory results should be urgently assessed for ketoacidosis or lactic acidosis using appropriate biochemical tests, and metformin must be stopped if acidosis is present.",
+          "nodes": []
+        },
+        {
+          "node_id": "0012",
+          "title": "Vitamin B 12 levels:",
+          "start_index": 11,
+          "end_index": 12,
+          "summary": "The text provides precautions and monitoring guidance for TEVA-METFORMIN: avoid it in hepatic disease because of lactic-acidosis risk; periodically assess vitamin B12, folic acid, and hematologic parameters during long-term therapy; promptly evaluate illness or laboratory abnormalities in controlled diabetics for ketoacidosis or lactic acidosis and stop metformin if acidosis occurs; recognize circumstances and populations at increased risk of hypoglycemia; temporarily replace metformin with insulin during acute stress when glycemic control is lost; manage secondary treatment failure with combination therapy or insulin; and monitor diabetic treatment response through periodic fasting laboratory testing.",
+          "nodes": []
+        },
+        {
+          "node_id": "0013",
+          "title": "TEVA-METFORMIN Hypoglycemia and Glycemic Control",
+          "start_index": 12,
+          "end_index": 12,
+          "summary": "The text discusses hypoglycemia risks and recognition with TEVA-METFORMIN, particularly in vulnerable patients or with inadequate calories, strenuous exercise, other glucose-lowering drugs, or alcohol. It explains temporary loss of glucose control during acute stress and possible use of insulin, as well as restarting TEVA-METFORMIN afterward. It describes secondary failure of oral antidiabetic therapy, potential combination treatment with sulfonylureas, and progression to insulin if needed. It also begins guidance on monitoring treatment response with periodic fasting laboratory tests.",
+          "nodes": []
+        },
+        {
+          "node_id": "0014",
+          "title": "Laboratory tests:",
+          "start_index": 12,
+          "end_index": 13,
+          "summary": "The text addresses hypoglycemia risks and recognition with TEVA-METFORMIN, temporary loss of glycemic control during acute stress and management of secondary treatment failure, required glucose, hematologic, and renal monitoring, and considerations for metformin use during pregnancy and lactation, including preference for insulin in pregnancy and weighing continuation of nursing against continued treatment.",
+          "nodes": []
+        },
+        {
+          "node_id": "0015",
+          "title": "Pregnancy and lactation:",
+          "start_index": 13,
+          "end_index": 13,
+          "summary": "The text outlines glucose, glycosylated hemoglobin, blood-count, vitamin B12, and renal monitoring recommendations for metformin therapy. It states that pregnancy safety is unestablished despite reassuring animal data and partial placental transfer, recommends weighing risks and benefits and generally using insulin for glycemic control during pregnancy, and advises caution during lactation because metformin enters rat milk, requiring consideration of discontinuing either nursing or the drug.",
+          "nodes": []
+        },
+        {
+          "node_id": "0016",
+          "title": "Nursing mother:",
+          "start_index": 13,
+          "end_index": 14,
+          "summary": "The text describes monitoring requirements for glucose, glycosylated hemoglobin, blood counts, vitamin B12 when indicated, and renal function; pregnancy and breastfeeding considerations, including preference for insulin in pregnancy and caution during lactation; the absence of established pediatric safety and the need for cautious, renal-function-based use in older adults; and drug interactions, including increased hypoglycemia risk with sulfonylureas and certain listed drugs, no observed pharmacokinetic effects on propranolol or ibuprofen, and low interaction potential due to minimal plasma-protein binding.",
+          "nodes": []
+        },
+        {
+          "node_id": "0017",
+          "title": "Pediatric, Geriatric Use and Drug Interactions",
+          "start_index": 14,
+          "end_index": 14,
+          "summary": "The page states that pediatric safety and effectiveness of TEVA-METFORMIN are unestablished. Evidence is insufficient to compare elderly and younger patients, but no response differences have been reported; because metformin is renally excreted and renal function declines with age, older adults require cautious dosing, regular renal monitoring, normal renal function, and generally should not receive the maximum dose. It describes potential hypoglycemic interactions, particularly with sulfonylureas and several listed drugs, reports no pharmacokinetic effect on propranolol or ibuprofen in single-dose studies, and notes negligible plasma-protein binding, with the final interaction statement incomplete.",
+          "nodes": []
+        },
+        {
+          "node_id": "0018",
+          "title": "Drug Interactions:",
+          "start_index": 14,
+          "end_index": 15,
+          "summary": "The excerpt states that pediatric use is unestablished and that metformin should be used cautiously in elderly patients because age-related renal impairment increases toxicity risk, requiring normal renal function, careful dosing, and regular monitoring. It reviews drug interactions, including potential hypoglycemia with sulfonylureas and certain potentiating drugs, minimal interaction potential from metformin's low protein binding, and specific single-dose findings for propranolol, ibuprofen, glyburide, furosemide, and nifedipine. It also begins a section on interactions with cationic drugs, listing several examples, but the provided text ends before that discussion is complete.",
+          "nodes": []
+        },
+        {
+          "node_id": "0019",
+          "title": "Metformin Drug Interactions with Glyburide, Furosemide, and Nifedipine",
+          "start_index": 15,
+          "end_index": 15,
+          "summary": "The page discusses metformin interactions with highly protein-bound drugs and sulfonylureas, then details studies of glyburide, furosemide, and nifedipine. Glyburide showed variable decreases without clear clinical significance; furosemide increased metformin exposure while metformin reduced furosemide exposure and half-life; nifedipine increased metformin absorption with minimal reciprocal effects. It also begins a section on cationic drugs, listing several examples.",
+          "nodes": []
+        },
+        {
+          "node_id": "0020",
+          "title": "Cationic Drugs:",
+          "start_index": 15,
+          "end_index": 16,
+          "summary": "The text reviews TEVA-METFORMIN interactions with highly protein-bound drugs, glyburide, furosemide, nifedipine, cationic renally secreted drugs, hyperglycemia-inducing medications, and phenprocoumon or other antivitamin K anticoagulants. It provides observed pharmacokinetic effects, notes where clinical significance or chronic-use data are uncertain, recommends monitoring and dose adjustment when appropriate, and states that lactic acidosis is very rare, with no reported Canadian cases when metformin is used as indicated.",
+          "nodes": []
+        },
+        {
+          "node_id": "0021",
+          "title": "Other:",
+          "start_index": 16,
+          "end_index": 17,
+          "summary": "The text describes renal tubular secretion interactions with metformin, particularly with cimetidine and other cationic drugs, and recommends monitoring and dose adjustment. It lists medications that may worsen hyperglycemia and require closer glycemic surveillance, explains increased phenprocoumon elimination and bleeding risk, and provides lactic acidosis incidence, discontinuation, and patient-education guidance. It also identifies gastrointestinal effects as the most common adverse reactions, with strategies for prevention and management, including dose titration, administration with meals, temporary discontinuation during severe vomiting or diarrhea, and exclusion of other illness or lactic acidosis in persistent symptoms.",
+          "nodes": []
+        }
+      ]
+    },
+    {
+      "node_id": "0022",
+      "title": "ADVERSE REACTIONS",
+      "start_index": 17,
+      "end_index": 18,
+      "summary": "The text describes metformin safety management, adverse reactions, and overdose treatment. It emphasizes immediate discontinuation for acidosis and recognition of lactic acidosis symptoms; gastrointestinal effects are common, usually transient, dose-related, and mitigated by gradual titration and administration with meals, but severe diarrhea or vomiting warrants temporary discontinuation. It also covers metallic taste, dermatologic reactions, vitamin B12 reduction and monitoring, and the rare occurrence of megaloblastic anemia. Massive overdose may intensify gastrointestinal and systemic symptoms and cause lactic acidosis without typical hypoglycemia; treatment involves stopping metformin, supportive care, excluding lactic acidosis, and potentially hemodialysis.",
+      "nodes": []
+    },
+    {
+      "node_id": "0023",
+      "title": "SYMPTOMS AND TREATMENT OF OVERDOSAGE",
+      "start_index": 18,
+      "end_index": 19,
+      "summary": "The text describes uncommon metallic taste, dermatologic reaction rates comparable with control therapies, and reduced vitamin B12 levels associated with metformin, recommending monitoring or supplementation while noting rare megaloblastic anemia and no increased neuropathy. It outlines overdose symptoms and management, including evaluation for lactic acidosis, supportive care, and possible hemodialysis; hypoglycemia is not expected even after very large ingestion. Dosage should be individually titrated, periodically reassessed and discontinued when ineffective or unnecessary, with usual doses of 500 mg three or four times daily or 850 mg two or three times daily, a 2.55 g daily maximum, and administration with food to reduce gastric intolerance.",
+      "nodes": []
+    },
+    {
+      "node_id": "0024",
+      "title": "DOSAGE AND ADMINISTRATION",
+      "start_index": 19,
+      "end_index": 20,
+      "summary": "The text provides metformin dosing and administration guidance, including individualized dosing, discontinuation and periodic treatment reassessment, possible short-term use, standard and maximum doses, and administration with food to limit gastrointestinal effects. It also gives pharmaceutical information for metformin hydrochloride, including its chemical name, formula, molecular weight, physical appearance, solubility, and melting point, and lists the active and inactive ingredients of the 500 mg tablet while only identifying the active ingredient of the 850 mg tablet in the supplied excerpt.",
+      "nodes": []
+    },
+    {
+      "node_id": "0025",
+      "title": "PHARMACEUTICAL INFORMATION",
+      "start_index": 20,
+      "end_index": 20,
+      "summary": "The text provides pharmaceutical information for metformin hydrochloride, including its chemical and molecular details, structural formula, physical form, solubility, and melting point. It also describes the composition of TEVA-METFORMIN 500 mg and 850 mg tablets, listing the 500 mg tablet's medicinal and non-medicinal ingredients, including the components of its white Opadry coating; the 850 mg composition is cut off after stating its metformin hydrochloride content.",
+      "nodes": []
+    },
+    {
+      "node_id": "0026",
+      "title": "COMPOSITION",
+      "start_index": 20,
+      "end_index": 21,
+      "summary": "The text provides pharmaceutical, compositional, storage, availability, and pharmacological information for TEVA-METFORMIN tablets. It describes metformin hydrochloride’s chemical identity, formula, physical properties, solubility, and melting point; lists the active and inactive ingredients in 500 mg and 850 mg tablets; specifies storage conditions and tablet appearances, markings, and package sizes; and summarizes slow absorption, tissue distribution, low peak blood levels after a 2 g dose, and the absence of notable effects beyond its metabolic activity in animal studies.",
+      "nodes": []
+    },
+    {
+      "node_id": "0027",
+      "title": "Teva-Metformin Storage, Availability, and Pharmacology",
+      "start_index": 21,
+      "end_index": 21,
+      "summary": "The page lists Teva-metformin’s non-medicinal ingredients, storage conditions, tablet descriptions and package sizes for 500 mg and 850 mg strengths, and pharmacological findings on its slow absorption, tissue distribution, peak blood levels, and limited effects beyond its metabolic activity.",
+      "nodes": []
+    },
+    {
+      "node_id": "0028",
+      "title": "PHARMACOLOGY",
+      "start_index": 21,
+      "end_index": 23,
+      "summary": "The text lists metformin tablet excipients, storage requirements, product appearances and package sizes for 500 mg and 850 mg tablets, and pharmacologic findings. It describes slow absorption, tissue distribution, low peak blood levels, insulin-related antihyperglycemic effects, effects on glycogen, muscle glucose uptake and respiration, renal elimination without metabolism or accumulation, experimental effects on gluconeogenesis and intestinal sugar absorption, and proposed mechanisms involving fatty-acid oxidation, acetyl-CoA, and lipogenesis. It ends with a Toxicology heading without accompanying content.",
+      "nodes": []
+    },
+    {
+      "node_id": "0029",
+      "title": "TOXICOLOGY",
+      "start_index": 23,
+      "end_index": 27,
+      "summary": "The section describes metformin’s urinary detection and lack of accumulation, experimental effects on gluconeogenesis, intestinal sugar absorption, fatty-acid and acetyl-CoA metabolism, and lipogenesis, including their variable relevance to humans and possible contribution to weight reduction. It reviews acute and chronic toxicity in animals, including generally favorable findings in rats and rabbits but severe wasting and cachexia in dogs, and reports limited human toxicity, rare and comparatively mild lactic acidosis, and favorable comparison with phenformin. Teratology studies in rats found no malformations and only minor nonsignificant reproductive or postnatal differences. A bibliography covers biguanide pharmacology, lactic acidosis, monitoring, glucose testing, and drug distribution.",
+      "nodes": [
+        {
+          "node_id": "0030",
+          "title": "1. Animal Toxicity",
+          "start_index": 24,
+          "end_index": 25,
+          "summary": "The text reviews metformin toxicity in animals and humans. Reported acute LD50 values varied by species and administration route, while chronic studies in rats and rabbits showed no organ toxicity and high-dose rat studies demonstrated excellent tolerance without drug-related lesions. Beagle dogs developed severe wasting and cachexia despite largely unremarkable laboratory findings, apparently because of their established intolerance to oral hypoglycemic agents. In humans, no harmful effects on major organ systems, blood, or vessels were reported; lactic acidosis was very rare and less pronounced with metformin than with phenformin. The text concludes by introducing teratology studies in three groups of albino rats without providing their results.",
+          "nodes": []
+        },
+        {
+          "node_id": "0031",
+          "title": "2. Human Toxicity",
+          "start_index": 25,
+          "end_index": 27,
+          "summary": "The text discusses metformin toxicity and safety in animals and humans. Treated dogs developed profound wasting and fatal cachexia despite largely normal laboratory results, while human data showed no reported organ, blood, or vascular toxicity and a very low incidence of lactic acidosis. Metformin produced less clinically significant lactate elevation than phenformin and could reverse phenformin-associated hyperlactacidemia. Rat teratology studies found no malformations and only minor, statistically non-significant differences in survival, litter size, weaning weight, stillbirths, and postnatal deaths. A bibliography lists research concerning biguanide pharmacology, lactic acidosis, metformin monitoring, glucose testing, and drug distribution.",
+          "nodes": []
+        }
+      ]
+    },
+    {
+      "node_id": "0032",
+      "title": "BIBLIOGRAPHY",
+      "start_index": 27,
+      "end_index": 31,
+      "summary": "A bibliography of publications and reports from 1960 to 2000 concerning biguanide antidiabetic drugs—especially metformin and phenformin—covering their pharmacology, mechanisms of action, pharmacokinetics, clinical efficacy, glucose and lipid metabolism, safety, toxicity, lactic acidosis, long-term outcomes, laboratory and animal studies, and pharmaceutical bioavailability and product information.",
+      "nodes": []
+    }
+  ]
+}

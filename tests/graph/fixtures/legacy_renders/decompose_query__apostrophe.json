@@ -1,0 +1,17 @@
+{
+  "stage": "decompose_query",
+  "case": "apostrophe",
+  "vars": {
+    "user_query": "What's Lipitor's use and metformin's warning?"
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an AI assistant that decomposes complex medical queries into simpler subqueries.\n\nFor example:\n- \"Compare the side effects of Lipitor and Crestor and tell me which one is safer for elderly patients with kidney problems?\" → [\"What are the side effects of Lipitor?\", \"What are the side effects of Crestor?\", \"How do Lipitor and Crestor affect elderly patients?\", \"How do Lipitor and Crestor affect patients with kidney problems?\"]\n- \"What's the recommended dosage of metformin for type 2 diabetes, and how should it be adjusted for patients with liver disease?\" → [\"What is the recommended dosage of metformin for type 2 diabetes?\", \"How should metformin dosage be adjusted for patients with liver disease?\"]\n- \"Can you explain how ACE inhibitors work to lower blood pressure and what their long-term effects are on kidney function and cardiovascular health?\" → [\"How do ACE inhibitors work to lower blood pressure?\", \"What are the long-term effects of ACE inhibitors on kidney function?\", \"What are the long-term effects of ACE inhibitors on cardiovascular health?\"]\n\nOnly decompose if needed - if the query is already simple, leave it unchanged.\nReturn the original query, the complexity, and the decomposed queries.\n"
+    },
+    {
+      "role": "user",
+      "content": "User query: \nWhat&#39;s Lipitor&#39;s use and metformin&#39;s warning?\n\nDecomposed query: "
+    }
+  ]
+}

@@ -1,0 +1,51 @@
+{
+  "metadata": {
+    "engine": "coach-in-process",
+    "mode": "offline",
+    "kind": "single-baseline",
+    "judge_runs": 3,
+    "judge_seeds": [
+      17,
+      29,
+      43
+    ],
+    "deployed_judging": "real gateway",
+    "baseline_scope": "current checkout"
+  },
+  "metrics": {
+    "chunk_recall": 1.0,
+    "correctness": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "groundedness": [
+      1.0,
+      1.0,
+      1.0
+    ],
+    "safe_redirect": 1.0,
+    "forbidden_content": 0.0
+  },
+  "aggregate": {
+    "overall": {
+      "chunk_recall": 1.0,
+      "correctness": 1.0,
+      "groundedness": 1.0,
+      "safe_redirect": 1.0,
+      "forbidden_content": 0.0
+    }
+  },
+  "rows": [
+    {
+      "case_id": "route_a_informational",
+      "tag": "route_a",
+      "passed": true
+    },
+    {
+      "case_id": "route_a_inner_short_circuit",
+      "tag": "route_a",
+      "passed": true
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+/* Type tokens. Nunito Sans is the brand's real body font (Google Fonts, exact match).
+   Filson Pro (brand display font) is not redistributable — Quicksand is substituted
+   as the nearest free display face; see readme.md "Fonts" for the flag. */
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Quicksand:wght@400;500;600;700&display=swap');
+
+:root {
+  --font-headline: 'Quicksand', 'Georgia', 'Times New Roman', serif; /* substitute for Filson Pro */
+  --font-body: 'Nunito Sans', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+
+  --text-h1: 56px;
+  --text-h2: 40px;
+  --text-h3: 28px;
+  --text-h4: 22px;
+  --text-body-size: 18px;
+  --text-body-mobile: 16px;
+  --text-label: 14px;
+  --text-nav: 15px;
+  --text-button: 19px;
+
+  --tracking-display: -0.03em;
+  --tracking-label: 0.1em;
+  --leading-display: 1.1;
+  --leading-body: 1.4;
+  --leading-editorial: 1.8;
+}

@@ -1,0 +1,7 @@
+{
+  "component": "CalendarChangeCard",
+  "source": "Nymble Health Design System/components/generative-ui/CalendarChangeCard.prompt.md",
+  "note": "Prop contract for the schedule-change interrupt card, mirrored here so the suite is self-contained. The design system directory is not tracked in this repository; update this fixture together with the design prompt when the card's props change.",
+  "interrupt_props": ["eventLabel", "fromLabel", "toLabel", "reason"],
+  "post_decision_props": ["status"]
+}

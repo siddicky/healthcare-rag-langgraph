@@ -1,0 +1,284 @@
+{
+  "pass": false,
+  "score": 0.050469483568075124,
+  "stage": 1,
+  "verdict": "INCONCLUSIVE",
+  "smoke": false,
+  "arms": {
+    "a": {
+      "name": "weaviate"
+    },
+    "b": {
+      "name": "weaviate+rerank"
+    },
+    "candidates": [
+      "pinecone",
+      "weaviate+rerank",
+      "pinecone+rerank"
+    ]
+  },
+  "report_name": "pinecone-rerank",
+  "stage1": {
+    "a": {
+      "arm": "weaviate",
+      "n": 71,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.6476525821596244,
+      "chunk_recall": 0.5865526492287055,
+      "per_split": {
+        "core": {
+          "n": 36,
+          "page_recall": 0.6662037037037037,
+          "chunk_recall": 0.610978835978836
+        },
+        "holdout": {
+          "n": 35,
+          "page_recall": 0.6285714285714286,
+          "chunk_recall": 0.5614285714285714
+        }
+      },
+      "wall_s": 164.52,
+      "mean_latency_s": 2.3170140845070426
+    },
+    "b": {
+      "arm": "weaviate+rerank",
+      "n": 71,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.6981220657276995,
+      "chunk_recall": 0.6099597585513078,
+      "per_split": {
+        "core": {
+          "n": 36,
+          "page_recall": 0.7356481481481482,
+          "chunk_recall": 0.6367724867724868
+        },
+        "holdout": {
+          "n": 35,
+          "page_recall": 0.6595238095238095,
+          "chunk_recall": 0.5823809523809523
+        }
+      },
+      "wall_s": 160.55,
+      "mean_latency_s": 2.261169014084507
+    },
+    "arms": [
+      {
+        "arm": "weaviate",
+        "n": 71,
+        "n_errors": 0,
+        "errors": [],
+        "page_recall": 0.6476525821596244,
+        "chunk_recall": 0.5865526492287055,
+        "per_split": {
+          "core": {
+            "n": 36,
+            "page_recall": 0.6662037037037037,
+            "chunk_recall": 0.610978835978836
+          },
+          "holdout": {
+            "n": 35,
+            "page_recall": 0.6285714285714286,
+            "chunk_recall": 0.5614285714285714
+          }
+        },
+        "wall_s": 164.52,
+        "mean_latency_s": 2.3170140845070426
+      },
+      {
+        "arm": "pinecone",
+        "n": 71,
+        "n_errors": 0,
+        "errors": [],
+        "page_recall": 0.46267605633802816,
+        "chunk_recall": 0.4166331321260898,
+        "per_split": {
+          "core": {
+            "n": 36,
+            "page_recall": 0.44953703703703707,
+            "chunk_recall": 0.405489417989418
+          },
+          "holdout": {
+            "n": 35,
+            "page_recall": 0.4761904761904762,
+            "chunk_recall": 0.4280952380952381
+          }
+        },
+        "wall_s": 163.07,
+        "mean_latency_s": 2.2965633802816905
+      },
+      {
+        "arm": "weaviate+rerank",
+        "n": 71,
+        "n_errors": 0,
+        "errors": [],
+        "page_recall": 0.6981220657276995,
+        "chunk_recall": 0.6099597585513078,
+        "per_split": {
+          "core": {
+            "n": 36,
+            "page_recall": 0.7356481481481482,
+            "chunk_recall": 0.6367724867724868
+          },
+          "holdout": {
+            "n": 35,
+            "page_recall": 0.6595238095238095,
+            "chunk_recall": 0.5823809523809523
+          }
+        },
+        "wall_s": 160.55,
+        "mean_latency_s": 2.261169014084507
+      },
+      {
+        "arm": "pinecone+rerank",
+        "n": 71,
+        "n_errors": 0,
+        "errors": [],
+        "page_recall": 0.5035211267605634,
+        "chunk_recall": 0.4509054325955734,
+        "per_split": {
+          "core": {
+            "n": 36,
+            "page_recall": 0.5300925925925926,
+            "chunk_recall": 0.4744708994708995
+          },
+          "holdout": {
+            "n": 35,
+            "page_recall": 0.4761904761904762,
+            "chunk_recall": 0.4266666666666667
+          }
+        },
+        "wall_s": 207.24,
+        "mean_latency_s": 2.9188028169014086
+      }
+    ],
+    "candidates": [
+      {
+        "arm": "pinecone",
+        "page_recall": 0.46267605633802816,
+        "chunk_recall": 0.4166331321260898,
+        "delta_page_recall": -0.18497652582159624,
+        "mean_latency_s": 2.2965633802816905,
+        "n_errors": 0,
+        "pass": false,
+        "selected": false
+      },
+      {
+        "arm": "weaviate+rerank",
+        "page_recall": 0.6981220657276995,
+        "chunk_recall": 0.6099597585513078,
+        "delta_page_recall": 0.050469483568075124,
+        "mean_latency_s": 2.261169014084507,
+        "n_errors": 0,
+        "pass": true,
+        "selected": true
+      },
+      {
+        "arm": "pinecone+rerank",
+        "page_recall": 0.5035211267605634,
+        "chunk_recall": 0.4509054325955734,
+        "delta_page_recall": -0.14413145539906103,
+        "mean_latency_s": 2.9188028169014086,
+        "n_errors": 0,
+        "pass": false,
+        "selected": false
+      }
+    ],
+    "selected_arm": "weaviate+rerank",
+    "eligibility": {
+      "total": 86,
+      "eligible": 71,
+      "skipped_no_expected_pages": 8,
+      "skipped_multiturn": 7
+    },
+    "gate": {
+      "name": "stage1_page_recall",
+      "arm": "weaviate+rerank",
+      "a": 0.6476525821596244,
+      "b": 0.6981220657276995,
+      "delta": 0.050469483568075124,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": true
+    },
+    "gates": [
+      {
+        "name": "stage1_page_recall",
+        "arm": "pinecone",
+        "a": 0.6476525821596244,
+        "b": 0.46267605633802816,
+        "delta": -0.18497652582159624,
+        "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+        "pass": false
+      },
+      {
+        "name": "stage1_page_recall",
+        "arm": "weaviate+rerank",
+        "a": 0.6476525821596244,
+        "b": 0.6981220657276995,
+        "delta": 0.050469483568075124,
+        "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+        "pass": true
+      },
+      {
+        "name": "stage1_page_recall",
+        "arm": "pinecone+rerank",
+        "a": 0.6476525821596244,
+        "b": 0.5035211267605634,
+        "delta": -0.14413145539906103,
+        "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+        "pass": false
+      }
+    ],
+    "delta_page_recall": 0.050469483568075124,
+    "wall_s": 695.38
+  },
+  "stage2": null,
+  "gates": [
+    {
+      "name": "stage1_page_recall",
+      "arm": "pinecone",
+      "a": 0.6476525821596244,
+      "b": 0.46267605633802816,
+      "delta": -0.18497652582159624,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": false
+    },
+    {
+      "name": "stage1_page_recall",
+      "arm": "weaviate+rerank",
+      "a": 0.6476525821596244,
+      "b": 0.6981220657276995,
+      "delta": 0.050469483568075124,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": true
+    },
+    {
+      "name": "stage1_page_recall",
+      "arm": "pinecone+rerank",
+      "a": 0.6476525821596244,
+      "b": 0.5035211267605634,
+      "delta": -0.14413145539906103,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": false
+    }
+  ],
+  "thresholds": {
+    "stage1_page_recall_epsilon": 1e-09,
+    "min_correctness_delta": 0.03,
+    "min_groundedness_delta": 0.0,
+    "min_holdout_correctness_delta": 0.0,
+    "max_cost_ratio": 1.25,
+    "max_latency_p50_ratio": 1.25
+  },
+  "min_page_recall_delta": 0.0,
+  "git_sha": "61da91e",
+  "started_at": "2026-08-20T15:59:59+00:00",
+  "repetitions": 2,
+  "note": "stage 1 passed; stage 2 not run, so no adoption decision was made",
+  "finished_at": "2026-08-20T16:11:37+00:00",
+  "wall_s": 698.83,
+  "exit_code": 3,
+  "report_path": "evals/results/pinecone-rerank.md",
+  "stage1_items_path": "/Users/siddicky/Projects/nymble/healthcare-rag-langgraph/evals/results/pinecone-rerank-stage1-items.json"
+}

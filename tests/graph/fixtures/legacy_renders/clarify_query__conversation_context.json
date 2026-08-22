@@ -1,0 +1,18 @@
+{
+  "stage": "clarify_query",
+  "case": "conversation_context",
+  "vars": {
+    "user_query": "What's its main warning?",
+    "conversation_context": "They asked about Lipitor's side effects."
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an AI assistant that clarifies ambiguous medical queries.\nYour task is to rewrite potentially ambiguous queries to be more explicit and specific,\nespecially when they contain pronouns or implicit references to previous conversation.\n\nFor example:\n- \"What are its side effects?\" → \"What are Lipitor's side effects?\"\n- \"Is it safe during pregnancy?\" → \"Is metformin safe during pregnancy?\"\n- \"Are any of these serious?\" → \"Are any of the side effects of Lipitor serious?\"\n\nOnly rewrite if needed - if the query is already clear and specific, leave it unchanged.\nReturn the original query, the clarified query, and the level of ambiguity.\n"
+    },
+    {
+      "role": "user",
+      "content": "Previous conversation:\nThey asked about Lipitor&#39;s side effects.\n\nUser query: \nWhat&#39;s its main warning?\n\nClarified query: "
+    }
+  ]
+}

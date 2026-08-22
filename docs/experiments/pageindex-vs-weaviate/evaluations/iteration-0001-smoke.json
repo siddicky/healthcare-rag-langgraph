@@ -1,0 +1,94 @@
+{
+  "pass": true,
+  "score": 0.16666666666666663,
+  "stage": 1,
+  "verdict": "SMOKE",
+  "smoke": true,
+  "arms": {
+    "a": {
+      "name": "weaviate"
+    },
+    "b": {
+      "name": "pageindex"
+    }
+  },
+  "stage1": {
+    "a": {
+      "arm": "weaviate",
+      "n": 3,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.5,
+      "chunk_recall": 0.5,
+      "per_split": {
+        "core": {
+          "n": 3,
+          "page_recall": 0.5,
+          "chunk_recall": 0.5
+        }
+      },
+      "wall_s": 3.93,
+      "mean_latency_s": 1.3083333333333333
+    },
+    "b": {
+      "arm": "pageindex",
+      "n": 3,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.6666666666666666,
+      "chunk_recall": 0.6666666666666666,
+      "per_split": {
+        "core": {
+          "n": 3,
+          "page_recall": 0.6666666666666666,
+          "chunk_recall": 0.6666666666666666
+        }
+      },
+      "wall_s": 7.64,
+      "mean_latency_s": 2.545
+    },
+    "eligibility": {
+      "total": 86,
+      "eligible": 3,
+      "skipped_no_expected_pages": 8,
+      "skipped_multiturn": 7,
+      "smoke_subset": true
+    },
+    "gate": {
+      "name": "stage1_page_recall",
+      "a": 0.5,
+      "b": 0.6666666666666666,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": true
+    },
+    "delta_page_recall": 0.16666666666666663,
+    "wall_s": 11.57
+  },
+  "stage2": null,
+  "gates": [
+    {
+      "name": "stage1_page_recall",
+      "a": 0.5,
+      "b": 0.6666666666666666,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": true
+    }
+  ],
+  "thresholds": {
+    "stage1_page_recall_epsilon": 1e-09,
+    "min_correctness_delta": 0.03,
+    "min_groundedness_delta": 0.0,
+    "min_holdout_correctness_delta": 0.0,
+    "max_cost_ratio": 1.25,
+    "max_latency_p50_ratio": 1.25
+  },
+  "git_sha": "6bfb4ca",
+  "started_at": "2026-08-20T12:17:24+00:00",
+  "repetitions": 2,
+  "note": "stage 1 passed; stage 2 not run, so no adoption decision was made",
+  "finished_at": "2026-08-20T12:17:39+00:00",
+  "wall_s": 14.53,
+  "exit_code": 0,
+  "report_path": "evals/results/pageindex-vs-weaviate.md",
+  "stage1_items_path": "/Users/siddicky/Projects/nymble/healthcare-rag-langgraph/evals/results/pageindex-vs-weaviate-stage1-items.json"
+}

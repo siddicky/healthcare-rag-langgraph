@@ -1,0 +1,18 @@
+/* Spacing scale — 8/16/24/32/48/64/96/128, plus content-width caps. */
+:root {
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 32px;
+  --space-xl: 48px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+  --space-4xl: 128px;
+
+  --max-width: 1200px;
+  --max-narrow: 800px;
+
+  --gutter-desktop: 64px;
+  --gutter-tablet: 32px;
+  --gutter-mobile: 24px;
+}

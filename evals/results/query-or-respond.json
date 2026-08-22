@@ -1,0 +1,85 @@
+{
+  "schema": "todo12-query-inconclusive.v1",
+  "task": 12,
+  "lane": "query",
+  "verdict": "INCONCLUSIVE",
+  "reason": "query judge calibration failed authored threshold",
+  "sealed_measurement_sha": "a0f5c070cb925d34d733a783364d5168a191d536",
+  "defaults": {
+    "HC_RAG_QUERY_RESPONSE_ARM": "current",
+    "HC_RAG_SAFETY_CLASSIFIER": "llm"
+  },
+  "sealed_calibration": {
+    "query": {
+      "status": "INCONCLUSIVE",
+      "fixture_count": 24,
+      "passed_count": 22,
+      "failure_count": 2,
+      "acceptable_min": 0.8,
+      "failures": [
+        {
+          "fixture_id": "chat-greeting-ok-1",
+          "score": 0.78,
+          "threshold": 0.8
+        },
+        {
+          "fixture_id": "chat-greeting-ok-2",
+          "score": 0.72,
+          "threshold": 0.8
+        }
+      ]
+    },
+    "safety": {
+      "status": "PASS",
+      "fixture_count": 12,
+      "passed_count": 12,
+      "failure_count": 0,
+      "threshold": "exact_binary"
+    }
+  },
+  "attempt_flags": {
+    "adapter_attempted": false,
+    "stage_1_attempted": false,
+    "stage_2_attempted": false,
+    "paid_measurement_attempted": false,
+    "current_arm_measurement_attempted": false,
+    "control_arm_measurement_attempted": false,
+    "tool_arm_measurement_attempted": false
+  },
+  "paid_command": {
+    "command": "uv run python -m evals.routing_gate --lane query --stage all --repetitions 2 --concurrency 1 --json --report-name query-or-respond",
+    "executed": false
+  },
+  "measurements": {
+    "current_arm": [],
+    "control_arm": [],
+    "tool_arm": [],
+    "metrics": [],
+    "deltas": [],
+    "cost": [],
+    "latency": [],
+    "experiment_urls": []
+  },
+  "provenance": {
+    "todo11_seal": ".omo/evidence/task-11-evaluate-query-response-and-semantic-safety-routing.json",
+    "todo11_report": ".omo/evidence/task-11-evaluate-query-response-and-semantic-safety-routing.log",
+    "todo11_verification": ".omo/evidence/task-11-final-independent-adversarial-verify.md",
+    "hash_method": "evals.routing_provenance.sha256_paths (relative-path\u0000bytes\u0000, sorted)",
+    "current_provenance_hashes": {
+      "code": "d9a17baf9fc0908728b84fcd135e544449fd68ea3c32abb60128d7acdca5b285",
+      "dataset": "d43f6ef16ff74dcd7116c5c4e86da446b6c4ccbf060fd9689098f1fc72be9d63",
+      "multiturn": "d77fd9dc840585001496e280f7625d00fec28fe39965420a1eb4352c91ab1278",
+      "prototypes": "402c39e9e2910147a45dde46b04140977cdedb15348ce3addc79cfcecf3d36c1",
+      "thresholds": "214240abc7c2c779cb12b84d4ef8a0b547e8925224a06318b2f893d68f5919c6",
+      "evaluators": "6ca003e9f1102e1d4336fe1c901f09200dfaa66208b9433c2568f76399de4fb6",
+      "prompts": "47f414841b1ad76390341c1de7e2ca071dc74ded935efb5a581cadf457596d7f",
+      "uv_lock": "b7fbfde6ed7f4ee81a0fd7320752196d780bbba79bda7eb380bd2b858118b691"
+    },
+    "raw_input_sha256": {
+      "evals/routing_dataset.json": "22bf7c7cd1df47416bcd7c7c559f5059c5763ecb6c857c18b53a43a373435ed7",
+      "evals/routing_multiturn_dataset.json": "2690f1e854c47e9597e6c0c0b9472646ab6a66e7a766a74483f42c515d0cbaa1",
+      "evals/routing_prototypes.json": "079cb9c517a51887ac3eb9326658d92966af896c7d4541dd5ebc949edcb198a4",
+      "evals/routing_evaluator_calibration.json": "9621a2210b5d64ee1034e11243d545a21ed9c686b08180fd29741339f1aa0490"
+    }
+  }
+}

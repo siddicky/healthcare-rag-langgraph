@@ -1,40 +1,28 @@
 """
 Processor components for the healthcare RAG system.
 
-Each module in this package contains processors responsible for a specific part of the RAG pipeline:
-- base: Base processor class and shared utilities
-- preprocessing: Query preprocessing (clarification, decomposition)
-- retrieval: Document retrieval and evaluation
-- generation: Answer generation
-- validation: Citation validation
-- followups: Follow-up question generation
+Each module in this package contains the code for a specific part of the RAG
+pipeline (the LangGraph nodes in ``healthcare_rag/graph/`` are the callers):
+- base: shared utilities (log_timing)
+- retrieval: Weaviate hybrid search, routing tool schemas, document union
+- generation: document formatting for prompts
+- validation: citation validation
+- safety: runtime safety gate (PHI scrubbing + policy routing)
 """
 
-from .base import BaseProcessor, PromptManager, log_timing
-from .preprocessing import QueryPreprocessor, ConversationContextProcessor
-from .retrieval import QueryRouter, RetrievalEvaluator
-from .generation import AnswerGenerator
+from .base import log_timing
 from .validation import AnswerValidator
-from .followups import FollowUpQuestionsGenerator
+from .safety import SafetyGate, SafetyDecision, scrub_phi
 
 __all__ = [
-    # Base classes
-    "BaseProcessor",
-    "PromptManager",
+    # Base utilities
     "log_timing",
-    
-    # Preprocessing
-    "QueryPreprocessor",
-    "ConversationContextProcessor",
-    
-    # Retrieval
-    "QueryRouter",
-    "RetrievalEvaluator",
-    
-    # Generation and Validation
-    "AnswerGenerator",
+
+    # Validation
     "AnswerValidator",
-    
-    # Followups
-    "FollowUpQuestionsGenerator",
+
+    # Safety
+    "SafetyGate",
+    "SafetyDecision",
+    "scrub_phi",
 ]

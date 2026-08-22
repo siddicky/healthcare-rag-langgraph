@@ -1,0 +1,33 @@
+{
+  "dependencies": ["."],
+  "graphs": {
+    "healthcare_rag": "./healthcare_rag/graph/__init__.py:graph",
+    "coach": "./healthcare_rag/agent/__init__.py:coach"
+  },
+  "store": {
+    "index": {
+      "embed": "openai:text-embedding-3-small",
+      "dims": 1536,
+      "fields": ["$"]
+    }
+  },
+  "auth": {
+    "path": "./healthcare_rag/agent/auth.py:auth",
+    "disable_studio_auth": true
+  },
+  "http": {
+    "app": "./healthcare_rag/agent/http_app.py:app",
+    "middleware_order": "auth_first",
+    "enable_custom_route_auth": true,
+    "disable_mcp": true,
+    "disable_a2a": true
+  },
+  "env": ".env",
+  "api_version": "0.8.7",
+  "python_version": "3.12",
+  "dockerfile_lines": [
+    "ENV PRESIDIO_DEVICE=cpu",
+    "RUN pip install --no-cache-dir presidio-analyzer==2.2.364 spacy==3.8.15 'en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85'",
+    "RUN python -c \"import spacy; from presidio_analyzer import AnalyzerEngine; spacy.load('en_core_web_sm'); AnalyzerEngine()\""
+  ]
+}

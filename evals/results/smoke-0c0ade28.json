@@ -1,0 +1,434 @@
+{
+  "experiment_name": "smoke-0c0ade28",
+  "experiment_url": "https://smith.langchain.com/o/6b8e80b6-250f-44b3-a8e4-1ce64b74c2b6/projects/p/a7828e89-e928-41fe-8be0-8037fbc7746a",
+  "generated_at": "2026-08-18T22:10:27.381894+00:00",
+  "metadata": {
+    "git_sha": "497d456",
+    "git_dirty": true,
+    "llm_model": "gpt-4o-mini",
+    "validator_model": "gpt-4o",
+    "judge_model": "gpt-4o-mini",
+    "concurrency": 1,
+    "pricing_as_of": "2026-01 (unverified; see docstring)",
+    "n_examples": 2
+  },
+  "aggregate": {
+    "overall": {
+      "n": 2,
+      "answered": 1.0,
+      "behavior_match": 1.0,
+      "behavior_match_heuristic": 1.0,
+      "chunk_hit_any": 1.0,
+      "chunk_recall": 0.75,
+      "completion_tokens": 1007.5,
+      "correctness": 0.875,
+      "est_cost_usd": 0.011708,
+      "est_cost_total_usd": 0.023416,
+      "groundedness": 1.0,
+      "hallucinated": 0.0,
+      "latency_s": 11.308,
+      "latency_p50_s": 11.308,
+      "latency_p95_s": 11.742700000000001,
+      "latency_max_s": 11.791,
+      "llm_calls": 6.0,
+      "must_mention_recall": 0.45,
+      "must_not_mention_violation": 0.0,
+      "n_branches": 1.0,
+      "page_precision": 0.5,
+      "page_recall": 0.75,
+      "pipeline_error": 0.0,
+      "prompt_tokens": 4865.5,
+      "refusal_heuristic": 0.0,
+      "right_collection_routed": 1.0,
+      "time_to_first_answer_s": 5.558,
+      "total_tokens": 5873.0,
+      "total_tokens_sum": 11746,
+      "used_refined_branch": 0.0
+    },
+    "by_category": {
+      "factual_single": {
+        "n": 2,
+        "answered": 1.0,
+        "behavior_match": 1.0,
+        "behavior_match_heuristic": 1.0,
+        "chunk_hit_any": 1.0,
+        "chunk_recall": 0.75,
+        "completion_tokens": 1007.5,
+        "correctness": 0.875,
+        "est_cost_usd": 0.011708,
+        "est_cost_total_usd": 0.023416,
+        "groundedness": 1.0,
+        "hallucinated": 0.0,
+        "latency_s": 11.308,
+        "latency_p50_s": 11.308,
+        "latency_p95_s": 11.742700000000001,
+        "latency_max_s": 11.791,
+        "llm_calls": 6.0,
+        "must_mention_recall": 0.45,
+        "must_not_mention_violation": 0.0,
+        "n_branches": 1.0,
+        "page_precision": 0.5,
+        "page_recall": 0.75,
+        "pipeline_error": 0.0,
+        "prompt_tokens": 4865.5,
+        "refusal_heuristic": 0.0,
+        "right_collection_routed": 1.0,
+        "time_to_first_answer_s": 5.558,
+        "total_tokens": 5873.0,
+        "total_tokens_sum": 11746,
+        "used_refined_branch": 0.0
+      }
+    }
+  },
+  "langsmith": {
+    "project": {
+      "run_count": 2,
+      "total_tokens": 11746,
+      "prompt_tokens": 9731,
+      "completion_tokens": 2015,
+      "total_cost": 0.0234168,
+      "latency_p50": 10.913818,
+      "latency_p99": 10.913818,
+      "error_rate": 0.0,
+      "url": "https://smith.langchain.com/o/6b8e80b6-250f-44b3-a8e4-1ce64b74c2b6/projects/p/a7828e89-e928-41fe-8be0-8037fbc7746a"
+    },
+    "root_runs": 2,
+    "by_stage": {
+      "validate_answer": {
+        "calls": 2,
+        "tokens": 4932,
+        "cost": 0.022072500000000002
+      },
+      "generate_answer": {
+        "calls": 2,
+        "tokens": 2377,
+        "cost": 0.000564
+      },
+      "evaluate_retrieval": {
+        "calls": 2,
+        "tokens": 2194,
+        "cost": 0.0003444
+      },
+      "decompose_query": {
+        "calls": 2,
+        "tokens": 926,
+        "cost": 0.000165
+      },
+      "generate_follow_ups": {
+        "calls": 2,
+        "tokens": 460,
+        "cost": 9.375e-05
+      },
+      "retrieve_documents": {
+        "calls": 2,
+        "tokens": 302,
+        "cost": 6.87e-05
+      }
+    },
+    "by_stage_per_query": {
+      "validate_answer": {
+        "calls": 1.0,
+        "tokens": 2466.0,
+        "cost": 0.011036250000000001
+      },
+      "generate_answer": {
+        "calls": 1.0,
+        "tokens": 1188.5,
+        "cost": 0.000282
+      },
+      "evaluate_retrieval": {
+        "calls": 1.0,
+        "tokens": 1097.0,
+        "cost": 0.0001722
+      },
+      "decompose_query": {
+        "calls": 1.0,
+        "tokens": 463.0,
+        "cost": 8.25e-05
+      },
+      "generate_follow_ups": {
+        "calls": 1.0,
+        "tokens": 230.0,
+        "cost": 4.6875e-05
+      },
+      "retrieve_documents": {
+        "calls": 1.0,
+        "tokens": 151.0,
+        "cost": 3.435e-05
+      }
+    }
+  },
+  "rows": [
+    {
+      "example_id": "lipitor-001",
+      "category": "factual_single",
+      "drug": "lipitor",
+      "expected_behavior": "answer",
+      "question": "What dose of Lipitor should an adult start on for high cholesterol?",
+      "outputs": {
+        "answer": "For adults with high cholesterol, the recommended starting dose of Lipitor (Atorvastatin) is either 10 mg or 20 mg once daily. The choice between these doses depends on the required reduction in LDL-C (low-density lipoprotein cholesterol). If a patient requires a significant reduction in LDL-C (more than 45%), they may be started at a higher dose of 40 mg once daily. The dosage range for Atorvastatin in adults is from 10 mg to 80 mg once daily, with the maximum recommended dose being 80 mg per day [doc_2] [doc_3]\n Additionally, it is important for patients to be placed on a standard cholesterol-lowering diet before starting Atorvastatin and to continue this diet during treatment [doc_4]\n Regular monitoring of lipid levels is also recommended to adjust the dosage as necessary based on the desired lipid levels [doc_2]\n",
+        "answered": true,
+        "raw_answer": "For adults with high cholesterol, the recommended starting dose of Lipitor (Atorvastatin) is either 10 mg or 20 mg once daily. The choice between these doses depends on the required reduction in LDL-C (low-density lipoprotein cholesterol). If a patient requires a significant reduction in LDL-C (more than 45%), they may be started at a higher dose of 40 mg once daily. The dosage range for Atorvastatin in adults is from 10 mg to 80 mg once daily, with the maximum recommended dose being 80 mg per day [doc_2][doc_3].\n\nAdditionally, it is important for patients to be placed on a standard cholesterol-lowering diet before starting Atorvastatin and to continue this diet during treatment [doc_4]. Regular monitoring of lipid levels is also recommended to adjust the dosage as necessary based on the desired lipid levels [doc_2].",
+        "follow_ups": [
+          "What factors should be considered when determining the appropriate starting dose of Lipitor?",
+          "Can you explain the importance of the cholesterol-lowering diet mentioned in relation to Lipitor treatment?",
+          "How does the effectiveness of Lipitor compare to other cholesterol medications available?"
+        ],
+        "contexts": [
+          {
+            "content": "Heterozygous Familial Hypercholesterolemia in Pediatric Patients (10-17 years of age )\nIn this population,  the  recommended  starting  dose  of  Atorvastatin  is  10  mg/day;  the  maximum recommended dose is 20 mg/day (doses greater than 20 mg/day have not been studied in this patient population).  Doses  should  be  individualized  according  to  the  recommended  goal  of  therapy  (see INDICATIONS AND CLINICAL USE and PHARMACOLOGY, Clinical Studies). Adjustments should be made at intervals of 4 weeks or more.",
+            "source": "Lipitor",
+            "chunk_id": 42,
+            "page_numbers": [
+              20
+            ],
+            "score": 0.766348123550415,
+            "routed_query": "What dose of Lipitor should an adult start on for high cholesterol?"
+          },
+          {
+            "content": "Primary  Hypercholesterolemia  and  Combined  (Mixed)  Dyslipidemia,  Including  Familial  Combined Hyperlipidemia\nThe recommended starting dose of Atorvastatin is 10 or 20 mg once daily, depending on patient's LDL -C reduction required. Patients who require a large reduction in LDL-C (more than 45%) may be started at 40 mg once daily. The dosage range of Atorvastatin is 10 to 80 mg once daily. Doses can be given at any time  of  the  day  with  or  without  food,  and  should  preferably  be  given  in  the  evening.  A  significant therapeutic response is evident within 2 weeks, and the maximum response is usually achieved within 24  weeks.  The  response  is  maintained  during  chronic  therapy.  Adjustments  of  dosage,  if  necessary, should be made at intervals of 2 to 4 weeks. The maximum dose is 80 mg/day.\nThe dosage of Atorvastatin should be individualized according the baseline LDL-C, total-C/HDL-C ratio and/or TG levels to achieve the recommended desired lipid values at the lowest dose needed to achieve\nLDL-C  desired  level.  Lipid  levels  should  be  monitored  periodically  and,  if  necessary,  the  dose  of Atorvastatin adjusted based on desired lipid levels recommended by guidelines.",
+            "source": "Lipitor",
+            "chunk_id": 40,
+            "page_numbers": [
+              19
+            ],
+            "score": 0.6884106397628784,
+            "routed_query": "What dose of Lipitor should an adult start on for high cholesterol?"
+          },
+          {
+            "content": "Usual Dose:\nAdults: The recommended starting dose of PrivaATORVASTATIN  is  10  or  20  mg  once  daily,  depending  on your  required  LDL-C  reduction.  Patients  who  need  a  large reduction in LDL-C (more than 45%) may be started at 40 mg once daily. The dosage range of Priva-ATORVASTATIN is 10 to 80 mg once daily. The maximum dose is 80 mg/day.\nThe recommended dose of Priva-ATORVASTATIN is 10 to 80 mg/day for people who have already suffered a heart attack.\nChildren  (10-17  years  old):  the  recommended  starting  dose  of Priva-ATORVASTATIN is 10 mg/day; the maximum recommended dose is 20 mg/day",
+            "source": "Lipitor",
+            "chunk_id": 111,
+            "page_numbers": [
+              47
+            ],
+            "score": 0.6429234743118286,
+            "routed_query": "What dose of Lipitor should an adult start on for high cholesterol?"
+          },
+          {
+            "content": "DOSAGE AND ADMINISTRATION\nPatients  should  be  placed  on  a  standard  cholesterol-lowering  diet  before  receiving  Atorvastatin,  and should  continue  on  this  diet  during  treatment  with  Atorvastatin.  If  appropriate,  a  program  of  weight control and physical exercise should be implemented.\nPrior to initiating therapy with Atorvastatin, secondary causes for elevations in plasma lipid levels should be excluded. A lipid profile should also be performed.",
+            "source": "Lipitor",
+            "chunk_id": 39,
+            "page_numbers": [
+              19
+            ],
+            "score": 0.5279332399368286,
+            "routed_query": "What dose of Lipitor should an adult start on for high cholesterol?"
+          }
+        ],
+        "retrieved_chunk_ids": [
+          42,
+          40,
+          111,
+          39
+        ],
+        "retrieved_pages": [
+          19,
+          20,
+          47
+        ],
+        "retrieved_sources": [
+          "Lipitor"
+        ],
+        "latency_s": 11.791,
+        "time_to_first_answer_s": 6.044,
+        "usage": {
+          "llm_calls": 6,
+          "prompt_tokens": 4914,
+          "completion_tokens": 879,
+          "total_tokens": 5793,
+          "cached_prompt_tokens": 0,
+          "est_cost_usd": 0.010798,
+          "by_model": {
+            "gpt-4o-mini-2024-07-18": {
+              "calls": 5,
+              "prompt_tokens": 3101,
+              "completion_tokens": 318,
+              "cost_usd": 0.000656
+            },
+            "gpt-4o-2024-08-06": {
+              "calls": 1,
+              "prompt_tokens": 1813,
+              "completion_tokens": 561,
+              "cost_usd": 0.010143
+            }
+          }
+        },
+        "error": null,
+        "n_branches": 1,
+        "branch_types": [
+          "initial"
+        ],
+        "branch_statuses": [
+          "COMPLETED"
+        ],
+        "selected_branch_type": "initial",
+        "selected_branch_query": "What dose of Lipitor should an adult start on for high cholesterol?"
+      },
+      "feedback": {
+        "answered": 1,
+        "pipeline_error": 0,
+        "must_mention_recall": 0.5,
+        "must_not_mention_violation": 0,
+        "refusal_heuristic": 0,
+        "behavior_match_heuristic": 1,
+        "chunk_recall": 1.0,
+        "chunk_hit_any": 1,
+        "page_recall": 1.0,
+        "page_precision": 0.75,
+        "right_collection_routed": 1,
+        "latency_s": 11.791,
+        "time_to_first_answer_s": 6.044,
+        "llm_calls": 6,
+        "total_tokens": 5793,
+        "prompt_tokens": 4914,
+        "completion_tokens": 879,
+        "est_cost_usd": 0.010798,
+        "n_branches": 1,
+        "used_refined_branch": 0,
+        "correctness": 1.0,
+        "groundedness": 1.0,
+        "hallucinated": 0,
+        "behavior_match": 1
+      },
+      "run_id": "01a016ec-8af0-7d92-951e-7db456ef1aef",
+      "error": null
+    },
+    {
+      "example_id": "lipitor-002",
+      "category": "factual_single",
+      "drug": "lipitor",
+      "expected_behavior": "answer",
+      "question": "Who should not take atorvastatin?",
+      "outputs": {
+        "answer": "Atorvastatin should not be taken by individuals who meet the following criteria:\n\n 1. **Allergic Reactions**: Individuals who are allergic to any ingredient of atorvastatin should avoid this medication. This includes both the medicinal and important non-medicinal ingredients . [doc_1]\n\n 2. **Active Liver Disease**: Those with active liver disease or unexplained increases in liver enzymes should not use atorvastatin, as it may exacerbate these conditions . [doc_1]\n\n 3. **Pregnancy and Breastfeeding**: Atorvastatin is contraindicated in pregnant or breastfeeding individuals due to potential risks to the fetus or infant . [doc_1]\n\n 4. **Severe Renal Impairment**: Caution is advised for patients who are severely renally impaired, especially when higher dosages (80 mg/day) are required, as this can lead to increased plasma levels of atorvastatin . [doc_3]\n\n 5. **Elderly Patients**: While atorvastatin can be used in elderly patients, they may be more susceptible to myopathy, and thus, the lowest dose should be administered initially . [doc_2]\n\n In summary, atorvastatin should not be taken by individuals with allergies to its components, active liver disease, those who are pregnant or breastfeeding, severely renally impaired patients, and caution should be exercised in elderly patients.",
+        "answered": true,
+        "raw_answer": "Atorvastatin should not be taken by individuals who meet the following criteria:\n\n1. **Allergic Reactions**: Individuals who are allergic to any ingredient of atorvastatin should avoid this medication. This includes both the medicinal and important non-medicinal ingredients [doc_1].\n\n2. **Active Liver Disease**: Those with active liver disease or unexplained increases in liver enzymes should not use atorvastatin, as it may exacerbate these conditions [doc_1].\n\n3. **Pregnancy and Breastfeeding**: Atorvastatin is contraindicated in pregnant or breastfeeding individuals due to potential risks to the fetus or infant [doc_1].\n\n4. **Severe Renal Impairment**: Caution is advised for patients who are severely renally impaired, especially when higher dosages (80 mg/day) are required, as this can lead to increased plasma levels of atorvastatin [doc_3].\n\n5. **Elderly Patients**: While atorvastatin can be used in elderly patients, they may be more susceptible to myopathy, and thus, the lowest dose should be administered initially [doc_2].\n\nIn summary, atorvastatin should not be taken by individuals with allergies to its components, active liver disease, those who are pregnant or breastfeeding, severely renally impaired patients, and caution should be exercised in elderly patients.",
+        "follow_ups": [
+          "Can you explain what the symptoms of an allergic reaction to atorvastatin might be?",
+          "What alternative medications are available for individuals who cannot take atorvastatin?",
+          "How does atorvastatin interact with liver function and what tests are used to monitor this?"
+        ],
+        "contexts": [
+          {
+            "content": "When Priva-ATORVASTATIN should not be used:\nDo not take Priva-ATORVASTATIN if you/your child:\n\uf0b7 Are/is allergic to any ingredient of this medication (see what the  medicinal  ingredient  is  and  what  the  important  non medicinal ingredients are).\n\uf0b7 Have active liver  disease  or  unexplained  increases  in  liver enzymes.\n\uf0a7 Are/is pregnant or breast-feeding.",
+            "source": "Lipitor",
+            "chunk_id": 102,
+            "page_numbers": [
+              46
+            ],
+            "score": 0.783653974533081,
+            "routed_query": "Who should not take atorvastatin?"
+          },
+          {
+            "content": "Special Populations\nAdolescent females should be counselled on appropriate contraceptive methods while on  Atorvastatin therapy (see CONTRAINDICATIONS and PRECAUTIONS, Use in Pregnancy). Atorvastatin calcium has not been studied in controlled clinical trials involving pre-pubertal patients or patients younger than 10 years of age.\nDoses of atorvastatin calcium up to 80 mg/day for 1 year have been evaluated in 8 pediatric patients with homozygous  familial hypercholesterolemia (see Clinical Studies -Heterozygous Familial Hypercholesterolemia in pediatric patients).\nGeriatric  Use :  Treatment  experience  in  adults  70  years  or  older  (N=221)  with  doses  of  atorvastatin calcium  up  to  80  mg/day  has  demonstrated  that  the  safety  and  effectiveness  of  atorvastatin  in  this\npopulation was similar to that of patients <70 years of age. Pharmacokinetic evaluation of atorvastatin in subjects over the age of 65 years indicates an increased AUC. As a precautionary measure, the lowest dose should be administered initially (see DETAILED PHARMACOLOGY, Human Pharmacokinetics; REFERENCES).\nElderly  patients  may  be  more  susceptible  to  myopathy  (see  WARNINGS -Muscle  Effects -Predisposing Factors for Myopathy/Rhabdomyolysis).",
+            "source": "Lipitor",
+            "chunk_id": 23,
+            "page_numbers": [
+              9
+            ],
+            "score": 0.7409617900848389,
+            "routed_query": "Who should not take atorvastatin?"
+          },
+          {
+            "content": "Patients with Severe Hypercholesterolemia\nHigher  drug  dosages  (80  mg/day)  required  for  some  patients  with  severe  hypercholesterolemia (including  familial  hypercholesterolemia)  are  associated  with  increased  plasma  levels  of  atorvastatin. Caution should be exercised in such patients who are also severely renally impaired, elderly, or are  concomitantly  being  administered  digoxin  or  CYP  3A4  inhibitors (see  WARNINGS  AND PRECAUTIONS, Pharmacokinetic Interactions, Muscle Effects; DRUG INTERACTIONS; DOSAGE AND ADMINISTRATION).",
+            "source": "Lipitor",
+            "chunk_id": 17,
+            "page_numbers": [
+              7
+            ],
+            "score": 0.7362550497055054,
+            "routed_query": "Who should not take atorvastatin?"
+          },
+          {
+            "content": "DOSAGE AND ADMINISTRATION\nPatients  should  be  placed  on  a  standard  cholesterol-lowering  diet  before  receiving  Atorvastatin,  and should  continue  on  this  diet  during  treatment  with  Atorvastatin.  If  appropriate,  a  program  of  weight control and physical exercise should be implemented.\nPrior to initiating therapy with Atorvastatin, secondary causes for elevations in plasma lipid levels should be excluded. A lipid profile should also be performed.",
+            "source": "Lipitor",
+            "chunk_id": 39,
+            "page_numbers": [
+              19
+            ],
+            "score": 0.6133202910423279,
+            "routed_query": "Who should not take atorvastatin?"
+          }
+        ],
+        "retrieved_chunk_ids": [
+          102,
+          23,
+          17,
+          39
+        ],
+        "retrieved_pages": [
+          7,
+          9,
+          19,
+          46
+        ],
+        "retrieved_sources": [
+          "Lipitor"
+        ],
+        "latency_s": 10.825,
+        "time_to_first_answer_s": 5.072,
+        "usage": {
+          "llm_calls": 6,
+          "prompt_tokens": 4817,
+          "completion_tokens": 1136,
+          "total_tokens": 5953,
+          "cached_prompt_tokens": 0,
+          "est_cost_usd": 0.012618,
+          "by_model": {
+            "gpt-4o-mini-2024-07-18": {
+              "calls": 5,
+              "prompt_tokens": 2997,
+              "completion_tokens": 398,
+              "cost_usd": 0.000688
+            },
+            "gpt-4o-2024-08-06": {
+              "calls": 1,
+              "prompt_tokens": 1820,
+              "completion_tokens": 738,
+              "cost_usd": 0.01193
+            }
+          }
+        },
+        "error": null,
+        "n_branches": 1,
+        "branch_types": [
+          "initial"
+        ],
+        "branch_statuses": [
+          "COMPLETED"
+        ],
+        "selected_branch_type": "initial",
+        "selected_branch_query": "Who should not take atorvastatin?"
+      },
+      "feedback": {
+        "answered": 1,
+        "pipeline_error": 0,
+        "must_mention_recall": 0.4,
+        "must_not_mention_violation": 0,
+        "refusal_heuristic": 0,
+        "behavior_match_heuristic": 1,
+        "chunk_recall": 0.5,
+        "chunk_hit_any": 1,
+        "page_recall": 0.5,
+        "page_precision": 0.25,
+        "right_collection_routed": 1,
+        "latency_s": 10.825,
+        "time_to_first_answer_s": 5.072,
+        "llm_calls": 6,
+        "total_tokens": 5953,
+        "prompt_tokens": 4817,
+        "completion_tokens": 1136,
+        "est_cost_usd": 0.012618,
+        "n_branches": 1,
+        "used_refined_branch": 0,
+        "correctness": 0.75,
+        "groundedness": 1.0,
+        "hallucinated": 0,
+        "behavior_match": 1
+      },
+      "run_id": "01a016ec-c7a9-70d2-9387-1795fb8817d0",
+      "error": null
+    }
+  ]
+}

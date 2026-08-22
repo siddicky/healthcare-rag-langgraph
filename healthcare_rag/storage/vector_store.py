@@ -151,6 +151,11 @@ def prepare_data_for_import(data_row: Dict[str, Any]) -> Dict[str, Any]:
     Returns:
         A dictionary containing only the properties defined in EXPECTED_PROPERTIES.
     """
+    # The chunker writes the chunk identifier as ``id`` while the Weaviate schema
+    # names it ``id_`` (``id`` is reserved in Weaviate). Map it across so the
+    # chunk id is actually stored — otherwise every object has ``id_ = None``.
+    if "id_" not in data_row and "id" in data_row:
+        data_row = {**data_row, "id_": data_row["id"]}
     return {
         key: data_row.get(key)
         for key in EXPECTED_PROPERTIES

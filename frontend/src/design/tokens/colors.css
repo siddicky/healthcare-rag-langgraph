@@ -1,0 +1,32 @@
+/* Nymble Health color tokens — exact values from the live production stylesheet (captured 2026-08-20). */
+:root {
+  /* Base palette */
+  --rust: #631300;
+  --carrot: #ea492a;
+  --carrot-accessible: #c2390f;
+  --carrot-dark: #d13d20;
+  --gold: #eda94f;
+  --camel: #9e4d14;
+  --birch: #faf3e3;
+  --white: #ffffff;
+  --warm-white: #fdf8f0;
+
+  /* Alpha tints */
+  --rust-10: rgba(99, 19, 0, 0.1);
+  --rust-50: rgba(99, 19, 0, 0.5);
+  --gold-20: rgba(237, 169, 79, 0.2);
+  --gold-30: rgba(237, 169, 79, 0.3);
+
+  /* Semantic aliases */
+  --surface-page: var(--birch);
+  --surface-card: var(--white);
+  --surface-elevated-warm: var(--warm-white);
+  --text-ink: var(--rust);
+  --text-display: var(--carrot);           /* large display type only (>=24px): headings, big stats, decorative fills */
+  --text-display-accessible: var(--carrot-accessible); /* small carrot text and links — clears 4.5:1 */
+  --text-muted: var(--camel);
+  --border-hairline: var(--rust-10);
+  --border-gold: var(--gold-30);
+  --success: #2d7d32;
+  --error: #c62828;
+}

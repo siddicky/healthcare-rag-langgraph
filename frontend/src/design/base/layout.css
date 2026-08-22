@@ -1,0 +1,57 @@
+/* Layout utilities (container, section, grid, flex) — copied verbatim from the live nymble.health stylesheet. */
+/* --- Layout Utilities --- */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-2xl);
+}
+
+.container-narrow {
+  max-width: var(--max-narrow);
+  margin: 0 auto;
+  padding: 0 var(--space-2xl);
+}
+
+.section {
+  padding: var(--space-3xl) 0;
+}
+
+.section-sm {
+  padding: var(--space-xl) 0;
+}
+
+.bg-birch { background-color: var(--birch); }
+.bg-white { background-color: var(--white); }
+.bg-rust { background-color: var(--rust); }
+.bg-warm-white { background-color: var(--warm-white); }
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-md);
+}
+
+.grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-md);
+}
+
+.grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-md);
+}
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+

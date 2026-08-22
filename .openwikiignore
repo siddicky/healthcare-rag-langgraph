@@ -1,0 +1,10 @@
+# Paths OpenWiki must not read or reproduce.
+.env
+.env.*
+.venv/
+.omc/
+data/conversations/
+docs/*.pdf
+evals/results/*.json
+node_modules/
+__pycache__/

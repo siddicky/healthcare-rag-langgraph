@@ -1,0 +1,130 @@
+/* Base reset, typography defaults, links, accessibility — copied verbatim from the live nymble.health stylesheet. */
+/* --- Reset & Base --- */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  /* Keep anchored/focused content clear of the fixed navbar (WCAG 2.2 SC 2.4.11). */
+  scroll-padding-top: 90px;
+}
+
+/* Skip link — bypass repeated nav (WCAG SC 2.4.1). Visible only on focus. */
+.skip-link {
+  position: fixed;
+  left: var(--space-sm);
+  top: -120px;
+  z-index: 1100;
+  padding: 12px 20px;
+  background: var(--rust);
+  color: var(--white);
+  font-family: var(--font-body);
+  font-weight: 600;
+  border-radius: var(--border-radius-sm);
+  text-decoration: none;
+  transition: top var(--transition-fast);
+}
+
+.skip-link:focus {
+  top: var(--space-sm);
+  outline: 3px solid var(--gold);
+  outline-offset: 2px;
+}
+
+/* Honor reduced-motion preferences (best practice; supports SC 2.3.x intent). */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
+
+/* Main content target for the skip link; not a visible style change. */
+#main-content:focus {
+  outline: none;
+}
+
+body {
+  font-family: var(--font-body);
+  font-weight: 400;
+  font-size: 18px;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--rust);
+  background-color: var(--birch);
+  overflow-x: hidden;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+a {
+  color: var(--carrot-accessible);
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  color: var(--carrot-dark);
+  text-decoration: underline;
+}
+
+/* --- Typography --- */
+h1, h2, h3, h4, h5 {
+  font-family: var(--font-headline);
+  font-weight: 400;
+  letter-spacing: -0.03em;
+  line-height: 1.1;
+  color: var(--carrot);
+}
+
+/* h4/h5 are below the large-text threshold (h4 22px, h5 smaller) at weight 400,
+   so they use the accessible shade to clear 4.5:1. h1-h3 (>=28px) stay vivid. */
+h4, h5 {
+  color: var(--carrot-accessible);
+}
+
+h1 {
+  font-size: 56px;
+  line-height: 1.1;
+}
+
+h2 {
+  font-size: 40px;
+  line-height: 1.1;
+}
+
+h3 {
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+h4 {
+  font-size: 22px;
+  line-height: 1.1;
+}
+
+p {
+  margin-bottom: var(--space-sm);
+  color: var(--rust);
+}
+
+.text-birch { color: var(--birch); }
+.text-camel { color: var(--camel); }
+.text-rust { color: var(--rust); }
+.text-carrot { color: var(--carrot-accessible); }
+.text-gold { color: var(--gold); }
+.text-center { text-align: center; }
+

@@ -1,0 +1,9 @@
+{
+  "lc": 1,
+  "type": "constructor",
+  "id": ["langchain", "chat_models", "openai", "ChatOpenAI"],
+  "kwargs": {
+    "model": "gpt-5.6-sol",
+    "openai_api_key": {"lc": 1, "type": "secret", "id": ["OPENAI_API_KEY"]}
+  }
+}

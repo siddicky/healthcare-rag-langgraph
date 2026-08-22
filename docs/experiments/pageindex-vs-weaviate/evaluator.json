@@ -1,0 +1,39 @@
+{
+  "name": "pageindex-gate",
+  "command": "uv run python -m evals.pageindex_gate --json",
+  "smoke_command": "uv run python -m evals.pageindex_gate --json --smoke",
+  "cwd": ".",
+  "timeout_seconds": 9000,
+  "output": "json-stdout",
+  "pass_field": "pass",
+  "score_field": "score",
+  "exit_codes": { "0": "pass", "2": "stage1_reject_terminal", "3": "stage2_fail", "1": "error" },
+  "terminal_verdicts": ["REJECT"],
+  "stages": {
+    "1": {
+      "name": "retrieval-only page_recall gate",
+      "questions": "all 86 (core+holdout)",
+      "metric": "page_recall (evals/evaluators.py definition)",
+      "pass_if": "mean_page_recall(pageindex) >= mean_page_recall(weaviate)",
+      "on_fail": "verdict=REJECT, exit 2, stop mission"
+    },
+    "2": {
+      "name": "paired full eval",
+      "runner": "python -m evals.run_baseline --split core --split holdout --repetitions 2 --concurrency 1",
+      "arms": { "weaviate": "HC_RAG_RETRIEVER=weaviate", "pageindex": "HC_RAG_RETRIEVER=pageindex" },
+      "pass_if_all": [
+        "mean_correctness(pageindex) - mean_correctness(weaviate) >= 0.03",
+        "mean_groundedness(pageindex) >= mean_groundedness(weaviate)",
+        "mean_correctness_holdout(pageindex) >= mean_correctness_holdout(weaviate)",
+        "mean_cost_per_query(pageindex) <= 1.25 * mean_cost_per_query(weaviate)",
+        "p50_latency(pageindex) <= 1.25 * p50_latency(weaviate)"
+      ],
+      "reference_absolutes": { "cost_usd": 0.036, "p50_seconds": 20 }
+    }
+  },
+  "frozen_after_iteration_1": ["evals/pageindex_gate.py thresholds", "evals/golden_dataset.json", "evals/evaluators.py"],
+  "report_path": "evals/results/pageindex-vs-weaviate.md",
+  "decision_record_path": "docs/decisions/pageindex-vs-weaviate.md",
+  "max_runtime": "4h",
+  "status": "to-be-created-by-iteration-1"
+}

@@ -10,3 +10,27 @@ scratch/
 *.log
 
 zzscratches/
+# eval run logs and local watch logs
+evals/results/*.log
+evals/results/trace-watch-*.jsonl
+# openwiki scratch
+openwiki/.last-update.json
+# planning/evidence state (never fake working-tree dirtiness)
+.omo/
+.claude/
+# agent/tool runtime state (never fake working-tree dirtiness)
+.agents/
+.codex/
+.playwright-mcp/
+
+.langgraph_api/
+
+# uv build/sync byproduct; pyproject.toml is the dependency source (AGENTS.md)
+uv.lock
+
+# PageIndex local-mode store (trees are cached under data/ instead)
+.pageindex/
+
+# oh-my-claudecode operational state (any level); project skills stay committable
+.omc/
+!.omc/skills/

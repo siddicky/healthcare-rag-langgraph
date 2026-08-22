@@ -1,0 +1,7 @@
+/* Shallow, rust-tinted elevation — never cool gray. */
+:root {
+  --shadow-sm: 0 2px 12px rgba(99, 19, 0, 0.06);
+  --shadow-md: 0 4px 24px rgba(99, 19, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(99, 19, 0, 0.12);
+  --shadow-nav: 0 1px 8px rgba(99, 19, 0, 0.08);
+}

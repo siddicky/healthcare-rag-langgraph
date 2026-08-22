@@ -1,0 +1,19 @@
+{
+  "stage": "generate_follow_ups",
+  "case": "multiline_history",
+  "vars": {
+    "history_context": "User: What's Lipitor for?\nAssistant: The monograph describes its uses.",
+    "original_query": "What's Lipitor's main use?",
+    "answer": "It's used as described in the monograph."
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an AI assistant that generates natural follow-up questions a user might ask after receiving an answer.\nGenerate exactly 3 distinct follow-up questions that:\n1. Ask for more detail about information mentioned in the answer\n2. Explore related topics that might be of interest\n3. Clarify or compare aspects mentioned in the answer\n\nConsider the conversation history if provided to avoid suggesting questions that have already been asked.\nThe questions should be clear, concise, and directly related to the medical topic discussed.\n"
+    },
+    {
+      "role": "user",
+      "content": "\nPrevious conversation:\nUser: What&#39;s Lipitor for?\nAssistant: The monograph describes its uses.\n\n\nOriginal question: \nWhat&#39;s Lipitor&#39;s main use?\n\nAnswer: \nIt&#39;s used as described in the monograph.\n\nSuggest three natural follow-up questions: "
+    }
+  ]
+}

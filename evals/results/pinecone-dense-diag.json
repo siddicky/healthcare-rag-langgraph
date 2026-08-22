@@ -1,0 +1,181 @@
+{
+  "pass": false,
+  "score": -0.0568075117370892,
+  "stage": 1,
+  "verdict": "REJECT",
+  "smoke": false,
+  "arms": {
+    "a": {
+      "name": "weaviate"
+    },
+    "b": {
+      "name": "pinecone"
+    },
+    "candidates": [
+      "pinecone"
+    ]
+  },
+  "report_name": "pinecone-dense-diag",
+  "stage1": {
+    "a": {
+      "arm": "weaviate",
+      "n": 71,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.6640845070422535,
+      "chunk_recall": 0.5947686116700202,
+      "per_split": {
+        "core": {
+          "n": 36,
+          "page_recall": 0.6754629629629629,
+          "chunk_recall": 0.6179232804232804
+        },
+        "holdout": {
+          "n": 35,
+          "page_recall": 0.6523809523809524,
+          "chunk_recall": 0.570952380952381
+        }
+      },
+      "wall_s": 140.18,
+      "mean_latency_s": 1.9741408450704228
+    },
+    "b": {
+      "arm": "pinecone",
+      "n": 71,
+      "n_errors": 0,
+      "errors": [],
+      "page_recall": 0.6072769953051643,
+      "chunk_recall": 0.5296780684104627,
+      "per_split": {
+        "core": {
+          "n": 36,
+          "page_recall": 0.6953703703703704,
+          "chunk_recall": 0.583531746031746
+        },
+        "holdout": {
+          "n": 35,
+          "page_recall": 0.5166666666666666,
+          "chunk_recall": 0.4742857142857143
+        }
+      },
+      "wall_s": 153.42,
+      "mean_latency_s": 2.160676056338028
+    },
+    "arms": [
+      {
+        "arm": "weaviate",
+        "n": 71,
+        "n_errors": 0,
+        "errors": [],
+        "page_recall": 0.6640845070422535,
+        "chunk_recall": 0.5947686116700202,
+        "per_split": {
+          "core": {
+            "n": 36,
+            "page_recall": 0.6754629629629629,
+            "chunk_recall": 0.6179232804232804
+          },
+          "holdout": {
+            "n": 35,
+            "page_recall": 0.6523809523809524,
+            "chunk_recall": 0.570952380952381
+          }
+        },
+        "wall_s": 140.18,
+        "mean_latency_s": 1.9741408450704228
+      },
+      {
+        "arm": "pinecone",
+        "n": 71,
+        "n_errors": 0,
+        "errors": [],
+        "page_recall": 0.6072769953051643,
+        "chunk_recall": 0.5296780684104627,
+        "per_split": {
+          "core": {
+            "n": 36,
+            "page_recall": 0.6953703703703704,
+            "chunk_recall": 0.583531746031746
+          },
+          "holdout": {
+            "n": 35,
+            "page_recall": 0.5166666666666666,
+            "chunk_recall": 0.4742857142857143
+          }
+        },
+        "wall_s": 153.42,
+        "mean_latency_s": 2.160676056338028
+      }
+    ],
+    "candidates": [
+      {
+        "arm": "pinecone",
+        "page_recall": 0.6072769953051643,
+        "chunk_recall": 0.5296780684104627,
+        "delta_page_recall": -0.0568075117370892,
+        "mean_latency_s": 2.160676056338028,
+        "n_errors": 0,
+        "pass": false,
+        "selected": false
+      }
+    ],
+    "selected_arm": null,
+    "eligibility": {
+      "total": 86,
+      "eligible": 71,
+      "skipped_no_expected_pages": 8,
+      "skipped_multiturn": 7
+    },
+    "gate": {
+      "name": "stage1_page_recall",
+      "arm": "pinecone",
+      "a": 0.6640845070422535,
+      "b": 0.6072769953051643,
+      "delta": -0.0568075117370892,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": false
+    },
+    "gates": [
+      {
+        "name": "stage1_page_recall",
+        "arm": "pinecone",
+        "a": 0.6640845070422535,
+        "b": 0.6072769953051643,
+        "delta": -0.0568075117370892,
+        "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+        "pass": false
+      }
+    ],
+    "delta_page_recall": -0.0568075117370892,
+    "wall_s": 293.6
+  },
+  "stage2": null,
+  "gates": [
+    {
+      "name": "stage1_page_recall",
+      "arm": "pinecone",
+      "a": 0.6640845070422535,
+      "b": 0.6072769953051643,
+      "delta": -0.0568075117370892,
+      "threshold": "page_recall(B) >= page_recall(A) - 1e-09",
+      "pass": false
+    }
+  ],
+  "thresholds": {
+    "stage1_page_recall_epsilon": 1e-09,
+    "min_correctness_delta": 0.03,
+    "min_groundedness_delta": 0.0,
+    "min_holdout_correctness_delta": 0.0,
+    "max_cost_ratio": 1.25,
+    "max_latency_p50_ratio": 1.25
+  },
+  "min_page_recall_delta": 0.0,
+  "git_sha": "61da91e",
+  "started_at": "2026-08-20T16:13:13+00:00",
+  "repetitions": 2,
+  "finished_at": "2026-08-20T16:18:09+00:00",
+  "wall_s": 296.78,
+  "exit_code": 2,
+  "report_path": "evals/results/pinecone-dense-diag.md",
+  "stage1_items_path": "/Users/siddicky/Projects/nymble/healthcare-rag-langgraph/evals/results/pinecone-dense-diag-stage1-items.json"
+}

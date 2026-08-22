@@ -1,0 +1,1 @@
+{"title": "groundedness_grade", "type": "object", "properties": {"ls_groundedness": {"type": "number"}, "ls_hallucinated": {"type": "integer", "enum": [0, 1]}, "comment": {"type": "string"}}, "required": ["ls_groundedness", "ls_hallucinated", "comment"]}

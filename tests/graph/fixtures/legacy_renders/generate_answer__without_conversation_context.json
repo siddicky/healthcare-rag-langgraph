@@ -1,0 +1,19 @@
+{
+  "stage": "generate_answer",
+  "case": "without_conversation_context",
+  "vars": {
+    "user_question": "What's stated about dosing?",
+    "retrieval_results": "[doc_1]\n    Source: Lipitor monograph\n    Content: First line of evidence.\n        Indented continuation.\n\n[doc_2]\n    Source: Metformin monograph\n    Content: Second line of evidence.",
+    "conversation_context": ""
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are a medical assistant that generates answers with precise citations.\n\nFor each statement or claim in your answer, you must cite the specific document(s) that support it.\n\nYour response must:\n1. Provide complete answer to the question\n2. Cite the specific document(s) that support each statement\nFollow these guidelines:\n- Use the document IDs in the format [ID] to cite sources\n- Don't make up information - if the documents don't contain needed information, respond with a polite and professional response. \n  Don't mention the 'documents' in your response.\n- Group similar information from multiple sources when possible\n"
+    },
+    {
+      "role": "user",
+      "content": "Documents:\n|\n[doc_1]\n    Source: Lipitor monograph\n    Content: First line of evidence.\n        Indented continuation.\n\n[doc_2]\n    Source: Metformin monograph\n    Content: Second line of evidence.\n\nQuestion: \nWhat&#39;s stated about dosing?\n\nPlease provide a complete answer with citations to the specific document IDs that support each statement. "
+    }
+  ]
+}

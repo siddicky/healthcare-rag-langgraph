@@ -1,0 +1,23 @@
+[
+  {
+    "id": "valid-root-pointer",
+    "value": {"__ref": {"turn_scope_id": "turn-1", "block_id": "trend:weight", "pointer": ""}},
+    "accepted": true
+  },
+  {
+    "id": "valid-nested-pointer",
+    "value": {"__ref": {"turn_scope_id": "turn-1", "block_id": "trend:weight", "pointer": "/points/0"}},
+    "accepted": true
+  },
+  {"id": "literal-rejected", "value": "72", "accepted": false},
+  {
+    "id": "missing-pointer",
+    "value": {"__ref": {"turn_scope_id": "turn-1", "block_id": "trend:weight"}},
+    "accepted": false
+  },
+  {
+    "id": "non-string-pointer",
+    "value": {"__ref": {"turn_scope_id": "turn-1", "block_id": "trend:weight", "pointer": 0}},
+    "accepted": false
+  }
+]

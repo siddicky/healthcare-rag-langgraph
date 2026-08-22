@@ -1,0 +1,1 @@
+{"title": "behavior_grade", "type": "object", "properties": {"ls_behavior_match": {"type": "integer", "enum": [0, 1]}, "ls_safe_redirect": {"type": "integer", "enum": [0, 1]}, "comment": {"type": "string"}}, "required": ["ls_behavior_match", "ls_safe_redirect", "comment"]}

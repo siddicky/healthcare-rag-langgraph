@@ -1,0 +1,773 @@
+{
+  "experiment_name": "mt-smoke-931b2bf5",
+  "experiment_url": "https://smith.langchain.com/o/6b8e80b6-250f-44b3-a8e4-1ce64b74c2b6/projects/p/b2795c4e-e901-460b-8c19-a8c390f70dcf",
+  "generated_at": "2026-08-18T23:01:05.299701+00:00",
+  "metadata": {
+    "git_sha": "497d456",
+    "git_dirty": true,
+    "llm_model": "gpt-5.6-luna",
+    "validator_model": "gpt-5.6-terra",
+    "judge_model": null,
+    "sim_user_model": null,
+    "reasoning_effort": "none",
+    "disabled_stages": null,
+    "concurrency": 1,
+    "pricing_as_of": "2026-08-18 (gpt-5.6 verified; legacy 4o rows unverified)",
+    "n_conversations": 1,
+    "n_turns_planned": 6,
+    "kind": null,
+    "split": null,
+    "categories": null
+  },
+  "aggregate": {
+    "overall": {
+      "n": 1,
+      "cost_per_turn_usd": 0.053505166666666666,
+      "cost_total_usd": 0.321031,
+      "cost_sum_usd": 0.321031,
+      "history_used_rate": 1.0,
+      "latency_growth_ratio": 0.8500703482237073,
+      "latency_growth_slope": 2.5856285714285714,
+      "latency_max_turn_s": 43.776,
+      "latency_total_s": 111.703,
+      "latency_total_p50_s": 111.703,
+      "latency_total_p95_s": 111.703,
+      "latency_total_max_s": 111.703,
+      "llm_calls_total": 119.0,
+      "pii_persistence": 0.0,
+      "pii_persistence_count": 0.0,
+      "pipeline_error_any": 0.0,
+      "pipeline_error_rate": 0.0,
+      "tokens_per_turn": 26977.166666666668,
+      "tokens_total": 161863.0,
+      "tokens_sum": 161863,
+      "turn_answered_rate": 1.0,
+      "turn_forbidden_content": 0.0,
+      "turn_forbidden_content_rate": 0.0,
+      "turn_must_mention_recall": 0.6055555555555555,
+      "turn_must_mention_recall_worst": 0.0,
+      "turns_completed": 6.0
+    },
+    "by_category": {
+      "context_carryover": {
+        "n": 1,
+        "cost_per_turn_usd": 0.053505166666666666,
+        "cost_total_usd": 0.321031,
+        "cost_sum_usd": 0.321031,
+        "history_used_rate": 1.0,
+        "latency_growth_ratio": 0.8500703482237073,
+        "latency_growth_slope": 2.5856285714285714,
+        "latency_max_turn_s": 43.776,
+        "latency_total_s": 111.703,
+        "latency_total_p50_s": 111.703,
+        "latency_total_p95_s": 111.703,
+        "latency_total_max_s": 111.703,
+        "llm_calls_total": 119.0,
+        "pii_persistence": 0.0,
+        "pii_persistence_count": 0.0,
+        "pipeline_error_any": 0.0,
+        "pipeline_error_rate": 0.0,
+        "tokens_per_turn": 26977.166666666668,
+        "tokens_total": 161863.0,
+        "tokens_sum": 161863,
+        "turn_answered_rate": 1.0,
+        "turn_forbidden_content": 0.0,
+        "turn_forbidden_content_rate": 0.0,
+        "turn_must_mention_recall": 0.6055555555555555,
+        "turn_must_mention_recall_worst": 0.0,
+        "turns_completed": 6.0
+      }
+    },
+    "by_kind": {
+      "scripted": {
+        "n": 1,
+        "cost_per_turn_usd": 0.053505166666666666,
+        "cost_total_usd": 0.321031,
+        "cost_sum_usd": 0.321031,
+        "history_used_rate": 1.0,
+        "latency_growth_ratio": 0.8500703482237073,
+        "latency_growth_slope": 2.5856285714285714,
+        "latency_max_turn_s": 43.776,
+        "latency_total_s": 111.703,
+        "latency_total_p50_s": 111.703,
+        "latency_total_p95_s": 111.703,
+        "latency_total_max_s": 111.703,
+        "llm_calls_total": 119.0,
+        "pii_persistence": 0.0,
+        "pii_persistence_count": 0.0,
+        "pipeline_error_any": 0.0,
+        "pipeline_error_rate": 0.0,
+        "tokens_per_turn": 26977.166666666668,
+        "tokens_total": 161863.0,
+        "tokens_sum": 161863,
+        "turn_answered_rate": 1.0,
+        "turn_forbidden_content": 0.0,
+        "turn_forbidden_content_rate": 0.0,
+        "turn_must_mention_recall": 0.6055555555555555,
+        "turn_must_mention_recall_worst": 0.0,
+        "turns_completed": 6.0
+      }
+    },
+    "per_turn_profile": [
+      {
+        "turn": 1,
+        "n": 1,
+        "latency_s": 11.372,
+        "cost_usd": 0.014749,
+        "tokens": 7112.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 0.0
+      },
+      {
+        "turn": 2,
+        "n": 1,
+        "latency_s": 7.735,
+        "cost_usd": 0.009459,
+        "tokens": 8436.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      },
+      {
+        "turn": 3,
+        "n": 1,
+        "latency_s": 9.752,
+        "cost_usd": 0.008042,
+        "tokens": 8004.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      },
+      {
+        "turn": 4,
+        "n": 1,
+        "latency_s": 43.776,
+        "cost_usd": 0.177193,
+        "tokens": 80582.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      },
+      {
+        "turn": 5,
+        "n": 1,
+        "latency_s": 29.401,
+        "cost_usd": 0.103327,
+        "tokens": 46006.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      },
+      {
+        "turn": 6,
+        "n": 1,
+        "latency_s": 9.667,
+        "cost_usd": 0.008261,
+        "tokens": 11723.0,
+        "answered_rate": 1.0,
+        "used_history_rate": 1.0
+      }
+    ]
+  },
+  "langsmith": {
+    "project": {
+      "run_count": 0,
+      "total_tokens": 0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0,
+      "total_cost": 0.0,
+      "latency_p50": null,
+      "latency_p99": null,
+      "error_rate": 0.0,
+      "url": "https://smith.langchain.com/o/6b8e80b6-250f-44b3-a8e4-1ce64b74c2b6/projects/p/b2795c4e-e901-460b-8c19-a8c390f70dcf"
+    },
+    "root_runs": 1,
+    "by_stage": {
+      "validate_answer": {
+        "calls": 11,
+        "tokens": 67511,
+        "cost": 0.293302
+      },
+      "generate_answer": {
+        "calls": 12,
+        "tokens": 51168,
+        "cost": 0.013165600000000001
+      },
+      "evaluate_retrieval": {
+        "calls": 59,
+        "tokens": 27689,
+        "cost": 0.009310599999999997
+      },
+      "extract_conversation_context": {
+        "calls": 5,
+        "tokens": 5296,
+        "cost": 0.0017901999999999998
+      },
+      "retrieve_documents": {
+        "calls": 18,
+        "tokens": 4058,
+        "cost": 0.0013295999999999998
+      },
+      "decompose_query": {
+        "calls": 9,
+        "tokens": 3977,
+        "cost": 0.0012994
+      },
+      "generate_follow_ups": {
+        "calls": 6,
+        "tokens": 3689,
+        "cost": 0.0010748
+      },
+      "clarify_query": {
+        "calls": 5,
+        "tokens": 2774,
+        "cost": 0.0007718
+      }
+    },
+    "by_stage_per_query": {
+      "validate_answer": {
+        "calls": 11.0,
+        "tokens": 67511.0,
+        "cost": 0.293302
+      },
+      "generate_answer": {
+        "calls": 12.0,
+        "tokens": 51168.0,
+        "cost": 0.013165600000000001
+      },
+      "evaluate_retrieval": {
+        "calls": 59.0,
+        "tokens": 27689.0,
+        "cost": 0.009310599999999997
+      },
+      "extract_conversation_context": {
+        "calls": 5.0,
+        "tokens": 5296.0,
+        "cost": 0.0017901999999999998
+      },
+      "retrieve_documents": {
+        "calls": 18.0,
+        "tokens": 4058.0,
+        "cost": 0.0013295999999999998
+      },
+      "decompose_query": {
+        "calls": 9.0,
+        "tokens": 3977.0,
+        "cost": 0.0012994
+      },
+      "generate_follow_ups": {
+        "calls": 6.0,
+        "tokens": 3689.0,
+        "cost": 0.0010748
+      },
+      "clarify_query": {
+        "calls": 5.0,
+        "tokens": 2774.0,
+        "cost": 0.0007718
+      }
+    }
+  },
+  "rows": [
+    {
+      "example_id": "mt-001",
+      "category": "context_carryover",
+      "kind": "scripted",
+      "split": "core",
+      "title": "Start dose to kids to max, then across to the other drug",
+      "n_turns_expected": 6,
+      "outputs": {
+        "conversation_id": "mt-001",
+        "kind": "scripted",
+        "turns": [
+          {
+            "index": 1,
+            "user": "I just got put on Lipitor. What dose do people usually start on?",
+            "answer": "For adults, Lipitor (atorvastatin) is usually started at **10 or 20 mg once daily**, depending on how much LDL cholesterol reduction is needed. [doc_1]\n If a reduction in LDL cholesterol of **more than 45%** is needed, the starting dose may be **40 mg once daily**. The usual adult dosage range is **10\u201380 mg once daily**, with a maximum of **80 mg/day**. [doc_1] [doc_2]\n The dose may be adjusted based on lipid results, generally at intervals of **2\u20134 weeks**. It can be taken at any time of day, with or without food, although evening dosing is preferred in the prescribing information. [doc_2]\n For children aged **10\u201317 years**, the recommended starting dose is **10 mg/day**, with a maximum recommended dose of **20 mg/day**. [doc_1] [doc_3]\n Follow the dose prescribed by your clinician rather than changing it yourself.",
+            "answered": true,
+            "raw_answer": "For adults, Lipitor (atorvastatin) is usually started at **10 or 20 mg once daily**, depending on how much LDL cholesterol reduction is needed. [doc_1][doc_2]\n\nIf a reduction in LDL cholesterol of **more than 45%** is needed, the starting dose may be **40 mg once daily**. The usual adult dosage range is **10\u201380 mg once daily**, with a maximum of **80 mg/day**. [doc_1][doc_2]\n\nThe dose may be adjusted based on lipid results, generally at intervals of **2\u20134 weeks**. It can be taken at any time of day, with or without food, although evening dosing is preferred in the prescribing information. [doc_2]\n\nFor children aged **10\u201317 years**, the recommended starting dose is **10 mg/day**, with a maximum recommended dose of **20 mg/day**. [doc_1][doc_3]\n\nFollow the dose prescribed by your clinician rather than changing it yourself.",
+            "follow_ups": [
+              "How will my doctor decide whether I should start at 10, 20, or 40 mg?",
+              "What side effects or warning signs should I watch for while taking Lipitor?",
+              "How soon should I have my cholesterol and liver tests checked after starting or changing the dose?"
+            ],
+            "retrieved_chunk_ids": [
+              111,
+              40,
+              42,
+              59
+            ],
+            "retrieved_pages": [
+              19,
+              20,
+              26,
+              47
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 11.372,
+            "time_to_first_answer_s": 4.581,
+            "usage": {
+              "llm_calls": 6,
+              "prompt_tokens": 5944,
+              "completion_tokens": 1168,
+              "total_tokens": 7112,
+              "cached_prompt_tokens": 0,
+              "est_cost_usd": 0.014749,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 5,
+                  "prompt_tokens": 3809,
+                  "completion_tokens": 398,
+                  "cost_usd": 0.001239
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 2135,
+                  "completion_tokens": 770,
+                  "cost_usd": 0.01351
+                }
+              }
+            },
+            "error": null,
+            "used_history": false,
+            "n_branches": 1,
+            "selected_branch_type": "initial"
+          },
+          {
+            "index": 2,
+            "user": "What about in kids?",
+            "answer": "For **metformin**, safety and effectiveness in pediatric patients **have not been established**. [doc_1]\n Therefore, the provided information does **not support a specific pediatric dose or routine use in children**; a clinician should determine whether metformin is appropriate for an individual child. [doc_1]\n Animal studies did not show teratogenic effects in rats and rabbits at the doses studied, but animal findings do not establish safety in children or humans. [doc_3]\n",
+            "answered": true,
+            "raw_answer": "For **metformin**, safety and effectiveness in pediatric patients **have not been established**. [doc_1]\n\nTherefore, the provided information does **not support a specific pediatric dose or routine use in children**; a clinician should determine whether metformin is appropriate for an individual child. [doc_1]\n\nAnimal studies did not show teratogenic effects in rats and rabbits at the doses studied, but animal findings do not establish safety in children or humans. [doc_3]",
+            "follow_ups": [
+              "What is the usual starting dose of Lipitor for children ages 10\u201317?",
+              "What factors determine whether a child should be prescribed Lipitor?",
+              "How does Lipitor dosing in children compare with dosing in adults, and what monitoring is needed?"
+            ],
+            "retrieved_chunk_ids": [
+              25,
+              4,
+              23,
+              49,
+              25,
+              6,
+              10,
+              39,
+              25,
+              20,
+              45,
+              49,
+              25,
+              26,
+              7,
+              13,
+              25,
+              26,
+              13,
+              39,
+              6,
+              25,
+              23,
+              7
+            ],
+            "retrieved_pages": [
+              2,
+              4,
+              7,
+              9,
+              12,
+              13,
+              14,
+              19,
+              22,
+              25
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 7.735,
+            "time_to_first_answer_s": 3.133,
+            "usage": {
+              "llm_calls": 13,
+              "prompt_tokens": 7310,
+              "completion_tokens": 1126,
+              "total_tokens": 8436,
+              "cached_prompt_tokens": 0,
+              "est_cost_usd": 0.009459,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 12,
+                  "prompt_tokens": 5586,
+                  "completion_tokens": 798,
+                  "cost_usd": 0.002075
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 1724,
+                  "completion_tokens": 328,
+                  "cost_usd": 0.007384
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 1,
+            "selected_branch_type": "initial"
+          },
+          {
+            "index": 3,
+            "user": "And the max in that age group?",
+            "answer": "The maximum recommended daily dose of Lipitor (atorvastatin) for children aged 10\u201317 years is **20 mg once daily**. Doses above 20 mg/day have not been studied in this age group. [doc_1] [doc_2]",
+            "answered": true,
+            "raw_answer": "The maximum recommended daily dose of Lipitor (atorvastatin) for children aged 10\u201317 years is **20 mg once daily**. Doses above 20 mg/day have not been studied in this age group. [doc_1] [doc_2]",
+            "follow_ups": [
+              "How is the 20 mg maximum adjusted for a child\u2019s cholesterol levels or response to treatment?",
+              "What monitoring or blood tests are recommended for children taking Lipitor?",
+              "Are there important side effects, drug interactions, or activity precautions for children taking atorvastatin?"
+            ],
+            "retrieved_chunk_ids": [
+              42,
+              111,
+              40,
+              26
+            ],
+            "retrieved_pages": [
+              11,
+              19,
+              20,
+              47
+            ],
+            "retrieved_sources": [
+              "Lipitor"
+            ],
+            "latency_s": 9.752,
+            "time_to_first_answer_s": 5.787,
+            "usage": {
+              "llm_calls": 10,
+              "prompt_tokens": 7262,
+              "completion_tokens": 742,
+              "total_tokens": 8004,
+              "cached_prompt_tokens": 0,
+              "est_cost_usd": 0.008042,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 9,
+                  "prompt_tokens": 5554,
+                  "completion_tokens": 499,
+                  "cost_usd": 0.00171
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 1708,
+                  "completion_tokens": 243,
+                  "cost_usd": 0.006332
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 2,
+            "selected_branch_type": "clarified"
+          },
+          {
+            "index": 4,
+            "user": "My husband takes metformin - does that one have a pediatric dose too?",
+            "answer": "The provided prescribing information does **not establish a pediatric dose for metformin**: safety and effectiveness in pediatric patients have not been established. [doc_21] [doc_21] [doc_21] [doc_21] [doc_21] Although a usual adult dosage is listed\u2014500 mg three or four times daily, or 850 mg two or three times daily, with a maximum of 2.55 g/day\u2014this information is not identified as a pediatric regimen and should not be applied to children. [doc_21]\n [doc_16] [doc_16] Therefore, a child should not be given metformin based on the adult dosing information alone; a qualified clinician must determine whether it is appropriate and, if used, establish dosing and monitoring for that individual. The provided information does not supply a specific pediatric dose. [doc_16]\n [doc_21] [doc_16]",
+            "answered": true,
+            "raw_answer": "The provided prescribing information does **not establish a pediatric dose for metformin**: safety and effectiveness in pediatric patients have not been established. [doc_1] [doc_5] [doc_9] [doc_13] [doc_17] [doc_21]\n\nAlthough a usual adult dosage is listed\u2014500 mg three or four times daily, or 850 mg two or three times daily, with a maximum of 2.55 g/day\u2014this information is not identified as a pediatric regimen and should not be applied to children. [doc_2] [doc_10] [doc_16]\n\nTherefore, a child should not be given metformin based on the adult dosing information alone; a qualified clinician must determine whether it is appropriate and, if used, establish dosing and monitoring for that individual. The provided information does not supply a specific pediatric dose. [doc_1] [doc_2]",
+            "follow_ups": [
+              "Are there any situations in which metformin is prescribed to children despite the labeling saying pediatric safety and effectiveness are not established?",
+              "What factors would a clinician consider when deciding whether metformin is appropriate for a child?",
+              "How does pediatric metformin use differ from adult use in terms of dosing, monitoring, and side effects?"
+            ],
+            "retrieved_chunk_ids": [
+              25,
+              39,
+              26,
+              4,
+              25,
+              6,
+              26,
+              13,
+              25,
+              39,
+              6,
+              22,
+              25,
+              4,
+              5,
+              39,
+              25,
+              13,
+              26,
+              7,
+              25,
+              23,
+              4,
+              26
+            ],
+            "retrieved_pages": [
+              2,
+              3,
+              4,
+              9,
+              12,
+              13,
+              14,
+              19
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 43.776,
+            "time_to_first_answer_s": 9.757,
+            "usage": {
+              "llm_calls": 44,
+              "prompt_tokens": 67708,
+              "completion_tokens": 12874,
+              "total_tokens": 80582,
+              "cached_prompt_tokens": 1240,
+              "est_cost_usd": 0.177193,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 40,
+                  "prompt_tokens": 38499,
+                  "completion_tokens": 3999,
+                  "cost_usd": 0.012275
+                },
+                "gpt-5.6-terra": {
+                  "calls": 4,
+                  "prompt_tokens": 29209,
+                  "completion_tokens": 8875,
+                  "cost_usd": 0.164918
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 5,
+            "selected_branch_type": "decomposed_0"
+          },
+          {
+            "index": 5,
+            "user": "So what's the max for that one then?",
+            "answer": "The maximum recommended dose of metformin for children **cannot be established from the provided information**, because safety and effectiveness in pediatric patients have not been established. [doc_9] [doc_9] The stated maximum dose of **2.55 g/day (2,550 mg/day)** applies to the general dosage information in this product monograph and should **not be assumed to be an appropriate pediatric dose**. [doc_9]\n [doc_13] [doc_13] [doc_13] A child should receive metformin only under guidance from a qualified clinician, who can determine whether treatment is appropriate and select an individualized dose. [doc_13]\n [doc_13] [doc_13] [doc_13] [doc_13]\n",
+            "answered": true,
+            "raw_answer": "The maximum recommended dose of metformin for children **cannot be established from the provided information**, because safety and effectiveness in pediatric patients have not been established. [doc_4][doc_5][doc_9]\n\nThe stated maximum dose of **2.55 g/day (2,550 mg/day)** applies to the general dosage information in this product monograph and should **not be assumed to be an appropriate pediatric dose**. [doc_1][doc_6][doc_11][doc_13]\n\nA child should receive metformin only under guidance from a qualified clinician, who can determine whether treatment is appropriate and select an individualized dose. [doc_1][doc_6][doc_11][doc_13]",
+            "follow_ups": [
+              "What is the usual maximum metformin dose for adults?",
+              "Are there pediatric situations where doctors commonly prescribe metformin, such as type 2 diabetes or insulin resistance?",
+              "How does the maximum dose differ between immediate-release and extended-release metformin?"
+            ],
+            "retrieved_chunk_ids": [
+              39,
+              23,
+              26,
+              25,
+              25,
+              39,
+              26,
+              13,
+              25,
+              23,
+              39,
+              2,
+              39,
+              4,
+              6,
+              26
+            ],
+            "retrieved_pages": [
+              2,
+              4,
+              9,
+              13,
+              14,
+              19
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 29.401,
+            "time_to_first_answer_s": 10.732,
+            "usage": {
+              "llm_calls": 29,
+              "prompt_tokens": 38093,
+              "completion_tokens": 7913,
+              "total_tokens": 46006,
+              "cached_prompt_tokens": 0,
+              "est_cost_usd": 0.103327,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 26,
+                  "prompt_tokens": 22717,
+                  "completion_tokens": 2493,
+                  "cost_usd": 0.007535
+                },
+                "gpt-5.6-terra": {
+                  "calls": 3,
+                  "prompt_tokens": 15376,
+                  "completion_tokens": 5420,
+                  "cost_usd": 0.095792
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 5,
+            "selected_branch_type": "decomposed_0"
+          },
+          {
+            "index": 6,
+            "user": "And should he take it with food?",
+            "answer": "Yes. Metformin should be taken with food whenever possible to reduce stomach upset, including nausea and vomiting. [doc_1] Follow the dosing instructions prescribed for you, and contact your healthcare professional if vomiting occurs; the medication may need to be temporarily stopped and restarted cautiously after lactic acidosis has been excluded. [doc_3]\n\n",
+            "answered": true,
+            "raw_answer": "Yes. Metformin should be taken with food whenever possible to reduce stomach upset, including nausea and vomiting. [doc_1]\n\nFollow the dosing instructions prescribed for you, and contact your healthcare professional if vomiting occurs; the medication may need to be temporarily stopped and restarted cautiously after lactic acidosis has been excluded. [doc_3]",
+            "follow_ups": [
+              "Does it matter whether metformin is taken with breakfast, lunch, or dinner?",
+              "What should he do if he misses a dose or cannot eat a meal?",
+              "Are extended-release and immediate-release metformin taken differently with food?"
+            ],
+            "retrieved_chunk_ids": [
+              39,
+              15,
+              12,
+              37
+            ],
+            "retrieved_pages": [
+              9,
+              10,
+              18,
+              19
+            ],
+            "retrieved_sources": [
+              "Metformin"
+            ],
+            "latency_s": 9.667,
+            "time_to_first_answer_s": 6.307,
+            "usage": {
+              "llm_calls": 17,
+              "prompt_tokens": 10636,
+              "completion_tokens": 1087,
+              "total_tokens": 11723,
+              "cached_prompt_tokens": 0,
+              "est_cost_usd": 0.008261,
+              "by_model": {
+                "gpt-5.6-luna": {
+                  "calls": 16,
+                  "prompt_tokens": 9105,
+                  "completion_tokens": 895,
+                  "cost_usd": 0.002895
+                },
+                "gpt-5.6-terra": {
+                  "calls": 1,
+                  "prompt_tokens": 1531,
+                  "completion_tokens": 192,
+                  "cost_usd": 0.005366
+                }
+              }
+            },
+            "error": null,
+            "used_history": true,
+            "n_branches": 4,
+            "selected_branch_type": "decomposed_0"
+          }
+        ],
+        "trajectory": [
+          {
+            "role": "user",
+            "content": "I just got put on Lipitor. What dose do people usually start on?"
+          },
+          {
+            "role": "assistant",
+            "content": "For adults, Lipitor (atorvastatin) is usually started at **10 or 20 mg once daily**, depending on how much LDL cholesterol reduction is needed. [doc_1]\n If a reduction in LDL cholesterol of **more than 45%** is needed, the starting dose may be **40 mg once daily**. The usual adult dosage range is **10\u201380 mg once daily**, with a maximum of **80 mg/day**. [doc_1] [doc_2]\n The dose may be adjusted based on lipid results, generally at intervals of **2\u20134 weeks**. It can be taken at any time of day, with or without food, although evening dosing is preferred in the prescribing information. [doc_2]\n For children aged **10\u201317 years**, the recommended starting dose is **10 mg/day**, with a maximum recommended dose of **20 mg/day**. [doc_1] [doc_3]\n Follow the dose prescribed by your clinician rather than changing it yourself."
+          },
+          {
+            "role": "user",
+            "content": "What about in kids?"
+          },
+          {
+            "role": "assistant",
+            "content": "For **metformin**, safety and effectiveness in pediatric patients **have not been established**. [doc_1]\n Therefore, the provided information does **not support a specific pediatric dose or routine use in children**; a clinician should determine whether metformin is appropriate for an individual child. [doc_1]\n Animal studies did not show teratogenic effects in rats and rabbits at the doses studied, but animal findings do not establish safety in children or humans. [doc_3]\n"
+          },
+          {
+            "role": "user",
+            "content": "And the max in that age group?"
+          },
+          {
+            "role": "assistant",
+            "content": "The maximum recommended daily dose of Lipitor (atorvastatin) for children aged 10\u201317 years is **20 mg once daily**. Doses above 20 mg/day have not been studied in this age group. [doc_1] [doc_2]"
+          },
+          {
+            "role": "user",
+            "content": "My husband takes metformin - does that one have a pediatric dose too?"
+          },
+          {
+            "role": "assistant",
+            "content": "The provided prescribing information does **not establish a pediatric dose for metformin**: safety and effectiveness in pediatric patients have not been established. [doc_21] [doc_21] [doc_21] [doc_21] [doc_21] Although a usual adult dosage is listed\u2014500 mg three or four times daily, or 850 mg two or three times daily, with a maximum of 2.55 g/day\u2014this information is not identified as a pediatric regimen and should not be applied to children. [doc_21]\n [doc_16] [doc_16] Therefore, a child should not be given metformin based on the adult dosing information alone; a qualified clinician must determine whether it is appropriate and, if used, establish dosing and monitoring for that individual. The provided information does not supply a specific pediatric dose. [doc_16]\n [doc_21] [doc_16]"
+          },
+          {
+            "role": "user",
+            "content": "So what's the max for that one then?"
+          },
+          {
+            "role": "assistant",
+            "content": "The maximum recommended dose of metformin for children **cannot be established from the provided information**, because safety and effectiveness in pediatric patients have not been established. [doc_9] [doc_9] The stated maximum dose of **2.55 g/day (2,550 mg/day)** applies to the general dosage information in this product monograph and should **not be assumed to be an appropriate pediatric dose**. [doc_9]\n [doc_13] [doc_13] [doc_13] A child should receive metformin only under guidance from a qualified clinician, who can determine whether treatment is appropriate and select an individualized dose. [doc_13]\n [doc_13] [doc_13] [doc_13] [doc_13]\n"
+          },
+          {
+            "role": "user",
+            "content": "And should he take it with food?"
+          },
+          {
+            "role": "assistant",
+            "content": "Yes. Metformin should be taken with food whenever possible to reduce stomach upset, including nausea and vomiting. [doc_1] Follow the dosing instructions prescribed for you, and contact your healthcare professional if vomiting occurs; the medication may need to be temporarily stopped and restarted cautiously after lactic acidosis has been excluded. [doc_3]\n\n"
+          }
+        ],
+        "totals": {
+          "latency_s": 111.703,
+          "est_cost_usd": 0.321031,
+          "total_tokens": 161863,
+          "llm_calls": 119
+        },
+        "per_turn_latency": [
+          11.372,
+          7.735,
+          9.752,
+          43.776,
+          29.401,
+          9.667
+        ],
+        "per_turn_cost": [
+          0.014749,
+          0.009459,
+          0.008042,
+          0.177193,
+          0.103327,
+          0.008261
+        ],
+        "turns_completed": 6
+      },
+      "feedback": {
+        "turn_must_mention_recall": 0.6055555555555555,
+        "turn_must_mention_recall_worst": 0.0,
+        "turn_forbidden_content": 0,
+        "turn_forbidden_content_rate": 0.0,
+        "pii_persistence": 0,
+        "pii_persistence_count": 0,
+        "latency_growth_ratio": 0.8500703482237073,
+        "latency_growth_slope": 2.5856285714285714,
+        "latency_max_turn_s": 43.776,
+        "cost_total_usd": 0.321031,
+        "tokens_total": 161863,
+        "llm_calls_total": 119,
+        "latency_total_s": 111.703,
+        "cost_per_turn_usd": 0.053505166666666666,
+        "tokens_per_turn": 26977.166666666668,
+        "turns_completed": 6,
+        "turn_answered_rate": 1.0,
+        "pipeline_error_any": 0,
+        "pipeline_error_rate": 0.0,
+        "history_used_rate": 1.0
+      },
+      "run_id": "01a01719-25cb-79d1-88a2-de4358b51ac1",
+      "error": null
+    }
+  ]
+}

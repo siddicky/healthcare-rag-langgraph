@@ -1,0 +1,18 @@
+{
+  "stage": "extract_conversation_context",
+  "case": "multiline_history",
+  "vars": {
+    "current_query": "Does that warning apply?",
+    "history_text": "User: What's Lipitor for?\nAssistant: It is described in the monograph."
+  },
+  "messages": [
+    {
+      "role": "system",
+      "content": "You are an AI assistant that analyzes conversation history to extract only the relevant and required parts needed to answer a current query.\n            \nYour task is to identify information from previous exchanges that provides necessary context or background \nfor answering the current query effectively. This includes:\n\n- Prior information the user shared that relates to their current question\n- Previous answers that contain information needed for the current response\n- Any relevant medical topics, medications, or conditions discussed previously\n- User preferences or circumstances mentioned earlier that affect the current answer\n\nProvide:\n1. A boolean value indicating if any parts of the conversation history are relevant and necessary to answer the current query\n2. An explanation of why these entries are relevant and necessary\n3. A formatted context string ready to be used in the answer generation prompt, representing the relevant and necessary snippets of the conversation history\n\nIf no parts of the conversation history are relevant to the current query, return False and an empty formatted context.\n"
+    },
+    {
+      "role": "user",
+      "content": "Current query: \nDoes that warning apply?\n\nPrevious conversation:\n|\n  User: What&#39;s Lipitor for?\n  Assistant: It is described in the monograph.\n\nExtract the relevant context for answering this query: "
+    }
+  ]
+}
