@@ -6,9 +6,9 @@ tags: [privacy, pii, presidio, safety]
 openwiki:
   roles: [architecture, domain, operations]
   change_kinds: [lifecycle, safety]
-  source_paths: [healthcare_rag/processors/privacy.py, healthcare_rag/processors/privacy_patterns.py, healthcare_rag/graph/resources.py, healthcare_rag/graph/engine.py, healthcare_rag/processors/safety.py]
+  source_paths: [healthcare_rag/processors/privacy.py, healthcare_rag/processors/privacy_patterns.py, healthcare_rag/graph/resources.py, healthcare_rag/graph/engine.py, healthcare_rag/processors/safety.py, healthcare_rag/processors/direct_output_policy.py]
   symbols: [PrivacySanitizer, PrivacyScan, PrivacyScanError, Readiness, scrub_phi, union_spans, RedactSpan, deterministic_hits, clinical_code_intervals]
-  test_paths: [tests/test_privacy_sanitizer.py, tests/test_safety_gate.py]
+  test_paths: [tests/test_privacy_sanitizer.py, tests/test_safety_gate.py, tests/graph/test_direct_output_policy.py, tests/graph/test_query_or_respond_privacy.py]
   invariants: [Scanning is fail-closed: any initialization or scan failure raises PrivacyScanError and the turn produces no answer., Redaction merges overlapping spans and keeps the longest match; overlapping different kinds become one REDACTED_IDENTIFIER token., Clinical code intervals (privacy_patterns) are never redacted.]
   validation_commands: [".venv/bin/python -m pytest -q tests/test_privacy_sanitizer.py"]
 ---
@@ -79,6 +79,16 @@ fields are scanned and refused with fixed strings on `PrivacyScanError`
 (`agent/memory.py`, `agent/reminders.py`, `agent/tools/log_metric.py`,
 `agent/tools/log_injection.py`, `agent/store_data.py`).
 
+## Direct-output policy (`processors/direct_output_policy.py`)
+
+The `tool` query-response arm (see [architecture](../architecture/overview.md)) can let the model answer without retrieval; before any such text is shown, `evaluate_generated_output` gates it. NFKC-normalized, casefolded text is denied with reason:
+
+* `privacy_error` — over `MAX_INPUT_BYTES` or any scrub hit;
+* `unsafe_direct_content` — `injection_flags` matches;
+* `clinical_direct_content` — a `NUMERIC_DOSE` number-with-unit match, a `_CLINICAL_UNITS` token, or the `_CLINICAL_ACTIONS ∩ _CLINICAL_TARGETS` instruction pattern (advise/take/double… × atorvastatin/metformin/dose/doctor…).
+
+Only a clean pass returns `(scrubbed_content, None)`; denials return empty content plus the reason, which the gateway maps to a `fallback_reason` (`QueryOrRespondDecision`). History entering the tool router is also projected through `_project_history` (human/ai string content only, each message scrubbed and size-checked).
+
 ## Deployment note
 
 The analyzer needs the pinned spaCy model; the Docker image bakes it in via
@@ -95,3 +105,5 @@ counts as `contains_phi` everywhere at once — the safety gate notices, eval
 PHI categories, and coach tool refusals. Update `tests/test_privacy_sanitizer.py`
 expectations and re-run `tests/test_safety_gate.py`; then measure with a
 filtered eval (`pii_or_phi` category) via [evaluations](../observability/evaluations.md).
+
+**Focused validation:** `tests/test_privacy_sanitizer.py` for span union/readiness/error codes, `tests/graph/test_graph_privacy.py` + `test_graph_privacy_persistence.py` for graph-level fail-closed behaviour, `tests/test_safety_gate.py` for gate-level regression, `tests/graph/test_direct_output_policy.py` for direct-output denial reasons, `tests/graph/test_query_or_respond_privacy.py` for the tool-router boundary, and `tests/graph/test_validation_privacy.py` for validated-answer scrubbing.

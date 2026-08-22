@@ -14,7 +14,8 @@ from tests.graph.test_graph_integration import _install_graph
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    find_spec("langgraph.checkpoint.sqlite.aio") is None,
+    find_spec("langgraph.checkpoint.sqlite") is None
+    or find_spec("langgraph.checkpoint.sqlite.aio") is None,
     reason="graph-sqlite optional dependency is not installed",
 )
 async def test_sqlite_boundary_survives_reopen_without_phi_bytes(

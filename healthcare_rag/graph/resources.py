@@ -3,12 +3,13 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Callable
 from asyncio import Lock as AsyncLock
+from collections.abc import Callable
 from functools import partial
 from threading import Lock
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
+from anyio import to_thread
 from weaviate.client import WeaviateAsyncClient
 from weaviate.connect import ConnectionParams
 
@@ -20,6 +21,11 @@ if TYPE_CHECKING:
     from healthcare_rag.graph.llm import PromptRegistry
 
 logger = logging.getLogger("MedicalRAG")
+
+
+@runtime_checkable
+class AsyncCloseable(Protocol):
+    async def aclose(self) -> None: ...
 
 
 class Resources:
@@ -40,6 +46,7 @@ class Resources:
         self._pinecone_client: Any | None = None
         self._pinecone_index: Any | None = None
         self._gateway: LangChainLLMGateway | None = None
+        self._owned_gateway: LangChainLLMGateway | None = None
         self._privacy: PrivacySanitizer = privacy or PrivacySanitizer()
         self._lock: Lock = Lock()
         self._async_lock: AsyncLock = AsyncLock()
@@ -78,7 +85,9 @@ class Resources:
                         grpc_port=self.settings.weaviate_grpc_port,
                         grpc_secure=False,
                     ),
-                    additional_headers={"X-OpenAI-Api-Key": self.settings.openai_api_key},
+                    additional_headers={
+                        "X-OpenAI-Api-Key": self.settings.openai_api_key
+                    },
                 )
                 await client.connect()
                 self._weaviate = client
@@ -114,12 +123,8 @@ class Resources:
         client = await self.pinecone_client()
         async with self._async_lock:
             if self._pinecone_index is None:
-                import anyio
-
                 name = self.settings.pinecone_index_name
-                self._pinecone_index = await anyio.to_thread.run_sync(
-                    partial(client.Index, name)
-                )
+                self._pinecone_index = await to_thread.run_sync(partial(client.Index, name))
             return self._pinecone_index
 
     @property
@@ -127,7 +132,11 @@ class Resources:
         """Construct the shared model gateway on first access."""
         with self._lock:
             if self._gateway is None:
-                self._gateway = LangChainLLMGateway(self.settings, self.prompts)
+                gateway = LangChainLLMGateway(
+                    self._privacy, self.settings, self.prompts
+                )
+                self._gateway = gateway
+                self._owned_gateway = gateway
             return self._gateway
 
     @property
@@ -136,6 +145,12 @@ class Resources:
 
     async def aclose(self) -> None:
         """Close the clients this owner constructed and opened, and nothing else."""
+        gateway = self._owned_gateway
+        self._gateway = None
+        self._owned_gateway = None
+        if isinstance(gateway, AsyncCloseable):
+            await gateway.aclose()
+
         client = self._weaviate
         self._weaviate = None
         if client is not None and client.is_connected():

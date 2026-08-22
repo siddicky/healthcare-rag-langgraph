@@ -12,7 +12,8 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
         dev test test-judges calibrate eval-smoke eval eval-nojudge index-pageindex \
         ingest-pinecone \
         eval-multiturn eval-multiturn-smoke eval-agent eval-agent-multiturn deployed-smoke forget-member \
-        dataset-sync dataset-sync-multiturn wiki-init wiki-update
+        dataset-sync dataset-sync-multiturn \
+        routing-gate-query-smoke routing-gate-safety-smoke wiki-init wiki-update
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -109,6 +110,12 @@ deployed-smoke: ## Run the ten-check smoke against LANGGRAPH_DEPLOYMENT_URL
 
 forget-member: ## Self-erase a member through the deployed coach flow (FORGET_ARGS=--dry-run)
 	$(UV) run python scripts/forget_member.py --url "$(LANGGRAPH_DEPLOYMENT_URL)" $(FORGET_ARGS)
+
+routing-gate-query-smoke: ## Validate the paired query-routing gate contract with fixtures
+	$(PY) -m evals.routing_gate --lane query --smoke --json
+
+routing-gate-safety-smoke: ## Validate the paired safety-routing gate contract with fixtures
+	$(PY) -m evals.routing_gate --lane safety --smoke --json
 
 wiki-init: ## Generate the OpenWiki repo docs (openwiki/) — needs ~/.openwiki/.env
 	openwiki code --init -p

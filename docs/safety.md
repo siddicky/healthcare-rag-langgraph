@@ -75,8 +75,12 @@ first node and the only code that ever sees the raw question:
   are defensively re-scrubbed even when safety classification is disabled.
 
 The supported identifier-bearing runtime is controlled `GraphEngine` execution with
-`stream_mode="updates"`, `durability="exit"`, LangSmith tracing disabled, and an opaque
-non-personal `thread_id`. Direct compiled-graph calls, Agent Server, Studio, and
+`stream_mode="updates"`, `durability="exit"`, LangSmith tracing disabled by default, and an opaque
+non-personal `thread_id`. A graph runtime refuses environment-driven LangSmith tracing
+unless `LANGSMITH_HIDE_INPUTS=true`; it disables both `LANGSMITH_TRACING` and the legacy
+`LANGCHAIN_TRACING_V2` alias before graph construction when that safeguard is absent.
+Tracing is therefore only for deliberately opted-in synthetic or de-identified input.
+Direct compiled-graph calls, Agent Server, Studio, and
 `values`, `checkpoints`, `tasks`, or `debug` streams are development-only surfaces for
 non-sensitive synthetic input: outer request records, caller-selected callbacks, and
 pre-node stream events cannot be retroactively sanitized by graph code.
@@ -92,6 +96,12 @@ pre-node stream events cannot be retroactively sanitized by graph code.
 | `in_scope_informational` | Normal pipeline, on the scrubbed query. | yes | yes |
 | `ambiguous` | Normal pipeline — the existing clarify stage already handles under-specified queries. | yes | yes |
 | *any* + `contains_phi` | Recognized identifiers are replaced with `[REDACTED_…]` **before** the text reaches the safety LLM, retrieval, downstream prompts, updates, monitor fields, results, or history, and the reply is prefixed with one line: *"I've disregarded the personal identifiers in your message; please don't share them here."* | — | — |
+
+`benign_social` is a separate annotation, not a seventh safety category. It is
+true only for a standalone greeting, thanks, goodbye, or capability/scope
+question with no medical or general-knowledge request; its category remains
+`out_of_scope`. Mixed social/medical messages are not benign social and retain
+their medical safety classification.
 
 A request to read identifiers back ("remind me what my health card number was", "just the
 last three digits") is refused with its own template. There is genuinely nothing to read
@@ -205,9 +215,46 @@ classifier.
 | `HC_RAG_SAFETY_GATE` | `true` | `false` disables safety classification only; identifier sanitization remains active |
 | `HC_RAG_DISABLE_STAGES` | *(empty)* | add `safety` for the same classification ablation; identifier sanitization remains active |
 | `HC_RAG_REFUSAL_BOUNDARY` | `true` | persist qualifying gate refusals per thread and replay them deterministically on matching re-asks; `false` restores exactly the pre-boundary behavior; implied off whenever the safety gate is off |
+| `HC_RAG_QUERY_RESPONSE_ARM` | `current` | `current` preserves the existing scope response for benign social turns; `deterministic` emits fixed social text; `tool` invokes the query-or-respond node. Direct response is never medical. |
+| `HC_RAG_SAFETY_CLASSIFIER` | `llm` | Keep this default. `semantic_router` is not currently usable: `semantic-router==0.1.16` has a dependency conflict with unchanged `openai>=1.76,<2` and `python-dotenv>=1.1`. |
 
 All are read in `healthcare_rag/services/models.py` (`safety_gate_enabled()`,
-`refusal_boundary_enabled()`).
+`refusal_boundary_enabled()`, `query_response_arm()`, and
+`safety_classifier_backend()`).
+
+## Routing-arm safety boundary and experiment status
+
+The production defaults remain `HC_RAG_QUERY_RESPONSE_ARM=current` and
+`HC_RAG_SAFETY_CLASSIFIER=llm`.
+
+The three query-response arms apply only after the safety gate has classified
+and scrubbed the turn. `current` leaves a benign social turn on the established
+out-of-scope scope response. `deterministic` can return fixed scrubbed text for
+only greeting, thanks, goodbye, and capability/scope. `tool` can evaluate that
+same benign-social turn; a malformed or non-direct social decision falls back
+to the fixed social response, while non-social turns continue through retrieval.
+
+Direct response is never medical. In-scope medical, mixed social/medical,
+ambiguous clinical, out-of-scope knowledge, personal-advice, emergency,
+identifier-recall, and prompt-injection turns cannot use the direct-response
+channel. They remain subject to the safety gate, terminal refusals where
+applicable, retrieval, and citation validation. This does not change the PHI
+sanitization, persisted-refusal, or citation guarantees described above.
+
+The query lane is **INCONCLUSIVE**: its sealed judge calibration passed 22 of
+24 fixtures. No paired or paid query run was attempted, so there are no
+query-arm metrics, deltas, cost, latency, or experiment URLs. The source
+artifacts are [`evals/results/query-or-respond.md`](../evals/results/query-or-respond.md)
+and [`query-or-respond.json`](../evals/results/query-or-respond.json).
+
+The semantic safety lane is separately **INCONCLUSIVE** for a missing
+dependency. Exact `semantic-router==0.1.16` conflicts with unchanged
+`openai>=1.76,<2` and `python-dotenv>=1.1`; it is not a selectable successful
+backend. No adapter, configuration, calibration, stage, or paid semantic run
+was attempted. The dependency was not installed, imported, or exercised, and
+there are no semantic metrics. See
+[`evals/results/semantic-safety.md`](../evals/results/semantic-safety.md) and
+[`semantic-safety.json`](../evals/results/semantic-safety.json).
 
 ## Cost and latency
 
@@ -245,10 +292,11 @@ Measured on the worktree smoke, 2026-08-18 (gpt-5.6-luna, `reasoning_effort=none
 * **Process memory**: spaCy may retain analyzed token strings in its process-owned
   vocabulary for the worker lifetime. Disable core dumps/model serialization and bound
   worker lifetime according to deployment policy.
-* **Tracing and server surfaces**: supported identifier-bearing execution requires
-  tracing off. Agent Server/Studio request records, unsafe stream modes, legacy
-  checkpoints, identity linkage, retention/deletion, encryption and legal/BAA controls
-  are deployment concerns outside this sanitizer.
+* **Tracing and server surfaces**: tracing is off by default; a `GraphEngine` disables
+  requested environment tracing without `LANGSMITH_HIDE_INPUTS=true`. This controls the
+  supported graph runtime only. Agent Server/Studio request records, unsafe stream modes,
+  direct graph calls, legacy checkpoints, identity linkage, retention/deletion, encryption
+  and legal/BAA controls are deployment concerns outside this sanitizer.
 * **This is not a clinical decision system.** The gate reduces measured harm; it does
   not make the assistant safe to use for treatment decisions.
 

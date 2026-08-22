@@ -102,6 +102,43 @@ Every run is a LangSmith experiment on the same dataset, so use the dataset's
 reports in `results/`. Run with `--concurrency 1` (default) when you care about
 latency numbers.
 
+## Query-response and semantic-safety routing evidence
+
+The routing evaluation has two independent lanes. Its production defaults stay
+`HC_RAG_QUERY_RESPONSE_ARM=current` and
+`HC_RAG_SAFETY_CLASSIFIER=llm`; neither experiment changes them.
+
+The query-response lane has three arms, all using the `llm` safety classifier:
+`current`, `deterministic`, and `tool`. The gate command is:
+
+```sh
+uv run python -m evals.routing_gate --lane query --stage all --repetitions 2 --concurrency 1 --json --report-name query-or-respond
+```
+
+Its current outcome is **INCONCLUSIVE**. Authored query-judge calibration
+passed 22 of 24 fixtures; two acceptable greeting fixtures scored 0.78 and
+0.72, below the required 0.80. The gate was therefore not run: there is no
+paired or paid measurement of `current+llm`, `deterministic+llm`, or `tool+llm`,
+and no query metrics, deltas, cost, latency, or experiment URLs to compare.
+See [the query result](results/query-or-respond.md) and
+[decision record](../docs/decisions/query-or-respond-vs-current.md).
+
+The semantic-safety lane is separately **INCONCLUSIVE** due to the unresolved
+dependency `semantic-router==0.1.16` under unchanged
+`openai>=1.76,<2` and `python-dotenv>=1.1` bounds. No adapter was implemented;
+no semantic calibration, stage 1, stage 2, or paid semantic run was attempted.
+Semantic Router was not installed, imported, or exercised, so its result has no
+semantic metrics or runtime results. See [the semantic outcome](results/semantic-safety.md)
+and [dependency decision record](../docs/decisions/semantic-router-vs-llm-safety.md).
+
+The routing safety contract retains six `SafetyCategory` values:
+`in_scope_informational`, `personal_medical_advice`, `emergency_red_flag`,
+`out_of_scope`, `prompt_injection`, and `ambiguous`. `benign_social` is a
+separate annotation rather than a seventh category; it is limited to the
+narrow social/capability direct-response path. This annotation and the
+dependency blocker are documented in more detail in
+[routing experiments](../docs/routing-experiments.md).
+
 ## Trusting the graders
 
 * `evals/judge_calibration.json` holds hand-labelled cases with expected scores

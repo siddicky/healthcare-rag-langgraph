@@ -12,6 +12,7 @@ from healthcare_rag.graph.routers import (
     NODE_FOLLOW_UPS,
     NODE_GENERATE,
     NODE_MERGE,
+    NODE_QUERY_OR_RESPOND,
     NODE_RETRIEVE,
     NODE_SAFETY,
     NODE_VALIDATE,
@@ -29,6 +30,7 @@ EXPECTED_NODES = {
     NODE_VALIDATE,
     NODE_FOLLOW_UPS,
     NODE_FINALIZE,
+    NODE_QUERY_OR_RESPOND,
 }
 
 

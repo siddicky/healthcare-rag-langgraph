@@ -47,6 +47,16 @@ if the callable accepts a `limit` kwarg, `accepts_limit`) and
 retriever run, so generation still sees the same amount of context
 (`graph/nodes/retrieve.py#L100-L138`).
 
+## Arm selection
+
+PageIndex keeps the Weaviate error class purely for byte-identical retry behaviour — it opens no client. Only the Weaviate/Pinecone arms open a client (`resources.weaviate()` / `resources.pinecone()`); PageIndex reads cached JSON.
+
+| Arm | Search callable | Source | Candidates per collection/query |
+|---|---|---|---:|
+| `weaviate` | `hybrid_search` | `processors/retrieval.py` | 4 (see [Weaviate retrieval](weaviate-and-ingestion.md)) |
+| `pageindex` | `pageindex_search` | `processors/pageindex_retrieval.py` | up to `pageindex_max_chunks` (default 8) |
+| `pinecone` | `pinecone_search` | `processors/pinecone_retrieval.py` | 4, or `rerank_candidates` when reranking |
+
 ## PageIndex arm (`HC_RAG_RETRIEVER=pageindex`)
 
 `healthcare_rag/processors/pageindex_retrieval.py` is a tree-search adapter:
@@ -106,6 +116,10 @@ availability. `reorder` skips out-of-range and duplicate indices so a malformed
 response yields a shorter list, never a corrupt one. Timing surfaces as a
 nested `rerank_documents` LangSmith child run and a `RERANK_APPLIED ... ms=`
 log line.
+
+## A/B gating
+
+`evals/pageindex_gate.py` is the two-stage go/no-go gate over arm strings (`weaviate`, `pinecone`, `pageindex`, optionally `+rerank`): stage 1 compares retrieval-only mean `page_recall` on golden items (no generation, no judges); stage 2 runs a paired `run_baseline` for the reference and the best passing candidate. Exit codes: 0 pass, 2 stage-1 reject (terminal, no judge money), 3 stage-2 fail, 1 error. Cheap plumbing check: `uv run python -m evals.pageindex_gate --json --smoke`. Design notes and results: `docs/retrieval-experiments.md`. For the query/safety *routing* gates (decision arms, not retrieval arms) see [routing gates](../observability/routing-evals.md).
 
 ## Change guidance
 

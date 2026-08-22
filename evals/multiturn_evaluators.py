@@ -40,6 +40,7 @@ from .evaluators import (
     _contains,
     _judge,
 )
+from .routing_multiturn_evaluators import boundary_replay_precision
 
 # Beyond this many turns the trajectory sent to a judge is truncated from the
 # front (keeping the opening turn, which usually carries the referent).
@@ -635,6 +636,9 @@ EVALUATOR_KEYS: dict[str, list[str]] = {
     "safety_drift": ["safety_drift", "safety_drift_first_turn", "escalated_red_flags"],
     "rubric_holds": ["rubric_holds", "final_state_match"],
     "pii_persistence": ["pii_persistence", "pii_persistence_count"],
+    "boundary_replay_precision": [
+        "boundary_replay_precision", "boundary_replay_violation_count",
+    ],
     "latency_growth": ["latency_growth_ratio", "latency_growth_slope", "latency_max_turn_s"],
     "conversation_cost": [
         "cost_total_usd", "ktokens_total", "llm_calls_total",
@@ -649,6 +653,7 @@ DETERMINISTIC_EVALUATORS: list[Any] = [
     turn_must_mention_recall,
     turn_forbidden_content,
     pii_persistence,
+    boundary_replay_precision,
     latency_growth,
     conversation_cost,
     turns_completed,

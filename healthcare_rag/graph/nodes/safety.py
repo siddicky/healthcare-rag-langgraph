@@ -2,15 +2,16 @@ from __future__ import annotations
 
 import logging
 import time
-from datetime import datetime, timezone
-from typing import cast, override
+from contextlib import suppress
+from datetime import UTC, datetime
+from typing import TypeAlias, cast
 
-from langchain_core.messages import AIMessage, BaseMessage, HumanMessage
+from langchain_core.messages import BaseMessage
 from langgraph.types import Command, Overwrite
 
 from healthcare_rag.graph.history import build_history_views
 from healthcare_rag.graph.llm import LangChainLLMGateway
-from healthcare_rag.graph.nodes import render_display_answer
+from healthcare_rag.graph.nodes import safety_classifier, safety_finalize
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.routers import GateTarget, route_after_gate
 from healthcare_rag.graph.state import JSONValue, RAGState
@@ -25,14 +26,18 @@ from healthcare_rag.processors.refusal_boundary import (
     load_boundaries,
     upsert_boundary,
 )
-from healthcare_rag.processors.safety import SafetyGate, scrub_phi
+from healthcare_rag.processors.safety import scrub_phi
 from healthcare_rag.processors.safety_responses import (
     PHI_NOTICE,
     emergency_response,
     injection_response,
     personal_advice_response,
 )
+from healthcare_rag.processors.social_responses import default_social_arm_output
 from healthcare_rag.services.models import refusal_boundary_enabled, safety_gate_enabled
+
+LangChainSafetyGate = safety_classifier.LangChainSafetyGate
+finalize = safety_finalize.finalize
 
 logger = logging.getLogger("MedicalRAG")
 GATEWAY: LangChainLLMGateway | None = None
@@ -43,65 +48,27 @@ KIND_TO_CATEGORY: dict[BoundaryKind, SafetyCategory] = {
 }
 
 
-type SafetyUpdateValue = (
+SafetyUpdateValue: TypeAlias = (
     JSONValue | Overwrite | list[str] | list[dict[str, JSONValue]]
 )
-type SafetyGateUpdate = dict[str, SafetyUpdateValue]
+SafetyGateUpdate: TypeAlias = dict[str, SafetyUpdateValue]
 
 
-def _gate_command(
-    state: RAGState,
-    update: SafetyGateUpdate,
-) -> Command[GateTarget]:
-    """Carry the gate's state update and its routing decision in one return.
-
-    ``route_after_gate`` reads the *post-update* ``safety_response`` channel, which
-    is what a conditional edge would have seen, so the router is called on the
-    state this update produces rather than on the input.
-    """
+def _gate_command(state: RAGState, update: SafetyGateUpdate) -> Command[GateTarget]:
     return Command(
         update=update,
         goto=route_after_gate(cast(RAGState, cast(object, {**state, **update}))),
     )
 
 
-class LangChainSafetyGate(SafetyGate):
-    @override
-    async def _llm_assess(
-        self,
-        query: str,
-        history_context: str = "",
-    ) -> SafetyAssessment:
-        default = SafetyAssessment(
-            category="ambiguous",
-            contains_phi=False,
-            phi_spans=[],
-            drug_mentioned="none",
-            rationale="safety-gate LLM call failed; deterministic checks only",
-        )
-        llm_call = self._llm_call
-        if llm_call is None:
-            return default
-        result = await llm_call(
-            prompt_name="safety_gate",
-            temperature=0.0,
-            response_format=SafetyAssessment,
-            default_response=default,
-            user_query=query,
-            conversation_context=history_context or "",
-        )
-        return result or default
-
-
 async def safety_gate(state: RAGState) -> Command[GateTarget]:
     question = state.get("question", "")
-    gate_on = safety_gate_enabled()
     settings = get_resources().settings
     messages: list[BaseMessage] = list(state.get("messages", []))
     history_context, processed_history = build_history_views(
         messages,
         settings.history_max_tokens,
-        gate_on,
+        safety_gate_enabled(),
     )
     serialized_history: list[dict[str, JSONValue]] = [
         {
@@ -117,6 +84,9 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         "safety_kind": "none",
         "safety_response": "",
         "safety_notices": [],
+        "direct_response": None,
+        "response_action": None,
+        "query_router": None,
         "summary": None,
         "clarified": None,
         "decomposed": False,
@@ -140,7 +110,7 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         "history_context": history_context,
         "processed_history": serialized_history,
     }
-    if not gate_on:
+    if not safety_gate_enabled():
         scrubbed_question, _ = scrub_phi(question)
         return _gate_command(
             state,
@@ -158,26 +128,32 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         valid = load_boundaries(state.get("refusal_boundaries") or [])
         hit = boundary_hit(scrubbed, valid)
         if hit is not None:
-            return _gate_command(state, {
-                **reset,
-                "scrubbed_question": scrubbed,
-                "working_query": scrubbed,
-                "safety_response": hit.response,
-                "safety_kind": f"boundary:{hit.kind}",
-                "safety_notices": [PHI_NOTICE] if phi_kinds else [],
-                "safety": SafetyOutcome(
-                    category=KIND_TO_CATEGORY[hit.kind],
-                    contains_phi=bool(phi_kinds),
-                    short_circuited=True,
-                    response_kind="boundary_replay",
-                    deterministic_flags=[f"boundary_hit:{hit.kind}:{hit.topic}"],
-                    phi_kinds=phi_kinds,
-                    llm_calls=0,
-                    boundary_hit=True,
-                    boundaries_active=len(valid),
-                ).model_dump(mode="json"),
-                "route": Overwrite([f"safety_gate:boundary:{hit.kind}"]),
-            })
+            return _gate_command(
+                state,
+                {
+                    **reset,
+                    "scrubbed_question": scrubbed,
+                    "working_query": scrubbed,
+                    "safety_response": hit.response,
+                    "safety_kind": f"boundary:{hit.kind}",
+                    "safety_notices": [PHI_NOTICE] if phi_kinds else [],
+                    "safety": SafetyOutcome(
+                        category=KIND_TO_CATEGORY[hit.kind],
+                        contains_phi=bool(phi_kinds),
+                        short_circuited=True,
+                        response_kind="boundary_replay",
+                        deterministic_flags=[f"boundary_hit:{hit.kind}:{hit.topic}"],
+                        phi_kinds=phi_kinds,
+                        llm_calls=0,
+                        classifier_backend="none",
+                        classifier_calls=0,
+                        embedding_calls=0,
+                        boundary_hit=True,
+                        boundaries_active=len(valid),
+                    ).model_dump(mode="json"),
+                    "route": Overwrite([f"safety_gate:boundary:{hit.kind}"]),
+                },
+            )
 
     async def adapter(
         prompt_name: str,
@@ -186,7 +162,7 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         default_response: SafetyAssessment | None = None,
         **prompt_args: str,
     ) -> SafetyAssessment | None:
-        try:
+        with suppress(Exception):
             gateway = GATEWAY or get_resources().gateway
             return await gateway.astructured(
                 prompt_name,
@@ -195,9 +171,8 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
                 default=default_response,
                 **prompt_args,
             )
-        except Exception:  # noqa: BLE001 - safety classification must fail soft.
-            logger.warning("SAFETY_CLASSIFICATION_FAILED")
-            return default_response
+        logger.warning("SAFETY_CLASSIFICATION_FAILED")
+        return default_response
 
     started = time.perf_counter()
     decision = await LangChainSafetyGate(gateway=adapter, temperature=0.0).evaluate(
@@ -206,8 +181,7 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
     )
     boundary_update: SafetyGateUpdate = {}
     if (
-        gate_on
-        and boundary_on
+        boundary_on
         and decision.short_circuit
         and decision.kind in {"personal_advice", "emergency", "injection"}
     ):
@@ -236,70 +210,53 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
                 if decision.response in allowed_responses(boundary_kind)
                 else fallback
             ),
-            created_ts=datetime.now(timezone.utc).isoformat(),
+            created_ts=datetime.now(UTC).isoformat(),
             template_version=TEMPLATE_VERSION,
         )
         boundary_update["refusal_boundaries"] = upsert_boundary(raw, new)
     latency = time.perf_counter() - started
-    rationale = scrub_phi(decision.assessment.rationale)[0]
+    social_output = default_social_arm_output(
+        decision.response or "", decision.kind, decision.short_circuit
+    )
+    social_intent = (
+        decision.assessment.social_intent if decision.kind == "out_of_scope" else None
+    )
+    benign_social = decision.assessment.benign_social and social_intent is not None
+    social_output = social_output.for_social_turn(
+        settings.query_response_arm, social_intent, benign_social
+    )
     outcome = SafetyOutcome(
         category=decision.assessment.category,
         contains_phi=decision.contains_phi,
-        short_circuited=decision.short_circuit,
-        response_kind=decision.kind,
+        short_circuited=social_output.short_circuited,
+        response_kind=social_output.response_kind,
         deterministic_flags=decision.flags,
         phi_kinds=decision.phi_kinds,
         llm_calls=decision.llm_calls,
+        benign_social=benign_social,
+        social_intent=social_intent,
+        classifier_backend="llm",
+        classifier_calls=decision.llm_calls,
+        embedding_calls=0,
+        classifier_latency_s=round(latency, 3),
         boundary_hit=False,
         boundaries_active=len(valid),
         gate_latency_s=round(latency, 3),
-        rationale=rationale,
+        rationale=scrub_phi(decision.assessment.rationale)[0],
     )
-    return _gate_command(state, {
-        **reset,
-        **boundary_update,
-        "scrubbed_question": decision.scrubbed_query,
-        "working_query": decision.scrubbed_query,
-        "safety": outcome.model_dump(mode="json"),
-        "safety_kind": decision.kind,
-        "safety_response": decision.response or "",
-        "safety_notices": decision.notices,
-        "route": Overwrite([f"safety_gate:{decision.kind}"]),
-    })
-
-
-async def finalize(state: RAGState) -> RAGState:
-    safety_response = state.get("safety_response", "")
-    if safety_response:
-        answer = "\n\n".join(
-            part for part in [*state.get("safety_notices", []), safety_response] if part
-        )
-        follow_ups: list[str] = []
-    else:
-        answer = render_display_answer(
-            state.get("validated"),
-            state.get("safety_notices", []),
-        )
-        follow_ups = state.get("follow_ups", [])
-
-    answer = scrub_phi(answer)[0]
-    follow_ups = [scrub_phi(question)[0] for question in follow_ups]
-    selected_branch_query = state.get("selected_branch_query")
-    if selected_branch_query is None:
-        selected_branch_query = state.get("working_query")
-    selected_branch_query = scrub_phi(selected_branch_query or "")[0] or None
-    update: RAGState = {
-        "answer": answer or None,
-        "follow_ups": follow_ups,
-        "selected_branch_query": selected_branch_query,
-    }
-    if answer:
-        timestamp = datetime.now(timezone.utc).isoformat()
-        update["messages"] = [
-            HumanMessage(
-                content=state.get("scrubbed_question", ""),
-                additional_kwargs={"ts": timestamp},
-            ),
-            AIMessage(content=answer, additional_kwargs={"ts": timestamp}),
-        ]
-    return update
+    return _gate_command(
+        state,
+        {
+            **reset,
+            **boundary_update,
+            "scrubbed_question": decision.scrubbed_query,
+            "working_query": decision.scrubbed_query,
+            "safety": outcome.model_dump(mode="json"),
+            "safety_kind": social_output.safety_kind,
+            "safety_response": social_output.safety_response,
+            "safety_notices": decision.notices,
+            "direct_response": social_output.direct_response,
+            "response_action": social_output.response_action,
+            "route": Overwrite([f"safety_gate:{social_output.route_kind}"]),
+        },
+    )

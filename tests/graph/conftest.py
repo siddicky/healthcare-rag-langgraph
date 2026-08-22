@@ -8,10 +8,11 @@ from typing import Any, Protocol
 import pytest
 from langchain_core.messages import ToolCall
 
-from healthcare_rag.graph.llm import LangChainLLMGateway
+from healthcare_rag.graph.llm import LangChainLLMGateway, QueryOrRespondDecision
 from healthcare_rag.graph.resources import Resources, override
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.models.retrieval import QueryResultList
+from healthcare_rag.processors.privacy import PrivacySanitizer
 
 
 @dataclass(slots=True)  # noqa: MUTABLE_OK - counting fake records calls.
@@ -20,6 +21,7 @@ class FakeGateway(LangChainLLMGateway):
     completion_results: dict[str, str] = field(default_factory=dict)
     tool_calls: list[ToolCall] = field(default_factory=list)
     route_error: Exception | None = None
+    query_decision: QueryOrRespondDecision | None = None
     calls: list[dict[str, Any]] = field(default_factory=list)
 
     async def astructured(
@@ -66,10 +68,25 @@ class FakeGateway(LangChainLLMGateway):
             raise self.route_error
         return self.tool_calls
 
+    async def aquery_or_respond(
+        self,
+        history: list[Any],
+        current_query: str,
+    ) -> QueryOrRespondDecision:
+        self.calls.append(
+            {
+                "method": "query_or_respond",
+                "history": history,
+                "query": current_query,
+            }
+        )
+        assert self.query_decision is not None
+        return self.query_decision
+
 
 class FakeLLMGateway(LangChainLLMGateway):
     def __init__(self, **scripts: Iterable[Any]) -> None:
-        super().__init__()
+        super().__init__(PrivacySanitizer())
         self.scripts = {stage: deque(values) for stage, values in scripts.items()}
         self.calls: dict[str, list[dict[str, Any]]] = defaultdict(list)
 

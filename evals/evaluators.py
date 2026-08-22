@@ -20,7 +20,7 @@ from __future__ import annotations
 import asyncio
 import os
 import re
-from typing import Any, Optional
+from typing import Any, Optional, TypeVar
 
 import openai
 from pydantic import BaseModel, Field
@@ -319,7 +319,14 @@ class BehaviorVerdict(BaseModel):
     rationale: str
 
 
-async def _judge(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
+JudgeVerdict = TypeVar("JudgeVerdict", bound=BaseModel)
+
+
+async def _judge(
+    system: str,
+    user: str,
+    schema: type[JudgeVerdict],
+) -> JudgeVerdict:
     async with _judge_semaphore:
         resp = await _client().beta.chat.completions.parse(
             model=JUDGE_MODEL,
@@ -333,6 +340,14 @@ async def _judge(system: str, user: str, schema: type[BaseModel]) -> BaseModel:
     if parsed is None:
         raise RuntimeError("judge returned no parse")
     return parsed
+
+
+async def routing_judge(
+    system: str,
+    user: str,
+    schema: type[JudgeVerdict],
+) -> JudgeVerdict:
+    return await _judge(system, user, schema)
 
 
 async def correctness_judge(inputs: dict, outputs: dict, reference_outputs: dict) -> dict:

@@ -10,8 +10,14 @@ from langchain_core.outputs import ChatGeneration, LLMResult
 
 from healthcare_rag.graph.engine import GraphEngine, UsageRecorder, _redact_root_inputs
 from healthcare_rag.graph.resources import get
-from tests.graph.conftest import ResourceInstaller
-from tests.graph.test_graph_integration import _install_graph
+from healthcare_rag.models.answers import (
+    Citation,
+    CitedAnswerResult,
+    StatementWithCitations,
+)
+from healthcare_rag.models.queries import RetrievalEvaluation
+from healthcare_rag.models.retrieval import QueryDocument, QueryResult, QueryResultList
+from healthcare_rag.models.safety import SafetyAssessment
 
 RESULT_KEYS = {
     "answer",
@@ -27,6 +33,7 @@ RESULT_KEYS = {
     "usage",
     "per_call_usage",
     "safety_outcome",
+    "query_router",
     "error",
     "n_branches",
     "branch_types",
@@ -36,9 +43,76 @@ RESULT_KEYS = {
 }
 
 
+class _Gateway:
+    async def astructured(self, stage, _model_type, **_kwargs):
+        if stage == "safety_gate":
+            return SafetyAssessment(category="in_scope_informational")
+        if stage == "evaluate_retrieval":
+            return RetrievalEvaluation(
+                is_sufficient=True,
+                missing_information=None,
+                additional_queries=None,
+            )
+        if stage == "validate_answer":
+            return CitedAnswerResult(
+                statements=[
+                    StatementWithCitations(
+                        text="Lipitor information.",
+                        citations=[
+                            Citation(
+                                doc_id="doc_1",
+                                source_name="Lipitor",
+                                quote="Lipitor information.",
+                            )
+                        ],
+                        linebreaks="",
+                    )
+                ]
+            )
+        return None
+
+    async def acomplete(self, _stage, **_kwargs):
+        return "Lipitor information [doc_1]."
+
+    async def aroute_tools(self, _query):
+        return [
+            {
+                "name": "query_lipitor",
+                "args": {"query": "routed"},
+                "id": "call-lipitor",
+                "type": "tool_call",
+            }
+        ]
+
+
+async def _retrieve(_client, collection_name, query):
+    return QueryResultList(
+        results=[
+            QueryResult(
+                source=collection_name,
+                query=query,
+                docs=[
+                    QueryDocument(
+                        content="Lipitor information.",
+                        score=0.9,
+                        doc_id="doc-1",
+                        source_name="Lipitor",
+                        metadata={"id_": "doc_1"},
+                        page_numbers=[1],
+                    )
+                ],
+            )
+        ]
+    )
+
+
+def _install_graph(install_resources) -> None:
+    install_resources(_Gateway(), retriever=_retrieve)
+
+
 @pytest.mark.asyncio
 async def test_graph_engine_when_running_simple_turn_returns_legacy_key_set(
-    install_resources: ResourceInstaller,
+    install_resources,
 ) -> None:
     _install_graph(install_resources)
     engine = GraphEngine(get().settings)
@@ -48,16 +122,18 @@ async def test_graph_engine_when_running_simple_turn_returns_legacy_key_set(
     assert set(result) == RESULT_KEYS
     assert result["answer"] == "Lipitor information. [doc_1]"
     assert result["branch_types"] == ["initial"]
+    assert result["query_router"] is None
     await engine.aclose()
 
 
 @pytest.mark.asyncio
 @pytest.mark.skipif(
-    find_spec("langgraph.checkpoint.sqlite.aio") is None,
+    find_spec("langgraph.checkpoint.sqlite") is None
+    or find_spec("langgraph.checkpoint.sqlite.aio") is None,
     reason="graph-sqlite optional dependency is not installed",
 )
 async def test_sqlite_engine_when_reopened_preserves_turn_messages(
-    install_resources: ResourceInstaller,
+    install_resources,
     tmp_path,
 ) -> None:
     _install_graph(install_resources)
@@ -136,7 +212,7 @@ def test_redact_root_inputs_when_scrubber_fails_returns_empty(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     def fail(_question: str) -> tuple[str, list[str]]:
-        raise RuntimeError("scrubber failed")
+        raise RuntimeError("scrubber failed")  # noqa: GENERIC_ERR_OK - synthetic fault.
 
     monkeypatch.setattr("healthcare_rag.graph.engine.scrub_phi", fail)
     assert _redact_root_inputs({"question": "John Smith MRN 12345"}) == {}

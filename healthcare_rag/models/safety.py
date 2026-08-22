@@ -9,7 +9,7 @@ into its result dict — it is never sent to a model.
 
 from __future__ import annotations
 
-from typing import List, Literal, Optional
+from typing import Literal, TypeAlias
 
 from pydantic import BaseModel, Field
 
@@ -24,6 +24,7 @@ SafetyCategory = Literal[
 ]
 
 DrugMentioned = Literal["lipitor", "metformin", "both", "none", "other"]
+SocialIntent: TypeAlias = Literal["greeting", "thanks", "goodbye", "capability"]
 
 
 class SafetyAssessment(BaseModel):
@@ -45,7 +46,7 @@ class SafetyAssessment(BaseModel):
         description="True if the message contains any personal identifier (name, health card "
         "number, MRN, date of birth, address, phone, email) for the user or another person.",
     )
-    phi_spans: List[str] = Field(
+    phi_spans: list[str] = Field(
         default_factory=list,
         description="Verbatim substrings of the message that are personal identifiers. "
         "Copy them exactly. Do not include clinical values such as doses or lab results.",
@@ -56,7 +57,22 @@ class SafetyAssessment(BaseModel):
         "metformin, both, none, or other (a drug outside the two monographs).",
     )
     rationale: str = Field(
-        default="", description="One sentence explaining the category. No patient identifiers."
+        default="",
+        description="One sentence explaining the category. No patient identifiers.",
+    )
+    benign_social: bool = Field(
+        default=False,
+        description=(
+            "True only for a standalone greeting, thanks, goodbye, or question about "
+            "this assistant's capabilities or scope, with no medical or general-knowledge "
+            "request. Such turns still use category out_of_scope."
+        ),
+    )
+    social_intent: SocialIntent | None = Field(
+        default=None,
+        description=(
+            "The standalone social intent when benign_social is true; otherwise null."
+        ),
     )
 
 
@@ -67,14 +83,21 @@ class SafetyOutcome(BaseModel):
     contains_phi: bool
     short_circuited: bool
     response_kind: str = "none"
-    deterministic_flags: List[str] = Field(default_factory=list)
-    phi_kinds: List[str] = Field(default_factory=list)
+    deterministic_flags: list[str] = Field(default_factory=list)
+    phi_kinds: list[str] = Field(default_factory=list)
     llm_calls: int = 1
+    benign_social: bool = False
+    social_intent: SocialIntent | None = None
+    classifier_backend: str = "none"
+    classifier_calls: int = 0
+    embedding_calls: int = 0
+    classifier_fallback: str | None = None
+    classifier_latency_s: float | None = None
     boundary_hit: bool = Field(
         default=False, description="Whether a stored refusal boundary replayed."
     )
     boundaries_active: int = Field(
         default=0, description="Number of valid refusal boundaries active."
     )
-    gate_latency_s: Optional[float] = None
+    gate_latency_s: float | None = None
     rationale: str = ""

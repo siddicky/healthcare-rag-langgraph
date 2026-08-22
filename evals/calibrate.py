@@ -22,16 +22,31 @@ every experiment's numbers.
 from __future__ import annotations
 
 import argparse
-import asyncio
 import inspect
 import json
+import os
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
 
+import anyio
+import openai
 from dotenv import load_dotenv
 
 from . import evaluators as ev
+from .routing_calibration import (
+    CHITCHAT_ACCEPTABLE_MIN,
+    CHITCHAT_UNACCEPTABLE_MAX,
+    CalibrationCounts,
+    CalibrationLane,
+    CalibrationScore,
+    CalibrationStatus,
+    CalibrationThresholds,
+    RoutingCalibrationRun,
+    load_routing_fixtures,
+    summarize_calibration,
+)
+from .routing_judges import calibration_safety_drift, chitchat_quality
 
 load_dotenv()
 
@@ -107,12 +122,72 @@ async def run(use_judges: bool, only_metrics: set[str] | None = None) -> tuple[l
     return results, n_fail
 
 
+async def run_routing_fixtures() -> RoutingCalibrationRun:
+    fixtures = load_routing_fixtures()
+    scores: list[CalibrationScore] = []
+    if os.getenv("OPENAI_API_KEY"):
+        for case in fixtures.chitchat:
+            try:
+                result = await chitchat_quality(
+                    {"question": case.question},
+                    {"answer": case.response},
+                    {"expected_action": "direct", "intent": case.intent},
+                )
+            except (openai.OpenAIError, RuntimeError):
+                continue
+            score = result["score"]
+            if isinstance(score, (int, float)):
+                scores.append(
+                    CalibrationScore(
+                        fixture_id=case.id,
+                        lane=CalibrationLane.QUERY,
+                        score=float(score),
+                    )
+                )
+        for case in fixtures.safety_drift:
+            try:
+                result = await calibration_safety_drift(case.turns)
+            except (openai.OpenAIError, RuntimeError):
+                continue
+            score = result["score"]
+            if isinstance(score, (int, float)):
+                scores.append(
+                    CalibrationScore(
+                        fixture_id=case.id,
+                        lane=CalibrationLane.SAFETY,
+                        score=float(score),
+                    )
+                )
+    summary = summarize_calibration(fixtures, tuple(scores))
+    return RoutingCalibrationRun(
+        counts=CalibrationCounts(
+            chitchat_acceptable=sum(case.acceptable for case in fixtures.chitchat),
+            chitchat_unacceptable=sum(not case.acceptable for case in fixtures.chitchat),
+            safety_drift=sum(case.expected_drift for case in fixtures.safety_drift),
+            safety_safe=sum(not case.expected_drift for case in fixtures.safety_drift),
+        ),
+        thresholds=CalibrationThresholds(
+            chitchat_acceptable_min=CHITCHAT_ACCEPTABLE_MIN,
+            chitchat_unacceptable_max=CHITCHAT_UNACCEPTABLE_MAX,
+        ),
+        query=summary.query,
+        safety=summary.safety,
+    )
+
+
 async def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--no-judges", action="store_true")
     ap.add_argument("--metric", action="append", default=None, help="only check these metrics")
     ap.add_argument("--json", action="store_true")
+    ap.add_argument("--routing-fixtures", action="store_true")
     args = ap.parse_args()
+
+    if args.routing_fixtures:
+        routing = await run_routing_fixtures()
+        print(routing.model_dump_json(indent=2 if args.json else None))
+        statuses = {routing.query.status, routing.safety.status}
+        return 0 if statuses <= {CalibrationStatus.PASS, CalibrationStatus.INCONCLUSIVE} else 1
 
     results, n_fail = await run(use_judges=not args.no_judges, only_metrics=set(args.metric) if args.metric else None)
     if args.json:
@@ -129,4 +204,4 @@ async def main() -> int:
 
 
 if __name__ == "__main__":
-    raise SystemExit(asyncio.run(main()))
+    raise SystemExit(anyio.run(main))

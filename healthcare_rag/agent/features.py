@@ -4,7 +4,7 @@ import re
 import unicodedata
 from typing import Final, assert_never
 
-from healthcare_rag.processors.refusal_boundary import (
+from healthcare_rag.processors.refusal_topics import (
     _LIPITOR,
     _METFORMIN,
     _OUT_OF_SCOPE_DRUGS,

@@ -30,5 +30,37 @@ Please make sure the wiki covers, as separate pages where sensible:
    out-of-scope questions, personal medical advice, PII; point to the eval
    categories that measure this.
 
+## Routing-experiment truthfulness contract
+
+Treat the two routing lanes as independent outcome records, not as a summary
+of gate capability code. Production defaults remain
+`HC_RAG_QUERY_RESPONSE_ARM=current` and `HC_RAG_SAFETY_CLASSIFIER=llm`.
+
+- The query-response lane is **INCONCLUSIVE** solely because authored
+  query-judge calibration passed 22 of 24 fixtures: two acceptable greetings
+  scored 0.78 and 0.72, below the 0.80 minimum. No paired or paid query-arm
+  measurement was attempted. This is a measured calibration observation, not
+  a quality conclusion about any arm.
+- The semantic-safety lane is dependency-**INCONCLUSIVE** because exact
+  `semantic-router==0.1.16` is unsatisfiable with unchanged
+  `openai>=1.76,<2` and `python-dotenv>=1.1`. Semantic package installation,
+  import, adapter, configuration, calibration, stage 1, stage 2, runtime, and
+  paid measurement were all not attempted. This is a dependency fact, not a
+  runtime or quality result.
+
+Never say either semantic candidate was evaluated, not adopted, or rejected;
+never attribute its outcome to `RunnerError` or an unimplemented runtime.
+Gate smoke/runtime code documents capability and untested hypotheses, not
+completed experiment evidence. Keep measured observations, dependency facts,
+and untested hypotheses distinct in generated pages.
+
+For `openwiki/observability/routing-evals.md`, the `openwiki.invariants`
+front-matter must keep the binding-integrity invariant but must not mention
+`RunnerError`, an unimplemented runtime, paid or real runs, evaluation,
+adoption, or rejection, and must not attribute either verdict to runtime. Its
+outcome invariant must state the equivalent of: query evidence stops at failed
+authored judge calibration and semantic evidence stops at dependency preflight;
+neither lane has a completed paired or paid measurement.
+
 Do not paste secrets, PDF contents, or full chunk JSON. Link to files with
 paths and line references. Keep pages short; prefer more pages over long ones.

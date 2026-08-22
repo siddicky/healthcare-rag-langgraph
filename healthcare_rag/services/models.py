@@ -87,52 +87,18 @@ Model history
 from __future__ import annotations
 
 import os
-from typing import Any
+from typing import Literal, TypeAlias
 
-DEFAULT_LLM_MODEL = "gpt-5.6-luna"
-DEFAULT_VALIDATOR_MODEL = "gpt-5.6-terra"
-DEFAULT_REASONING_EFFORT = "none"
+from healthcare_rag.services import model_sampling
 
-_REASONING_PREFIXES = ("gpt-5", "o1", "o3", "o4")
-
-
-def default_llm_model() -> str:
-    return os.getenv("HC_RAG_LLM_MODEL", DEFAULT_LLM_MODEL).strip() or DEFAULT_LLM_MODEL
-
-
-def default_validator_model() -> str:
-    return os.getenv("HC_RAG_VALIDATOR_MODEL", DEFAULT_VALIDATOR_MODEL).strip() or DEFAULT_VALIDATOR_MODEL
-
-
-def default_reasoning_effort() -> str:
-    return os.getenv("HC_RAG_REASONING_EFFORT", DEFAULT_REASONING_EFFORT).strip() or DEFAULT_REASONING_EFFORT
-
-
-def is_reasoning_model(model: str) -> bool:
-    m = model.lower()
-    return m.startswith(_REASONING_PREFIXES)
-
-
-def sampling_params(model: str, temperature: float | None = None, reasoning_effort: str | None = None) -> dict[str, Any]:
-    """Return the kwargs to pass to ``chat.completions.create/parse`` for ``model``.
-
-    * gpt-4o family (non-reasoning): ``{"temperature": temperature}``
-    * gpt-5.x / o-series (reasoning): ``{"reasoning_effort": effort}`` and, only
-      when effort == "none", also the temperature (verified 2026-08-18: GPT-5.6
-      accepts temperature with reasoning_effort="none" and rejects it otherwise).
-    """
-    params: dict[str, Any] = {}
-    if is_reasoning_model(model):
-        effort = reasoning_effort or default_reasoning_effort()
-        if effort == "none" and model.lower().startswith(("o1", "o3", "o4")):
-            effort = "low"  # o-series has no "none" level
-        params["reasoning_effort"] = effort
-        if effort == "none" and temperature is not None:
-            params["temperature"] = temperature
-    elif temperature is not None:
-        params["temperature"] = temperature
-    return params
-
+DEFAULT_LLM_MODEL = model_sampling.DEFAULT_LLM_MODEL
+DEFAULT_REASONING_EFFORT = model_sampling.DEFAULT_REASONING_EFFORT
+DEFAULT_VALIDATOR_MODEL = model_sampling.DEFAULT_VALIDATOR_MODEL
+default_llm_model = model_sampling.default_llm_model
+default_reasoning_effort = model_sampling.default_reasoning_effort
+default_validator_model = model_sampling.default_validator_model
+is_reasoning_model = model_sampling.is_reasoning_model
+sampling_params = model_sampling.sampling_params
 
 VALID_STAGES = {"safety", "clarify", "decompose", "evaluate", "validate", "followups"}
 
@@ -143,7 +109,9 @@ def disabled_stages() -> frozenset[str]:
     stages = {s.strip().lower() for s in raw.split(",") if s.strip()}
     unknown = stages - VALID_STAGES
     if unknown:
-        raise ValueError(f"HC_RAG_DISABLE_STAGES has unknown stage(s) {sorted(unknown)}; valid: {sorted(VALID_STAGES)}")
+        raise ValueError(
+            f"HC_RAG_DISABLE_STAGES has unknown stage(s) {sorted(unknown)}; valid: {sorted(VALID_STAGES)}"
+        )
     return frozenset(stages)
 
 
@@ -172,7 +140,9 @@ def _env_bool(name: str, default: bool) -> bool:
         return False
     if val == "":
         return default
-    raise ValueError(f"{name} must be a boolean (one of {sorted(_TRUTHY | _FALSY)}), got {raw!r}")
+    raise ValueError(
+        f"{name} must be a boolean (one of {sorted(_TRUTHY | _FALSY)}), got {raw!r}"
+    )
 
 
 def max_subqueries() -> int:
@@ -183,7 +153,9 @@ def max_subqueries() -> int:
     try:
         value = int(raw.strip())
     except ValueError:
-        raise ValueError(f"HC_RAG_MAX_SUBQUERIES must be an integer, got {raw!r}") from None
+        raise ValueError(
+            f"HC_RAG_MAX_SUBQUERIES must be an integer, got {raw!r}"
+        ) from None
     if value < 1:
         raise ValueError(f"HC_RAG_MAX_SUBQUERIES must be >= 1, got {value}")
     return value
@@ -198,6 +170,7 @@ def decompose_only_complex() -> bool:
 # Safety gate                                                                  #
 # --------------------------------------------------------------------------- #
 
+
 def safety_gate_enabled() -> bool:
     """True when the runtime safety gate runs before the pipeline.
 
@@ -209,6 +182,42 @@ def safety_gate_enabled() -> bool:
 
 def refusal_boundary_enabled() -> bool:
     return _env_bool("HC_RAG_REFUSAL_BOUNDARY", True)
+
+
+QueryResponseArm: TypeAlias = Literal["current", "deterministic", "tool"]
+
+DEFAULT_QUERY_RESPONSE_ARM: QueryResponseArm = "current"
+DEFAULT_SAFETY_CLASSIFIER = "llm"
+VALID_QUERY_RESPONSE_ARMS = frozenset({"current", "deterministic", "tool"})
+VALID_SAFETY_CLASSIFIERS = frozenset({"llm", "semantic_router"})
+
+
+def _enum_env(name: str, default: str, allowed: frozenset[str]) -> str:
+    value = os.getenv(name)
+    if value is None:
+        return default
+    if value not in allowed:
+        raise ValueError(f"{name} must be one of {sorted(allowed)}, got {value!r}")
+    return value
+
+
+def query_response_arm() -> QueryResponseArm:
+    value = os.getenv("HC_RAG_QUERY_RESPONSE_ARM", DEFAULT_QUERY_RESPONSE_ARM)
+    match value:
+        case "current" | "deterministic" | "tool":
+            return value
+        case _:
+            message = (
+                "HC_RAG_QUERY_RESPONSE_ARM must be one of "
+                f"{sorted(VALID_QUERY_RESPONSE_ARMS)}, got {value!r}"
+            )
+            raise ValueError(message)
+
+
+def safety_classifier_backend() -> str:
+    return _enum_env(
+        "HC_RAG_SAFETY_CLASSIFIER", DEFAULT_SAFETY_CLASSIFIER, VALID_SAFETY_CLASSIFIERS
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -261,7 +270,9 @@ def pageindex_max_nodes() -> int:
 
 def pageindex_max_chunks() -> int:
     """Hard cap on how many chunks the selected page ranges may expand to."""
-    return _env_positive_int("HC_RAG_PAGEINDEX_MAX_CHUNKS", DEFAULT_PAGEINDEX_MAX_CHUNKS)
+    return _env_positive_int(
+        "HC_RAG_PAGEINDEX_MAX_CHUNKS", DEFAULT_PAGEINDEX_MAX_CHUNKS
+    )
 
 
 # --------------------------------------------------------------------------- #
@@ -339,9 +350,13 @@ def pinecone_alpha() -> float:
     try:
         value = float(raw.strip())
     except ValueError:
-        raise ValueError(f"HC_RAG_PINECONE_ALPHA must be a number, got {raw!r}") from None
+        raise ValueError(
+            f"HC_RAG_PINECONE_ALPHA must be a number, got {raw!r}"
+        ) from None
     if not 0.0 <= value <= 1.0:
-        raise ValueError(f"HC_RAG_PINECONE_ALPHA must be between 0.0 and 1.0, got {value}")
+        raise ValueError(
+            f"HC_RAG_PINECONE_ALPHA must be between 0.0 and 1.0, got {value}"
+        )
     return value
 
 

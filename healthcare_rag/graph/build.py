@@ -7,7 +7,7 @@ What stays below is the sequencing that is not a decision — plus ``validate_an
 whose "finalize" target differs between the two builders and so needs a path map.
 """
 
-from typing import TypedDict
+from typing import TypeAlias, TypedDict
 
 from langchain_core.messages import AnyMessage
 from langgraph.graph import END, START, StateGraph
@@ -23,6 +23,7 @@ from healthcare_rag.graph.nodes.preprocess import (
     decompose_query,
     extract_conversation_context,
 )
+from healthcare_rag.graph.nodes.query_or_respond import route_query_or_respond
 from healthcare_rag.graph.nodes.retrieve import merge_retrievals, retrieve_documents
 from healthcare_rag.graph.nodes.safety import finalize, safety_gate
 from healthcare_rag.graph.routers import (
@@ -34,6 +35,7 @@ from healthcare_rag.graph.routers import (
     NODE_FOLLOW_UPS,
     NODE_GENERATE,
     NODE_MERGE,
+    NODE_QUERY_OR_RESPOND,
     NODE_RETRIEVE,
     NODE_SAFETY,
     NODE_VALIDATE,
@@ -50,9 +52,9 @@ class PipelineInput(TypedDict, total=False):
     messages: list[AnyMessage]
 
 
-type PipelineBuilder = StateGraph[RAGState, None, PipelineInput, RAGState]
-type PublicBuilder = StateGraph[RAGState, None, GraphInput, GraphOutput]
-type GraphBuilder = PipelineBuilder | PublicBuilder
+PipelineBuilder: TypeAlias = StateGraph[RAGState, None, PipelineInput, RAGState]
+PublicBuilder: TypeAlias = StateGraph[RAGState, None, GraphInput, GraphOutput]
+GraphBuilder: TypeAlias = PipelineBuilder | PublicBuilder
 
 
 def add_pipeline(
@@ -118,6 +120,11 @@ def build_graph() -> PublicBuilder:
         output_schema=GraphOutput,
     )
     builder.add_node(NODE_SAFETY, safety_gate, input_schema=RAGState)
+    builder.add_node(
+        NODE_QUERY_OR_RESPOND,
+        route_query_or_respond,
+        input_schema=RAGState,
+    )
     builder.add_node(NODE_FINALIZE, finalize, input_schema=RAGState)
     add_pipeline(builder, terminal=NODE_FINALIZE)
     builder.add_edge(START, NODE_SAFETY)

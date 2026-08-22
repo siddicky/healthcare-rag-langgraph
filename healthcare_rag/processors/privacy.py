@@ -4,7 +4,9 @@ from dataclasses import dataclass
 from enum import StrEnum
 from importlib import metadata
 from threading import Condition, RLock
-from typing import Final, Protocol, final, override
+from typing import Final, Protocol, final
+
+from typing_extensions import override
 
 from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
 from presidio_analyzer.context_aware_enhancers import LemmaContextAwareEnhancer

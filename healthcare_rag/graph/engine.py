@@ -3,12 +3,10 @@
 from __future__ import annotations
 
 import time
+from dataclasses import dataclass
 from importlib import import_module, metadata
-from typing import Any, Protocol, Self
-from uuid import UUID
+from typing import Any, Protocol, Self, override
 
-from langchain_core.callbacks import AsyncCallbackHandler
-from langchain_core.outputs import LLMResult
 from langgraph.checkpoint.memory import InMemorySaver
 from langsmith import traceable
 
@@ -19,18 +17,43 @@ from healthcare_rag.graph.engine_record import (
     build_result,
     fold_branches,
 )
+from healthcare_rag.graph.engine_usage import UsageRecorder
 from healthcare_rag.graph.history import LegacyTurn, seed_messages
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.monitor import QueryMonitor
-from healthcare_rag.processors.safety import scrub_phi
 from healthcare_rag.processors.privacy import PrivacyScanError
+from healthcare_rag.processors.safety import scrub_phi
+from healthcare_rag.services.tracing import enforce_input_hiding
 
-__all__ = ["Engine", "GraphEngine", "UsageRecorder", "build_engine", "fold_branches"]
+__all__ = [
+    "Engine",
+    "GraphEngine",
+    "SafetyClassifierUnavailableError",
+    "UsageRecorder",
+    "build_engine",
+    "fold_branches",
+]
+
+
+@dataclass(frozen=True, slots=True)
+class SafetyClassifierUnavailableError(RuntimeError):
+    """Selected safety-classifier backend cannot be executed by this build."""
+
+    backend: str
+
+    @override
+    def __str__(self) -> str:
+        return (
+            f"Safety classifier backend {self.backend!r} is unavailable: "
+            "the compatible optional extra is not installed. "
+            "Set HC_RAG_SAFETY_CLASSIFIER=llm."
+        )
+
 
 class Engine(Protocol):
     async def __aenter__(self) -> Self: ...
-    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None: ...
+    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None: ...  # noqa: PYI036
     async def seed_history(self, thread_id: str, turns: list[LegacyTurn]) -> None: ...
     async def run_turn(
         self, thread_id: str, question: str, monitor: QueryMonitor | None = None
@@ -47,71 +70,20 @@ def _redact_root_inputs(inputs: dict[str, Any]) -> dict[str, str]:
     """Fail closed because LangSmith otherwise retains the original arguments."""
     try:
         return {"question": scrub_phi(inputs["question"])[0]}
-    except Exception:  # noqa: BLE001 - mandated fail-closed tracing boundary.
+    except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK - fail-closed tracing boundary.
         return {}
-
-
-class UsageRecorder(AsyncCallbackHandler):
-    """Mutable per-run callback accumulator; one instance belongs to one turn."""
-
-    def __init__(self) -> None:
-        self.calls: list[Any] = []
-        self._started: dict[UUID, tuple[float, str]] = {}
-
-    async def on_llm_start(
-        self,
-        serialized: dict[str, Any],
-        prompts: list[str],
-        *,
-        run_id: UUID,
-        parent_run_id: UUID | None = None,
-        tags: list[str] | None = None,
-        metadata: dict[str, Any] | None = None,
-        **kwargs: Any,
-    ) -> None:
-        del prompts, parent_run_id, tags, kwargs
-        model = str((metadata or {}).get("ls_model_name") or serialized.get("name") or "?")
-        self._started[run_id] = (time.perf_counter(), model)
-
-    async def on_llm_end(
-        self,
-        response: LLMResult,
-        *,
-        run_id: UUID,
-        parent_run_id: UUID | None = None,
-        tags: list[str] | None = None,
-        **kwargs: Any,
-    ) -> None:
-        del parent_run_id, tags, kwargs
-        from evals.usage import LLMCallUsage
-
-        started, model_hint = self._started.pop(run_id, (time.perf_counter(), "?"))
-        output = response.llm_output or {}
-        model = str(output.get("model_name") or output.get("model") or model_hint)
-        usage: dict[str, Any] = {}
-        if response.generations and response.generations[0]:
-            message = getattr(response.generations[0][0], "message", None)
-            usage = dict(getattr(message, "usage_metadata", None) or {})
-        if not usage:
-            usage = dict(output.get("token_usage") or {})
-        details = usage.get("input_token_details") or {}
-        self.calls.append(
-            LLMCallUsage(
-                model=model,
-                prompt_tokens=int(usage.get("input_tokens") or usage.get("prompt_tokens") or 0),
-                completion_tokens=int(usage.get("output_tokens") or usage.get("completion_tokens") or 0),
-                cached_prompt_tokens=int(details.get("cache_read") or 0),
-                latency_s=time.perf_counter() - started,
-                kind="create",
-            )
-        )
 
 
 class GraphEngine:
     """Own a compiled graph, its checkpointer lifecycle, and per-thread history."""
 
     def __init__(self, settings: GraphSettings | None = None) -> None:
+        enforce_input_hiding()
         self.settings = settings or GraphSettings.from_env()
+        if self.settings.safety_classifier == "semantic_router":
+            raise SafetyClassifierUnavailableError(
+                backend=self.settings.safety_classifier
+            )
         self.compiled: Any = None
         self._sqlite_context: Any = None
         self._history_usage: dict[str, bool] = {}
@@ -121,7 +93,7 @@ class GraphEngine:
             await self._initialize()
         return self
 
-    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:
+    async def __aexit__(self, exc_type: Any, exc: Any, traceback: Any) -> None:  # noqa: PYI036
         del exc_type, exc, traceback
         await self.aclose()
 
@@ -134,7 +106,9 @@ class GraphEngine:
             except ModuleNotFoundError as exc:
                 message = "SQLite checkpointing requires: pip install healthcare-rag[graph-sqlite]"
                 raise RuntimeError(message) from exc
-            self._sqlite_context = module.AsyncSqliteSaver.from_conn_string(uri.removeprefix("sqlite:"))
+            self._sqlite_context = module.AsyncSqliteSaver.from_conn_string(
+                uri.removeprefix("sqlite:")
+            )
             saver = await self._sqlite_context.__aenter__()
             await saver.setup()
         else:
@@ -189,13 +163,18 @@ class GraphEngine:
                         first_answer = time.perf_counter()
                         if monitor is not None and not refusal:
                             generation = update.get("generation") or {}
-                            monitor.set_raw_answer(str(generation.get("plain_answer") or ""))
+                            monitor.set_raw_answer(
+                                str(generation.get("plain_answer") or "")
+                            )
                     if node == "finalize":
                         finalized = time.perf_counter()
                         if monitor is not None:
+                            if update.get("direct_response") and not refusal:
+                                first_answer = first_answer or finalized
+                                monitor.set_raw_answer(update.get("direct_response"))
                             monitor.set_final_answer(update.get("answer"))
                             monitor.set_follow_up_questions(update.get("follow_ups"))
-        except Exception as exc:  # noqa: BLE001 - top-level raw-free request boundary.
+        except Exception as exc:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK - top-level raw-free request boundary.
             if isinstance(exc, PrivacyScanError):
                 privacy_failed = True
                 error = str(exc)
@@ -209,7 +188,7 @@ class GraphEngine:
             try:
                 snapshot = await self.compiled.aget_state(config)
                 state = snapshot.values
-            except Exception:  # noqa: BROAD_EXCEPT_OK - raw-free state boundary.
+            except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK - raw-free state boundary.
                 error = error or "PIPELINE_STATE_READ_FAILED"
                 state = {}
                 if monitor is not None:
@@ -249,6 +228,8 @@ class GraphEngine:
             "reranker": self.settings.reranker,
             "rerank_candidates": self.settings.rerank_candidates,
             "rerank_top_k": self.settings.rerank_top_k,
+            "query_response_arm": self.settings.query_response_arm,
+            "safety_classifier": self.settings.safety_classifier,
         }
 
     async def aclose(self) -> None:

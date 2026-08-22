@@ -20,6 +20,7 @@ This orchestrated approach, powered by technologies like Weaviate, OpenAI, LangG
 - [Coach Agent Platform](#coach-agent-platform)
 - [Retrieval Engine Details](#retrieval-engine-details)
 - [Setup & Execution](#setup--execution)
+- [Routing Experiment Status](#routing-experiment-status)
 - [Example Query Flow](#example-query-flow)
 - [Detailed Answer Validation and Hallucination Handling](#detailed-answer-validation-and-hallucination-handling)
 
@@ -223,6 +224,8 @@ Compose network; the existing `make weaviate` workflow remains unchanged.
 `healthcare_rag/services/models.py` (`HC_RAG_LLM_MODEL`, `HC_RAG_VALIDATOR_MODEL`,
 `HC_RAG_REASONING_EFFORT`; defaults `gpt-5.6-luna` / `gpt-5.6-terra`).
 `HC_RAG_DISABLE_STAGES` short-circuits pipeline stages for ablation experiments.
+The routing defaults remain `HC_RAG_QUERY_RESPONSE_ARM=current` and
+`HC_RAG_SAFETY_CLASSIFIER=llm`.
 
 **Observability** — for synthetic/non-sensitive development input, set `LANGSMITH_TRACING=true` and every query is traced to LangSmith as a
 tree of named stages (clarify / decompose / retrieve / evaluate / answer / validate / follow-ups)
@@ -235,6 +238,47 @@ through the real pipeline as a LangSmith experiment and writes `evals/results/<e
 
 **Docs for humans and agents** — `AGENTS.md` (conventions), `openwiki/` (generated repo wiki,
 `make wiki-update` to refresh).
+
+---
+
+## Routing Experiment Status
+
+The query-response and safety-classifier controls are experimental and do not
+change the production defaults: `HC_RAG_QUERY_RESPONSE_ARM=current` and
+`HC_RAG_SAFETY_CLASSIFIER=llm`.
+
+`HC_RAG_QUERY_RESPONSE_ARM` has three behaviors. `current` preserves the
+existing out-of-scope scope response for a benign social turn. `deterministic`
+returns fixed, scrubbed text only for a standalone greeting, thanks, goodbye, or
+capability/scope question. `tool` lets the query-or-respond node choose only a
+benign-social direct response; a malformed or non-direct social decision falls
+back to fixed social text, while non-social turns continue through retrieval.
+Direct response is never medical:
+in-scope medical, mixed social/medical, ambiguous clinical, out-of-scope
+knowledge, personal-advice, emergency, PHI-recall, and prompt-injection turns
+remain on their safety/refusal/retrieval paths. Medical answers continue through
+retrieval and citation validation.
+
+The safety category enum is unchanged: `in_scope_informational`,
+`personal_medical_advice`, `emergency_red_flag`, `out_of_scope`,
+`prompt_injection`, and `ambiguous`. `benign_social` is a separate annotation,
+not a seventh category; it may be true only for the four standalone social
+intents above.
+
+The query lane is **INCONCLUSIVE**. Its sealed judge calibration passed 22 of
+24 fixtures, so no paired or paid run was attempted and it has no query-arm
+metrics, deltas, cost, latency, or experiment URLs. See
+[`evals/results/query-or-respond.md`](evals/results/query-or-respond.md) and
+[`evals/results/query-or-respond.json`](evals/results/query-or-respond.json).
+
+The Semantic Router safety lane is separately **INCONCLUSIVE** because the
+exact `semantic-router==0.1.16` dependency conflicts with the unchanged project
+bounds `openai>=1.76,<2` and `python-dotenv>=1.1`. It is not a selectable working
+configuration. No adapter, configuration, calibration, stage, or paid semantic
+run was attempted; it was not installed, imported, or exercised, and there are
+no semantic metrics. See
+[`evals/results/semantic-safety.md`](evals/results/semantic-safety.md) and
+[`evals/results/semantic-safety.json`](evals/results/semantic-safety.json).
 
 ---
 
