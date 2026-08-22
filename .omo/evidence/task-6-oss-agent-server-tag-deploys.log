@@ -1,0 +1,46 @@
+Task 6 evidence — 2026-08-22
+
+Baseline
+- Branch: integration/all-work, ahead of origin by 4 at task start.
+- Worktree already contained unrelated modified/untracked files; none were edited or staged by this task.
+- `uv run python -c "import croniter"`: exit 0.
+- Red-first proof: `uv run pytest tests/server/test_crons.py -q` failed during collection with `ModuleNotFoundError: No module named 'server.crons'` before implementation.
+
+Focused verification (real output)
+```
+$ uv run pytest tests/server/test_crons.py -q
+...............                                                          [100%]
+15 passed in 1.35s
+
+$ uv run ruff check server/crons.py tests/server/test_crons.py
+All checks passed!
+```
+
+LSP
+- server/crons.py: No diagnostics found (error severity).
+- tests/server/test_crons.py: No diagnostics found (error severity).
+
+Manual QA
+- `httpx.ASGITransport` roundtrip is `test_asgi_roundtrip_create_search_fire_observes_run`.
+- It mounts the exported routes on a minimal authenticated Starlette app, creates a thread cron,
+  searches by reminder metadata, advances the injectable due time, invokes the scheduler seam, and
+  observes the fake RunEngine receive the exact input on `thread-a`.
+- Isolated run output before the final suite: `1 passed in 1.48s`.
+
+Adversarial coverage
+- Malformed input: invalid cron expression and unknown IANA zone both return 422.
+- Capacity: record 501 returns retryable 503 with `Retry-After: 1` at the 500-record bound.
+- Misleading success output: the real 15-test pytest output is pasted above; Ruff and LSP are also clean.
+- Owner isolation: owner-scoped search excludes another owner's cron.
+- Auth: member principals are denied on every exported cron route.
+- Flaky tests: guarded by explicit `datetime` injection and an event-signaled fake clock; no real-time sleeps.
+- Cancel/resume: N/A; crons do not resume, and todo 4 owns run cancellation/resume.
+- Repeated interruptions: N/A; this scheduler only submits with enqueue and does not manage interrupts.
+- Prompt injection: N/A; this API parses structured cron/run payloads and does not evaluate prompts.
+- Stale state: N/A; accepted in-memory wipe is the specified persistence model.
+- Dirty worktree: N/A to behavior; pre-existing unrelated dirt was recorded and left untouched.
+- Hung commands: N/A; every command completed within its bounded tool timeout.
+
+Cleanup
+- No scheduler task, server process, container, temp fixture, or pushed branch remains.
+- No production file outside server/crons.py was modified.

@@ -185,6 +185,62 @@ created checkpointer thread. This is the best-available interpretation of
 `scripts/langgraph_smoke.py:237-247`; todo 8 must re-verify the precise pinned-oracle checkpoint
 history semantics (especially whether restoration creates a new checkpoint or rewinds identity).
 
+## 2026-08-22 — todo 6: in-process cron registry and scheduler
+
+### Best-characterized response schema
+
+No oracle fixtures existed for todo 6. The public response is exactly these fields:
+`cron_id`, `thread_id`, `end_time`, `schedule`, `created_at`, `updated_at`, `payload`,
+`next_run_date`, `metadata`, `enabled`.
+
+- `schedule` and `next_run_date`: `scripts/deployed_smoke.py:601-605`.
+- `enabled`: `scripts/deployed_smoke.py:611-616`.
+- `payload.input`: `scripts/deployed_smoke.py:630-638`.
+- `cron_id`: `scripts/deployed_smoke.py:657-664`.
+- `metadata`: `scripts/deployed_smoke.py:697-701`.
+- `thread_id`, `schedule`, `timezone`, `enabled`, `next_run_date`, and `metadata` are the fields
+  consumed by `healthcare_rag/agent/cron_client.py:30-39`; timezone is accepted by that consumer but
+  is not emitted because the characterized Agent Server cron record shape stores it internally.
+- `end_time`, `created_at`, and `updated_at` are retained from the plan's fixture-characterized
+  Agent Server record requirement; todo 8 must verify their exact null/timestamp serialization.
+
+Search returns a bare list, not an `{items: ...}` envelope. This is load-bearing because
+`CronClient._cron_page` accepts either but `scripts/deployed_smoke.py:581-585` calls `list_body`.
+Delete returns 204. Disabled crons return `next_run_date: null`.
+
+### Integration choices for todo 7
+
+Todo 7 should import and call:
+
+```python
+start_scheduler(
+    engine: RunEngine,
+    storage: Storage,
+    clock: Callable[[], datetime] | None = None,
+) -> asyncio.Task[None]
+```
+
+Call it with the exact `app.state.run_engine` and `app.state.storage` instances during lifespan,
+then cancel/await the returned task during shutdown. Todo 6 intentionally does not modify
+`server/app.py`.
+
+- Registry overflow is **503** with `Retry-After: 1`, matching todo 4's retryable bounded queue
+  behavior. The bound is 500 server-wide in-memory records.
+- Fired runs force `multitask_strategy="enqueue"`. Evidence: the real reminder client sends enqueue
+  in `healthcare_rag/agent/cron_client.py:114-125`, and deployed smoke pins it at
+  `scripts/deployed_smoke.py:648-656`; this preserves a pending interrupt instead of rejecting or
+  replacing it.
+- Thread crons submit to their exact stored thread id. Stateless crons allocate a fresh opaque
+  thread id per fire because `RunEngine.submit` requires a thread id while stateless executions must
+  not share checkpoint state. This is an assumption for todo 8 to verify against the pinned oracle.
+- Five-field cron expressions and IANA zones are evaluated with `croniter` plus `zoneinfo`/`tzdata`.
+  `next_run_date` is serialized as an aware UTC ISO timestamp. Todo 8 must verify whether the oracle
+  preserves the schedule zone's offset instead.
+- The scheduler catches queue-full/conflict outcomes and leaves the cron due for retry on its next
+  one-second scan. Todo 8 must verify retry/backoff behavior and whether failed submissions advance
+  `next_run_date`.
+- Crons are intentionally not persisted; restart wipes the registry.
+
 ## 2026-08-22 — todo 3: threads service, TTL, copy, search
 
 ### if_exists exact semantics chosen (assumption for todo 8 to verify)
@@ -251,4 +307,3 @@ Semantic-search roundtrip: test puts 3 items with distinct `{"text": "..."}` pay
 ### verification
 
 `uv run pytest tests/server/test_assistants_store.py -q` → 7 passed (assistants search both/coach-only, get by id 404 hide, store put→get→search including semantic, member store 403, malformed 422/404, manifest 501). Full `uv run pytest tests/server/ -q` → 44 passed. Manual QA via `httpx.ASGITransport` on a minimal app mounting both `routes` lists captured real JSON: Studio search returns both assistants, PUT 204, GET returns `{"text":"cats meow"}`, semantic search returns `cats meow` first, member PUT correctly 403, invalid namespace 422, missing item 404. `uv run ruff check server/assistants.py server/store_routes.py server/storage.py` shows only pre-existing BLE001 noise (same class as `server/threads.py`).
-
