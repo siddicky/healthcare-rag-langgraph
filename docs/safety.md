@@ -75,8 +75,12 @@ first node and the only code that ever sees the raw question:
   are defensively re-scrubbed even when safety classification is disabled.
 
 The supported identifier-bearing runtime is controlled `GraphEngine` execution with
-`stream_mode="updates"`, `durability="exit"`, LangSmith tracing disabled, and an opaque
-non-personal `thread_id`. Direct compiled-graph calls, Agent Server, Studio, and
+`stream_mode="updates"`, `durability="exit"`, LangSmith tracing disabled by default, and an opaque
+non-personal `thread_id`. A graph runtime refuses environment-driven LangSmith tracing
+unless `LANGSMITH_HIDE_INPUTS=true`; it disables both `LANGSMITH_TRACING` and the legacy
+`LANGCHAIN_TRACING_V2` alias before graph construction when that safeguard is absent.
+Tracing is therefore only for deliberately opted-in synthetic or de-identified input.
+Direct compiled-graph calls, Agent Server, Studio, and
 `values`, `checkpoints`, `tasks`, or `debug` streams are development-only surfaces for
 non-sensitive synthetic input: outer request records, caller-selected callbacks, and
 pre-node stream events cannot be retroactively sanitized by graph code.
@@ -288,10 +292,11 @@ Measured on the worktree smoke, 2026-08-18 (gpt-5.6-luna, `reasoning_effort=none
 * **Process memory**: spaCy may retain analyzed token strings in its process-owned
   vocabulary for the worker lifetime. Disable core dumps/model serialization and bound
   worker lifetime according to deployment policy.
-* **Tracing and server surfaces**: supported identifier-bearing execution requires
-  tracing off. Agent Server/Studio request records, unsafe stream modes, legacy
-  checkpoints, identity linkage, retention/deletion, encryption and legal/BAA controls
-  are deployment concerns outside this sanitizer.
+* **Tracing and server surfaces**: tracing is off by default; a `GraphEngine` disables
+  requested environment tracing without `LANGSMITH_HIDE_INPUTS=true`. This controls the
+  supported graph runtime only. Agent Server/Studio request records, unsafe stream modes,
+  direct graph calls, legacy checkpoints, identity linkage, retention/deletion, encryption
+  and legal/BAA controls are deployment concerns outside this sanitizer.
 * **This is not a clinical decision system.** The gate reduces measured harm; it does
   not make the assistant safe to use for treatment decisions.
 

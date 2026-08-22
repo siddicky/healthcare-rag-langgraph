@@ -24,6 +24,7 @@ from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.monitor import QueryMonitor
 from healthcare_rag.processors.privacy import PrivacyScanError
 from healthcare_rag.processors.safety import scrub_phi
+from healthcare_rag.services.tracing import enforce_input_hiding
 
 __all__ = [
     "Engine",
@@ -77,6 +78,7 @@ class GraphEngine:
     """Own a compiled graph, its checkpointer lifecycle, and per-thread history."""
 
     def __init__(self, settings: GraphSettings | None = None) -> None:
+        enforce_input_hiding()
         self.settings = settings or GraphSettings.from_env()
         if self.settings.safety_classifier == "semantic_router":
             raise SafetyClassifierUnavailableError(
