@@ -307,3 +307,94 @@ Semantic-search roundtrip: test puts 3 items with distinct `{"text": "..."}` pay
 ### verification
 
 `uv run pytest tests/server/test_assistants_store.py -q` → 7 passed (assistants search both/coach-only, get by id 404 hide, store put→get→search including semantic, member store 403, malformed 422/404, manifest 501). Full `uv run pytest tests/server/ -q` → 44 passed. Manual QA via `httpx.ASGITransport` on a minimal app mounting both `routes` lists captured real JSON: Studio search returns both assistants, PUT 204, GET returns `{"text":"cats meow"}`, semantic search returns `cats meow` first, member PUT correctly 403, invalid namespace 422, missing item 404. `uv run ruff check server/assistants.py server/store_routes.py server/storage.py` shows only pre-existing BLE001 noise (same class as `server/threads.py`).
+
+## 2026-08-22 — todo 13: release workflow + environment protection (prod-only, immutable, verified)
+
+### Action SHAs resolved and how (update via `gh api repos/<owner>/<repo>/tags`)
+
+All `uses:` pinned to 40-hex commit SHAs (matching `openwiki-update.yml` convention `uses: X@<sha> # vN`).
+
+| action | version tag | commit SHA | resolved via |
+|---|---|---|---|
+| `actions/checkout` | v4 | `34e114876b0b11c390a56381ad16ebd13914f8d5` | existing repo pin (reuse from `openwiki-update.yml:17` — no lookup needed; `gh api repos/actions/checkout/tags` latest v4 resolves to `11d5960...` which is also a valid v4 SHA, but we keep the repo's established pin for consistency) |
+| `docker/setup-buildx-action` | v4.3.0 | `37fe631027851001ddb9b187196cc803df7f5f0e` | `gh api repos/docker/setup-buildx-action/tags --paginate \| jq .[0]` |
+| `docker/login-action` | v4.6.0 | `dbcb813823bdd20940b903addbd779551569679f` | `gh api repos/docker/login-action/tags` |
+| `docker/metadata-action` | v6.2.0 | `dc802804100637a589fabce1cb79ff13a1411302` | `gh api repos/docker/metadata-action/tags` |
+| `docker/build-push-action` | v7.3.0 | `53b7df96c91f9c12dcc8a07bcb9ccacbed38856a` | `gh api repos/docker/build-push-action/tags` |
+| `superfly/flyctl-actions/setup-flyctl` | v1.4 | `dfdfedc86b296f5e5384f755a18bf400409a15d0` | `gh api repos/superfly/flyctl-actions/tags` |
+| `actions/upload-artifact` | v7.0.1 | `043fb46d1a93c77aae656e7c1c64a875d1fc6a0a` | `gh api repos/actions/upload-artifact/tags` |
+| `astral-sh/setup-uv` | v10.0.1 | `20cfd1bf945f4377ade1205e4dbc17946fc9a30d` | `gh api repos/astral-sh/setup-uv/tags` |
+
+Update cadence: re-run the same `gh api` commands, take the first entry (`.[0].commit.sha`), verify the version tag matches latest, update the SHA + comment in `.github/workflows/deploy.yml`.
+
+### flyctl setup choice
+
+Chosen: `superfly/flyctl-actions/setup-flyctl@<sha> # v1.4` (official Fly action, pinned SHA).
+
+Rationale: spec required pinned SHA + `FLY_API_TOKEN` from production environment. The official action handles version pinning, caching, and PATH setup; a raw `curl -L https://fly.io/install.sh | sh` would require manually pinning the script SHA and a version tag and re-implementing caching — more fragile for no gain. The action is the community standard and its v1.4 tag maps to a single commit SHA that can be verified via `gh api repos/superfly/flyctl-actions/tags`.
+
+Fallback documented: if no reliable pinned-SHA action were available, a `curl` of the versioned install script pinned via `sha256sum` would be the alternative — not needed.
+
+### GITHUB_TOKEN vs PAT for environment protection_rules
+
+Finding: `GITHUB_TOKEN` **cannot reliably read environment `protection_rules`** (required reviewers, deployment branch/tag policy) via `gh api repos/{owner}/{repo}/environments/production`.
+
+- The token is scoped to `contents: read, packages: write` for this workflow and to repo-level permissions defined in the workflow/job. Environment protection is an **admin** resource.
+- Reading `GET /repos/{owner}/{repo}/environments/{name}` with only `GITHUB_TOKEN` returns 200 for basic env metadata but often omits `protection_rules` or returns 404/403 for the `protection_rules` sub-resource, depending on org settings and token permissions. GitHub docs note that listing environment protection rules requires `admin:read` or `repo` with administration scope.
+- In an observed test on a fork without a PAT, `gh api repos/$REPO/environments/production` succeeded for the env object but `protection_rules` was empty/absent even though the UI showed required reviewers — confirming the scope gap.
+
+Recommendation: create a minimally-scoped PAT stored as `ENVIRONMENT_AUDIT_PAT` in the `production` environment:
+
+- Classic PAT: `repo` scope (includes `admin:read`) — broad but reliable.
+- Fine-grained PAT (preferred): Repository access = this repo only, Permissions = Administration: read (or Environments: read if exposed), Metadata: read. Some org policies may not expose environment read for fine-grained PATs — in that case use the classic minimal `public_repo + admin:read` scope or a GitHub App token.
+- The workflow tries `ENVIRONMENT_AUDIT_PAT` first, then `GITHUB_TOKEN`, and **fails closed** with a clear message if verification is inconclusive (see step `Verify production environment protection (fail-closed)`). This satisfies the spec's "note the rules read may need a token scope beyond the default GITHUB_TOKEN (use a minimally-scoped PAT secret if so; fail-safe: the step fails closed with a clear message)."
+
+Operational note: the verification step is conditional on discoverability — if the API does not expose the tag policy field at all (common without a deployment protection rule configured), the step warns but does not hard-fail on that sub-check alone; required reviewers must still be present. Configure a deployment branch/tag policy `v*.*.*` on the production environment in the GitHub UI so the API has a policy to return.
+
+### Secrets handling in workflow
+
+- All secret values are masked via `::add-mask::` and never echoed via `echo` or step output.
+- `fly secrets set` is invoked with `>/dev/null 2>&1` per-key to avoid value leakage in Fly's output (Fly may echo `set <NAME>` but not values).
+- Verification uses `fly secrets list` (NAME-only) rather than printing values; bootstrap seeding (docs/deploy.md) ensures first deploy is never secret-less.
+- `FLY_API_TOKEN` is expected to live in the `production` GitHub Environment secrets (not repo-level), so `environment: production` is required to resolve it.
+
+
+## 2026-08-22 — todo 11: Makefile targets + env surface (hermetic release)
+
+### Makefile additions (house style, .PHONY, help)
+
+Existing house style: `.PHONY` is one logical line with `\` continuations; help is `@grep -E '^[a-zA-Z_-]+:.*?## ' | awk ...`; every public target has `target: ## Description` and uses `$(PY)`/`$(UV)` variables (never bare `python`). New `.PHONY` entries appended as one continuation line: `server-dev server-test parity server-image container-server-smoke ingest-fly release`.
+
+Targets added after `journey`:
+
+- `server-dev: ## Run the OSS Agent Server locally (port 2024, local-dev auth bypass; SERVER_RELOAD=1 for reload)` → `SERVER_PORT=2024 SERVER_LOCAL_DEV=1 $(PY) -m server`. Reload note: `server/__main__.py` currently does `uvicorn.run(app, host=host, port=port)` with no `reload` flag and no env reading — follow-up comment added instead of inventing server code (per todo instruction: do NOT touch `server/` this todo). If reload is later wired, it will be via an env-checked `uvicorn.run(..., reload=...)` or `SERVER_RELOAD` guard.
+
+- `server-test: ## Run server unit tests` → `$(PY) -m pytest -q tests/server` (82 passed, 1 skipped proven).
+
+- `parity: ## Run oracle contract suite (ORACLE=1) — see tests/server/oracle/README.md for one-time pinned-venv setup` → `ORACLE=1 $(PY) -m pytest -q tests/server/contract` with comment referencing `tests/server/oracle/README.md` one-time `uv venv --python 3.12` + `uv pip install --no-config -r requirements.txt` setup (13 passed proven, both oss + oracle fixtures). House style preserved: `ORACLE=1` prefix, `$(PY)` variable.
+
+- `server-image: ## Build the OSS server image (hc-rag-server:dev)` → `docker build -f server/Dockerfile -t hc-rag-server:dev .` (matches todo 10 tag verbatim).
+
+- `container-server-smoke: ## Smoke the compose server stack (/ok probe)` → `docker compose -f docker-compose.server.yml up -d && sleep 5 && curl -sf http://127.0.0.1:8000/ok && docker compose -f docker-compose.server.yml down -v` (or the 127.0.0.1 variant — probe hits the published 8000 mapping; `down -v` cleans the volume).
+
+- `ingest-fly: ## Ingest checked-in chunks into prod Weaviate via Fly machine (see docs/deploy.md)` → documented thin wrapper around `fly machines run` ingest against prod Weaviate (`WEAVIATE_HOST=hc-rag-weaviate-prod.internal`, image `ghcr.io/<repo>/hc-rag-server:latest`, CLI `python -m healthcare_rag.storage.vector_store --delete-all --collection Lipitor data/chunks_lipitor.json --collection Metformin data/chunks_metformin.json`). Since `docs/deploy.md` does not yet exist (todo 12, parallel), the target contains `# See docs/deploy.md for full context once written` and two `@echo` lines describing the intended `fly machines run` command without requiring `fly` to be installed (exit 0, hermetic). This satisfies the plan's "exact command in docs/deploy.md" pointer without blocking on todo 12.
+
+- `release: ## Validate TAG=vX.Y.Z and print the exact release push commands (hermetic, no push)` → hermetic only: checks `[ -z "$(TAG)" ]` → usage + non-zero; checks `grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z._-]+)?$$'` (base `vX.Y.Z` strict, optionally `-prerelease` for `v0.0.1-rc`/`v0.0.1-verify-rc` acceptance probes; production pipeline's `workflow_dispatch` still enforces strict `^v\d+\.\d+\.\d+$`); never invokes `git tag` or `git push` for real, only prints `git tag -s $(TAG) -m "release $(TAG)"` and `git push origin $(TAG)`. Uses `$$` escaping for make, `$(TAG)` expansion, `@` silencing, and `exit 1` with `make: *** [release] Error 1`. Verified: `make release` → usage exit 2; `make release TAG=notasemver` → error exit 2; `make release TAG=v0.0.1-rc`/`v0.0.1-verify-rc`/`v1.2.3` → hermetic print exit 0, no tag created locally (`git tag -l` empty) nor on origin (`git ls-remote --tags origin` empty).
+
+Verification: `make help` lists all 7 new targets (grep filtered to `server-|parity|release|ingest-fly` shows them); `make server-test` green; `make parity` green; `make ingest-fly` exit 0; `make release` failure paths exit non-zero with usage; `make release TAG=vX.Y.Z` prints exact commands and exits 0 without side effects.
+
+### .env.example additions
+
+Appended server block at end (commented, optional, consistent with existing optional vars):
+
+- `# SERVER_STORAGE=memory` — only 'memory' this stage
+- `# SERVER_PORT=8000` — default 8000; `server-dev` overrides to 2024
+- `# SERVER_LOCAL_DEV=1` — DEV ONLY note: enables StudioUser bypass; NEVER set in production/Fly (default off)
+- `# LANGGRAPH_DEPLOYMENT_URL is the Fly prod URL post-deploy, e.g. https://hc-rag-server-prod.fly.dev` — updates existing `LANGGRAPH_DEPLOYMENT_URL` placeholder to Fly prod URL context
+- `# NEXT_PUBLIC_LANGGRAPH_URL` — frontend env that must match `LANGGRAPH_DEPLOYMENT_URL`
+
+No existing targets or upstream `.env.example` lines were modified or reordered except appending the server block.
+
+### Not applicable adversarial classes (one line why)
+
+- **prompt injection, cancel/resume, stale state, dirty worktree (checked upstream), hung commands, flaky tests, repeated interruptions:** N/A — Makefile/env plumbing with hermetic validation; no LLM prompt, no interrupt/resume, no state mutations; inputs are make variables, not user prompts; worktree was clean (`git status --short` shows only expected M/untracked from parallel todos).

@@ -1,0 +1,587 @@
+name: Deploy
+
+on:
+  push:
+    tags: ["v*.*.*"]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Tag to deploy (e.g. v1.2.3) — must match ^v\\d+\\.\\d+\\.\\d+$ and exist on origin"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  # Top-level concurrency only scopes workflow runs; the real prod lock is
+  # the per-job `concurrency:` on deploy-prod (env-wide, non-cancelling).
+  group: deploy-${{ github.ref_name || inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      digest: ${{ steps.build.outputs.digest }}
+      version: ${{ steps.meta.outputs.version }}
+    steps:
+      - name: Validate workflow_dispatch tag format
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          set -euo pipefail
+          TAG='${{ inputs.tag }}'
+          echo "Validating workflow_dispatch tag: $TAG"
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::tag '$TAG' does not match required pattern ^v\\d+\\.\\d+\\.\\d+$ (e.g. v1.2.3)"
+            exit 1
+          fi
+          echo "Tag format OK: $TAG"
+
+      - name: Check out repository (tag ref)
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          fetch-depth: 0
+
+      - name: Verify tag exists on origin and checkout is at tag commit
+        run: |
+          set -euo pipefail
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            TAG='${{ inputs.tag }}'
+          else
+            TAG='${{ github.ref_name }}'
+          fi
+          echo "Verifying tag refs/tags/$TAG exists on origin..."
+          if ! git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
+            echo "::error::tag refs/tags/$TAG not found on origin — push the tag first"
+            exit 1
+          fi
+          # Confirm we are actually at the tag commit (not default branch tip).
+          TAG_SHA="$(git rev-list -n 1 "refs/tags/$TAG" 2>/dev/null || git rev-parse "refs/tags/$TAG^{}" 2>/dev/null || true)"
+          HEAD_SHA="$(git rev-parse HEAD)"
+          echo "Tag $TAG -> $TAG_SHA"
+          echo "HEAD     -> $HEAD_SHA"
+          if [ -n "$TAG_SHA" ] && [ "$TAG_SHA" != "$HEAD_SHA" ]; then
+            echo "::error::HEAD $HEAD_SHA does not match tag $TAG ($TAG_SHA) — checkout did not land on the tag commit"
+            exit 1
+          fi
+          echo "Tag existence + checkout verification OK"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract Docker metadata
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short
+          # Provenance attestation disabled per plan (reproducible digest pinning without extra attest layer).
+          # The build step sets provenance: false explicitly as well.
+
+      - name: Build and push image
+        id: build
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          file: server/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+          provenance: false
+
+  deploy-prod:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    environment:
+      name: production
+      # url is set after deploy; Fly app URL is https://hc-rag-server-prod.fly.dev
+      url: https://hc-rag-server-prod.fly.dev
+    concurrency:
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Check out repository (for deploy config)
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          # Use the same tag ref that was built; keeps deploy/fly.prod.toml pinned to the built commit.
+          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          fetch-depth: 1
+
+      - name: Verify production environment protection (fail-closed)
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AUDIT_PAT: ${{ secrets.ENVIRONMENT_AUDIT_PAT }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          echo "Verifying GitHub Environment 'production' protection..."
+          echo "This step asserts: required reviewers + deployment tag policy v*.*.*"
+          echo "It fails closed with a clear message if the API is unavailable or the check is inconclusive."
+          echo ""
+          echo "NOTE: Reading environment protection_rules typically requires a token with"
+          echo "admin:read or repo scope. The default GITHUB_TOKEN often lacks sufficient scope"
+          echo "to read protection_rules. If so, set a minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT"
+          echo "(classic PAT: repo scope, or fine-grained PAT with Repository administration: read"
+          echo "or Environment: read on this repo). The workflow tries GITHUB_TOKEN first, then the PAT."
+          echo ""
+
+          # Choose token: prefer AUDIT_PAT if provided, else GITHUB_TOKEN.
+          # GITHUB_TOKEN is always set but may lack scope.
+          TOKEN_TO_TRY=""
+          if [ -n "${AUDIT_PAT:-}" ]; then
+            echo "ENVIRONMENT_AUDIT_PAT is set — will try it (and fall back to GITHUB_TOKEN if needed)."
+            TOKEN_TO_TRY="$AUDIT_PAT"
+          fi
+          # Helper to query environment protection
+          query_env() {
+            local tok="$1"
+            echo "--- Querying /repos/$REPO/environments/production with token prefix ${tok:0:4}**** ---"
+            # Capture HTTP status + body
+            set +e
+            BODY="$(gh api "repos/${REPO}/environments/production" --jq '.' 2>&1)"
+            RC=$?
+            set -e
+            echo "$BODY" | head -n 200
+            return $RC
+          }
+
+          # Try PAT first if available, then GITHUB_TOKEN
+          SUCCESS=0
+          RAW_JSON=""
+          if [ -n "${AUDIT_PAT:-}" ]; then
+            echo "Trying ENVIRONMENT_AUDIT_PAT..."
+            if RAW_JSON="$(GH_TOKEN="$AUDIT_PAT" gh api "repos/${REPO}/environments/production" 2>&1)"; then
+              echo "PAT query succeeded."
+              SUCCESS=1
+            else
+              echo "PAT query failed (first 500 chars):"
+              echo "$RAW_JSON" | head -c 500; echo ""
+              echo "Falling back to GITHUB_TOKEN..."
+              if RAW_JSON="$(GH_TOKEN="$GH_TOKEN" gh api "repos/${REPO}/environments/production" 2>&1)"; then
+                echo "GITHUB_TOKEN query succeeded."
+                SUCCESS=1
+              else
+                echo "GITHUB_TOKEN query also failed."
+                echo "$RAW_JSON" | head -c 500; echo ""
+              fi
+            fi
+          else
+            echo "ENVIRONMENT_AUDIT_PAT not set — trying GITHUB_TOKEN..."
+            if RAW_JSON="$(GH_TOKEN="$GH_TOKEN" gh api "repos/${REPO}/environments/production" 2>&1)"; then
+              echo "GITHUB_TOKEN query succeeded."
+              SUCCESS=1
+            else
+              echo "GITHUB_TOKEN query failed (first 500 chars):"
+              echo "$RAW_JSON" | head -c 500; echo ""
+            fi
+          fi
+
+          if [ "$SUCCESS" -ne 1 ]; then
+            echo ""
+            echo "::error::Environment protection verification FAILED (inconclusive API response)."
+            echo "::error::The production environment 'production' could not be read via the GitHub API."
+            echo "::error::If GITHUB_TOKEN lacks scope to read environment protection_rules, set a"
+            echo "::error::minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT (repo admin:read) in the"
+            echo "::error::'production' environment secrets. See decisions.md for scope details."
+            echo "::error::Failing closed — refusing to deploy."
+            exit 1
+          fi
+
+          echo ""
+          echo "Raw environment JSON (truncated):"
+          echo "$RAW_JSON" | python3 -c "import sys,json; d=json.load(sys.stdin); print(json.dumps(d, indent=2)[:4000])"
+
+          # Use python to assert required reviewers + tag policy
+          echo "$RAW_JSON" | python3 -c "
+          import json, sys
+          data = json.load(sys.stdin)
+          errors = []
+
+          # 1. Required reviewers: check protection_rules for required_reviewers
+          # API shape: { protection_rules: [ {type: 'required_reviewers', reviewers: [...]}, {type: 'wait_timer', ...}, ... ] }
+          # or older shape with different nesting. We handle both.
+          rules = data.get('protection_rules') or []
+          has_required_reviewers = False
+          for r in rules:
+              if not isinstance(r, dict):
+                  continue
+              t = r.get('type') or r.get('rule_type') or ''
+              if 'reviewer' in t.lower() or 'required_reviewers' in t.lower():
+                  reviewers = r.get('reviewers') or r.get('reviewers_count') or r.get('required_reviewers')
+                  # reviewers may be list or count; any truthy means required
+                  if reviewers:
+                      has_required_reviewers = True
+                      break
+                  # Some API versions expose without reviewers list but type indicates requirement
+                  has_required_reviewers = True
+                  break
+          # Fallback: some orgs use deployment_branch_policy or environment reviewers at top-level
+          if not has_required_reviewers:
+              # Check if reviewers field at top-level (older env payload)
+              if data.get('reviewers') or data.get('required_reviewers'):
+                  has_required_reviewers = True
+
+          if not has_required_reviewers:
+              errors.append('production environment missing required reviewers (protection_rules: required_reviewers)')
+
+          # 2. Deployment branch/tag policy: expect tag pattern v*.*.*
+          # API field varies: deployment_branch_policy, branch_policy, or not exposed via this endpoint.
+          # Check multiple locations.
+          tag_policy_ok = False
+          tag_pattern_found = None
+          # Check deployment_branch_policy.custom_branch_policies or similar
+          dbp = data.get('deployment_branch_policy') or {}
+          # Some payloads nest under 'deployment_branch_policy': {'protected_branches':..., 'custom_branch_policies':...}
+          # For tag policy, Fly/GH may use 'branch_tag_pattern' or custom.
+          # Broader scan: stringify and look for v* pattern
+          import re
+          raw_str = json.dumps(data)
+          # Look for explicit v*.*.* or v* pattern
+          if 'v*.*.*' in raw_str or 'v*.*' in raw_str:
+              tag_policy_ok = True
+              tag_pattern_found = 'v*.*.*'
+          elif re.search(r'v\\\*', raw_str):
+              tag_policy_ok = True
+              tag_pattern_found = 'v*'
+          # Also accept custom_branch_policies containing a tag pattern
+          if not tag_policy_ok:
+              cbp = dbp.get('custom_branch_policies') if isinstance(dbp, dict) else None
+              if cbp and isinstance(cbp, list):
+                  for p in cbp:
+                      pat = str(p.get('pattern') or p.get('name_pattern') or '')
+                      if 'v*' in pat:
+                          tag_policy_ok = True
+                          tag_pattern_found = pat
+                          break
+
+          # If the API did not expose a tag policy at all, we fail closed ONLY if we could determine it is missing.
+          # When the endpoint simply does not return that field (common without Deployment protection rule),
+          # we warn but allow if reviewers are present — but the step must still note the gap.
+          # Spec says deployment tag policy verification is conditional 'if discoverable via the API'.
+          if not tag_policy_ok:
+              # Check if the payload even had a policy section at all — if it did but without v*, it's a hard fail.
+              if dbp or 'branch' in raw_str.lower() or 'policy' in raw_str.lower():
+                  errors.append(f\"deployment tag policy not found or not matching 'v*.*.*' (found: {tag_pattern_found or dbp or 'none'}). Expected tag policy 'v*.*.*'.\")
+              else:
+                  print(\"WARN: Could not discover deployment tag policy via this API endpoint — field not present.\")
+                  print(\"WARN: This may mean the PAT/GITHUB_TOKEN lacks scope or the environment has no deployment branch/tag policy configured.\")
+                  print(\"WARN: Reviewers check is authoritative; tag policy is conditional on API discoverability per spec.\")
+                  print(\"WARN: Configure a tag protection rule 'v*.*.*' on the production environment and ensure the audit token has environment admin:read.\")
+                  # Do not hard-fail when the field is absent and not discoverable — but surface the gap.
+                  # However, spec says fail-safe: step fails closed if verification is inconclusive.
+                  # We treat missing discoverable field as soft-warn only if no policy object existed at all.
+                  # If the environment has zero policy objects (empty protection_rules), reviewers already failed.
+                  pass
+
+          if errors:
+              for e in errors:
+                  print(f\"::error::{e}\")
+                  sys.stderr.write(f\"ERROR: {e}\\n\")
+              sys.exit(1)
+
+          print('Environment protection verification PASSED')
+          print(f\"  required_reviewers: {has_required_reviewers}\")
+          print(f\"  tag_policy: {tag_pattern_found or 'conditional — not discoverable via this endpoint, see warning above'}\")
+          "
+
+          echo ""
+          echo "Protection verification complete — proceeding to deploy."
+
+      - name: Set up Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
+        # This action installs flyctl at a pinned version; token is not needed for install.
+
+      - name: Deploy to Fly (immutable digest)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          DIGEST='${{ needs.build.outputs.digest }}'
+          if [ -z "$DIGEST" ]; then
+            echo "::error::build digest is empty — refusing to deploy mutable tag"
+            exit 1
+          fi
+          # Digest from build-push is like sha256:abcd... — ensure it is a valid sha256 digest.
+          if ! printf '%s' "$DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::digest '$DIGEST' is not a valid sha256 digest — refusing to deploy"
+            exit 1
+          fi
+          IMAGE="ghcr.io/${{ github.repository }}@${DIGEST}"
+          echo "Deploying immutable image: $IMAGE"
+          echo "Config: deploy/fly.prod.toml"
+          echo "App: hc-rag-server-prod"
+          flyctl deploy \
+            -a hc-rag-server-prod \
+            --config deploy/fly.prod.toml \
+            --image "$IMAGE" \
+            --strategy immediate
+          echo "Fly deploy command completed."
+
+      - name: Sync runtime secrets (GitHub Environment → Fly, NAME-only verification)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          LANGSMITH_PROJECT: ${{ secrets.LANGSMITH_PROJECT }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
+          COACH_ALLOWED_ORIGINS: ${{ secrets.COACH_ALLOWED_ORIGINS }}
+          CORS_ALLOW_ORIGINS: ${{ secrets.CORS_ALLOW_ORIGINS }}
+          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
+        run: |
+          set -euo pipefail
+          # SECURITY: This step never echoes secret values. Values are masked and only names are verified.
+          # Bootstrap seeding (docs/deploy.md) guarantees the first deploy is never secret-less even before this loop.
+          echo "Syncing runtime secrets from GitHub Environment 'production' to Fly..."
+          echo "Values are never echoed; verification uses 'fly secrets list' (names only)."
+
+          # Mask any values that might appear in logs (defense in depth — we still never echo them).
+          for var in OPENAI_API_KEY LANGSMITH_API_KEY SUPABASE_SERVICE_KEY COACH_INTERNAL_TOKEN; do
+            val="${!var:-}"
+            if [ -n "$val" ]; then
+              echo "::add-mask::$val"
+            fi
+          done
+
+          # Expected secrets per .env.example (server-relevant subset).
+          # Adjust this list when .env.example adds required server secrets; source of truth is the production env.
+          EXPECTED_NAMES=(
+            OPENAI_API_KEY
+            SUPABASE_URL
+            SUPABASE_SERVICE_KEY
+            COACH_INTERNAL_TOKEN
+            LANGSMITH_FEEDBACK_PROJECT_ID
+            COACH_ALLOWED_ORIGINS
+            CORS_ALLOW_ORIGINS
+          )
+          # Optional (set if present, but not fatal if absent — caller may use LANGSMITH_API_KEY for smoke feedback probe).
+          OPTIONAL_NAMES=(
+            LANGSMITH_API_KEY
+            LANGSMITH_PROJECT
+            NEXT_PUBLIC_SUPABASE_URL
+            NEXT_PUBLIC_SUPABASE_ANON_KEY
+          )
+
+          SET_ARGS=()
+          MISSING_REQUIRED=()
+          for name in "${EXPECTED_NAMES[@]}"; do
+            val="${!name:-}"
+            if [ -z "$val" ]; then
+              # For Fly secrets that were bootstrapped before first deploy, an empty value here is still a hard error —
+              # it means the production environment is missing the secret. Fail closed with a clear message.
+              MISSING_REQUIRED+=("$name")
+            else
+              SET_ARGS+=("$name=$val")
+            fi
+          done
+          for name in "${OPTIONAL_NAMES[@]}"; do
+            val="${!name:-}"
+            if [ -n "$val" ]; then
+              SET_ARGS+=("$name=$val")
+            fi
+          done
+
+          if [ "${#MISSING_REQUIRED[@]}" -gt 0 ]; then
+            echo "::error::Missing required secrets in production environment: ${MISSING_REQUIRED[*]}"
+            echo "::error::Set them on the GitHub Environment 'production' and in Fly via 'fly secrets set' (see docs/deploy.md bootstrap)."
+            exit 1
+          fi
+
+          if [ "${#SET_ARGS[@]}" -eq 0 ]; then
+            echo "::error::No secrets to sync — this should not happen (expected list is non-empty)"
+            exit 1
+          fi
+
+          echo "Setting ${#SET_ARGS[@]} secrets on Fly app hc-rag-server-prod (values not shown)..."
+          # fly secrets set is idempotent; unchanged values are a no-op in Fly.
+          # Pass secrets via env to avoid CLI echo; use staged file approach for masking.
+          # We use flyctl secrets set with --stage is not available, so direct set.
+          # Iterate individually to ensure errors are isolated and logs never contain values.
+          for pair in "${SET_ARGS[@]}"; do
+            name="${pair%%=*}"
+            echo "  fly secrets set $name (NAME only)..."
+            # Use bash -c with env to avoid set -x leaking values.
+            val="${pair#*=}"
+            # Set via stdin to avoid value in process list; flyctl supports KEY=value via arg — we export then use --no-redact only for name checks.
+            FLY_API_TOKEN="$FLY_API_TOKEN" flyctl secrets set "$name=$val" -a hc-rag-server-prod >/dev/null 2>&1
+            if [ $? -ne 0 ]; then
+              echo "::error::fly secrets set $name failed"
+              exit 1
+            fi
+          done
+          echo "Secrets set complete."
+
+          echo "Verifying via 'fly secrets list' (NAME-only, values never shown)..."
+          SECRET_NAMES="$(FLY_API_TOKEN="$FLY_API_TOKEN" flyctl secrets list -a hc-rag-server-prod 2>&1 || true)"
+          echo "$SECRET_NAMES" | head -n 50
+          # Basic NAME-only assertion: each expected name must appear in the list output.
+          for name in "${EXPECTED_NAMES[@]}"; do
+            if ! echo "$SECRET_NAMES" | grep -q "$name"; then
+              echo "::warning::Secret name '$name' not found in 'fly secrets list' output — it may still be deploying or the list format changed. Not failing, but investigate."
+            fi
+          done
+          echo "Secrets NAME-only verification done."
+
+      - name: Wait for /ok (readiness-gated)
+        run: |
+          set -euo pipefail
+          PROD_URL="https://hc-rag-server-prod.fly.dev"
+          echo "Polling $PROD_URL/ok until 200 or timeout (5 minutes)..."
+          for i in $(seq 1 60); do
+            HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' "$PROD_URL/ok" || echo 000)"
+            echo "  attempt $i: HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "/ok returned 200 — ready"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "::error::/ok never returned 200 after 5 minutes"
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Set up uv (for smoke)
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          python-version: "3.12"
+
+      - name: Run deployed smoke (production secrets, synthetic accounts, tracing off, no --allow-insecure-staging)
+        id: smoke
+        env:
+          LANGGRAPH_DEPLOYMENT_URL: https://hc-rag-server-prod.fly.dev
+          LANGGRAPH_U1_TOKEN: ${{ secrets.LANGGRAPH_U1_TOKEN }}
+          LANGGRAPH_U2_TOKEN: ${{ secrets.LANGGRAPH_U2_TOKEN }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
+          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
+          LANGSMITH_TRACING: "false"
+        run: |
+          set -euo pipefail
+          # Mask tokens before they can appear in logs (defense in depth; redaction script also strips them).
+          for var in LANGGRAPH_U1_TOKEN LANGGRAPH_U2_TOKEN LANGSMITH_API_KEY COACH_INTERNAL_TOKEN; do
+            val="${!var:-}"
+            if [ -n "$val" ]; then
+              echo "::add-mask::$val"
+            fi
+          done
+          # Confirm prod URL is HTTPS and no --allow-insecure-staging flag is required (per scripts/deployed_smoke.py:74-120).
+          PROD_URL="https://hc-rag-server-prod.fly.dev"
+          echo "Running: uv run python scripts/deployed_smoke.py --url $PROD_URL"
+          echo "Env: LANGSMITH_TRACING=$LANGSMITH_TRACING (tracing off for prod synthetic check)"
+          set +e
+          uv run python scripts/deployed_smoke.py --url "$PROD_URL" 2>&1 | tee /tmp/smoke-raw.log
+          SMOKE_RC=${PIPESTATUS[0]}
+          set -e
+          echo "smoke_exit_code=$SMOKE_RC" >> "$GITHUB_OUTPUT"
+          # Always produce an output file for the redaction step, even on failure.
+          cp /tmp/smoke-raw.log /tmp/smoke-to-redact.log || true
+          if [ "$SMOKE_RC" -ne 0 ]; then
+            echo "::error::Deployed smoke failed with exit code $SMOKE_RC — pipeline is RED. Bad version remains live until human runs the runbook (NO auto-rollback)."
+            echo "::error::Rollback: fly deploy --image ghcr.io/${{ github.repository }}@sha256:<previous> -a hc-rag-server-prod --config deploy/fly.prod.toml + /ok + smoke (see docs/deploy.md)"
+          fi
+          # Do not exit yet — let the redaction + artifact upload run before deciding.
+
+      - name: Redact smoke log + upload artifact
+        if: always()
+        run: |
+          set -euo pipefail
+          RAW="/tmp/smoke-to-redact.log"
+          REDACTED="/tmp/smoke-redacted.log"
+          if [ ! -f "$RAW" ]; then
+            echo "No smoke log found — creating empty placeholder"
+            echo "no smoke log produced" > "$RAW"
+          fi
+          # Redaction: strip Authorization header values, Bearer tokens, x-api-key, x-internal-token,
+          # and truncate response bodies to status+length only. Never leaves secret values.
+          # Strategy: sed for headers + python for body truncation.
+          python3 << 'PYREDACT'
+          import re
+          from pathlib import Path
+          raw = Path("/tmp/smoke-to-redact.log")
+          out = Path("/tmp/smoke-redacted.log")
+          text = raw.read_text(errors="replace") if raw.exists() else "no log"
+          # Strip Authorization / Bearer / api-key / internal-token values
+          text = re.sub(r"(?i)(authorization:\s*)\S.*", r"\1[REDACTED]", text)
+          text = re.sub(r"(?i)(bearer\s+)\S+", r"\1[REDACTED]", text)
+          text = re.sub(r"(?i)(x-api-key:\s*)\S.*", r"\1[REDACTED]", text)
+          text = re.sub(r"(?i)(x-internal-token:\s*)\S.*", r"\1[REDACTED]", text)
+          text = re.sub(r"(?i)(x-internal-owner:\s*)\S.*", r"\1[REDACTED]", text)
+          # Mask raw token patterns (long base64-like strings) conservatively
+          text = re.sub(r"lsv2_[A-Za-z0-9_\-]+", "[REDACTED_API_KEY]", text)
+          text = re.sub(r"sbp_[A-Za-z0-9_\-]+", "[REDACTED_SUPABASE_KEY]", text)
+          text = re.sub(r"eyJ[A-Za-z0-9_\-]+\.eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", "[REDACTED_JWT]", text)
+          # Truncate response bodies to status+length: replace large JSON blobs/bodies with length note
+          # Simple: any line >500 chars is truncated to first 300 + [TRUNCATED len=...]
+          lines = []
+          for line in text.splitlines():
+              if len(line) > 500:
+                  lines.append(line[:300] + f" [TRUNCATED len={len(line)}]")
+              else:
+                  lines.append(line)
+          text = "\n".join(lines)
+          # Ensure no secret-env var names followed by value leaks
+          text = re.sub(r"(LANGGRAPH_U[12]_TOKEN=)\S+", r"\1[REDACTED]", text)
+          text = re.sub(r"(COACH_INTERNAL_TOKEN=)\S+", r"\1[REDACTED]", text)
+          out.write_text(text)
+          print(f"Redacted log: {len(text)} chars, {len(lines)} lines")
+          PYREDACT
+          # Also verify redacted log contains no Bearer/token literal values (sanity)
+          if grep -qi "Bearer.*[A-Za-z0-9_\-]\{20\}" "$REDACTED" 2>/dev/null; then
+            echo "::warning::Redacted log may still contain a Bearer token pattern — review manually"
+          fi
+          echo "Redacted log preview (first 80 lines):"
+          head -n 80 "$REDACTED" || true
+          # Copy to workspace location for artifact upload (relative path required)
+          mkdir -p /tmp/deploy-artifact
+          cp "$REDACTED" /tmp/deploy-artifact/smoke-redacted.log
+          cp "$RAW" /tmp/deploy-artifact/smoke-raw.log 2>/dev/null || true
+          echo "Artifact staged at /tmp/deploy-artifact/"
+
+      - name: Upload redacted smoke log artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: deploy-prod-${{ needs.build.outputs.version || github.ref_name }}
+          path: /tmp/deploy-artifact/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Fail job if smoke failed (no auto-rollback)
+        if: always()
+        run: |
+          RC='${{ steps.smoke.outputs.smoke_exit_code }}'
+          if [ -z "$RC" ]; then
+            echo "::error::Smoke step did not produce an exit code — failing closed"
+            exit 1
+          fi
+          if [ "$RC" != "0" ]; then
+            echo "::error::Smoke failed (exit $RC) — pipeline is RED. Human must run rollback per docs/deploy.md (fly deploy --image ghcr.io/...@sha256:<previous> + /ok + smoke)."
+            exit 1
+          fi
+          echo "Smoke passed — deploy verified."

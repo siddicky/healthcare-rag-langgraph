@@ -1,0 +1,178 @@
+=== task-13 oss-agent-server-tag-deploys — evidence log ===
+Date: 2026-08-22T22:53:39Z
+Branch: integration/all-work
+Commit: 872f6bf
+
+--- git status --short --branch (before) ---
+## integration/all-work...origin/integration/all-work [ahead 9]
+ M .env.example
+ M .omo/notepads/oss-agent-server-tag-deploys/decisions.md
+ M Makefile
+?? .DS_Store
+?? .env.local
+?? .github/workflows/deploy.yml
+?? .vercel/
+?? "Nymble Health Design System/"
+?? artifacts/.DS_Store
+?? deploy/
+?? docs/deploy.md
+?? tests/agent/test_finalized_stream.py
+?? tests/agent/test_member_streaming.py
+?? tests/test_vector_store.py
+?? tmp/
+
+--- YAML parse ---
+YAML parses OK
+on: {'push': {'tags': ['v*.*.*']}, 'workflow_dispatch': {'inputs': {'tag': {'description': 'Tag to deploy (e.g. v1.2.3) — must match ^v\\d+\\.\\d+\\.\\d+$ and exist on origin', 'required': True, 'type': 'string'}}}}
+
+--- pinned SHA checks ---
+All uses lines:
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+
+Pinned count (expect 9):
+       9
+Unpinned count (expect 0):
+       0
+List unpinned (should be empty):
+(none)
+
+--- job graph ---
+on.push.tags: ['v*.*.*']
+on.workflow_dispatch.inputs.tag: {'description': 'Tag to deploy (e.g. v1.2.3) — must match ^v\\d+\\.\\d+\\.\\d+$ and exist on origin', 'required': True, 'type': 'string'}
+permissions: {'contents': 'read', 'packages': 'write'}
+jobs: ['build', 'deploy-prod']
+build outputs: {'digest': '${{ steps.build.outputs.digest }}', 'version': '${{ steps.meta.outputs.version }}'}
+deploy-prod needs: build
+deploy-prod environment: {'name': 'production', 'url': 'https://hc-rag-server-prod.fly.dev'}
+deploy-prod concurrency: {'group': 'deploy-production', 'cancel-in-progress': False}
+
+--- structural grep checks ---
+digest pinning present:
+5
+506:            echo "::error::Rollback: fly deploy --image ghcr.io/${{ github.repository }}@sha256:<previous> -a hc-rag-server-prod --config deploy/fly.prod.toml + /ok + smoke (see docs/deploy.md)"
+584:            echo "::error::Smoke failed (exit $RC) — pipeline is RED. Human must run rollback per docs/deploy.md (fly deploy --image ghcr.io/...@sha256:<previous> + /ok + smoke)."
+
+env-wide concurrency present:
+17:concurrency:
+19:  # the per-job `concurrency:` on deploy-prod (env-wide, non-cancelling).
+121:    concurrency:
+122:      group: deploy-production
+21:  cancel-in-progress: false
+123:      cancel-in-progress: false
+
+protection verification step present:
+132:      - name: Verify production environment protection (fail-closed)
+143:          echo "NOTE: Reading environment protection_rules typically requires a token with"
+145:          echo "to read protection_rules. If so, set a minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT"
+205:            echo "::error::If GITHUB_TOKEN lacks scope to read environment protection_rules, set a"
+222:          # 1. Required reviewers: check protection_rules for required_reviewers
+223:          # API shape: { protection_rules: [ {type: 'required_reviewers', reviewers: [...]}, {type: 'wait_timer', ...}, ... ] }
+225:          rules = data.get('protection_rules') or []
+247:              errors.append('production environment missing required reviewers (protection_rules: required_reviewers)')
+295:                  # If the environment has zero policy objects (empty protection_rules), reviewers already failed.
+135:          AUDIT_PAT: ${{ secrets.ENVIRONMENT_AUDIT_PAT }}
+145:          echo "to read protection_rules. If so, set a minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT"
+154:            echo "ENVIRONMENT_AUDIT_PAT is set — will try it (and fall back to GITHUB_TOKEN if needed)."
+174:            echo "Trying ENVIRONMENT_AUDIT_PAT..."
+191:            echo "ENVIRONMENT_AUDIT_PAT not set — trying GITHUB_TOKEN..."
+206:            echo "::error::minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT (repo admin:read) in the"
+
+workflow_dispatch validation present:
+33:      - name: Validate workflow_dispatch tag format
+39:          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+327:          if ! printf '%s' "$DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+
+checkout tag ref present:
+45:      - name: Check out repository (tag ref)
+125:      - name: Check out repository (for deploy config)
+20:  group: deploy-${{ github.ref_name || inputs.tag }}
+37:          TAG='${{ inputs.tag }}'
+48:          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+55:            TAG='${{ inputs.tag }}'
+129:          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+
+secrets never echoed (add-mask present):
+367:              echo "::add-mask::$val"
+490:              echo "::add-mask::$val"
+
+fly deploy immutable digest present:
+335:          flyctl deploy \
+128:          # Use the same tag ref that was built; keeps deploy/fly.prod.toml pinned to the built commit.
+333:          echo "Config: deploy/fly.prod.toml"
+337:            --config deploy/fly.prod.toml \
+506:            echo "::error::Rollback: fly deploy --image ghcr.io/${{ github.repository }}@sha256:<previous> -a hc-rag-server-prod --config deploy/fly.prod.toml + /ok + smoke (see docs/deploy.md)"
+
+smoke command (no --allow-insecure-staging):
+493:          # Confirm prod URL is HTTPS and no --allow-insecure-staging flag is required (per scripts/deployed_smoke.py:74-120).
+495:          echo "Running: uv run python scripts/deployed_smoke.py --url $PROD_URL"
+498:          uv run python scripts/deployed_smoke.py --url "$PROD_URL" 2>&1 | tee /tmp/smoke-raw.log
+WARN: found allow-insecure flag
+
+artifact upload present:
+568:        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+572:          retention-days: 7
+570:          name: deploy-prod-${{ needs.build.outputs.version || github.ref_name }}
+
+redaction present:
+510:      - name: Redact smoke log + upload artifact
+515:          REDACTED="/tmp/smoke-redacted.log"
+530:          text = re.sub(r"(?i)(authorization:\s*)\S.*", r"\1[REDACTED]", text)
+531:          text = re.sub(r"(?i)(bearer\s+)\S+", r"\1[REDACTED]", text)
+532:          text = re.sub(r"(?i)(x-api-key:\s*)\S.*", r"\1[REDACTED]", text)
+533:          text = re.sub(r"(?i)(x-internal-token:\s*)\S.*", r"\1[REDACTED]", text)
+534:          text = re.sub(r"(?i)(x-internal-owner:\s*)\S.*", r"\1[REDACTED]", text)
+536:          text = re.sub(r"lsv2_[A-Za-z0-9_\-]+", "[REDACTED_API_KEY]", text)
+537:          text = re.sub(r"sbp_[A-Za-z0-9_\-]+", "[REDACTED_SUPABASE_KEY]", text)
+538:          text = re.sub(r"eyJ[A-Za-z0-9_\-]+\.eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", "[REDACTED_JWT]", text)
+549:          text = re.sub(r"(LANGGRAPH_U[12]_TOKEN=)\S+", r"\1[REDACTED]", text)
+
+--- TOML parse of deploy/fly.prod.toml ---
+app: hc-rag-server-prod
+primary_region: iad
+http_service: {'internal_port': 8000, 'force_https': True, 'auto_start_machines': True, 'auto_stop_machines': False, 'min_machines_running': 1, 'processes': ['app'], 'checks': [{'grace_period': '10s', 'interval': '15s', 'method': 'GET', 'path': '/ok', 'timeout': '5s', 'type': 'http'}]}
+
+--- adversarial: malformed tag handling ---
+Validation uses grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$' — test:
+  v1.2.3 -> PASS (valid)
+  v1 -> REJECT (invalid, fail-fast)
+  main -> REJECT (invalid, fail-fast)
+  v1.2 -> REJECT (invalid, fail-fast)
+  v1.2.3-rc1 -> REJECT (invalid, fail-fast)
+
+--- actionlint (if available) ---
+not installed in this env — noted as limitation
+
+--- honest execution statement ---
+What was actually executed vs statically verified:
+
+Executed:
+- YAML validation via `uv run python -c "import yaml; yaml.safe_load(...)"` — passed
+- Pinned SHA grep checks — 9 uses, 0 unpinned, all 40-hex, grep-verified
+- Job graph inspection via python yaml (on.push.tags = ['v*.*.*'], workflow_dispatch tag required true, build->deploy-prod needs, environment: production, concurrency deploy-production cancel-in-progress false)
+- Digest pinning grep, env concurrency grep, protection verification step grep — all present
+- TOML parse of deploy/fly.prod.toml — passed
+- Malformed tag regex test — correctly rejects non-semver
+
+Not executed (sandboxes limitation, honest):
+- No real `git push` of a tag and no live GitHub Actions run (spec says MUST NOT push a tag).
+- No `act` local runner dry-run (nektos/act not installed in this environment).
+- No `actionlint` binary available via uv tool (registry miss) — workflow linted via yaml + manual grep only.
+- No live Fly deploy, no real smoke against https://hc-rag-server-prod.fly.dev (requires prod secrets + live app).
+- A workflow_dispatch dry-run showing build green and deploy-prod awaiting approval was NOT performed — this would require pushing a real rc tag to origin or a fork scratch branch, which is disallowed. The static verification above is the most rigorous check possible without a live run; it proves the workflow would fail fast on invalid input and would check out the tag commit, but it does not prove the runtime deploy would succeed.
+
+If a fork/scratch branch were available, the dry-run would be: push tag v0.0.0-rc.test1 to fork, trigger workflow_dispatch with tag=v0.0.0-rc.test1, observe build green and deploy-prod blocked on environment approval in the Actions UI, then delete the tag. A live report would be recorded here.
+
+--- workflow_dispatch dry-run note ---
+Per spec, Must NOT push a tag from this task. Therefore no live dry-run was performed.
+Static proof above is the acceptance evidence for this sandboxed run.
+Future maintainer: to record a live dry-run, push a scratch rc tag to a fork and capture the Actions UI state (build green, deploy-prod awaiting approval).
+
+=== end evidence ===
