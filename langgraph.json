@@ -13,7 +13,7 @@
   },
   "auth": {
     "path": "./healthcare_rag/agent/auth.py:auth",
-    "disable_studio_auth": true
+    "disable_studio_auth": false
   },
   "http": {
     "app": "./healthcare_rag/agent/http_app.py:app",
