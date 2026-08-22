@@ -1,0 +1,325 @@
+# Evidence for task 5 — assistants + store endpoints
+Generated: 2026-08-22T14:37:28.612009
+
+## git status --short (before)
+$ git -C /Users/siddicky/Projects/nymble/healthcare-rag-langgraph status --short --branch
+## integration/all-work...origin/integration/all-work [ahead 5]
+ M .env.example
+ M .gitignore
+ M .omo/notepads/coach-agent-platform/issues.md
+ M .omo/notepads/coach-agent-platform/learnings.md
+ M Makefile
+ M frontend/e2e/smoke.spec.ts
+ M frontend/src/chat/__tests__/actionBar.test.tsx
+ M frontend/src/chat/__tests__/chat.test.tsx
+ M frontend/src/chat/__tests__/forbiddenModes.test.ts
+ M frontend/src/chat/__tests__/model.test.ts
+ M frontend/src/chat/__tests__/protocol.test.ts
+ M frontend/src/chat/__tests__/streamWire.test.ts
+ M frontend/src/chat/coachApi.ts
+ M frontend/src/chat/coachProtocol.ts
+ M frontend/src/chat/stream.ts
+ M healthcare_rag/agent/finalize.py
+ M healthcare_rag/agent/perimeter.py
+ M healthcare_rag/graph/nodes/retrieve.py
+ M healthcare_rag/graph/resources.py
+ M healthcare_rag/graph/settings.py
+ M healthcare_rag/processors/retrieval.py
+ M healthcare_rag/storage/vector_store.py
+ M scripts/deployed_smoke.py
+ M scripts/forget_member_api.py
+ M server/storage.py
+ M tests/agent/test_perimeter_composed.py
+ M tests/agent/test_server_perimeter.py
+ M tests/graph/test_resources.py
+ M tests/graph/test_settings.py
+?? .DS_Store
+?? "Nymble Health Design System/"
+?? artifacts/.DS_Store
+?? server/assistants.py
+?? server/store_routes.py
+?? tests/agent/test_finalized_stream.py
+?? tests/agent/test_member_streaming.py
+?? tests/server/test_assistants_store.py
+?? tests/server/test_crons.py
+?? tests/test_vector_store.py
+?? tmp/
+
+
+## pytest tests/server/test_assistants_store.py -q
+$ uv run pytest tests/server/test_assistants_store.py -q
+.......                                                                  [100%]
+7 passed in 2.34s
+
+
+## pytest tests/server/ -q full
+$ uv run pytest tests/server/ -q
+
+==================================== ERRORS ====================================
+_________________ ERROR collecting tests/server/test_crons.py __________________
+ImportError while importing test module '/Users/siddicky/Projects/nymble/healthcare-rag-langgraph/tests/server/test_crons.py'.
+Hint: make sure your test modules/packages have valid Python names.
+Traceback:
+../../../.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/importlib/__init__.py:90: in import_module
+    return _bootstrap._gcd_import(name[level:], package, level)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+tests/server/test_crons.py:15: in <module>
+    from server.crons import CRON_LIMIT, routes, run_due_crons
+E   ModuleNotFoundError: No module named 'server.crons'
+=========================== short test summary info ============================
+ERROR tests/server/test_crons.py
+!!!!!!!!!!!!!!!!!!!! Interrupted: 1 error during collection !!!!!!!!!!!!!!!!!!!!
+1 error in 0.21s
+
+
+## ruff check server/assistants.py server/store_routes.py server/storage.py
+$ uv run ruff check server/assistants.py server/store_routes.py server/storage.py
+BLE001 Do not catch blind exception: `Exception`
+  --> server/assistants.py:50:35
+   |
+48 |     try:
+49 |         body: dict[str, Any] = await request.json() if request.headers.get("content-type", "").startswith("application/json") else {}
+50 |     except (json.JSONDecodeError, Exception):
+   |                                   ^^^^^^^^^
+51 |         body = {}
+52 |     # empty body with no json still {}
+   |
+
+TRY004 Prefer `TypeError` exception for invalid type
+  --> server/store_routes.py:15:9
+   |
+13 |         return
+14 |     if not isinstance(labels, (list, tuple)):
+15 |         raise ValueError("namespace must be list")
+   |         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+16 |     for label in labels:
+17 |         if not isinstance(label, str) or not label:
+   |
+
+BLE001 Do not catch blind exception: `Exception`
+  --> server/store_routes.py:59:12
+   |
+57 |     try:
+58 |         body = await request.json()
+59 |     except Exception:
+   |            ^^^^^^^^^
+60 |         return JSONResponse({"detail": "Invalid JSON"}, status_code=422)
+61 |     if not isinstance(body, dict):
+   |
+
+BLE001 Do not catch blind exception: `Exception`
+  --> server/store_routes.py:74:12
+   |
+72 |     try:
+73 |         _validate_namespace(namespace)
+74 |     except Exception as exc:
+   |            ^^^^^^^^^
+75 |         status = getattr(exc, "status_code", 422)
+76 |         detail = getattr(exc, "detail", str(exc))
+   |
+
+BLE001 Do not catch blind exception: `Exception`
+   --> server/store_routes.py:116:12
+    |
+114 |     try:
+115 |         _validate_namespace(namespace)
+116 |     except Exception as exc:
+    |            ^^^^^^^^^
+117 |         status = getattr(exc, "status_code", 422)
+118 |         detail = getattr(exc, "detail", str(exc))
+    |
+
+BLE001 Do not catch blind exception: `Exception`
+   --> server/store_routes.py:138:12
+    |
+136 |     try:
+137 |         body = await request.json()
+138 |     except Exception:
+    |            ^^^^^^^^^
+139 |         return JSONResponse({"detail": "Invalid JSON"}, status_code=422)
+140 |     if not isinstance(body, dict):
+    |
+
+BLE001 Do not catch blind exception: `Exception`
+   --> server/store_routes.py:150:12
+    |
+148 |     try:
+149 |         _validate_namespace(namespace_prefix)
+150 |     except Exception as exc:
+    |            ^^^^^^^^^
+151 |         status = getattr(exc, "status_code", 422)
+152 |         detail = getattr(exc, "detail", str(exc))
+    |
+
+BLE001 Do not catch blind exception: `Exception`
+   --> server/store_routes.py:190:12
+    |
+188 |     try:
+189 |         body = await request.json()
+190 |     except Exception:
+    |            ^^^^^^^^^
+191 |         return JSONResponse({"detail": "Invalid JSON"}, status_code=422)
+192 |     if not isinstance(body, dict):
+    |
+
+BLE001 Do not catch blind exception: `Exception`
+   --> server/store_routes.py:202:12
+    |
+200 |     try:
+201 |         _validate_namespace(namespace)
+202 |     except Exception as exc:
+    |            ^^^^^^^^^
+203 |         status = getattr(exc, "status_code", 422)
+204 |         detail = getattr(exc, "detail", str(exc))
+    |
+
+Found 9 errors.
+
+
+## Manual QA httpx ASGITransport roundtrip (captured)
+$ uv run python - << 'PY2'
+import asyncio, json, httpx
+from server.assistants import routes as a_routes
+from server.store_routes import routes as s_routes
+from server.config import ServerConfig
+from server.storage import Storage
+from server.auth import AuthPolicyEngine, AuthMiddleware
+from langgraph_sdk import Auth
+from starlette.applications import Starlette
+from langgraph.store.memory import InMemoryStore
+from langgraph.checkpoint.memory import InMemorySaver
+
+# Build stub auth
+from langgraph_sdk import Auth as A
+
+auth=A()
+@auth.authenticate
+async def authenticate(method, path, headers, authorization):
+    if authorization == "Bearer good":
+        return {"identity": "member-1", "is_authenticated": True, "role": "member"}
+    raise A.exceptions.HTTPException(status_code=401)
+@auth.on
+async def deny_all(ctx, value):
+    del value
+    kind = ctx.user["kind"] if "kind" in ctx.user else None
+    return None if kind == "StudioUser" else False
+@auth.on.assistants.read
+async def r(ctx, value):
+    del value
+    if ctx.user.get("kind") == "StudioUser":
+        return None
+    return {"graph_id": "coach"}
+@auth.on.assistants.search
+async def sr(ctx, value):
+    del value
+    if ctx.user.get("kind") == "StudioUser":
+        return None
+    return {"graph_id": "coach"}
+
+cfg = ServerConfig(graphs={"healthcare_rag": "./healthcare_rag/graph/__init__.py:graph", "coach": "./healthcare_rag/agent/__init__.py:coach"}, auth_path=None, http_app=None, http_flags={}, store_index={}, api_version="0.12.6", storage="memory", port=8000, local_dev=False, raw={})
+
+class Fake:
+    def embed_documents(self, texts):
+        out=[]
+        for t in texts:
+            low=t.lower()
+            if "cats" in low or "meow" in low: out.append([1,0,0])
+            elif "dogs" in low or "bark" in low: out.append([0,1,0])
+            else: out.append([0,0,1])
+        return out
+    def embed_query(self, t): return self.embed_documents([t])[0]
+    async def aembed_documents(self, texts): return self.embed_documents(texts)
+    async def aembed_query(self, t): return self.embed_query(t)
+
+store = InMemoryStore(index=None)
+store.index_config={"embed":"fake","dims":3,"fields":["$"],"__tokenized_fields":[("$","$")]}
+store.embeddings=Fake()
+storage = Storage(saver=InMemorySaver(), store=store)
+routes = a_routes + s_routes
+app = Starlette(routes=routes, middleware=[AuthMiddleware.as_starlette(auth, local_dev=True)])
+app.state.config=cfg; app.state.storage=storage; app.state.auth_engine=AuthPolicyEngine(auth)
+class R:
+    def is_ready(self): return True
+app.state.readiness=R()
+
+async def run():
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        r = await client.post("/assistants/search", json={})
+        print("Studio assistants search:", r.status_code, json.dumps(r.json(), indent=2))
+        r2 = await client.put("/store/items", json={"namespace": ["test","qa"], "key": "k1", "value": {"text": "cats meow"}})
+        print("PUT k1:", r2.status_code)
+        r3 = await client.put("/store/items", json={"namespace": ["test","qa"], "key": "k2", "value": {"text": "dogs bark"}})
+        print("PUT k2:", r3.status_code)
+        r4 = await client.get("/store/items", params={"namespace":"test.qa","key":"k1"})
+        print("GET k1:", r4.status_code, r4.json())
+        r5 = await client.post("/store/items/search", json={"namespace_prefix":["test","qa"], "query":"cats", "limit":10})
+        print("SEARCH cats:", r5.status_code, json.dumps(r5.json(), indent=2))
+        r6 = await client.put("/store/items", json={"namespace":["bad.label"], "key":"k","value":{"x":1}})
+        print("MALFORMED:", r6.status_code, r6.json())
+        r7 = await client.get("/store/items", params={"namespace":"nope","key":"missing"})
+        print("MISSING:", r7.status_code, r7.json())
+import anyio
+anyio.run(run)
+PY2
+
+Studio assistants search: 200 [
+  {
+    "assistant_id": "healthcare_rag",
+    "graph_id": "healthcare_rag",
+    "name": "healthcare_rag",
+    "metadata": {},
+    "config": {},
+    "created_at": "2026-08-22T21:37:33.948628+00:00",
+    "updated_at": "2026-08-22T21:37:33.948628+00:00",
+    "version": 1
+  },
+  {
+    "assistant_id": "coach",
+    "graph_id": "coach",
+    "name": "coach",
+    "metadata": {},
+    "config": {},
+    "created_at": "2026-08-22T21:37:33.948756+00:00",
+    "updated_at": "2026-08-22T21:37:33.948756+00:00",
+    "version": 1
+  }
+]
+PUT k1: 204
+PUT k2: 204
+GET k1: 200 {'namespace': ['test', 'qa'], 'key': 'k1', 'value': {'text': 'cats meow'}, 'created_at': '2026-08-22T21:37:33.949181+00:00', 'updated_at': '2026-08-22T21:37:33.949182+00:00'}
+SEARCH cats: 200 {
+  "items": [
+    {
+      "namespace": [
+        "test",
+        "qa"
+      ],
+      "key": "k1",
+      "value": {
+        "text": "cats meow"
+      },
+      "created_at": "2026-08-22T21:37:33.949181+00:00",
+      "updated_at": "2026-08-22T21:37:33.949182+00:00"
+    },
+    {
+      "namespace": [
+        "test",
+        "qa"
+      ],
+      "key": "k2",
+      "value": {
+        "text": "dogs bark"
+      },
+      "created_at": "2026-08-22T21:37:33.949334+00:00",
+      "updated_at": "2026-08-22T21:37:33.949335+00:00"
+    }
+  ]
+}
+MALFORMED: 422 {'detail': 'Namespace labels cannot contain periods. Received: bad.label'}
+MISSING: 404 {'detail': 'Item not found'}
+
+
+$ uv run python -c "from server.config import load_config; from server.storage import create_storage; cfg=load_config(); s=create_storage(cfg); print('warning check:', s.store.index_config)"
+warning check: None
+store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+
