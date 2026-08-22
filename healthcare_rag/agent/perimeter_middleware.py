@@ -106,6 +106,11 @@ class MemberPerimeterMiddleware(BaseHTTPMiddleware):
         user = request.scope.get("user")
         if user is None:
             return JSONResponse({"detail": "Unauthorized"}, status_code=401)
+        if user.get("kind") == "StudioUser":
+            # A LangSmith Studio principal only exists while langgraph.json
+            # leaves `disable_studio_auth` false. It is a workspace operator,
+            # not a member, so the member perimeter does not apply to it.
+            return await call_next(request)
         role = user.get("role")
         if role == "internal":
             if request.url.path == "/coach/internal/version":

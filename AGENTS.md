@@ -168,6 +168,11 @@ false-positive lock-in, an over-matching boundary refusing legitimate follow-ups
   `compose_ui`; do not add a second ad-hoc interrupt counter.
 - Catalog facts are never literals. Every fact prop is a `__ref` object into a
   same-turn DATA envelope; static labels/actions alone use the backend allow-list.
+- LangSmith Studio is allowed in: `disable_studio_auth` is false and the member
+  perimeter passes `StudioUser` principals straight through (workspace operators
+  can read any thread in Studio). `CORS_ALLOW_ORIGINS` must include
+  `https://smith.langchain.com` for the Connect panel to load. Flip both back to
+  close the perimeter to operators.
 - `cron_wake` is a server-originated capability. The member perimeter rejects it
   and exposes no cron-management route. MCP and A2A remain disabled.
 - Upload ids are atomically reserved for 15 minutes. Extraction bytes exist only
