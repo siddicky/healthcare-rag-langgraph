@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 from contextlib import asynccontextmanager
 
+import anyio
 from starlette.applications import Starlette
 from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
@@ -13,7 +14,9 @@ from server.config import ServerConfig, load_config
 from server.graphs import attach_graphs, load_raw_graphs
 from server.manifest import UNIMPLEMENTED_PATHS, UNIMPLEMENTED_PREFIXES
 from server.routes.system import routes as system_routes
-from server.storage import Storage, create_storage
+from server.run_engine import RunEngine
+from server.runs import routes as run_routes
+from server.storage import create_storage
 
 
 class ReadinessState:
@@ -92,12 +95,8 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
     # To keep extensible, we do NOT register auth/scheduler/custom_app here.
     # Instead lifespan will set_ready for config/graphs and leave readiness true.
 
-    storage: Storage | None = None
-    graphs: dict[str, object] | None = None
-
     @asynccontextmanager
     async def lifespan(app: Starlette):  # type: ignore[no-untyped-def]
-        nonlocal storage, graphs
         app.state.config = cfg  # type: ignore[attr-defined]
         app.state.readiness = readiness  # type: ignore[attr-defined]
         # Validate probe: if config is invalid, fail startup (tested via invalid langgraph.json)
@@ -117,15 +116,20 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
                     sync_setup()
 
             raw = load_raw_graphs(cfg)
-            graphs = attach_graphs(raw, storage)
-            app.state.graphs = graphs  # type: ignore[attr-defined]
+            attached_graphs = attach_graphs(raw, storage)
+            app.state.graphs = attached_graphs  # type: ignore[attr-defined]
             app.state.raw_graphs = raw  # type: ignore[attr-defined]
 
             readiness.set_ready("config")
             readiness.set_ready("graphs")
             readiness.set_ready("auth")
             # If downstream todos have registered extra checks, they remain False until those subsystems set_ready
-            yield
+            async with anyio.create_task_group() as tasks:
+                run_engine = RunEngine(storage, attached_graphs, tasks)
+                app.state.run_engine = run_engine  # type: ignore[attr-defined]
+                yield
+                run_engine.shutdown()
+                tasks.cancel_scope.cancel()
         finally:
             # teardown
             pass
@@ -133,6 +137,7 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
     # Build routes
     routes: list[Route] = []
     routes.extend(system_routes)
+    routes.extend(run_routes)
 
     # catch-all for 501 manifest and 404
     async def catch_all(request: Request):  # type: ignore[no-untyped-def]

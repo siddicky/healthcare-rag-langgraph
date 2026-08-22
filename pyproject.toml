@@ -55,6 +55,7 @@ ingest = [
     "transformers>=4.51",
 ]
 dev = [
+    "httpx-sse>=0.4,<1",
     "pytest>=8",
     "pytest-asyncio>=0.26",
     "rich>=14",
