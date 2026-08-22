@@ -130,9 +130,15 @@ async def supabase_bearer(
 @auth.on
 async def deny_all(
     ctx: Auth.types.AuthContext, value: Auth.types.on.value
-) -> Literal[False]:
-    del ctx, value
-    return False
+) -> AuthDecision:
+    del value
+    return None if _is_studio(ctx) else False
+
+
+def _is_studio(ctx: Auth.types.AuthContext) -> bool:
+    """LangSmith Studio principal (only issued while disable_studio_auth is false)."""
+    kind = ctx.user["kind"] if "kind" in ctx.user else None  # noqa: SIM401
+    return kind == "StudioUser"
 
 
 def _role(ctx: Auth.types.AuthContext) -> str | None:
@@ -149,6 +155,8 @@ def _sub_role(ctx: Auth.types.AuthContext) -> str | None:
 async def create_thread(
     ctx: Auth.types.AuthContext, value: Auth.types.on.threads.create.value
 ) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
     if _role(ctx) == "member":
         value["metadata"] = {"user_id": ctx.user.identity}
         return None
@@ -168,6 +176,8 @@ async def _thread_scope(
     ctx: Auth.types.AuthContext,
     value: Auth.types.on.threads.read.value | Auth.types.on.threads.search.value,
 ) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
     del value
     if _role(ctx) == "member":
         return {"user_id": ctx.user.identity}
@@ -187,6 +197,8 @@ auth.on.threads.search(_thread_scope)
 async def delete_thread(
     ctx: Auth.types.AuthContext, value: Auth.types.on.threads.delete.value
 ) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
     del value
     if _role(ctx) == "member":
         return {"user_id": ctx.user.identity}
@@ -199,6 +211,8 @@ async def delete_thread(
 async def create_run(
     ctx: Auth.types.AuthContext, value: Auth.types.on.threads.create_run.value
 ) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
     run_input = value.get("kwargs", {}).get("input")
     if _role(ctx) == "member":
         if isinstance(run_input, Mapping) and "cron_wake" in run_input:
@@ -226,6 +240,8 @@ async def create_run(
 async def read_coach_assistant(
     ctx: Auth.types.AuthContext, value: Auth.types.on.assistants.read.value
 ) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
     del ctx, value
     return {"graph_id": "coach"}
 
@@ -241,6 +257,8 @@ def _cron_owner(ctx: Auth.types.AuthContext) -> str | None:
 async def create_cron(
     ctx: Auth.types.AuthContext, value: Auth.types.on.crons.create.value
 ) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
     owner = _cron_owner(ctx)
     payload = value.get("payload")
     metadata = payload.get("metadata") if isinstance(payload, Mapping) else None
@@ -260,6 +278,8 @@ async def _cron_scope(
     | Auth.types.on.crons.update.value
     | Auth.types.on.crons.delete.value,
 ) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
     del value
     owner = _cron_owner(ctx)
     return {"user_id": owner} if owner is not None else False
