@@ -15,7 +15,7 @@ PROJECT_ID: Final = "00000000-0000-4000-8000-000000000fee"
 def test_deploy_config_pins_runtime_and_privacy_dependencies() -> None:
     config = json.loads(Path("langgraph.json").read_text())
 
-    assert config["api_version"] == "0.8.7"
+    assert config["api_version"] == "0.13.0"
     assert config["store"]["index"] == {
         "embed": "openai:text-embedding-3-small",
         "dims": 1536,
@@ -176,7 +176,7 @@ async def test_smoke_version_gate_is_first_and_stops_mismatch() -> None:
     async with httpx.AsyncClient(
         base_url=settings.url, transport=httpx.MockTransport(handler)
     ) as client:
-        with pytest.raises(SmokeFailure, match="0.8.7"):
+        with pytest.raises(SmokeFailure, match="0.13.0"):
             await DeployedSmoke(settings, client).run()
 
     assert requests == ["/coach/internal/version"] * 5
