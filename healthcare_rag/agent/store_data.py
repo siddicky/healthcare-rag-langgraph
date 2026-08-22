@@ -261,6 +261,7 @@ class UploadRegistryRecord(StoreModel):
     status: Literal["uploading", "scanning", "extracting", "done", "error"]
     proposal: JsonObject | None = None
     consumed: bool = False
+    admitted: bool = False
 
 
 @final

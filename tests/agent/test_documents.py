@@ -510,3 +510,40 @@ async def test_upload_buffer_is_released_in_finally(
 
 async def _async_value(value: object) -> object:
     return value
+
+
+@pytest.mark.asyncio
+async def test_claim_proceeds_when_perimeter_already_admitted_the_upload() -> None:
+    """The perimeter marks `admitted` before the graph runs; claim must accept it.
+
+    This pins the handoff between _consume_attachment (admission marker,
+    re-send stays a perimeter 403) and claim_document (which still rejects
+    `consumed` records): a first review send must reach the interrupt.
+    """
+    # Given
+    from healthcare_rag.agent.build import build_coach_graph
+    from healthcare_rag.agent.store_data import put_upload_registry
+    from healthcare_rag.agent.uploads import reservation_id
+
+    store = InMemoryStore()
+    await _seed_registry(store)
+    namespace = ("users", USER_ID, "upload_registry")
+    item = await store.aget(namespace, reservation_id(UPLOAD_ID))
+    assert item is not None
+    await store.aput(
+        namespace,
+        reservation_id(UPLOAD_ID),
+        {**item.value, "admitted": True},
+    )
+    graph = build_coach_graph().compile(checkpointer=InMemorySaver(), store=store)
+
+    # When
+    result = await graph.ainvoke(
+        {"question": "Please review this document.", "attachment_id": UPLOAD_ID},
+        _config(),
+    )
+
+    # Then
+    assert "no longer available" not in str(result["messages"][-1].content)
+    ops = await store.asearch(("users", USER_ID, "ops"), limit=10)
+    assert len(ops) == 1

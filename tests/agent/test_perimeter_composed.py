@@ -176,3 +176,18 @@ def test_state_projection_rejects_private_sentinels_recursively() -> None:
     }
     with pytest.raises(PerimeterDenied):
         project_state({"values": {"nested": {"question": "private"}}, "interrupts": []})
+
+
+def test_state_projection_allows_cleared_private_channels() -> None:
+    from healthcare_rag.agent.perimeter import PerimeterDenied, project_state
+
+    assert project_state(
+        {"values": {"messages": [], "pending_document_op_id": None}, "interrupts": []}
+    ) == {
+        "values": {"messages": [], "pending_document_op_id": None},
+        "interrupts": [],
+    }
+    with pytest.raises(PerimeterDenied):
+        project_state(
+            {"values": {"pending_document_op_id": "sha256-op"}, "interrupts": []}
+        )

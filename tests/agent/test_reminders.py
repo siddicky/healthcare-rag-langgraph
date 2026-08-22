@@ -621,3 +621,91 @@ async def test_erasure_sweeps_known_orphan_crons_and_upload_reservations() -> No
         await store.aget(("users", "user-1", "upload_registry"), "reservation-1")
         is None
     )
+
+
+async def test_tool_node_runtime_injection_reaches_create_reminder_impl(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """ToolNode injects `runtime` into the call args before Pydantic parsing.
+
+    The three reminder args models must tolerate that injected key
+    (`extra="allow"`, the ChangeScheduleInput wrapper pattern); `forbid`
+    made every real agent-run reminder call die as a filtered-blank
+    tool-invocation error.
+    """
+    # Given
+    from contextlib import asynccontextmanager
+
+    from langgraph.checkpoint.memory import InMemorySaver
+    from langgraph.graph import END, START, MessagesState, StateGraph
+    from langgraph.prebuilt import ToolNode
+
+    from healthcare_rag.agent import reminders as reminders_module
+    from healthcare_rag.agent.reminders import create_reminder
+
+    store = InMemoryStore()
+
+    async def handler(request: httpx.Request) -> httpx.Response:
+        items = await store_data.list_reminders(store, "member-u1")
+        payload = _cron_payload()
+        payload["metadata"] = {
+            "reminder_id": items[0].reminder_id,
+            "user_id": "member-u1",
+        }
+        return httpx.Response(200, json=payload, request=request)
+
+    transport = httpx.MockTransport(handler)
+
+    @asynccontextmanager
+    async def fake_deployment_client():
+        async with httpx.AsyncClient(
+            base_url="https://deployment.test", transport=transport
+        ) as http:
+            yield CronClient(http=http, api_key="platform", internal_token="internal")
+
+    monkeypatch.setattr(
+        reminders_module, "_deployment_client", fake_deployment_client
+    )
+
+    builder = StateGraph(MessagesState)
+    _ = builder.add_node(
+        "tools", ToolNode([create_reminder], handle_tool_errors=False)
+    )
+    _ = builder.add_edge(START, "tools")
+    _ = builder.add_edge("tools", END)
+    graph = builder.compile(checkpointer=InMemorySaver(), store=store)
+
+    # When
+    result = await graph.ainvoke(
+        {
+            "messages": [
+                AIMessage(
+                    content="",
+                    tool_calls=[
+                        {
+                            "name": "create_reminder",
+                            "args": {
+                                "title": "Weekly weight log",
+                                "weekday": "Mon",
+                                "time": "09:00",
+                            },
+                            "id": "call-1",
+                            "type": "tool_call",
+                        }
+                    ],
+                )
+            ]
+        },
+        {
+            "configurable": {
+                "thread_id": "thread-1",
+                "coach_human_msg_id": "human-1",
+                "langgraph_auth_user": {"identity": "member-u1"},
+            }
+        },
+    )
+
+    # Then
+    content = cast("str", result["messages"][-1].content)
+    envelope = _envelope(content)
+    assert envelope["block_id"] == "reminders:list"

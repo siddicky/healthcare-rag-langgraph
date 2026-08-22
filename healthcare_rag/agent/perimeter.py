@@ -174,7 +174,13 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
 
 def _sweep(value: JSONValue) -> None:
     if isinstance(value, Mapping):
-        if _PRIVATE_SENTINELS.intersection(value):
+        # Only sentinel keys carrying data deny. Tracked coach channels such
+        # as ``pending_document_op_id`` rest at ``None`` in every checkpoint,
+        # and a cleared channel carries nothing to leak — denying on it would
+        # reject every member state read (graph state always includes it).
+        if _PRIVATE_SENTINELS.intersection(
+            key for key, item in value.items() if item is not None
+        ):
             _deny("State contains a private channel", 500)
         for item in value.values():
             _sweep(item)

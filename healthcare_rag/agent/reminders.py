@@ -66,7 +66,11 @@ _FULL_WEEKDAY: Final[dict[Weekday, str]] = {
 
 
 class CreateReminderArgs(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    # extra="allow": ToolNode merges the injected `runtime` key into the
+    # call args before Pydantic parsing (same wrapper pattern as
+    # change_schedule's ChangeScheduleInput); forbid rejects it and the
+    # tool dies with a filtered-blank invocation error in real agent runs.
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="allow")
 
     title: str
     weekday: Weekday
@@ -74,7 +78,7 @@ class CreateReminderArgs(BaseModel):
 
 
 class EditReminderArgs(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="allow")
 
     target: str
     weekday: Weekday | None = None
@@ -83,7 +87,7 @@ class EditReminderArgs(BaseModel):
 
 
 class CancelReminderArgs(BaseModel):
-    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="allow")
 
     target: str
 

@@ -61,7 +61,7 @@ async def _consume_attachment(request: Request, body: JSONBody) -> None:
         and item.value.get("owner") == identity
         and item.value.get("intended_thread") == thread_id
         and item.value.get("status") == "done"
-        and item.value.get("consumed") is False
+        and item.value.get("admitted") is not True
         and isinstance(item.value.get("expires_at"), int | float)
         and item.value["expires_at"] > time.time()
     )
@@ -69,7 +69,10 @@ async def _consume_attachment(request: Request, body: JSONBody) -> None:
         raise PerimeterDenied("Attachment is unavailable")
     assert item is not None
     updated = dict(item.value)
-    updated["consumed"] = True
+    # `admitted`, not `consumed`: claim_document rejects consumed records,
+    # and this middleware runs before the graph, so an eager consumed write
+    # would make every first claim fail. Re-admission stays a 403 here.
+    updated["admitted"] = True
     await store.aput(namespace, item_key, updated, index=False, ttl=UPLOAD_TTL_MINUTES)
 
 
