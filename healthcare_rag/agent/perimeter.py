@@ -174,10 +174,6 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
 
 def _sweep(value: JSONValue) -> None:
     if isinstance(value, Mapping):
-        # Only sentinel keys carrying data deny. Tracked coach channels such
-        # as ``pending_document_op_id`` rest at ``None`` in every checkpoint,
-        # and a cleared channel carries nothing to leak — denying on it would
-        # reject every member state read (graph state always includes it).
         if _PRIVATE_SENTINELS.intersection(
             key for key, item in value.items() if item is not None
         ):
@@ -190,10 +186,22 @@ def _sweep(value: JSONValue) -> None:
             _sweep(item)
 
 
+def _filter_pending_document_op_id(value: JSONValue) -> JSONValue:
+    if isinstance(value, dict):
+        return {
+            key: _filter_pending_document_op_id(item)
+            for key, item in value.items()
+            if key != "pending_document_op_id"
+        }
+    if isinstance(value, list):
+        return [_filter_pending_document_op_id(item) for item in value]
+    return value
+
+
 def project_state(payload: JSONBody) -> dict[str, JSONValue]:
     value = _require_body_mapping(payload)
     projected: dict[str, JSONValue] = {
-        "values": value.get("values", {}),
+        "values": _filter_pending_document_op_id(value.get("values", {})),
         "interrupts": value.get("interrupts", []),
     }
     _sweep(projected)

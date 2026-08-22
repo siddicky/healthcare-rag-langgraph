@@ -6,8 +6,10 @@ from typing import Final
 
 import pytest
 
+from healthcare_rag.agent.perimeter import JSONBody, JSONValue
+
 THREAD_ID: Final = "00000000-0000-0000-0000-000000000001"
-RUN_ENVELOPE: Final = {
+RUN_ENVELOPE: Final[dict[str, JSONValue]] = {
     "assistant_id": "coach",
     "input": {"question": "What is Lipitor used for?"},
     "stream_mode": ["updates"],
@@ -53,7 +55,7 @@ def test_member_native_allow_list_accepts_only_contract_routes(
     method: str,
     path: str,
     query: str,
-    body: dict[str, object] | None,
+    body: dict[str, JSONValue] | None,
 ) -> None:
     from healthcare_rag.agent.perimeter import validate_member_request
 
@@ -89,7 +91,7 @@ def test_member_native_allow_list_rejects_every_unlisted_surface(
     method: str,
     path: str,
     query: str,
-    body: dict[str, object] | list[object] | None,
+    body: dict[str, JSONValue] | list[JSONValue] | None,
 ) -> None:
     from healthcare_rag.agent.perimeter import PerimeterDenied, validate_member_request
 
@@ -113,10 +115,10 @@ def test_member_native_allow_list_rejects_every_unlisted_surface(
         ("interrupt_after", "*"),
     ],
 )
-def test_run_envelope_rejects_extra_keys(replacement: str, value: object) -> None:
+def test_run_envelope_rejects_extra_keys(replacement: str, value: JSONValue) -> None:
     from healthcare_rag.agent.perimeter import PerimeterDenied, validate_member_request
 
-    body = {**RUN_ENVELOPE, replacement: value}
+    body: dict[str, JSONValue] = {**RUN_ENVELOPE, replacement: value}
     with pytest.raises(PerimeterDenied):
         validate_member_request("POST", f"/threads/{THREAD_ID}/runs/stream", "", body)
 
@@ -133,10 +135,10 @@ def test_run_envelope_rejects_extra_keys(replacement: str, value: object) -> Non
         ("assistant_id", "healthcare_rag"),
     ],
 )
-def test_run_envelope_rejects_wrong_fixed_value(key: str, value: object) -> None:
+def test_run_envelope_rejects_wrong_fixed_value(key: str, value: JSONValue) -> None:
     from healthcare_rag.agent.perimeter import PerimeterDenied, validate_member_request
 
-    body = {**RUN_ENVELOPE, key: value}
+    body: dict[str, JSONValue] = {**RUN_ENVELOPE, key: value}
     with pytest.raises(PerimeterDenied):
         validate_member_request("POST", f"/threads/{THREAD_ID}/runs/stream", "", body)
 
@@ -144,7 +146,7 @@ def test_run_envelope_rejects_wrong_fixed_value(key: str, value: object) -> None
 def test_attachment_requires_exact_document_review_sentinel() -> None:
     from healthcare_rag.agent.perimeter import PerimeterDenied, validate_member_request
 
-    body = {
+    body: dict[str, JSONValue] = {
         **RUN_ENVELOPE,
         "input": {"question": "Delete my records", "attachment_id": "upload-id"},
     }
@@ -155,12 +157,13 @@ def test_attachment_requires_exact_document_review_sentinel() -> None:
 def test_resume_accepts_only_unified_resume_shape() -> None:
     from healthcare_rag.agent.perimeter import validate_member_request
 
-    body = {key: value for key, value in RUN_ENVELOPE.items() if key != "input"} | {
-        "command": {
-            "resume": {
-                "accept": True,
-                "fields": [{"key": "dose", "value": "unknown"}],
-            }
+    body: dict[str, JSONValue] = {
+        key: value for key, value in RUN_ENVELOPE.items() if key != "input"
+    }
+    body["command"] = {
+        "resume": {
+            "accept": True,
+            "fields": [{"key": "dose", "value": "unknown"}],
         }
     }
 
@@ -175,19 +178,49 @@ def test_state_projection_rejects_private_sentinels_recursively() -> None:
         "interrupts": [],
     }
     with pytest.raises(PerimeterDenied):
-        project_state({"values": {"nested": {"question": "private"}}, "interrupts": []})
+        _ = project_state(
+            {"values": {"nested": {"question": "private"}}, "interrupts": []}
+        )
 
 
-def test_state_projection_allows_cleared_private_channels() -> None:
-    from healthcare_rag.agent.perimeter import PerimeterDenied, project_state
+def test_state_projection_filters_pending_document_op_id_recursively() -> None:
+    from healthcare_rag.agent.perimeter import project_state
 
     assert project_state(
-        {"values": {"messages": [], "pending_document_op_id": None}, "interrupts": []}
+        {
+            "values": {
+                "messages": [],
+                "pending_document_op_id": "sha256-op",
+                "nested": {"pending_document_op_id": None, "public": "safe"},
+            },
+            "interrupts": [],
+        }
     ) == {
-        "values": {"messages": [], "pending_document_op_id": None},
+        "values": {"messages": [], "nested": {"public": "safe"}},
         "interrupts": [],
     }
-    with pytest.raises(PerimeterDenied):
-        project_state(
-            {"values": {"pending_document_op_id": "sha256-op"}, "interrupts": []}
-        )
+
+
+def test_state_projection_preserves_interrupt_while_filtering_pending_document_op_id() -> None:
+    from healthcare_rag.agent.perimeter import project_state
+
+    interrupt: dict[str, JSONValue] = {
+        "value": {
+            "sourceLabel": "intake.pdf",
+            "fields": [{"key": "dose", "value": "Morning"}],
+        },
+        "id": "interrupt-id",
+    }
+
+    payload: JSONBody = {
+        "values": {
+            "messages": [],
+            "pending_document_op_id": "sha256-op",
+        },
+        "interrupts": [interrupt],
+    }
+
+    assert project_state(payload) == {
+        "values": {"messages": []},
+        "interrupts": [interrupt],
+    }
