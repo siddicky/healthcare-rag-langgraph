@@ -1,3 +1,5 @@
+from typing import Final
+
 import pytest
 
 from healthcare_rag.models.answers import (
@@ -6,7 +8,12 @@ from healthcare_rag.models.answers import (
     StatementWithCitations,
 )
 from healthcare_rag.models.retrieval import QueryDocument, QueryResult, QueryResultList
+from healthcare_rag.processors import AnswerValidator as ExportedAnswerValidator
 from healthcare_rag.processors.validation import AnswerValidator
+
+_FALLBACK: Final = (
+    "I'm sorry, I couldn't validate the information to answer your question."
+)
 
 
 def _results() -> QueryResultList:
@@ -63,7 +70,7 @@ async def _validate(
 
 
 @pytest.mark.asyncio
-async def test_valid_cited_answer_is_reconstructed() -> None:
+async def test_valid_cited_answer_is_reconstructed(caplog: pytest.LogCaptureFixture) -> None:
     # Given
     structured = CitedAnswerResult(
         statements=[
@@ -74,12 +81,14 @@ async def test_valid_cited_answer_is_reconstructed() -> None:
             )
         ]
     )
+    caplog.set_level("INFO", logger="MedicalRAG")
 
     # When
     validated = await _validate("Muscle pain can occur. [doc_1]", structured)
 
     # Then
     assert validated == "Muscle pain can occur. [doc_1]"
+    assert "Citation check summary: Total checked: 1, Individual citation failures: 0" in caplog.messages
 
 
 @pytest.mark.asyncio
@@ -176,9 +185,7 @@ async def test_missing_citation_structure_fails_closed() -> None:
     )
 
     # Then
-    assert validated == (
-        "I'm sorry, I couldn't validate the information to answer your question."
-    )
+    assert validated == _FALLBACK
 
 
 @pytest.mark.asyncio
@@ -225,9 +232,7 @@ async def test_wholly_uncited_answer_fails_closed() -> None:
     validated = await _validate("Unsupported dosage advice.", structured)
 
     # Then
-    assert validated == (
-        "I'm sorry, I couldn't validate the information to answer your question."
-    )
+    assert validated == _FALLBACK
 
 
 @pytest.mark.asyncio
@@ -249,4 +254,88 @@ async def test_unsupported_uncited_tail_is_not_returned() -> None:
     )
 
     # Then
+    assert validated == "Muscle pain can occur. [doc_1]"
+
+
+def test_public_processor_export_preserves_validator_identity() -> None:
+    # Given / When / Then
+    assert ExportedAnswerValidator is AnswerValidator
+
+
+@pytest.mark.asyncio
+async def test_unknown_citation_id_fails_closed() -> None:
+    # Given
+    structured = CitedAnswerResult(
+        statements=[
+            StatementWithCitations(
+                text="Muscle pain can occur.",
+                citations=[_citation("doc_3", "Muscle pain can occur.")],
+                linebreaks="",
+            )
+        ]
+    )
+
+    # When
+    validated = await _validate("Muscle pain can occur. [doc_3]", structured)
+
+    # Then
+    assert validated == _FALLBACK
+
+
+@pytest.mark.asyncio
+async def test_malformed_citation_marker_fails_closed() -> None:
+    # Given
+    structured = CitedAnswerResult(
+        statements=[
+            StatementWithCitations(
+                text="Muscle pain can occur.",
+                citations=[_citation("doc_x", "Muscle pain can occur.")],
+                linebreaks="",
+            )
+        ]
+    )
+
+    # When
+    validated = await _validate("Muscle pain can occur. [doc_x]", structured)
+
+    # Then
+    assert validated == _FALLBACK
+
+
+@pytest.mark.asyncio
+async def test_returned_structure_uses_source_text_and_original_document_ids() -> None:
+    # Given
+    structured = CitedAnswerResult(
+        statements=[
+            StatementWithCitations(
+                text="untrusted scaffolding",
+                citations=[_citation("doc_1", "Muscle pain can occur.")],
+                linebreaks="\\n\\n\\n",
+            )
+        ]
+    )
+
+    async def llm_call(**_kwargs: str) -> CitedAnswerResult:
+        return structured
+
+    # When
+    resolved, validated = await AnswerValidator(
+        llm_call=llm_call
+    ).structure_and_validate_async(
+        "Muscle pain can occur. [doc_1]",
+        _results(),
+        "formatted documents",
+        {"doc_1": "lipitor-muscle"},
+    )
+
+    # Then
+    assert resolved == CitedAnswerResult(
+        statements=[
+            StatementWithCitations(
+                text="Muscle pain can occur.",
+                citations=[_citation("lipitor-muscle", "Muscle pain can occur.")],
+                linebreaks="",
+            )
+        ]
+    )
     assert validated == "Muscle pain can occur. [doc_1]"
