@@ -47,6 +47,10 @@ Per-turn scores emit mean and worst turn. Conversation-level checks cover contex
 
 **Change protocol:** iterate with deterministic filtered checks, run judges before behavior/prompt/model changes merge, and rescore comparisons after evaluator configuration changes.
 
+## Coach agent suite
+
+The deployed [coach agent](../agent/coach.md) has its own offline harnesses: `make eval-agent` (`evals/run_agent.py --offline`, backed by `evals/coach_engine.py` over `evals/agent_cases.py` with fakes from `evals/offline_agent_fakes.py`) and `make eval-agent-multiturn` (`evals/run_agent_multiturn.py`). Reports are produced by `evals/agent_report.py`; `evals/check_agent_parity.py`/`evals/agent_parity.py` guard the coach against drift like the RAG parity gate does. `make deployed-smoke` (`scripts/deployed_smoke.py`) is the conditional live check against `LANGGRAPH_DEPLOYMENT_URL` after a deployment or perimeter change, and `make forget-member` exercises self-erase end to end.
+
 ## Live trace monitoring
 
 Two `evals/` tools watch LangSmith projects while experiments run; both need `LANGSMITH_API_KEY`:

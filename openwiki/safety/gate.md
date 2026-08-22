@@ -6,8 +6,8 @@ tags: [safety, gate, pii, prompt-injection]
 openwiki:
   roles: [architecture, domain, testing]
   change_kinds: [lifecycle, public-api]
-  source_paths: [healthcare_rag/processors/safety.py, healthcare_rag/processors/safety_responses.py, healthcare_rag/processors/refusal_boundary.py, prompts/safety_gate.yaml.j2, healthcare_rag/models/safety.py, healthcare_rag/graph/nodes/safety.py]
-  symbols: [SafetyGate, SafetyDecision, scrub_phi, SafetyAssessment, SafetyOutcome, assess_safety, RefusalBoundary, boundary_hit, upsert_boundary]
+  source_paths: [healthcare_rag/processors/safety.py, healthcare_rag/processors/safety_responses.py, healthcare_rag/processors/refusal_boundary.py, healthcare_rag/processors/privacy.py, prompts/safety_gate.yaml.j2, healthcare_rag/models/safety.py, healthcare_rag/graph/nodes/safety.py]
+  symbols: [SafetyGate, SafetyDecision, scrub_phi, PrivacySanitizer, SafetyAssessment, SafetyOutcome, assess_safety, RefusalBoundary, boundary_hit, upsert_boundary]
   test_paths: [tests/test_safety_gate.py, tests/test_refusal_boundary.py, tests/graph/test_graph_safety.py, tests/graph/test_boundary_durability.py]
   invariants: [Deterministic pre-checks can only escalate a decision, never relax it., A refusal template never contains a number with a clinical unit., The scrubbed query is what reaches retrieval, prompts, and history persistence.]
   validation_commands: [make test]
@@ -19,7 +19,7 @@ Every query passes the `safety_gate` graph node **before** retrieval or generati
 
 ## Design: two layers, OR-ed
 
-1. **Deterministic pre-checks** (no network, `healthcare_rag/processors/safety.py`): regexes for PHI (`_PHI_PATTERNS`: email, health card, MRN, DOB, phone, postal, address, cued names), instruction-override attempts (`injection_flags`), requests to recite identifiers back (`identifier_recall_requested`), and first-person emergency red flags (`red_flag_terms`). These are a **floor** — they can only escalate an outcome (force `emergency_red_flag`/`prompt_injection`, set `contains_phi`), never downgrade what the model chose.
+1. **Deterministic pre-checks** (no network, `healthcare_rag/processors/safety.py`): the local [PrivacySanitizer](../privacy/sanitizer.md) for identifiers (`contains_phi` and identifier kinds), plus regexes for instruction-override attempts (`injection_flags`), requests to recite identifiers back (`identifier_recall_requested`), and first-person emergency red flags (`red_flag_terms`). These are a **floor** — they can only escalate an outcome (force `emergency_red_flag`/`prompt_injection`, set `contains_phi`), never downgrade what the model chose.
 2. **One LLM classification call** (`prompts/safety_gate.yaml.j2` → `SafetyAssessment` in `healthcare_rag/models/safety.py`, temperature 0, default model): one of `in_scope_informational`, `personal_medical_advice`, `emergency_red_flag`, `out_of_scope`, `prompt_injection`, `ambiguous`, plus `phi_spans` and `drug_mentioned`. If this call fails, the deterministic layer still decides (fail-open only for classification, exactly what the pre-gate pipeline did).
 
 `SafetyGate.assess` merges both; `SafetyGate.evaluate` returns a `SafetyDecision` carrying the scrubbed query, template choice, and one-line notices.
@@ -38,7 +38,7 @@ flowchart TD
 
 ## Scrubbing and short-circuit wiring
 
-- `scrub_phi(text, extra_spans)` replaces identifiers with `[REDACTED_<KIND>]` tokens, merging model-reported `phi_spans` (tried raw, HTML-escaped, and unescaped, because Jinja autoescaping shows the model `O&#39;Brien`) with regex hits, keeping the longest of overlapping spans (`#L149-L218`). A denylist stops drug/patient words from ever being redacted.
+- `scrub_phi(text, extra_spans)` replaces identifiers with `[REDACTED_<KIND>]` tokens. It no longer runs its own regexes: it delegates to the process-wide [PrivacySanitizer](../privacy/sanitizer.md) (`get().privacy.scan`), Presidio plus deterministic clinical patterns, and the `extra_spans` argument is retained only for call compatibility — model output never receives text-mutation authority (`healthcare_rag/processors/safety.py#L58-L81`). `contains_phi` therefore reflects only what the deterministic sanitizer found.
 - The `safety_gate` node first derives history views from the checkpointed messages: when the gate is on, every message is scrubbed (`build_history_views`), then token-capped (`HC_RAG_HISTORY_MAX_TOKENS`) and paired into the processed-history and context windows (`healthcare_rag/graph/history.py`). The node then **resets all downstream state** for the turn (retrievals, branch events, route, generation, validation, etc., via `Overwrite`) so nothing leaks from a prior turn on a checkpointed thread, then runs `LangChainSafetyGate.evaluate` (`graph/nodes/safety.py`). On short-circuit, `finalize` joins notices + template with `follow_ups = []` deliberately; the refusal never re-enters retrieval or generation.
 - Non-short-circuited queries run the pipeline on the scrubbed query (`working_query = decision.scrubbed_query`); one-line notices ("identifiers disregarded", "instructions unchanged") are prefixed to the final answer by `render_display_answer` at finalize.
 - Observability: the `safety` state field (`SafetyOutcome`) records category, `contains_phi`, `short_circuited`, response kind, deterministic flags, PHI kinds, LLM-call count, gate latency, and a scrubbed rationale; `build_result` copies it into each eval result row as `safety_outcome` (`graph/nodes/safety.py`; `graph/engine_record.py`).

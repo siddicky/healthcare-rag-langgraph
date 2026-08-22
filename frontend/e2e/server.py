@@ -33,7 +33,7 @@ import subprocess
 import sys
 import threading
 import time
-from datetime import date, timedelta
+from datetime import UTC, date, datetime, timedelta
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import ClassVar, Final, override
@@ -77,7 +77,7 @@ def _free_port() -> int:
 
 def _next_weekday(target: int) -> date:
     """Next strictly-future date whose weekday() == target (Mon=0)."""
-    today = date.today()
+    today = datetime.now(UTC).date()
     return today + timedelta(days=(target - today.weekday()) % 7 or 7)
 
 
@@ -100,7 +100,7 @@ class FixtureHandler(BaseHTTPRequestHandler):
     feedback_posts: ClassVar[list[dict[str, object]]] = []
 
     @override
-    def log_message(self, format: str, *args: object) -> None:  # noqa: A002
+    def log_message(self, format: str, *args: object) -> None:
         del format, args
 
     def _cors(self) -> None:
@@ -377,7 +377,7 @@ class FixtureHandler(BaseHTTPRequestHandler):
         if question == "what's on my calendar this month?":
             if not results_after:
                 return cls._tool_calls_completion([cls._call("view_schedule", {
-                    "month": date.today().strftime("%Y-%m"),
+                    "month": datetime.now(UTC).date().strftime("%Y-%m"),
                 })])
             calendar = turn_block("calendar:")
             if calendar is None or not composed_in_turn:

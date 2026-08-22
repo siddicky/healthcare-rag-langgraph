@@ -24,7 +24,10 @@ from langgraph.prebuilt import InjectedStore
 from langgraph.store.base import BaseStore
 from pydantic import BaseModel, ConfigDict, JsonValue, ValidationError
 
-from healthcare_rag.agent import store_data
+# Module-path import is required: `from healthcare_rag.agent import store_data`
+# re-enters agent.__init__ during build -> coach_agent -> tools.log_metric loading
+# (basedpyright-reported import cycle), so the PLR0402 alias form stays.
+import healthcare_rag.agent.store_data as store_data  # noqa: PLR0402
 from healthcare_rag.agent.memory import principal_mapping
 from healthcare_rag.agent.store_data import MetricEntry, make_envelope
 from healthcare_rag.graph.resources import get as get_resources

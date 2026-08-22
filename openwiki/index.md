@@ -9,10 +9,12 @@ okf_version: "0.1"
 
 # Directories
 
+- [agent](agent/)
 - [architecture](architecture/)
 - [configuration](configuration/)
 - [observability](observability/)
 - [operations](operations/)
+- [privacy](privacy/)
 - [processors](processors/)
 - [retrieval](retrieval/)
 - [safety](safety/)

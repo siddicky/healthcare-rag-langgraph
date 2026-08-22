@@ -522,7 +522,6 @@ async def test_claim_proceeds_when_perimeter_already_admitted_the_upload() -> No
     """
     # Given
     from healthcare_rag.agent.build import build_coach_graph
-    from healthcare_rag.agent.store_data import put_upload_registry
     from healthcare_rag.agent.uploads import reservation_id
 
     store = InMemoryStore()

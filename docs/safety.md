@@ -313,3 +313,40 @@ Watch, per `openwiki/safety/posture.md`:
 Per-example gate decisions are in the eval output under `safety_outcome`
 (`category`, `contains_phi`, `short_circuited`, `response_kind`, `deterministic_flags`,
 `gate_latency_s`).
+
+## Coach agent platform addendum
+
+The member-facing coach adds identity-linked behavioral data, reminders, document
+review, feedback, and generative UI. The controls below extend the existing gate;
+they do not replace its limits and do not assert any certified compliance status.
+
+* **Document-processing residual.** Uploaded bytes remain in a request-lifetime
+  memory buffer and are cleared after processing, but the extraction model must see
+  the document content to produce a proposal. Tracing is disabled on this path.
+  The accepted residual is model-provider transit of the document content; the
+  application persists only the scrubbed, bounded proposal and not the source bytes.
+* **Server-held credentials.** The platform API key and internal token are held by
+  the server and scoped to cron management and the feedback proxy. They are never
+  shipped to, derived by, or accepted from the member frontend. Member requests use
+  only a Supabase bearer and the fixed member route/envelope allow-list.
+* **One writer policy.** Every new persistent writer applies the same
+  scrub-then-rescan rule: scrub through the process-owned privacy scanner, rescan
+  the candidate output, and persist only when the second scan reports no identifier
+  kinds. Tool/model-supplied owner ids never select a namespace.
+* **Data classification and retention.** Coaching facts, metrics, schedules,
+  reminder metadata, document proposals, feedback linkage, and thread history are
+  behavioral coaching data. They are identity-linked, owner-scoped, and retained
+  until member self-erasure; they are distinct from direct identifiers that the
+  sanitizer attempts to remove. Self-erasure first sweeps crons and transient
+  reservations, then owner-scoped store data, and only then emits the marker that
+  permits client-driven thread deletion.
+* **Accepted platform residuals.** Agent Server and hosting infrastructure may
+  process outer request records while a member request is in transit. Reminder
+  crons are server-side scheduled runs and therefore persist scheduling metadata
+  until cancellation or erasure. These are explicit, user-accepted properties of
+  enabling member chat, uploads, feedback, and reminders—not hidden sanitizer
+  guarantees. Deployment operators must set retention, access, encryption, and
+  provider terms appropriate to their environment.
+
+This addendum documents engineering boundaries only. It makes no HIPAA, SOC 2,
+GDPR, PHIPA, PIPEDA, or other legal/compliance certification claim.

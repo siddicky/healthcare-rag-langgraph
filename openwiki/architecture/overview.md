@@ -15,7 +15,7 @@ openwiki:
 
 # LangGraph runtime architecture
 
-The runtime is a LangGraph `StateGraph` — the speculative orchestrator (`healthcare_rag/orch/`) and the old linear `MedicalRAG` pipeline were removed in the Phase-2 cleanup. The CLI enters at `healthcare_rag/__main__.py`, loads `.env`, and calls `build_engine()` to get a `GraphEngine` (`healthcare_rag/cli/interactive.py`); the engine owns the compiled graph, its checkpointer, and per-thread history (`healthcare_rag/graph/engine.py`). The same graph is served by the local LangGraph Agent Server (`langgraph.json` → `healthcare_rag/graph/__init__.py:graph`, `make dev`).
+The runtime is a LangGraph `StateGraph` — the speculative orchestrator (`healthcare_rag/orch/`) and the old linear `MedicalRAG` pipeline were removed in the Phase-2 cleanup. The CLI enters at `healthcare_rag/__main__.py`, loads `.env`, and calls `build_engine()` to get a `GraphEngine` (`healthcare_rag/cli/interactive.py`); the engine owns the compiled graph, its checkpointer, and per-thread history (`healthcare_rag/graph/engine.py`). The same graph is served by the local LangGraph Agent Server (`langgraph.json` → `healthcare_rag/graph/__init__.py:graph`, `make dev`); `langgraph.json` also serves the separate [coach agent](../agent/coach.md) graph (`coach`) with its own auth and HTTP app.
 
 ## Graph topology
 

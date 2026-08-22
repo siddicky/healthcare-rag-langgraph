@@ -11,7 +11,7 @@ tags: [retrieval, weaviate, ingestion]
 
 Routing builds one OpenAI function tool per configured collection — `query_<collection.lower()>` — via `build_routing_tools` (`healthcare_rag/processors/retrieval.py#L13-L35`). The graph node `retrieve_documents` asks the shared `LangChainLLMGateway.aroute_tools` which tools to call; each call's tool name is mapped back to a collection (`query_lipitor` → `Lipitor`) and its `query` argument is the search text (`healthcare_rag/graph/nodes/retrieve.py`). Thus configured collection names must stay compatible with that mapping and with the ingested collection names. Renaming a collection requires updating runtime defaults/configuration, ingestion target, and eval expectations together.
 
-Each tool accepts one required string argument, `query`, intended to be the user query verbatim. A routing failure is caught and degraded to an empty result list rather than aborting the request; each Weaviate search is retried up to three times (1 s / 2 s backoff) on `WeaviateBaseError` (`graph/nodes/retrieve.py#L29-L63`).
+Each tool accepts one required string argument, `query`, intended to be the user query verbatim. A routing failure is caught and degraded to an empty result list rather than aborting the request; each collection search is retried up to three times (1 s / 2 s backoff) on the arm's SDK error class (`WeaviateBaseError` here, `PineconeException` on the pinecone arm) (`graph/nodes/retrieve.py#L85-L149`). Two A/B alternatives replace only the per-collection search callable — see [retrieval arms and reranking](arms-and-reranking.md).
 
 For each tool call, `hybrid_search` uses `collection.query.hybrid` with:
 

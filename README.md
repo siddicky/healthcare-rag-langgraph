@@ -17,6 +17,7 @@ This orchestrated approach, powered by technologies like Weaviate, OpenAI, LangG
 - [Core Pipeline Components](#core-pipeline-components)
 - [Technology Stack](#technology-stack)
 - [Conditional Pipeline Orchestration (LangGraph)](#conditional-pipeline-orchestration-langgraph)
+- [Coach Agent Platform](#coach-agent-platform)
 - [Retrieval Engine Details](#retrieval-engine-details)
 - [Setup & Execution](#setup--execution)
 - [Example Query Flow](#example-query-flow)
@@ -124,6 +125,50 @@ image. The generated deployment image installs the pinned Presidio/spaCy model
 through the root package declared in `dependencies`. Both Agent Server surfaces
 remain limited to synthetic, non-sensitive input as described in
 `docs/safety.md`.
+
+---
+
+## Coach Agent Platform
+
+The member-facing coach is a second LangGraph application under
+`healthcare_rag/agent/`, with its Next.js client under `frontend/`. Its ordered
+decision-list gate is the authority for every turn: D0a admits only validated,
+server-originated reminder wakes; D0b admits the fixed attachment review route;
+D1–D9 then select erasure, safety handling, monograph relay, or coaching tools.
+The model does not choose which perimeter it runs inside.
+
+Generative UI is data-bound rather than prose-bound. Tools emit DATA envelopes,
+`compose_ui` may emit only the catalog tree, and every fact-bearing component prop
+must be a `{__ref: {turn_scope_id, block_id, pointer}}` object. The frontend
+hydrates those references against same-turn envelopes and rejects literal facts,
+unknown components, unresolved references, and unknown dispatch actions.
+
+Recurring reminders are owner-scoped store records paired with Agent Server cron
+runs. Cron creation and reconciliation use server-held internal credentials; a
+member can create, edit, or cancel reminders only through natural-language coach
+turns. A valid `cron_wake` is delivered model-free after the server revalidates its
+owner, thread, reminder, and rotating token.
+
+Document upload is a two-step reservation pipeline. The server atomically reserves
+the client upload id for 15 minutes, reads supported content into a request-lifetime
+buffer, performs extraction, scrubs the proposal, and stores only the bounded
+proposal for review. The original bytes are cleared and never written to disk.
+
+The member perimeter authenticates Supabase bearer tokens and exposes a fixed
+allow-list: own threads, constrained update streams, branch copy, uploads, feedback,
+and unified interrupt resumes. Cron administration, arbitrary state mutation,
+MCP, and A2A are not member surfaces. Deploy the `coach` graph and HTTP app from
+`langgraph.json`, configure the deployment secrets and allowed frontend origin,
+then use `make deployed-smoke LANGGRAPH_DEPLOYMENT_URL=https://…` for the live
+acceptance checks.
+
+Self-erasure follows the same path as a real chat turn. `make forget-member
+LANGGRAPH_DEPLOYMENT_URL=https://…` signs in as the member, asks the graph to erase
+owner-scoped records, crons, and upload reservations, waits for the durable marker,
+then snapshots and deletes all owned threads with the marker thread last. Use
+`FORGET_ARGS=--dry-run` to list the thread phase without mutation. The safety and
+privacy boundaries, residuals, and data-handling posture are documented in the
+[coach platform safety addendum](docs/safety.md#coach-agent-platform-addendum).
 
 ---
 

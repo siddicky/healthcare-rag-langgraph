@@ -67,4 +67,28 @@ healthcare_rag = ["prompts/*.yaml.j2"]
 [tool.pytest.ini_options]
 asyncio_mode = "auto"
 testpaths = ["tests"]
+pythonpath = ["."]
 addopts = "-m 'not judge'"   # judge tests are opt-in: pytest -m judge
+
+[tool.ruff]
+exclude = [
+    ".agents",
+    ".claude",
+    ".codex",
+    ".langgraph_api",
+    ".omc",
+    ".omo",
+    ".pageindex",
+    ".playwright-mcp",
+    ".pytest_cache",
+    ".ruff_cache",
+    ".venv",
+    "artifacts",
+    "build",
+    "dist",
+    "frontend/.next",
+    "frontend/node_modules",
+    "healthcare_rag.egg-info",
+    "Nymble Health Design System",
+    "tmp",
+]

@@ -11,7 +11,8 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
 .PHONY: journey help venv weaviate ingest run container-build container-ingest container-run \
         dev test test-judges calibrate eval-smoke eval eval-nojudge index-pageindex \
         ingest-pinecone \
-        eval-multiturn eval-multiturn-smoke dataset-sync dataset-sync-multiturn wiki-init wiki-update
+        eval-multiturn eval-multiturn-smoke eval-agent eval-agent-multiturn deployed-smoke forget-member \
+        dataset-sync dataset-sync-multiturn wiki-init wiki-update
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -96,6 +97,18 @@ eval-multiturn: ## Multi-turn conversation eval → LangSmith experiment + repor
 
 eval-multiturn-smoke: ## 2-conversation multi-turn smoke (no LLM judges)
 	$(PY) -m evals.run_multiturn --prefix mt-smoke --limit 2 --no-judges
+
+eval-agent: ## Offline in-process coach agent evaluation
+	$(PY) evals/run_agent.py --offline
+
+eval-agent-multiturn: ## Offline in-process coach multi-turn evaluation
+	$(PY) evals/run_agent_multiturn.py --offline
+
+deployed-smoke: ## Run the ten-check smoke against LANGGRAPH_DEPLOYMENT_URL
+	$(UV) run python scripts/deployed_smoke.py --url "$(LANGGRAPH_DEPLOYMENT_URL)"
+
+forget-member: ## Self-erase a member through the deployed coach flow (FORGET_ARGS=--dry-run)
+	$(UV) run python scripts/forget_member.py --url "$(LANGGRAPH_DEPLOYMENT_URL)" $(FORGET_ARGS)
 
 wiki-init: ## Generate the OpenWiki repo docs (openwiki/) — needs ~/.openwiki/.env
 	openwiki code --init -p
