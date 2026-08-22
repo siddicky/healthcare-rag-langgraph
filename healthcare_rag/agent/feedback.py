@@ -19,7 +19,7 @@ from pydantic import (
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
-from healthcare_rag.processors.safety import scrub_phi
+from healthcare_rag.processors.safety import ascrub_phi
 
 JSONValue: TypeAlias = JsonValue
 JSON_ADAPTER: Final = TypeAdapter(dict[str, JsonValue])
@@ -87,7 +87,7 @@ async def post_feedback(request: Request) -> Response:
         return JSONResponse({"detail": "Message not found"}, status_code=403)
 
     identity = request.user.identity
-    comment = scrub_phi(payload.comment)[0] if payload.comment else None
+    comment = (await ascrub_phi(payload.comment))[0] if payload.comment else None
     record: dict[str, JSONValue] = {
         "thread_id": str(payload.thread_id),
         "message_id": payload.message_id,

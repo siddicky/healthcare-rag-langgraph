@@ -11,6 +11,7 @@ from uuid import uuid4
 from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 import httpx
+from anyio import to_thread
 from langchain.tools import ToolRuntime, tool
 from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
@@ -247,7 +248,7 @@ async def create_reminder_impl(
         >= MAX_ACTIVE_REMINDERS
     ):
         return CAP_REACHED
-    clean_title = sanitize_memory_field(title)
+    clean_title = await to_thread.run_sync(sanitize_memory_field, title)
     if clean_title is None or not clean_title.strip():
         return TITLE_REJECTED
     pending = ReminderRecord(

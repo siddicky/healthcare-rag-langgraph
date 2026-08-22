@@ -53,6 +53,7 @@ from .safety_responses import (
 from .safety_signals import (
     DOSING_QUESTION,
     SALVAGEABLE_INJECTION_FLAGS,
+    ascrub_phi,
     contains_phi,
     identifier_recall_requested,
     injection_flags,
@@ -160,8 +161,8 @@ class SafetyGate:
         """
         det_red_flags = red_flag_terms(query)
         det_injection = injection_flags(query)
-        scrubbed_query, phi_kinds = scrub_phi(query)
-        scrubbed_history = scrub_phi(history_context)[0]
+        scrubbed_query, phi_kinds = await ascrub_phi(query)
+        scrubbed_history = (await ascrub_phi(history_context))[0]
         llm = await self._llm_assess(scrubbed_query, scrubbed_history)
 
         category = llm.category
@@ -199,7 +200,7 @@ class SafetyGate:
         if identifier_recall_requested(query):
             flags.append("identifier_recall")
 
-        scrubbed, phi_kinds = scrub_phi(query)
+        scrubbed, phi_kinds = await ascrub_phi(query)
         notices: list[str] = []
         if phi_kinds:
             notices.append(PHI_NOTICE)
@@ -287,6 +288,7 @@ __all__ = [
     "NUMERIC_DOSE",
     "SafetyDecision",
     "SafetyGate",
+    "ascrub_phi",
     "contains_phi",
     "identifier_recall_requested",
     "injection_flags",

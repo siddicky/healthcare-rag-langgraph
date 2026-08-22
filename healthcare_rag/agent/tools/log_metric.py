@@ -31,7 +31,7 @@ import healthcare_rag.agent.store_data as store_data  # noqa: PLR0402
 from healthcare_rag.agent.memory import principal_mapping
 from healthcare_rag.agent.store_data import MetricEntry, make_envelope
 from healthcare_rag.graph.resources import get as get_resources
-from healthcare_rag.processors.privacy import PrivacyScanError
+from healthcare_rag.processors.privacy import PrivacyScanError, ascan
 
 MAX_POINTS: Final = 8
 METRIC_INVALID: Final = (
@@ -134,7 +134,7 @@ async def log_metric_impl(
     thread_id, human_msg_id = _turn_scope(config)
     privacy = get_resources().privacy
     try:
-        clean_unit = privacy.scan(unit).text
+        clean_unit = (await ascan(privacy, unit)).text
     except PrivacyScanError:
         return PRIVACY_REFUSAL
     try:

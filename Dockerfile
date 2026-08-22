@@ -21,14 +21,11 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 
 COPY healthcare_rag ./healthcare_rag
 RUN --mount=type=cache,target=/root/.cache/uv \
-    uv sync --frozen --no-dev --no-editable \
-    && /opt/venv/bin/python -c \
-      "from healthcare_rag.processors.privacy import PrivacySanitizer; PrivacySanitizer().initialize()"
+    uv sync --frozen --no-dev --no-editable
 
 FROM python:${PYTHON_VERSION}-slim-bookworm AS runtime
 
 ENV PATH=/opt/venv/bin:$PATH \
-    PRESIDIO_DEVICE=cpu \
     PYTHONDONTWRITEBYTECODE=1 \
     PYTHONFAULTHANDLER=1 \
     PYTHONUNBUFFERED=1

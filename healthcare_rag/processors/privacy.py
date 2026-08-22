@@ -1,43 +1,33 @@
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from enum import StrEnum
-from importlib import metadata
 from threading import Condition, RLock
-from typing import Final, Protocol, final
+from typing import Any, Final, Protocol, final
 
+import httpx
+from anyio import to_thread
 from typing_extensions import override
 
-from presidio_analyzer import AnalyzerEngine, RecognizerRegistry
-from presidio_analyzer.context_aware_enhancers import LemmaContextAwareEnhancer
-from presidio_analyzer.nlp_engine import NerModelConfiguration, SpacyNlpEngine
-from presidio_analyzer.predefined_recognizers import (
-    CaSinRecognizer,
-    CreditCardRecognizer,
-    CryptoRecognizer,
-    IbanRecognizer,
-    IpRecognizer,
-    MacAddressRecognizer,
-    MedicalLicenseRecognizer,
-    PhoneRecognizer,
-    SpacyRecognizer,
-    UrlRecognizer,
-    UsBankRecognizer,
-    UsItinRecognizer,
-    UsLicenseRecognizer,
-    UsMbiRecognizer,
-    UsNpiRecognizer,
-    UsPassportRecognizer,
-    UsSsnRecognizer,
+from healthcare_rag.processors.privacy_patterns import (
+    clinical_code_intervals,
+    deterministic_hits,
 )
-
-from healthcare_rag.processors.privacy_patterns import clinical_code_intervals, deterministic_hits
 
 MAX_INPUT_BYTES: Final = 16 * 1024
 DEFAULT_SCORE_THRESHOLD: Final = 0.40
 MODEL_NAME: Final = "en_core_web_sm"
 MODEL_VERSION: Final = "3.8.0"
 ANALYZER_VERSION: Final = "2.2.364"
+SPACY_VERSION: Final = "3.8.15"
+
+# The privacy engine (presidio + spaCy) runs in services/privacy and is reached
+# over HTTP. These two variables are the only configuration; both are required.
+SERVICE_URL_ENV: Final = "PRIVACY_SERVICE_URL"
+SERVICE_TOKEN_ENV: Final = "PRIVACY_SERVICE_TOKEN"
+SERVICE_TIMEOUT_ENV: Final = "PRIVACY_SERVICE_TIMEOUT_S"
+DEFAULT_TIMEOUT_S: Final = 10.0
 
 ENTITY_TYPES: Final[tuple[str, ...]] = (
     "CA_SIN", "CREDIT_CARD", "CRYPTO", "IBAN_CODE", "IP_ADDRESS",
@@ -45,11 +35,8 @@ ENTITY_TYPES: Final[tuple[str, ...]] = (
     "US_BANK_NUMBER", "US_ITIN", "US_DRIVER_LICENSE", "US_MBI", "US_NPI",
     "US_PASSPORT", "US_SSN",
 )
-_SPACY_IGNORED_LABELS: Final[tuple[str, ...]] = (
-    "CARDINAL", "DATE", "EVENT", "FAC", "GPE", "LANGUAGE", "LAW", "LOC",
-    "MONEY", "NORP", "ORDINAL", "ORG", "PERCENT", "PRODUCT", "QUANTITY",
-    "TIME", "WORK_OF_ART",
-)
+_SENTINEL_TEXT: Final = "Alice Johnson used 192.168.10.42."
+_SENTINEL_ENTITIES: Final[frozenset[str]] = frozenset({"PERSON", "IP_ADDRESS"})
 
 
 class Readiness(StrEnum):
@@ -87,10 +74,28 @@ class PrivacyScan:
     kinds: tuple[str, ...]
 
 
-class AnalyzerResult(Protocol):
+@dataclass(frozen=True, slots=True)
+class AnalyzerResult:
     start: int
     end: int
     entity_type: str
+
+
+class PrivacyScanner(Protocol):
+    def scan(self, text: str) -> PrivacyScan: ...
+
+
+async def ascan(scanner: PrivacyScanner, text: str) -> PrivacyScan:
+    """Scan from async code. The scan is a network call, so it runs in a worker thread."""
+    return await to_thread.run_sync(scanner.scan, text)
+
+
+class PrivacyBackend(Protocol):
+    """Where presidio actually runs. ``validate`` is the readiness gate."""
+
+    def validate(self) -> None: ...
+
+    def analyze(self, text: str) -> list[AnalyzerResult]: ...
 
 
 def union_spans(text_length: int, spans: list[RedactSpan]) -> list[RedactSpan]:
@@ -118,13 +123,91 @@ def union_spans(text_length: int, spans: list[RedactSpan]) -> list[RedactSpan]:
 
 
 @final
+class RemotePresidioBackend:
+    """httpx client for services/privacy. Raw-free: only codes leave this class."""
+
+    def __init__(
+        self,
+        base_url: str,
+        token: str,
+        *,
+        client: httpx.Client | None = None,
+        timeout_s: float = DEFAULT_TIMEOUT_S,
+    ) -> None:
+        if not base_url or not token:
+            raise PrivacyScanError("PRIVACY_SERVICE_UNCONFIGURED")
+        self._base_url = base_url.rstrip("/")
+        self._headers = {"Authorization": f"Bearer {token}"}
+        self._client = client or httpx.Client(timeout=timeout_s)
+
+    @classmethod
+    def from_env(cls, client: httpx.Client | None = None) -> RemotePresidioBackend:
+        timeout = os.getenv(SERVICE_TIMEOUT_ENV)
+        return cls(
+            os.getenv(SERVICE_URL_ENV, ""),
+            os.getenv(SERVICE_TOKEN_ENV, ""),
+            client=client,
+            timeout_s=float(timeout) if timeout else DEFAULT_TIMEOUT_S,
+        )
+
+    def validate(self) -> None:
+        health = self._request("GET", "/health", None, "PRIVACY_INITIALIZATION_FAILED")
+        if (
+            health.get("analyzer_version") != ANALYZER_VERSION
+            or health.get("spacy_version") != SPACY_VERSION
+        ):
+            raise PrivacyScanError("PRIVACY_VERSION_MISMATCH")
+        if health.get("model_name") != MODEL_NAME or health.get("model_version") != MODEL_VERSION:
+            raise PrivacyScanError("PRIVACY_MODEL_MISMATCH")
+        inventory = health.get("entities")
+        if not isinstance(inventory, list) or not set(ENTITY_TYPES) <= set(inventory):
+            raise PrivacyScanError("PRIVACY_INVENTORY_MISMATCH")
+        sentinels = self._analyze(_SENTINEL_TEXT, sorted(_SENTINEL_ENTITIES), "PRIVACY_SENTINEL_FAILED")
+        if not {result.entity_type for result in sentinels} >= _SENTINEL_ENTITIES:
+            raise PrivacyScanError("PRIVACY_SENTINEL_FAILED")
+
+    def analyze(self, text: str) -> list[AnalyzerResult]:
+        return self._analyze(text, list(ENTITY_TYPES), "PRIVACY_SCAN_FAILED")
+
+    def _analyze(self, text: str, entities: list[str], code: str) -> list[AnalyzerResult]:
+        body = {"text": text, "entities": entities, "score_threshold": DEFAULT_SCORE_THRESHOLD}
+        payload = self._request("POST", "/analyze", body, code)
+        results = payload.get("results")
+        if not isinstance(results, list):
+            raise PrivacyScanError(code)
+        try:
+            return [
+                AnalyzerResult(int(item["start"]), int(item["end"]), str(item["entity_type"]))
+                for item in results
+            ]
+        except (KeyError, TypeError, ValueError):
+            raise PrivacyScanError(code) from None
+
+    def _request(
+        self, method: str, path: str, json: dict[str, Any] | None, code: str
+    ) -> dict[str, Any]:
+        try:
+            response = self._client.request(
+                method, f"{self._base_url}{path}", json=json, headers=self._headers
+            )
+            response.raise_for_status()
+            payload = response.json()
+        except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK
+            raise PrivacyScanError(code) from None
+        if not isinstance(payload, dict):
+            raise PrivacyScanError(code)
+        return payload
+
+
+@final
 class PrivacySanitizer:
     """Process-owned, fail-closed recognized-identifier scanner."""
 
-    def __init__(self) -> None:
+    def __init__(self, backend: PrivacyBackend | None = None) -> None:
         self._condition = Condition(RLock())
         self._readiness = Readiness.UNINITIALIZED
-        self._analyzer: AnalyzerEngine | None = None
+        self._backend: PrivacyBackend | None = backend
+        self._ready_backend: PrivacyBackend | None = None
 
     @property
     def readiness(self) -> Readiness:
@@ -141,20 +224,20 @@ class PrivacySanitizer:
                 raise PrivacyScanError("PRIVACY_NOT_READY")
             self._readiness = Readiness.INITIALIZING
         try:
-            analyzer = self._build_analyzer()
-            self._validate(analyzer)
+            backend = self._build_backend()
+            backend.validate()
         except PrivacyScanError:
             with self._condition:
                 self._readiness = Readiness.FAILED
                 self._condition.notify_all()
             raise
-        except Exception:  # noqa: BROAD_EXCEPT_OK - raw-free third-party boundary.
+        except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK
             with self._condition:
                 self._readiness = Readiness.FAILED
                 self._condition.notify_all()
             raise PrivacyScanError("PRIVACY_INITIALIZATION_FAILED") from None
         with self._condition:
-            self._analyzer = analyzer
+            self._ready_backend = backend
             self._readiness = Readiness.READY
             self._condition.notify_all()
 
@@ -162,19 +245,10 @@ class PrivacySanitizer:
         if len(text.encode("utf-8")) > MAX_INPUT_BYTES:
             raise PrivacyScanError("PRIVACY_INPUT_TOO_LARGE")
         self.initialize()
-        analyzer = self._analyzer
-        if analyzer is None:
+        backend = self._ready_backend
+        if backend is None:
             raise PrivacyScanError("PRIVACY_NOT_READY")
-        try:
-            results = analyzer.analyze(
-                text=text,
-                language="en",
-                entities=list(ENTITY_TYPES),
-                score_threshold=DEFAULT_SCORE_THRESHOLD,
-                return_decision_process=False,
-            )
-        except Exception:  # noqa: BROAD_EXCEPT_OK - raw-free third-party boundary.
-            raise PrivacyScanError("PRIVACY_SCAN_FAILED") from None
+        results = backend.analyze(text)
         preserve = clinical_code_intervals(text)
         candidates = [
             RedactSpan(hit.start, hit.end, hit.kind, "deterministic")
@@ -197,6 +271,9 @@ class PrivacySanitizer:
             clean = f"{clean[:span.start]}[REDACTED_{span.kind}]{clean[span.end:]}"
         return PrivacyScan(clean, kinds)
 
+    async def ascan(self, text: str) -> PrivacyScan:
+        return await ascan(self, text)
+
     @staticmethod
     def _presidio_result_allowed(text: str, result: AnalyzerResult) -> bool:
         if result.entity_type != "PERSON" or " " in text[result.start:result.end].strip():
@@ -205,55 +282,5 @@ class PrivacySanitizer:
         cues = ("name is ", "patient ", "pt. ", "dr. ", "doctor ", "provider ")
         return any(cue in prefix for cue in cues)
 
-    def _build_analyzer(self) -> AnalyzerEngine:
-        nlp = SpacyNlpEngine(
-            models=[{"lang_code": "en", "model_name": MODEL_NAME}],
-            ner_model_configuration=NerModelConfiguration(
-                model_to_presidio_entity_mapping={"PERSON": "PERSON"},
-                labels_to_ignore=_SPACY_IGNORED_LABELS,
-                default_score=0.85,
-            ),
-        )
-        nlp.load()
-        recognizers = [
-            CaSinRecognizer(), CreditCardRecognizer(), CryptoRecognizer(),
-            IbanRecognizer(), IpRecognizer(), MacAddressRecognizer(),
-            MedicalLicenseRecognizer(), PhoneRecognizer(supported_regions=("CA", "US")),
-            SpacyRecognizer(),
-            UrlRecognizer(), UsBankRecognizer(), UsItinRecognizer(), UsLicenseRecognizer(),
-            UsMbiRecognizer(), UsNpiRecognizer(), UsPassportRecognizer(), UsSsnRecognizer(),
-        ]
-        registry = RecognizerRegistry(recognizers=recognizers, supported_languages=["en"])
-        return AnalyzerEngine(
-            registry=registry,
-            nlp_engine=nlp,
-            log_decision_process=False,
-            default_score_threshold=DEFAULT_SCORE_THRESHOLD,
-            supported_languages=["en"],
-            context_aware_enhancer=LemmaContextAwareEnhancer(
-                context_prefix_count=5,
-                context_suffix_count=5,
-                context_matching_mode="whole_word",
-                min_score_with_context_similarity=DEFAULT_SCORE_THRESHOLD,
-            ),
-        )
-
-    def _validate(self, analyzer: AnalyzerEngine) -> None:
-        if metadata.version("presidio-analyzer") != ANALYZER_VERSION:
-            raise PrivacyScanError("PRIVACY_VERSION_MISMATCH")
-        if metadata.version("spacy") != "3.8.15":
-            raise PrivacyScanError("PRIVACY_VERSION_MISMATCH")
-        if metadata.version("en-core-web-sm") != MODEL_VERSION:
-            raise PrivacyScanError("PRIVACY_MODEL_MISMATCH")
-        inventory = set(analyzer.get_supported_entities(language="en"))
-        if not set(ENTITY_TYPES) <= inventory:
-            raise PrivacyScanError("PRIVACY_INVENTORY_MISMATCH")
-        sentinels = analyzer.analyze(
-            text="Alice Johnson used 192.168.10.42.",
-            language="en",
-            entities=["PERSON", "IP_ADDRESS"],
-            score_threshold=DEFAULT_SCORE_THRESHOLD,
-            return_decision_process=False,
-        )
-        if not {result.entity_type for result in sentinels} >= {"PERSON", "IP_ADDRESS"}:
-            raise PrivacyScanError("PRIVACY_SENTINEL_FAILED")
+    def _build_backend(self) -> PrivacyBackend:
+        return self._backend if self._backend is not None else RemotePresidioBackend.from_env()

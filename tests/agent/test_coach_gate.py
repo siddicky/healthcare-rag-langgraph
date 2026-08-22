@@ -40,10 +40,15 @@ def _gateway(category: SafetyCategory = "in_scope_informational") -> Gateway:
     return call
 
 
+async def _passthrough_scrub(text: str) -> tuple[str, list[str]]:
+    return text, []
+
+
 @pytest.fixture(autouse=True)
 def _isolate_gate(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(gate, "GATEWAY", _gateway())
-    monkeypatch.setattr(gate, "scrub_phi", lambda text: (text, []))
+    monkeypatch.setattr(gate, "ascrub_phi", _passthrough_scrub)
+    monkeypatch.setattr("healthcare_rag.processors.safety.ascrub_phi", _passthrough_scrub)
     monkeypatch.setattr(
         "healthcare_rag.processors.safety.scrub_phi", lambda text: (text, [])
     )

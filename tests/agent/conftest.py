@@ -117,7 +117,9 @@ def _free_port() -> int:
 
 
 @pytest.fixture(scope="session")
-def agent_server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
+def agent_server(
+    tmp_path_factory: pytest.TempPathFactory, privacy_service_server: str
+) -> Iterator[str]:
     dependency_server = ThreadingHTTPServer(("127.0.0.1", 0), _FixtureHandler)
     dependency_thread = threading.Thread(
         target=dependency_server.serve_forever,
@@ -206,6 +208,8 @@ def agent_server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
             "HC_RAG_VALIDATOR_MODEL",
             "LANGSMITH_FEEDBACK_PROJECT_ID",
             "COACH_SOCKET_GUARD_MARKER",
+            "PRIVACY_SERVICE_URL",
+            "PRIVACY_SERVICE_TOKEN",
         )
     }
     config_path = log_path.parent / "langgraph.fixture.json"

@@ -161,7 +161,7 @@ def test_initialization_failure_is_raw_free_and_sticky(
         attempts += 1
         raise SyntheticInitializationError("Jane Doe must never leave this boundary")
 
-    monkeypatch.setattr(sanitizer, "_build_analyzer", fail_build)
+    monkeypatch.setattr(sanitizer, "_build_backend", fail_build)
 
     codes: list[str] = []
     for _ in range(2):
@@ -183,7 +183,7 @@ async def test_engine_failure_sets_stable_monitor_channels(
     def fail_build():
         raise SyntheticInitializationError("Jane Doe upstream detail")
 
-    monkeypatch.setattr(sanitizer, "_build_analyzer", fail_build)
+    monkeypatch.setattr(sanitizer, "_build_backend", fail_build)
     settings = make_settings()
     previous = get_resources()
     override_resources(Resources(settings, privacy=sanitizer))

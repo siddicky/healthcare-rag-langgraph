@@ -25,10 +25,11 @@ def test_deploy_config_pins_runtime_and_privacy_dependencies() -> None:
     assert config["http"]["app"] == "./healthcare_rag/agent/http_app.py:app"
     assert config["http"]["disable_mcp"] is True
     assert config["http"]["disable_a2a"] is True
+    # The presidio/spaCy engine is served by services/privacy; the graph image
+    # must not carry it.
     docker = "\n".join(config["dockerfile_lines"])
-    assert "presidio-analyzer==2.2.364" in docker
-    assert "spacy==3.8.15" in docker
-    assert "en_core_web_sm-3.8.0" in docker
+    assert "presidio" not in docker
+    assert "spacy" not in docker
 
 
 def test_example_environment_declares_deployment_and_feedback_projects() -> None:
@@ -40,6 +41,8 @@ def test_example_environment_declares_deployment_and_feedback_projects() -> None
 
     assert "LANGGRAPH_DEPLOYMENT_URL" in values
     assert "LANGSMITH_FEEDBACK_PROJECT_ID" in values
+    assert "PRIVACY_SERVICE_URL" in values
+    assert "PRIVACY_SERVICE_TOKEN" in values
 
 
 @pytest.mark.parametrize("value", [None, "", "not-a-uuid"])

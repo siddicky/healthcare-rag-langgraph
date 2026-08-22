@@ -22,8 +22,9 @@ A generated refusal is a probability. The gate is the part we can promise.
 ```
 user message
    │
-   ├─ Presidio + deterministic identifier sanitizer
-   │    (current message and history; always enabled)
+   ├─ deterministic + Presidio identifier sanitizer
+   │    (current message and history; always enabled;
+   │     Presidio spans come from services/privacy over HTTP)
    ├─ deterministic safety pre-checks  (regex; no network) ─┐
    │    PHI · instruction override · identifier recall ·  │ OR-ed
    │    emergency red flags                               │
@@ -38,7 +39,9 @@ user message
 | piece | file |
 |---|---|
 | gate + deterministic checks + policy | `healthcare_rag/processors/safety.py` |
-| Presidio lifecycle, registry, span union, replacement | `healthcare_rag/processors/privacy.py` |
+| sanitizer lifecycle, remote Presidio client, span union, replacement, `ascan` | `healthcare_rag/processors/privacy.py` |
+| `scrub_phi` (sync) / `ascrub_phi` (async, thread-offloaded) | `healthcare_rag/processors/safety_signals.py` |
+| Presidio engine, registry, version/sentinel validation (HTTP service) | `services/privacy/privacy_service/` |
 | deterministic healthcare identifier patterns | `healthcare_rag/processors/privacy_patterns.py` |
 | response templates (plain strings) | `healthcare_rag/processors/safety_responses.py` |
 | classification prompt | `healthcare_rag/prompts/safety_gate.yaml.j2` |

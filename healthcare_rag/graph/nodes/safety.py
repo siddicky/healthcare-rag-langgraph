@@ -26,7 +26,7 @@ from healthcare_rag.processors.refusal_boundary import (
     load_boundaries,
     upsert_boundary,
 )
-from healthcare_rag.processors.safety import scrub_phi
+from healthcare_rag.processors.safety import ascrub_phi
 from healthcare_rag.processors.safety_responses import (
     PHI_NOTICE,
     emergency_response,
@@ -111,7 +111,7 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         "processed_history": serialized_history,
     }
     if not safety_gate_enabled():
-        scrubbed_question, _ = scrub_phi(question)
+        scrubbed_question, _ = await ascrub_phi(question)
         return _gate_command(
             state,
             {
@@ -124,7 +124,7 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
     boundary_on = refusal_boundary_enabled()
     valid: list[RefusalBoundary] = []
     if boundary_on:
-        scrubbed, phi_kinds = scrub_phi(question)
+        scrubbed, phi_kinds = await ascrub_phi(question)
         valid = load_boundaries(state.get("refusal_boundaries") or [])
         hit = boundary_hit(scrubbed, valid)
         if hit is not None:
@@ -242,7 +242,7 @@ async def safety_gate(state: RAGState) -> Command[GateTarget]:
         boundary_hit=False,
         boundaries_active=len(valid),
         gate_latency_s=round(latency, 3),
-        rationale=scrub_phi(decision.assessment.rationale)[0],
+        rationale=(await ascrub_phi(decision.assessment.rationale))[0],
     )
     return _gate_command(
         state,

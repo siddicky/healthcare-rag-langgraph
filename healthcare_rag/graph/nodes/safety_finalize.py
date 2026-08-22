@@ -6,7 +6,7 @@ from langchain_core.messages import AIMessage, HumanMessage
 
 from healthcare_rag.graph.nodes import render_display_answer
 from healthcare_rag.graph.state import RAGState
-from healthcare_rag.processors.safety import scrub_phi
+from healthcare_rag.processors.safety import ascrub_phi
 
 
 async def finalize(state: RAGState) -> RAGState:
@@ -27,12 +27,12 @@ async def finalize(state: RAGState) -> RAGState:
         )
         follow_ups = state.get("follow_ups", [])
 
-    answer = scrub_phi(answer)[0]
-    follow_ups = [scrub_phi(question)[0] for question in follow_ups]
+    answer = (await ascrub_phi(answer))[0]
+    follow_ups = [(await ascrub_phi(question))[0] for question in follow_ups]
     selected_branch_query = state.get("selected_branch_query")
     if selected_branch_query is None:
         selected_branch_query = state.get("working_query")
-    selected_branch_query = scrub_phi(selected_branch_query or "")[0] or None
+    selected_branch_query = (await ascrub_phi(selected_branch_query or ""))[0] or None
     update: RAGState = {
         "answer": answer or None,
         "follow_ups": follow_ups,

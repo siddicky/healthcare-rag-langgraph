@@ -27,6 +27,8 @@ openwiki/.last-update.json
 
 # uv build/sync byproduct; pyproject.toml is the dependency source (AGENTS.md)
 uv.lock
+# ...except the privacy service, which FastAPI Cloud builds from its own lock
+!services/privacy/uv.lock
 
 # PageIndex local-mode store (trees are cached under data/ instead)
 .pageindex/
@@ -34,3 +36,5 @@ uv.lock
 # oh-my-claudecode operational state (any level); project skills stay committable
 .omc/
 !.omc/skills/
+.vercel
+.env*
