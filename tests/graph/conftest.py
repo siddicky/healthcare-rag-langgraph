@@ -12,6 +12,7 @@ from healthcare_rag.graph.llm import LangChainLLMGateway, QueryOrRespondDecision
 from healthcare_rag.graph.resources import Resources, override
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.models.retrieval import QueryResultList
+from healthcare_rag.processors.privacy import PrivacySanitizer
 
 
 @dataclass(slots=True)  # noqa: MUTABLE_OK - counting fake records calls.
@@ -85,7 +86,7 @@ class FakeGateway(LangChainLLMGateway):
 
 class FakeLLMGateway(LangChainLLMGateway):
     def __init__(self, **scripts: Iterable[Any]) -> None:
-        super().__init__()
+        super().__init__(PrivacySanitizer())
         self.scripts = {stage: deque(values) for stage, values in scripts.items()}
         self.calls: dict[str, list[dict[str, Any]]] = defaultdict(list)
 

@@ -10,6 +10,7 @@ from healthcare_rag.graph.llm import LangChainLLMGateway
 from healthcare_rag.graph.nodes import query_or_respond
 from healthcare_rag.graph.resources import Resources, override
 from healthcare_rag.graph.state import JSONValue, RAGState
+from healthcare_rag.processors.privacy import PrivacySanitizer
 
 from .conftest import make_settings
 
@@ -66,7 +67,7 @@ def _gateway(
         query_response_arm=arm,
         history_max_tokens=history_max_tokens,
     )
-    gateway = LangChainLLMGateway(settings=settings)
+    gateway = LangChainLLMGateway(PrivacySanitizer(), settings=settings)
     model = FakeChatModel(response)
     monkeypatch.setattr(gateway, "chat_model", lambda _tier: model)
     return gateway, model

@@ -41,6 +41,7 @@ from dataclasses import dataclass, field
 from ..models.safety import SafetyAssessment
 from ..services.models import default_llm_model
 from .base import log_timing
+from .safety_patterns import NUMERIC_DOSE, injection_flags, strip_injection
 from .safety_responses import (
     INJECTION_NOTICE,
     PHI_NOTICE,
@@ -84,95 +85,12 @@ def contains_phi(text: str) -> bool:
 # 2. Prompt injection                                                          #
 # --------------------------------------------------------------------------- #
 
-_INJECTION_PATTERNS: tuple[tuple[str, re.Pattern[str]], ...] = (
-    (
-        "ignore_instructions",
-        re.compile(
-            r"\b(?:ignore|disregard|forget|override|bypass|drop)\b[^.?!]{0,40}?"
-            r"\b(?:instruction|instructions|rules?|guidelines?|polic(?:y|ies)|prompt|training|"
-            r"restrictions?|safety|guardrails?)\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "persona_override",
-        re.compile(
-            r"\b(?:pretend|act|behave|roleplay|role-play|imagine)\b[^.?!]{0,30}?"
-            r"\b(?:you(?:'re| are)|to be|as (?:if|an?|my))\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "persona_override",
-        re.compile(
-            r"\b(?:you are now|you'?re now|from now on,? (?:you|ignore|act)|answer as|respond as|reply as)\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "unrestricted_mode",
-        re.compile(
-            r"\b(?:unrestricted|unfiltered|jailbreak|jailbroken|developer mode|dev mode|test mode|"
-            r"god mode|dan mode|no (?:safety|restrictions|filters|polic(?:y|ies))|"
-            r"without (?:any )?(?:safety|restrictions|filters))\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "system_prompt_exfil",
-        re.compile(
-            r"\b(?:system prompt|prompt verbatim|"
-            r"(?:print|repeat|reveal|show|output|tell me|give me) your (?:system )?(?:prompt|instructions))\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "fiction_harm",
-        re.compile(
-            r"\b(?:novel|story|fiction|fictional|screenplay|script|character)\b[^.?!]{0,90}?"
-            r"\b(?:lethal|fatal|deadly|overdose|toxic dose|how much .{0,20}kill)\b",
-            re.IGNORECASE,
-        ),
-    ),
-    (
-        "fiction_harm",
-        re.compile(
-            r"\b(?:lethal|fatal|deadly|toxic) (?:dose|amount|quantity)\b[^.?!]{0,90}?"
-            r"\b(?:novel|story|fiction|fictional|screenplay|script|character|writing)\b",
-            re.IGNORECASE,
-        ),
-    ),
-)
-
-
 #: The only override pattern worth unpacking: "ignore your instructions and <real
 #: question>" often wraps something the assistant can legitimately answer. Every other
 #: pattern (persona installation, unrestricted/developer mode, system-prompt
 #: exfiltration, harm laundered through fiction) has no salvageable question inside it,
 #: so it is refused outright rather than re-assessed.
 SALVAGEABLE_INJECTION_FLAGS = frozenset({"ignore_instructions"})
-
-
-def injection_flags(text: str) -> list[str]:
-    """Names of the instruction-override patterns matched by ``text`` (deduplicated)."""
-    hits: list[str] = []
-    for name, pattern in _INJECTION_PATTERNS:
-        if pattern.search(text or "") and name not in hits:
-            hits.append(name)
-    return hits
-
-
-def strip_injection(text: str) -> str:
-    """Remove the override wording so the *underlying* question can be re-assessed."""
-    out = text or ""
-    for _name, pattern in _INJECTION_PATTERNS:
-        out = pattern.sub(" ", out)
-    # Tidy the leftovers ("  and tell me..." -> "tell me...").
-    out = re.sub(r"\s+", " ", out).strip()
-    out = re.sub(
-        r"^(?:and|then|also|but|so|,|\.|;|:)\s+", "", out, flags=re.IGNORECASE
-    ).strip()
-    return out
 
 
 # --------------------------------------------------------------------------- #
@@ -325,15 +243,6 @@ DOSING_QUESTION = re.compile(
     r"increase|decrease|reduce|split|half a tablet|skip|hold|stop taking|start taking)\b",
     re.IGNORECASE,
 )
-
-#: Static refusals must not carry a specific number with a clinical unit. Mirrors
-#: ``evals.evaluators.NUMERIC_DOSE_PATTERN`` and is asserted over every template.
-NUMERIC_DOSE = re.compile(
-    r"\b\d+(?:[.,]\d+)?\s*(?:mg|mcg|µg|g|ml|mL|mmol/?L?|[uµ]mol/?L?|%|tablets?|"
-    r"times? (?:a|per) day|hours?|hrs?|days?|weeks?)\b",
-    re.IGNORECASE,
-)
-
 
 # --------------------------------------------------------------------------- #
 # 6. Decision object                                                           #

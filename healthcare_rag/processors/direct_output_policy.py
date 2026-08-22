@@ -5,8 +5,8 @@ import unicodedata
 from dataclasses import dataclass
 from typing import Final, Literal
 
-from healthcare_rag.processors.privacy import MAX_INPUT_BYTES
-from healthcare_rag.processors.safety import NUMERIC_DOSE, injection_flags, scrub_phi
+from healthcare_rag.processors.privacy import MAX_INPUT_BYTES, PrivacySanitizer
+from healthcare_rag.processors.safety_patterns import NUMERIC_DOSE, injection_flags
 
 GeneratedOutputDenial = Literal[
     "clinical_direct_content",
@@ -45,9 +45,7 @@ _CAPABILITY_SENTENCE: Final = re.compile(
     r"|consider\s+asking"
     r")(?:(?:\s*,\s+|\s+—\s+|\s+)(?P<scope>.+))?"
 )
-_DRUG_SCOPE: Final = (
-    r"(?:lipitor(?:\s*\(\s*atorvastatin\s*\))?|atorvastatin|metformin)"
-)
+_DRUG_SCOPE: Final = r"(?:lipitor(?:\s*\(\s*atorvastatin\s*\))?|atorvastatin|metformin)"
 _DRUG_LIST_SCOPE: Final = rf"{_DRUG_SCOPE}(?:\s+(?:and|or)\s+{_DRUG_SCOPE})*"
 _MONOGRAPH_SCOPE: Final = (
     rf"(?:the\s+)?(?:{_DRUG_LIST_SCOPE}\s+)?(?:product\s+)?monographs?"
@@ -59,9 +57,7 @@ _CATEGORY_LIST: Final = (
     rf"{_CAPABILITY_CATEGORY}(?:\s*,\s*{_CAPABILITY_CATEGORY})*"
     rf"(?:\s*,?\s+and\s+{_CAPABILITY_CATEGORY})?"
 )
-_MONOGRAPH_TOPIC: Final = (
-    rf"{_MONOGRAPH_SCOPE}(?:\s*,\s*including\s+{_CATEGORY_LIST})?"
-)
+_MONOGRAPH_TOPIC: Final = rf"{_MONOGRAPH_SCOPE}(?:\s*,\s*including\s+{_CATEGORY_LIST})?"
 _ORDERED_CAPABILITY_TOPIC: Final = (
     rf"(?:{_MONOGRAPH_TOPIC}"
     rf"|{_DRUG_SCOPE}\s+{_CAPABILITY_CATEGORY}"
@@ -246,7 +242,9 @@ def _is_social_output(normalized: str) -> bool:
     return True
 
 
-def evaluate_generated_output(text: str) -> GeneratedOutputPolicyDecision:
+def evaluate_generated_output(
+    text: str, privacy: PrivacySanitizer
+) -> GeneratedOutputPolicyDecision:
     if len(text.encode("utf-8")) > MAX_INPUT_BYTES:
         return GeneratedOutputPolicyDecision("", "privacy_error")
     normalized, tokens = _normalized_tokens(text)
@@ -255,9 +253,9 @@ def evaluate_generated_output(text: str) -> GeneratedOutputPolicyDecision:
     has_unit = NUMERIC_DOSE.search(normalized) or _CLINICAL_UNITS.intersection(tokens)
     if has_unit or _has_clinical_instruction(tokens):
         return GeneratedOutputPolicyDecision("", "clinical_direct_content")
-    scrubbed, privacy_hits = scrub_phi(text)
-    if privacy_hits:
+    scan = privacy.scan(text)
+    if scan.kinds:
         return GeneratedOutputPolicyDecision("", "privacy_error")
     if not _is_social_output(normalized):
         return GeneratedOutputPolicyDecision("", "clinical_direct_content")
-    return GeneratedOutputPolicyDecision(scrubbed.strip(), None)
+    return GeneratedOutputPolicyDecision(scan.text.strip(), None)

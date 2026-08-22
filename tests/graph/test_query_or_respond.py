@@ -3,10 +3,17 @@ from __future__ import annotations
 import pytest
 from langchain_core.messages import AIMessage
 
+from healthcare_rag.graph import llm, query_response
 from healthcare_rag.graph.nodes import query_or_respond
 from healthcare_rag.processors.social_responses import social_response
 
 from .query_or_respond_fakes import SyntheticModelError, _install, _state, _tool_call
+
+
+def test_llm_keeps_query_response_contract_reexports() -> None:
+    assert llm.QueryOrRespondDecision is query_response.QueryOrRespondDecision
+    assert llm.RouterAction is query_response.RouterAction
+    assert llm.QUERY_OR_RESPOND_TOOL is query_response.QUERY_OR_RESPOND_TOOL
 
 
 @pytest.mark.parametrize(

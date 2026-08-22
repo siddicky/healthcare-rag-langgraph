@@ -1,122 +1,39 @@
 """LangChain ChatOpenAI gateway for graph nodes."""
 
 import logging
-from dataclasses import dataclass
 from threading import Lock
-from typing import Annotated, Any, Final, Literal, Protocol, TypeVar
+from typing import Any, Literal, Protocol, TypeVar
 
 from langchain_core.messages import AIMessage, BaseMessage, HumanMessage, ToolCall
 from langchain_core.messages.utils import count_tokens_approximately, trim_messages
 from langchain_openai import ChatOpenAI
 from openai import DefaultAsyncHttpxClient, DefaultHttpxClient
-from pydantic import BaseModel, ConfigDict, StringConstraints, ValidationError
+from pydantic import BaseModel
 
+from healthcare_rag.graph.query_response import (
+    QUERY_OR_RESPOND_TOOL,
+    QueryOrRespondDecision,
+    RouterAction,
+    project_history,
+    query_or_respond_decision,
+    scrub_router_text,
+)
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.processors.direct_output_policy import evaluate_generated_output
-from healthcare_rag.processors.privacy import MAX_INPUT_BYTES, PrivacyScanError
+from healthcare_rag.processors.privacy import PrivacySanitizer, PrivacyScanError
 from healthcare_rag.processors.retrieval import build_routing_tools
-from healthcare_rag.processors.safety import scrub_phi
 from healthcare_rag.services.models import sampling_params
 
 logger = logging.getLogger("MedicalRAG")
 ModelT = TypeVar("ModelT", bound=BaseModel)
-RouterAction = Literal["direct", "retrieve"]
-QUERY_OR_RESPOND_TOOL: Final[dict[str, Any]] = {
-    "type": "function",
-    "function": {
-        "name": "retrieve_monographs",
-        "description": "Retrieve Lipitor and metformin product-monograph information.",
-        "parameters": {
-            "type": "object",
-            "properties": {
-                "query": {
-                    "type": "string",
-                    "description": "The monograph question to retrieve evidence for.",
-                }
-            },
-            "required": ["query"],
-            "additionalProperties": False,
-        },
-    },
-}
-_HISTORY_MESSAGE_TYPES: Final = {"human": HumanMessage, "ai": AIMessage}
-
-
-class RetrieveMonographsArguments(BaseModel):
-    model_config = ConfigDict(extra="forbid", frozen=True)
-    query: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1)]
-
-
-@dataclass(frozen=True, slots=True)
-class QueryOrRespondDecision:
-    action: RouterAction | None
-    direct_content: str
-    tool_query: str | None
-    fallback_reason: str | None
-    tool_call_count: int
-
-
-def _scrub_router_text(text: str) -> str:
-    if len(text.encode("utf-8")) > MAX_INPUT_BYTES:
-        raise PrivacyScanError("PRIVACY_INPUT_TOO_LARGE")
-    return scrub_phi(text)[0]
-
-
-def _project_history(history: list[BaseMessage]) -> list[BaseMessage]:
-    projected: list[BaseMessage] = []
-    for message in history:
-        message_type = _HISTORY_MESSAGE_TYPES.get(message.type)
-        if message_type is None:
-            continue
-        content = message.content
-        if not isinstance(content, str):
-            raise PrivacyScanError("PRIVACY_UNSUPPORTED_MESSAGE_CONTENT")
-        projected.append(message_type(content=_scrub_router_text(content)))
-    return projected
-
-
-def _query_or_respond_decision(response: AIMessage) -> QueryOrRespondDecision:
-    tool_call_count = len(response.tool_calls) + len(response.invalid_tool_calls)
-    if response.invalid_tool_calls:
-        return QueryOrRespondDecision(
-            "retrieve", "", None, "malformed_tool", tool_call_count
-        )
-    if len(response.tool_calls) > 1:
-        return QueryOrRespondDecision(
-            "retrieve", "", None, "multiple_tools", tool_call_count
-        )
-    if len(response.tool_calls) == 1:
-        tool_call = response.tool_calls[0]
-        if tool_call["name"] != "retrieve_monographs":
-            return QueryOrRespondDecision(
-                "retrieve", "", None, "unknown_tool", tool_call_count
-            )
-        try:
-            arguments = RetrieveMonographsArguments.model_validate(tool_call["args"])
-            query = _scrub_router_text(arguments.query)
-        except ValidationError:
-            return QueryOrRespondDecision(
-                "retrieve", "", None, "malformed_tool", tool_call_count
-            )
-        except PrivacyScanError:
-            return QueryOrRespondDecision(
-                "retrieve", "", None, "privacy_error", tool_call_count
-            )
-        return QueryOrRespondDecision("retrieve", "", query, None, tool_call_count)
-    if not isinstance(response.content, str):
-        return QueryOrRespondDecision(None, "", None, "malformed_content", 0)
-    raw_content = response.content.strip()
-    if not raw_content:
-        return QueryOrRespondDecision(None, "", None, "empty_response", 0)
-    try:
-        policy = evaluate_generated_output(raw_content)
-    except PrivacyScanError:
-        return QueryOrRespondDecision("direct", "", None, "privacy_error", 0)
-    except Exception:  # noqa: BLE001  # noqa: BROAD_EXCEPT_OK
-        return QueryOrRespondDecision("direct", "", None, "direct_policy_error", 0)
-    return QueryOrRespondDecision(
-        "direct", policy.content, None, policy.denial_reason, 0
-    )
+__all__ = [
+    "QUERY_OR_RESPOND_TOOL",
+    "LangChainLLMGateway",
+    "PromptRegistry",
+    "QueryOrRespondDecision",
+    "RouterAction",
+    "evaluate_generated_output",
+]
 
 
 class PromptRegistry(Protocol):
@@ -128,9 +45,11 @@ class LangChainLLMGateway:
 
     def __init__(
         self,
+        privacy: PrivacySanitizer,
         settings: GraphSettings | None = None,
         prompts: PromptRegistry | None = None,
     ) -> None:
+        self._privacy = privacy
         self.settings: GraphSettings = settings or GraphSettings.from_env()
         self._prompts: PromptRegistry | None = prompts
         self._models: dict[tuple[str, str, float | None, str], ChatOpenAI] = {}
@@ -250,7 +169,7 @@ class LangChainLLMGateway:
         """Return one query-or-respond decision from the centralized default model."""
         try:
             capped_history = trim_messages(
-                _project_history(history),
+                project_history(history, self._privacy),
                 strategy="last",
                 token_counter=count_tokens_approximately,
                 max_tokens=self.settings.history_max_tokens,
@@ -260,7 +179,7 @@ class LangChainLLMGateway:
             messages = [
                 *self._messages("query_or_respond", {}),
                 *capped_history,
-                HumanMessage(content=_scrub_router_text(current_query)),
+                HumanMessage(content=scrub_router_text(current_query, self._privacy)),
             ]
             model = self.chat_model("default").bind_tools(
                 [QUERY_OR_RESPOND_TOOL],
@@ -276,4 +195,6 @@ class LangChainLLMGateway:
             return QueryOrRespondDecision(None, "", None, "model_error", 0)
         if not isinstance(response, AIMessage):
             return QueryOrRespondDecision(None, "", None, "malformed_response", 0)
-        return _query_or_respond_decision(response)
+        return query_or_respond_decision(
+            response, self._privacy, evaluate_generated_output
+        )

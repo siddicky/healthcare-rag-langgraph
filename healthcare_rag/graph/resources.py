@@ -9,6 +9,7 @@ from functools import partial
 from threading import Lock
 from typing import TYPE_CHECKING, Any, Protocol, runtime_checkable
 
+from anyio import to_thread
 from weaviate.client import WeaviateAsyncClient
 from weaviate.connect import ConnectionParams
 
@@ -84,7 +85,9 @@ class Resources:
                         grpc_port=self.settings.weaviate_grpc_port,
                         grpc_secure=False,
                     ),
-                    additional_headers={"X-OpenAI-Api-Key": self.settings.openai_api_key},
+                    additional_headers={
+                        "X-OpenAI-Api-Key": self.settings.openai_api_key
+                    },
                 )
                 await client.connect()
                 self._weaviate = client
@@ -120,12 +123,8 @@ class Resources:
         client = await self.pinecone_client()
         async with self._async_lock:
             if self._pinecone_index is None:
-                import anyio
-
                 name = self.settings.pinecone_index_name
-                self._pinecone_index = await anyio.to_thread.run_sync(
-                    partial(client.Index, name)
-                )
+                self._pinecone_index = await to_thread.run_sync(partial(client.Index, name))
             return self._pinecone_index
 
     @property
@@ -133,7 +132,9 @@ class Resources:
         """Construct the shared model gateway on first access."""
         with self._lock:
             if self._gateway is None:
-                gateway = LangChainLLMGateway(self.settings, self.prompts)
+                gateway = LangChainLLMGateway(
+                    self._privacy, self.settings, self.prompts
+                )
                 self._gateway = gateway
                 self._owned_gateway = gateway
             return self._gateway

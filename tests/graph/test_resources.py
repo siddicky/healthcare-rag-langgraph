@@ -132,6 +132,7 @@ async def test_aclose_rebuilds_usable_sync_and_async_model_clients(
     with _openai_response_server() as base_url:
         monkeypatch.setenv("OPENAI_BASE_URL", base_url)
         resources = Resources(make_settings())
+        assert resources.gateway._privacy is resources.privacy
         model = resources.gateway.chat_model("default")
 
         assert model.invoke("first").content == "fresh"
@@ -140,12 +141,13 @@ async def test_aclose_rebuilds_usable_sync_and_async_model_clients(
         await resources.aclose()
         await resources.aclose()
 
-        replacement = Resources(make_settings())
-        replacement_model = replacement.gateway.chat_model("default")
+        replacement_model = resources.gateway.chat_model("default")
 
         assert replacement_model.invoke("second").content == "fresh"
         assert (await replacement_model.ainvoke("second")).content == "fresh"
-        await replacement.aclose()
+        assert replacement_model is not model
+        assert resources.gateway._privacy is resources.privacy
+        await resources.aclose()
 
 
 async def test_aclose_skips_injected_gateway_without_close() -> None:

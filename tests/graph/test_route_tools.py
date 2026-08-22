@@ -12,11 +12,12 @@ from pydantic import BaseModel
 
 from healthcare_rag.graph.llm import LangChainLLMGateway
 from healthcare_rag.graph.settings import GraphSettings
+from healthcare_rag.processors.privacy import PrivacySanitizer
 
 
 def _gateway_with_fake_model() -> tuple[LangChainLLMGateway, MagicMock]:
     settings = GraphSettings.from_env()
-    gateway = LangChainLLMGateway(settings=settings)
+    gateway = LangChainLLMGateway(PrivacySanitizer(), settings=settings)
     model = MagicMock()
     bound = MagicMock()
     bound.ainvoke = AsyncMock(
@@ -64,7 +65,7 @@ async def test_astructured_calls_run_concurrently(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     settings = GraphSettings.from_env()
-    gateway = LangChainLLMGateway(settings=settings)
+    gateway = LangChainLLMGateway(PrivacySanitizer(), settings=settings)
     slow_model = _SlowStructured()
     monkeypatch.setattr(
         gateway,

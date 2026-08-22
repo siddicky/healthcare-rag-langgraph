@@ -5,8 +5,11 @@ from langchain_core.messages import AIMessage
 
 from healthcare_rag.graph import llm as graph_llm
 from healthcare_rag.graph.nodes import query_or_respond
-from healthcare_rag.processors import direct_output_policy
-from healthcare_rag.processors.privacy import PrivacyScanError
+from healthcare_rag.processors.privacy import (
+    PrivacySanitizer,
+    PrivacyScan,
+    PrivacyScanError,
+)
 from healthcare_rag.processors.social_responses import social_response
 
 from .query_or_respond_fakes import _gateway, _install, _state
@@ -169,7 +172,7 @@ async def test_social_policy_exception_fails_closed(
     class SyntheticPolicyError(RuntimeError):
         pass
 
-    def raise_policy_error(_content: str) -> None:
+    def raise_policy_error(_content: str, _privacy: PrivacySanitizer) -> None:
         raise SyntheticPolicyError("synthetic policy failure")
 
     _install(monkeypatch, AIMessage(content="Hello there."))
@@ -195,11 +198,12 @@ async def test_social_policy_exception_fails_closed(
 async def test_social_privacy_scanner_exception_fails_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    def raise_privacy_error(_content: str) -> tuple[str, list[str]]:
+    gateway, _model = _install(monkeypatch, AIMessage(content="Hello there."))
+
+    def raise_privacy_error(_content: str) -> PrivacyScan:
         raise PrivacyScanError("PRIVACY_SCAN_FAILED")
 
-    _install(monkeypatch, AIMessage(content="Hello there."))
-    monkeypatch.setattr(direct_output_policy, "scrub_phi", raise_privacy_error)
+    monkeypatch.setattr(gateway._privacy, "scan", raise_privacy_error)
 
     update = await query_or_respond.generate_query_or_respond(
         _state(benign_social=True)
