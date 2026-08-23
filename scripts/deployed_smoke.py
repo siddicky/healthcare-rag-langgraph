@@ -638,6 +638,13 @@ class DeployedSmoke:
         self.u2_threads.append(thread_id)
         u2_owner = self.owner(self.settings.u2_token)
         title = f"Smoke reminder {uuid4()}"
+        # The real server persists crons across dev-server restarts (and
+        # treats an empty metadata filter as no filter), so absolute counts
+        # include prior runs' crons. Every assertion here is scoped to the
+        # crons THIS run creates.
+        baseline_ids = {
+            str(item.get("cron_id")) for item in await self._crons(u2_owner)
+        }
         crons: list[JSONValue] = []
         for _ in range(3):
             _ = await self.run_turn(
@@ -645,21 +652,24 @@ class DeployedSmoke:
                 thread_id,
                 question=f"Create a reminder titled {title} every Monday at 09:00 UTC.",
             )
-            # The real server's cron search can lag the create turn's
-            # completion; poll before re-issuing the turn, or the retry
-            # itself duplicates the cron (observed on the pinned
-            # reference: two crons, one reminder, 9 s apart).
             for _ in range(6):
-                crons = await self._crons(u2_owner)
+                crons = [
+                    item
+                    for item in await self._crons(u2_owner)
+                    if str(item.get("cron_id")) not in baseline_ids
+                ]
                 if crons:
                     break
                 await anyio.sleep(2.0)
             if crons:
                 break
+            # Model-side routing lottery, same as check 3: retry only while
+            # nothing new was created, so a create is never duplicated.
         require(len(crons) == 1, "create_reminder did not create exactly one cron")
         cron = crons[0]
         require(isinstance(cron, Mapping), "cron response shape invalid")
         assert isinstance(cron, Mapping)
+        cron_id = str(cron.get("cron_id"))
         require(cron.get("schedule") == "0 9 * * 1", "created cron schedule mismatch")
         require(
             isinstance(cron.get("next_run_date"), str),
@@ -670,7 +680,11 @@ class DeployedSmoke:
             thread_id,
             question=f"Pause my {title} reminder.",
         )
-        paused = await self._crons(u2_owner)
+        paused = [
+            item
+            for item in await self._crons(u2_owner)
+            if str(item.get("cron_id")) == cron_id
+        ]
         require(
             len(paused) == 1
             and isinstance(paused[0], Mapping)
@@ -791,7 +805,11 @@ class DeployedSmoke:
         require(isinstance(reminder_id, str), "created cron omitted reminder_id")
         assert isinstance(reminder_id, str)
         require(
-            not await self._crons(u2_owner, {"reminder_id": reminder_id}),
+            not [
+                item
+                for item in await self._crons(u2_owner)
+                if str(item.get("cron_id")) == cron_id
+            ],
             "cancel left cron behind",
         )
         _ = await self.request(
