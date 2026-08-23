@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import pathlib
 import signal
 import subprocess
 import sys
@@ -24,8 +25,20 @@ ORACLE_LANGGRAPH = "tests/server/oracle/.venv/bin/langgraph"
 @pytest.fixture(scope="session")
 def oracle_server() -> None:
     """Start pinned oracle via subprocess when ORACLE=1, else skip."""
-    if os.getenv("ORACLE") != "1" and os.getenv("CI") not in ("true", "1"):
+    explicitly_requested = os.getenv("ORACLE") == "1"
+    if not explicitly_requested and os.getenv("CI") not in ("true", "1"):
         pytest.skip("oracle tests require ORACLE=1 (or CI)")
+    # CI is set on every GitHub Actions job, but only the oracle job builds the
+    # pinned venv. Gating on CI alone made this suite try to run — and error with
+    # FileNotFoundError — in any other workflow that happens to collect it.
+    # ORACLE=1 is an explicit request, so a missing venv there is a real failure.
+    if not pathlib.Path(ORACLE_LANGGRAPH).exists():
+        if explicitly_requested:
+            pytest.fail(
+                f"ORACLE=1 was set but the pinned oracle venv is missing at {ORACLE_LANGGRAPH}. "
+                "Build it first (see .github/workflows/server-parity.yml, 'Build pinned oracle venv')."
+            )
+        pytest.skip(f"pinned oracle venv not built in this job ({ORACLE_LANGGRAPH})")
     proc = subprocess.Popen(
         [ORACLE_LANGGRAPH, "dev", "--config", ORACLE_CONFIG, "--port", str(ORACLE_PORT), "--no-browser", "--no-reload"],
         stdout=subprocess.DEVNULL,
