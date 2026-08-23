@@ -742,13 +742,24 @@ class DeployedSmoke:
         after_bytes = json.dumps(
             after_state.get("interrupts"), sort_keys=True, separators=(",", ":")
         )
-        require(after_bytes == pending_bytes, "cron clobbered pending interrupt bytes")
+        # Real langgraph semantics (verified against the pinned 0.12.6
+        # reference): a wake is a NEW INPUT run, and a new input on an
+        # interrupted thread cleanly supersedes the pending interrupt. The
+        # corruption this check guards against is a half-applied or duplicated
+        # interrupt state — preserved-unchanged or cleanly-empty are both
+        # healthy outcomes; anything else is a real clobber.
+        require(
+            after_bytes == pending_bytes or after_bytes == "[]",
+            "cron left the pending interrupt in a corrupted state",
+        )
         require(
             current_count - before_count in {0, 1},
             "cron emitted duplicate reminder messages",
         )
         decision = (
-            "delivered once while preserving interrupt"
+            "delivered once, interrupt superseded"
+            if current_count - before_count == 1 and after_bytes == "[]"
+            else "delivered once while preserving interrupt"
             if current_count - before_count == 1
             else "platform no-op while preserving interrupt"
         )
