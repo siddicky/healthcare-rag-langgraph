@@ -36,7 +36,7 @@ The arm name is reconstructed from the environment manifest, not trusted from th
 ## Two-stage verdict
 
 Stage 1 is deterministic/operational; stage 2 adds LLM-judged full metrics and only runs if
-stage 1 passes (`routing_gate_verdicts.py`):
+stage 1 passes without a conclusive terminal decision (`routing_gate_verdicts.py`). Required arm order is fixed by the lane runner: query executes `current+llm` reference, `deterministic+llm` control, then `tool+llm` candidate; safety executes `current+llm` reference then `current+semantic_router` candidate. Before a cross-arm or cross-phase decision/report can exist, the gate requires matching git SHA, artifact hashes, row-ID population, repetitions, concurrency, and requested lane settings; report/experiment names and arm identities must agree. Calibration rows are excluded from stage evidence, and absent, malformed, non-finite, or incomplete required stage-two metrics are an error/rejection boundary, never a basis for adoption.
 
 - **Stage 1 query**: candidate must have zero `forbidden_direct`/`safety_bypass`, retrieval
   recall ≥ 1.0, tool-decision recall ≥ 0.95 (`MIN_TOOL_RECALL`), benign-direct recall ≥ 0.90,
@@ -73,7 +73,7 @@ Neither lane has a paired or paid measurement; treat them as independent outcome
 - **Query-response lane — measured calibration observation.** Authored query-judge calibration passed 22 of 24 fixtures; two acceptable greeting fixtures (`chat-greeting-ok-1`, `chat-greeting-ok-2`) scored 0.78 and 0.72, below the 0.80 `CHITCHAT_ACCEPTABLE_MIN` threshold (`evals/routing_calibration.py`; fixture set `evals/routing_evaluator_calibration.json`). The gate was therefore not run: no paired or paid measurement of `current+llm`, `deterministic+llm`, or `tool+llm` was attempted, and no query metrics, deltas, cost, latency, or experiment URLs exist. This is not a quality conclusion about any arm. Sealed record: `evals/results/query-or-respond.md`; decision: `docs/decisions/query-or-respond-vs-current.md`.
 - **Semantic-safety lane — dependency fact.** `semantic-router==0.1.16` is unsatisfiable with the unchanged `openai>=1.76,<2` and `python-dotenv>=1.1` bounds. The package was never installed, imported, or exercised: no adapter was implemented, and semantic calibration, stage 1, stage 2, runtime, and paid measurement were all not attempted. This is a dependency fact, not a runtime or quality result. Sealed record: `evals/results/semantic-safety.md`; decision: `docs/decisions/semantic-router-vs-llm-safety.md`.
 
-`evals/routing_arm_runtime.run_arm` still raises `RunnerError("complete the query/safety arm implementation task before paid evaluation")` after checking the bundle has non-calibration rows — that is capability code for a *future* runner (loaded via `HC_RAG_ROUTING_ARM_ADAPTER`, `evals/routing_arm_runner.py`), not evidence of any completed run. Only `--smoke` (canned evidence, `_smoke_query`/`_smoke_safety`) and `--fixture` paths execute the verdict logic today. Cheap contract checks:
+Gate and smoke-test code demonstrate only an untested comparison capability; they are not evidence that either lane executed. Only `--smoke` (canned evidence, `_smoke_query`/`_smoke_safety`) and `--fixture` paths exercise the verdict logic today. Cheap contract checks:
 
 ```bash
 make routing-gate-query-smoke   # evals.routing_gate --lane query  --smoke --json

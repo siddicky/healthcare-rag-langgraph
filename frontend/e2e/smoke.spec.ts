@@ -494,3 +494,44 @@ test("perimeter sentinel: member token rejection set", async () => {
 
   await api.dispose();
 });
+
+test("open chat recovers when its active thread disappears", async ({ page }) => {
+  test.setTimeout(120_000);
+  const run = readRun();
+  const api = await memberApi(run, run.u1.token);
+  const createdThreads = trackThreadCreations(page);
+
+  await login(page, run, run.u1);
+  await page.getByRole("button", { name: "New conversation" }).click();
+  await send(page, "start reset scenario");
+  await expectAssistantCount(page, "Offline monograph answer for: start reset scenario", 1);
+  const missingThreadId = createdThreads[0] ?? "";
+  expect(missingThreadId).not.toBe("");
+
+  const deleted = await api.delete(`/threads/${missingThreadId}`);
+  expect(deleted.ok()).toBe(true);
+
+  await send(page, "continue after reset");
+
+  const recoveryAlert = page.locator(".banner-error");
+  await expect(recoveryAlert).toContainText(
+    "That conversation is no longer available. Start a new one.",
+  );
+  await expect(recoveryAlert).not.toContainText("HTTP 404");
+  await expect(page.locator(".bubble")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Nymble Coach" })).toBeVisible();
+  for (const viewport of [
+    { name: "mobile", width: 375, height: 812 },
+    { name: "tablet", width: 768, height: 1024 },
+    { name: "desktop", width: 1280, height: 720 },
+  ]) {
+    await page.setViewportSize({ width: viewport.width, height: viewport.height });
+    await expect(recoveryAlert).toBeVisible();
+    await page.screenshot({
+      path: path.join(SCREENSHOTS, `stale-thread-recovery-${viewport.name}.png`),
+      fullPage: true,
+    });
+  }
+
+  await api.dispose();
+});

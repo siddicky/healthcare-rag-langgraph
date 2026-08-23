@@ -1,77 +1,47 @@
 ---
-type: application
-title: Member frontend
-description: The Next.js App Router member app in frontend/ - Supabase login, coach chat client and protocol, the declarative json-render catalog with data-ref hydration, and the deployed/hermetic Playwright E2E suites.
-tags: [frontend, nextjs, coach, catalog, e2e]
-openwiki:
-  roles: [architecture, integration, testing]
-  change_kinds: [public-api, ui]
-  source_paths: [frontend/src/chat/coachApi.ts, frontend/src/chat/useCoachChat.ts, frontend/src/chat/model.ts, frontend/src/catalog/catalog.ts, frontend/src/catalog/hydrate.ts, frontend/src/catalog/dispatch.tsx, frontend/src/catalog/schemas.ts, frontend/src/lib/langgraph.ts, frontend/src/lib/supabase.ts, frontend/e2e/smoke.spec.ts, frontend/e2e/server.py, frontend/e2e/run.ts]
-  symbols: [useCoachChat, coachApi, catalog.js registry, dispatch map, hydrate, createLangGraphClient]
-  test_paths: [frontend/src/chat/__tests__, frontend/src/catalog/__tests__, frontend/src/lib/__tests__, frontend/e2e/smoke.spec.ts]
-  invariants: [The registered component list is exactly catalog.js; unknown components or dispatch ids fail closed., Fact props in compose_ui trees must be data-ref objects with RFC 6901 pointers; literals there are zod-rejected, and unresolved or cross-turn refs render nothing plus telemetry., No server secrets in the frontend - the Supabase member bearer is the only credential and is injected per request by the SDK client factory.]
-  validation_commands: [bun --cwd frontend run test, bun --cwd frontend run build]
+type: frontend system
+title: Member frontend and coach protocol
+description: The Bun/Next member UI's fixed protocol for authenticated coach threads, streams, resumes, uploads, feedback, erasure, and safe catalog hydration.
+tags: [frontend, coach, protocol, catalog]
 ---
 
-# Member frontend
+# Member frontend and coach protocol
 
-`frontend/` is the member-facing Next.js App Router app (TypeScript strict,
-Turbopack) for the Nymble AI Coach. It talks to the deployed coach surface
-([coach agent](../agent/coach.md)) — served either by the platform or the
-[OSS Agent Server](../server/agent-server.md)) through
-`@langchain/langgraph-sdk`. Runner is **bun** (`bun --cwd frontend run …`).
-`frontend/README.md` is the authoritative short contract.
+The frontend mirrors the perimeter protocol but does not enforce its security. `frontend/src/chat/coachProtocol.ts` defines fixed `coach` stream inputs, resume shape, allowed rendered nodes, attachment sentinel, and status constants. `coachApi.ts` is the sole client surface for thread CRUD/state, upload/status, feedback, and streamed runs; `createCoachFetch()` refreshes/stamps a Supabase Bearer token. It never has internal secrets, cron authority, stores, or arbitrary assistant access.
 
-- **Auth** (`src/lib/supabase.ts`, `src/app/login`): Supabase email+password;
-  `src/lib/langgraph.ts` builds the SDK client with a refresh-aware bearer.
-  Env is client-side only (`NEXT_PUBLIC_SUPABASE_URL`,
-  `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `NEXT_PUBLIC_LANGGRAPH_URL`) — names already
-  in the repo `.env.example`.
-- **Chat** (`src/chat/`): `useCoachChat` drives the turn loop over
-  `coachApi.ts`/`coachProtocol.ts` (stream parsing in `stream.ts`, envelope model
-  in `model.ts`, upload flow in `uploadFlow.ts`, self-erase in `erase.ts`).
-- **Design system** (`src/design/`): copied verbatim from
-  `Nymble Health Design System/` — never edit here. Ported Nymble components
-  including the eight generative-UI cards live in `src/components/`.
+## Thread and stream lifecycle
 
-## Catalog contract (compose_ui rendering)
+`streamRun` sends either a fixed input envelope or a fixed resume command. `applyStreamPart` consumes only update events from `RENDERED_NODE_NAMES`; unknown node updates are discarded with telemetry, and raw model tokens are not rendered. Projected state uses only public `values.messages` and `interrupts`. `useCoachChat` permits one active run per thread and injects network/timer/random dependencies for deterministic tests.
 
-Route B's `compose_ui` tool emits declarative component trees the frontend
-renders — the shared contract with the [coach agent](../agent/coach.md)'s
-catalog-composition middleware:
-
-- Wire format is `{component, props, children?}`; fact props are data-ref objects
-  `{__ref: {turn_scope_id, block_id, pointer}}` (RFC 6901 pointer into the
-  envelope's `data`). Hydration lives in `src/catalog/hydrate.ts` +
-  `src/catalog/dataRef.ts`; schemas in `src/catalog/schemas.ts` (zod).
-- The registered component list is **exactly** `catalog.js` (`src/catalog/`):
-  InjectionTracker, MiniCalendar, TrendCard, ActionCard, StatRow, ScoreRing,
-  Timeline, Card, Tag, Label, Button. The four fixed-contract cards
-  (CalendarChangeCard, MemoryExtractionCard, DocumentIngestCard, ReminderCard)
-  render directly from interrupts/status/envelopes and are never composable.
-- Button actions dispatch through the fixed map in `src/catalog/dispatch.tsx`;
-  unknown ids fail closed.
-
-## Tests and E2E
-
-```bash
-bun --cwd frontend run test    # vitest (unit: chat, catalog, lib __tests__)
-bun --cwd frontend run build   # type-checked production build
-bun --cwd frontend run playwright  # e2e/smoke.spec.ts
+```mermaid
+sequenceDiagram
+  participant UI as Member UI
+  participant API as coachApi
+  participant Perimeter as Server perimeter
+  participant Graph as Coach graph
+  UI->>API: stream input or resume
+  API->>Perimeter: fixed authenticated envelope
+  Perimeter->>Graph: scoped admitted request
+  Graph-->>Perimeter: updates and interrupts
+  Perimeter-->>API: projected state
+  API-->>UI: allowed node updates only
 ```
 
-The Playwright suite supports two modes driven by a runfile
-(`COACH_E2E_RUNFILE`, default `frontend/e2e/.tmp/run.json`, built by
-`e2e/run.ts` + `global-setup.ts`): **hermetic**, against the Python fake backend
-`frontend/e2e/server.py`, and **deployed**, against real `dep_url`/`server_url`
-with two synthetic member identities (`u1`/`u2`) and internal headers for
-cross-checking thread state. The deployed mode is the smoke companion of the
-[deploy runbook](../operations/deploy.md).
+Caption: client filtering improves robustness; the [member perimeter](../agent/member-perimeter.md) is the authoritative enforcement point.
 
-## Change guidance
+Uploads use the exact attachment sentinel and server-reported lifecycle state; polling does not invent progress. Feedback uses its dedicated endpoint. Erasure phase 2 snapshots all paginated owned threads and deletes the marker thread last; failure preserves retry state. See [member data lifecycle](../agent/member-data-lifecycle.md) for the backend record/cleanup protocol.
 
-- Adding a composable card: register in `catalog.js`, add the schema, then extend
-  the catalog unit tests — and remember the server-side coach middleware must
-  accept the composition before the frontend will ever see it.
-- Changing chat protocol shapes: update `coachProtocol.ts`/`model.ts` and the
-  hermetic fake (`e2e/server.py`) in the same change so E2E stays meaningful.
+## Catalog and data envelopes
+
+`src/catalog/` has schemas, registry, hydration, rendering, dispatch, and telemetry for the same 11 composable backend components. The pipeline validates recursive wire shape, component schema, closed dispatch ID, same-turn `DataRef`, RFC-6901 pointer resolution, and then concrete hydrated values. Invalid node/subtree renders `null` while valid siblings survive with typed telemetry.
+
+Fact props cannot be literals: `createHydrator()` resolves only the current turn's envelope and marks a same block from another turn `cross_turn`. Action IDs are closed to logging, schedule/reminder, upload, and confirm/decline actions; unknown actions fail closed. Fixed-contract document/memory/calendar/reminder cards bypass free model composition. Backend validation/retry/fallback is documented in [coach routing](../agent/coach-routing.md).
+
+## Evidence and validation
+
+- `frontend/src/chat/__tests__/protocol.test.ts` and `forbiddenModes.test.ts` pin request bodies and forbid extra modes.
+- `streamWire.test.ts` pins rendered-node filtering; `erase.test.ts` pins pagination/marker-last/fail-stop semantics.
+- `frontend/src/catalog/__tests__/catalog.test.tsx` and `dataRef.fixture.test.ts` cover render containment and shared backend/frontend data-reference grammar.
+- `frontend/e2e/smoke.spec.ts` is the browser-level surface.
+
+Use Bun as defined in `frontend/package.json`: `bun --cwd frontend run test`, then `bun --cwd frontend run build`; run the configured Playwright command when UI/integration behavior changes. The client protocol must change in lockstep with the perimeter contract and its Python tests.

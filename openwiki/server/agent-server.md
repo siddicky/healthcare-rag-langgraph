@@ -1,98 +1,44 @@
 ---
-type: application
-title: OSS Agent Server
-description: The clean-room, in-memory reimplementation of the LangGraph Agent Server API in server/ - threads/runs/crons engines, auth/perimeter topology, storage seam, 501 manifest, and the pinned-oracle parity suites.
-tags: [server, langgraph, http, parity]
-openwiki:
-  roles: [architecture, integration, testing, operations]
-  change_kinds: [public-api, lifecycle, persistence]
-  source_paths: [server/app.py, server/config.py, server/auth.py, server/run_engine.py, server/threads.py, server/runs.py, server/crons.py, server/storage.py, server/graphs.py, server/manifest.py, server/_compat.py, server/__main__.py]
-  symbols: [create_app, load_config, ServerConfig, AuthPolicyEngine, RunEngine, RunRequest, Storage, create_storage, load_raw_graphs, attach_graphs, UNIMPLEMENTED_PATHS]
-  test_paths: [tests/server/test_topology.py, tests/server/test_threads.py, tests/server/test_runs.py, tests/server/test_crons.py, tests/server/test_auth_engine.py, tests/server/test_assistants_store.py, tests/server/test_scaffold.py, tests/server/test_license_boundary.py]
-  invariants: [Graphs are recompiled from each registered builder with the shared InMemorySaver checkpointer and InMemoryStore before serving, so thread state survives across runs in-process., Documented-but-unimplemented endpoints return 501 via server/manifest.py; MCP/A2A are unmounted and 404/405 instead., SERVER_STORAGE only accepts "memory" - there is no durable backend.]
-  validation_commands: [make server-test, make container-server-smoke]
+type: service architecture
+title: Clean-room agent server
+description: The in-memory server that exposes configured graphs through thread, run, cron, store, assistant, auth, custom-app, readiness, and parity-compatible surfaces.
+tags: [server, langgraph, api, parity]
 ---
 
-# OSS Agent Server
+# Clean-room agent server
 
-`server/` is a second server surface next to the CLI: a clean-room, in-memory
-reimplementation of the LangGraph Agent Server HTTP API, served by plain
-Starlette + uvicorn (`server/__main__.py`, `server/app.py:create_app`). It exists
-so the repository can run and parity-test the deployed API shape
-([coach agent](../agent/coach.md) included) without depending on the closed
-`langgraph-api` package; `tests/server/test_license_boundary.py` pins that
-boundary. Everything runs from `langgraph.json` — the same file the LangGraph
-platform uses — parsed by `server/config.py:load_config` into a frozen
-`ServerConfig` (`SERVER_STORAGE` must be `memory`, `SERVER_PORT`, `SERVER_LOCAL_DEV`
-local-dev auth bypass).
+`server/` is a clean-room, in-memory implementation of the Agent Server surface. `langgraph.json` selects the RAG and coach graphs, the auth/custom HTTP modules, store embedding configuration, API version `0.12.6`, and disables MCP/A2A. It is not the base RAG `GraphEngine`; it hosts compiled graphs behind HTTP.
 
-## What it serves
+## Startup and readiness
+
+`python -m server` loads configuration and starts Uvicorn. App lifespan creates storage, installs the local compatibility module, loads/recompiles graphs against shared saver/store, enters the custom app lifespan, creates the run engine, starts the cron scheduler, and marks readiness components. Shutdown clears scheduler readiness, cancels scheduler work/runs, and exits the custom lifespan. `/ok` returns 503 until every component is ready; `/info` exposes API version.
 
 ```mermaid
 flowchart TD
-    CFG["langgraph.json"] --> APP["create_app (server/app.py)"]
-    APP --> AUTH["AuthMiddleware + AuthPolicyEngine (server/auth.py)"]
-    APP --> PERIM["MemberPerimeterMiddleware (reused from healthcare_rag/agent/)"]
-    APP --> R["Route modules"]
-    R --> T["threads.py"]
-    R --> RU["runs.py + RunEngine (run_engine.py)"]
-    R --> C["crons.py (+ scheduler)"]
-    R --> SR["store_routes.py"]
-    R --> SY["routes/system.py (/ok, /info)"]
-    APP -.recompile.-> G["graphs.py: attach_graphs(builder + Storage)"]
-    ST["storage.py: InMemorySaver + InMemoryStore + dicts"] --> G
-    MAN["manifest.py 501 list"] --> APP
+  B["server startup"] --> ST["storage and compatibility shim"]
+  ST --> GR["load and compile configured graphs"]
+  GR --> CA["enter custom coach app lifespan"]
+  CA --> RE["create run engine and cron scheduler"]
+  RE --> OK["readiness OK"]
+  OK --> SD["shutdown cancels scheduler and runs"]
 ```
 
-- **Threads** (`server/threads.py`): thread CRUD/state backed by a plain dict plus
-  the shared checkpointer.
-- **Runs** (`server/runs.py`, `server/run_engine.py`): streaming run lifecycle.
-  `RunRequest` is strict (`extra="forbid"`, exactly one of `input`/`command`, fixed
-  stream modes) and `RunEngine` executes graph turns against the attached graphs.
-- **Crons** (`server/crons.py`): reminder schedules plus an in-process scheduler
-  (`start_scheduler`) — this is what wakes the coach's `reminder_delivery`.
-- **Store** (`server/store_routes.py`) over `InMemoryStore`; the semantic index
-  config comes from `langgraph.json` `store.index` and falls back to lexical-only
-  search if embeddings are unavailable (`server/storage.py:create_storage`).
-- **Graphs** (`server/graphs.py`): each entry in `config.graphs` is loaded from its
-  import string, then `attach_graphs` recompiles the raw builder with the shared
-  `InMemorySaver`/`InMemoryStore` — never uses a pre-compiled graph — so both the
-  `healthcare_rag` and `coach` graphs serve from one storage seam.
-- **Auth** (`server/auth.py`): `AuthMiddleware` + `AuthPolicyEngine` with resource ×
-  action scopes (`runs`, `threads`, `crons`, `assistants`, `store`), `ScopeUser`
-  principals, `/ok` and `/info` public. Topology (which principal reaches which
-  route) is pinned in `tests/server/test_topology.py` and
-  `tests/server/test_topology_upload.py`.
-- **501 manifest** (`server/manifest.py`): documented-but-unimplemented endpoints
-  (`/metrics`, `/store/…`, `/assistants`, `/runs/wait|stream`, `/webhooks`,
-  `/listeners`) return 501; MCP/A2A are simply unmounted. Keep this list in sync
-  when adding routes.
+Caption: readiness is not reported before storage, graphs, custom app, and scheduler are established.
 
-## Parity against the real platform
+## HTTP surface and authorization
 
-The repo dev venv resolves `langgraph-api==0.13.0` via `[tool.uv]
-constraint-dependencies` and is explicitly **not** the characterization source.
-The pinned oracle (`tests/server/oracle/README.md`) uses
-`langgraph-cli[inmem]==0.4.31` + `langgraph-api==0.12.6` in an isolated
-`tests/server/oracle/.venv` (`--no-config` to bypass the constraint), runs the
-verbatim-copied `langgraph.json` from the repo root, and feeds
-`tests/server/contract/`:
+Auth applies before dispatch except public `/ok` and `/info`. Native resources are threads/state/copy, runs/wait/stream/join/cancel, crons, store items, and read-only assistants. Custom coach routes are inserted before native routes and add uploads/status, feedback, and internal version. The member-specific authorization and response projection are canonical in [member perimeter](../agent/member-perimeter.md).
 
-```bash
-make server-test                       # unit suites (tests/server/, offline)
-make parity                            # ORACLE=1 pytest tests/server/contract
-make server-dev                        # SERVER_PORT=2024 SERVER_LOCAL_DEV=1 python -m server
-make server-image                      # docker build -f server/Dockerfile -t hc-rag-server:dev
-make container-server-smoke            # compose stack + /ok probe
-```
+The fallback returns 501 only for enumerated documented-but-unimplemented paths; MCP/A2A stay unmounted and return 404/405. Member graph routing/catalog behavior is [coach routing](../agent/coach-routing.md).
 
-## Change guidance
+## Run/thread/cron semantics
 
-- Adding a route: add it to the route module, decide 501 vs implemented in
-  `manifest.py`, and extend `tests/server/test_topology.py` (and the oracle
-  contract if the real API has the endpoint).
-- Changing run semantics: `RunRequest`/`RunEngine` invariants are pinned by
-  `tests/server/test_runs.py`; contract drift is caught by `make parity` only
-  when the pinned oracle venv exists.
-- Local dev auth is a bypass (`SERVER_LOCAL_DEV=1`); never ship it — production
-  runs the [Fly deploy](../operations/deploy.md) with platform auth.
+Thread scope mismatches appear as 404. Run input contains exactly one of input or command; server-authenticated identity is injected and client-provided identity stripped. Per-thread conflicts reject, enqueue, or interrupt according to policy; queue overflow is 503 with `Retry-After`. Resume commands are replay-key idempotent. Cancellation rolls back pre-run state; graph exceptions record `error`; shutdown marks pending work interrupted.
+
+Cron schedules validate cron/IANA zone, poll once per second, enqueue due work, and leave queue-conflicted records due for a later pass. Thread delete cascades best-effort run/cron/checkpoint cleanup.
+
+## Boundaries and validation
+
+Only `SERVER_STORAGE=memory` is supported. Threads, checkpoints, runs, store, crons, and replay data vanish on restart; only Weaviate persistence is external. Embedding-index startup may fall back to lexical store search on recognized dependency/auth failures. `SERVER_LOCAL_DEV` is dev-only and the image sets it off.
+
+Use `make server-test`; use `make parity` for pinned-oracle compatibility; `make container-server-smoke` checks compose readiness. Tests under `tests/server/` pin SSE, rollback, cancellation, copy/delete cascade, cron, scoping, and license boundary. Operations/deployment topology is [deployment](../operations/deploy.md).

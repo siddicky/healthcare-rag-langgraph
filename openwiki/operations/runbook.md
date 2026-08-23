@@ -7,6 +7,10 @@ tags: [operations, setup, weaviate]
 
 # Local development and Weaviate operations
 
+## Configuration ownership and first run
+
+Configuration has several owners: `pyproject.toml` + `uv.lock` define the Python dependency graph; `.env` is local secret input; `GraphSettings.from_env` snapshots RAG choices; `langgraph.json` selects graphs, auth, custom app, API version and store index; Compose supplies local service overrides; and Fly manifests/workflow provide deployed topology. The [deployment page](deploy.md) describes precedence/production boundaries. Do not assume an environment variable used by one surface is consumed by every other surface.
+
 ## First run
 
 1. Install `uv`, Docker, and Docker Compose. Use Python **3.11 or newer**; the project metadata requires `>=3.11` because models use `typing.Self` (`pyproject.toml#L1-L16`).

@@ -15,6 +15,8 @@ openwiki:
 
 # Coach agent service
 
+> Canonical change pages: [coach routing and catalog](coach-routing.md), [member perimeter](member-perimeter.md), and [member data lifecycle](member-data-lifecycle.md). This overview remains supporting context.
+
 `healthcare_rag/agent/` is a second, deployed product surface next to the CLI
 RAG graph: the **coach** LangGraph graph (a medication-adherence behavior
 coach for members) served by the LangGraph Agent Server. `langgraph.json`

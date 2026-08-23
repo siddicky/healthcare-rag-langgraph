@@ -1,8 +1,12 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import type { ThreadSummary, ThreadStateProjection } from "./coachApi";
-import type { RunStreamPart } from "./coachApi";
+import {
+  CoachApiError,
+  type RunStreamPart,
+  type ThreadStateProjection,
+  type ThreadSummary,
+} from "./coachApi";
 import {
   SENTINEL_QUESTION,
   type ResumePayload,
@@ -76,6 +80,12 @@ export interface FeedbackUi {
 }
 
 const SIDEBAR_PAGE_SIZE = 50;
+const MISSING_THREAD_MESSAGE = "That conversation is no longer available. Start a new one.";
+
+function isMissingThreadError(error: unknown): boolean {
+  if (error instanceof CoachApiError) return error.status === 404;
+  return error instanceof Error && "status" in error && error.status === 404;
+}
 
 export function useCoachChat(deps: CoachChatDeps) {
   const [threads, setThreads] = useState<ThreadSummary[]>([]);
@@ -138,6 +148,22 @@ export function useCoachChat(deps: CoachChatDeps) {
     if (mountedRef.current) setThreads(collected);
     return collected;
   }, [deps.api]);
+
+  const recoverMissingThread = useCallback(
+    async (threadId: string): Promise<void> => {
+      clearThreadTitles([threadId]);
+      if (activeThreadRef.current === threadId) {
+        activeThreadRef.current = null;
+        setActiveThreadId(null);
+        commitMessages([]);
+        commitPendingInterrupt(null);
+        setUpload({ phase: "idle" });
+      }
+      await refreshThreads();
+      if (mountedRef.current) setError(MISSING_THREAD_MESSAGE);
+    },
+    [commitMessages, commitPendingInterrupt, refreshThreads],
+  );
 
   const startErasePhase2 = useCallback(
     async (threadId: string): Promise<void> => {
@@ -237,7 +263,9 @@ export function useCoachChat(deps: CoachChatDeps) {
         maybeStartErase(messagesRef.current, threadId);
         return true;
       } catch (streamError) {
-        if (mountedRef.current) {
+        if (isMissingThreadError(streamError)) {
+          await recoverMissingThread(threadId);
+        } else if (mountedRef.current) {
           setError(
             streamError instanceof Error
               ? streamError.message
@@ -250,7 +278,7 @@ export function useCoachChat(deps: CoachChatDeps) {
         if (mountedRef.current) setBusy(false);
       }
     },
-    [commitMessages, commitPendingInterrupt, deps.stream, maybeStartErase],
+    [commitMessages, commitPendingInterrupt, deps.stream, maybeStartErase, recoverMissingThread],
   );
 
   const ensureThread = useCallback(async (): Promise<string> => {
@@ -424,12 +452,16 @@ export function useCoachChat(deps: CoachChatDeps) {
       try {
         await loadThreadState(threadId);
       } catch (stateError) {
-        setError(
-          stateError instanceof Error ? stateError.message : "Couldn't open that conversation.",
-        );
+        if (isMissingThreadError(stateError)) {
+          await recoverMissingThread(threadId);
+        } else {
+          setError(
+            stateError instanceof Error ? stateError.message : "Couldn't open that conversation.",
+          );
+        }
       }
     },
-    [loadThreadState],
+    [loadThreadState, recoverMissingThread],
   );
 
   const removeThread = useCallback(
