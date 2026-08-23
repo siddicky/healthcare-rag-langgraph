@@ -217,8 +217,7 @@ read-only, non-root container. The Compose app profile forces LangSmith tracing
 off for identifier-bearing CLI input and reaches Weaviate over the internal
 Compose network; the existing `make weaviate` workflow remains unchanged.
 
-> `requirements.txt` is the original frozen environment and its pins are mutually incompatible
-> (`grpcio` vs `grpcio-tools`); dependencies now live in `pyproject.toml`. Re-chunking the PDFs
+> Dependencies live in `pyproject.toml`, resolved through `uv.lock`. Re-chunking the PDFs
 > (`healthcare_rag/processors/pdf_chunker.py`) needs the optional `ingest` extra (docling).
 
 **Configuration** — see `.env.example`. Model selection is centralised in

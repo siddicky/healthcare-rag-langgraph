@@ -18,8 +18,8 @@ make venv                       # uv, Python 3.12, editable install
 make weaviate ingest            # docker compose + load data/chunks_*.json
 make run                        # interactive CLI
 ```
-Python **≥3.11** is required (`typing.Self`). Do not use `requirements.txt` —
-its pins are mutually incompatible; `pyproject.toml` is the dependency source.
+Python **≥3.11** is required (`typing.Self`). `pyproject.toml` is the dependency
+source; `uv.lock` pins the resolved set.
 
 ## Non-negotiables
 - **Healthcare context.** The app must not give personal medical advice, must
