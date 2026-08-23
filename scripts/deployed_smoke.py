@@ -638,12 +638,19 @@ class DeployedSmoke:
         self.u2_threads.append(thread_id)
         u2_owner = self.owner(self.settings.u2_token)
         title = f"Smoke reminder {uuid4()}"
-        _ = await self.run_turn(
-            self.settings.u2_token,
-            thread_id,
-            question=f"Create a reminder titled {title} every Monday at 09:00 UTC.",
-        )
-        crons = await self._crons(u2_owner)
+        crons: list[JSONValue] = []
+        for _ in range(3):
+            _ = await self.run_turn(
+                self.settings.u2_token,
+                thread_id,
+                question=f"Create a reminder titled {title} every Monday at 09:00 UTC.",
+            )
+            crons = await self._crons(u2_owner)
+            if crons:
+                break
+            # Model-side routing lottery, same as check 3: the turn can land
+            # on a clarifying reply. Retry only while nothing was created, so
+            # a successful create can never be duplicated.
         require(len(crons) == 1, "create_reminder did not create exactly one cron")
         cron = crons[0]
         require(isinstance(cron, Mapping), "cron response shape invalid")
