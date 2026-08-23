@@ -116,10 +116,16 @@ that unblocks `langchain >= 1.3.9` without touching the `openai` pin.
 
 ## Verification
 
-- Full offline suite (macOS, local): **1729 passed, 1 skipped, 0 failed** (baseline before this work:
-  1725 passed, 3 skipped — `cryptography` 50.0.0 un-skips two conditional tests). On Linux CI the same
-  suite reports **1728 passed, 2 skipped** — one further test skips there. Quote the platform with the
-  number; neither is "the" suite count.
+- Full offline suite (macOS, local): **1736 passed, 1 skipped, 0 failed**. On Linux CI the same suite
+  reports one further skip. Quote the platform with the number; neither is "the" suite count.
+
+  An earlier draft of this record claimed the `cryptography` upgrade "un-skips two conditional tests".
+  That was wrong and is corrected here: `cryptography` appears **zero** times anywhere under `tests/`.
+  The two tests in question — `tests/graph/test_boundary_durability.py` and
+  `tests/graph/test_engine_record.py` — are gated on
+  `find_spec("langgraph.checkpoint.sqlite")`, i.e. the **graph-sqlite extra**. They began running because
+  of the CI extras fix (`02d0a01`), not because of `2494ae8`. Falsified by experiment: removing only
+  `langgraph-checkpoint-sqlite` while holding `cryptography` at 50.0.0 reproduces the skips exactly.
 - `tests/server` the way CI runs it: **89 passed, 1 skipped**.
 - Credential-free: **1729 passed, 1 skipped, 0 failed**, verified by removing `.env` from disk entirely,
   in a fresh venv, with the Weaviate container stopped. Note that `env -u VAR` does **not** produce a
