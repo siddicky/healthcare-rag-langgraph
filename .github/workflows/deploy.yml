@@ -359,24 +359,12 @@ jobs:
             exit 1
           fi
 
-          echo "Setting ${#SET_ARGS[@]} secrets on Fly app hc-rag-server-prod (values not shown)..."
-          # fly secrets set is idempotent; unchanged values are a no-op in Fly.
-          # Pass secrets via env to avoid CLI echo; use staged file approach for masking.
-          # We use flyctl secrets set with --stage is not available, so direct set.
-          # Iterate individually to ensure errors are isolated and logs never contain values.
-          for pair in "${SET_ARGS[@]}"; do
-            name="${pair%%=*}"
-            echo "  fly secrets set $name (NAME only)..."
-            # Use bash -c with env to avoid set -x leaking values.
-            val="${pair#*=}"
-            # Set via stdin to avoid value in process list; flyctl supports KEY=value via arg — we export then use --no-redact only for name checks.
-            FLY_API_TOKEN="$FLY_API_TOKEN" flyctl secrets set "$name=$val" -a hc-rag-server-prod >/dev/null 2>&1
-            if [ $? -ne 0 ]; then
-              echo "::error::fly secrets set $name failed"
-              exit 1
-            fi
-          done
-          echo "Secrets set complete."
+          echo "Importing ${#SET_ARGS[@]} secrets into Fly in one update (values not shown)..."
+          if ! printf '%s\n' "${SET_ARGS[@]}" | FLY_API_TOKEN="$FLY_API_TOKEN" flyctl secrets import -a hc-rag-server-prod >/dev/null 2>&1; then
+            echo "::error::Fly secrets import failed"
+            exit 1
+          fi
+          echo "Secrets import complete."
 
           echo "Verifying via 'fly secrets list' (NAME-only, values never shown)..."
           SECRET_NAMES="$(FLY_API_TOKEN="$FLY_API_TOKEN" flyctl secrets list -a hc-rag-server-prod 2>&1 || true)"

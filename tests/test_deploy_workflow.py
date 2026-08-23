@@ -163,6 +163,17 @@ def test_fly_deploy_mirrors_private_ghcr_image_to_fly_registry() -> None:
     )
 
 
+def test_runtime_secret_sync_imports_all_values_in_one_fly_update() -> None:
+    sync_script = _deploy_step(
+        "Sync runtime secrets (GitHub Environment → Fly, NAME-only verification)"
+    ).get("run")
+
+    assert sync_script is not None
+    assert 'printf \'%s\\n\' "${SET_ARGS[@]}"' in sync_script
+    assert "flyctl secrets import" in sync_script
+    assert "flyctl secrets set" not in sync_script
+
+
 def test_release_tag_commit_must_be_reachable_from_origin_main() -> None:
     workflow = _workflow()
     steps = workflow["jobs"]["build"]["steps"]
