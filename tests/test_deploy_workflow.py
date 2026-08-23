@@ -23,7 +23,11 @@ DeployJob = TypedDict(
     "DeployJob",
     {"permissions": WorkflowPermissions, "steps": list[WorkflowStep]},
 )
-WorkflowJobs = TypedDict("WorkflowJobs", {"deploy-prod": DeployJob})
+BuildJob = TypedDict("BuildJob", {"steps": list[WorkflowStep]})
+WorkflowJobs = TypedDict(
+    "WorkflowJobs",
+    {"build": BuildJob, "deploy-prod": DeployJob},
+)
 Workflow = TypedDict("Workflow", {"jobs": WorkflowJobs})
 WORKFLOW_ADAPTER: Final = TypeAdapter(Workflow)
 
@@ -136,6 +140,24 @@ def test_environment_audit_grants_github_token_actions_read() -> None:
     permissions = _workflow()["jobs"]["deploy-prod"]["permissions"]
 
     assert permissions.get("actions") == "read"
+
+
+def test_release_tag_commit_must_be_reachable_from_origin_main() -> None:
+    workflow = _workflow()
+    steps = workflow["jobs"]["build"]["steps"]
+    step = next(
+        step
+        for step in steps
+        if step.get("name")
+        == "Verify tag exists on origin and checkout is at tag commit"
+    )
+    script = step.get("run")
+
+    assert script is not None
+    assert (
+        "git fetch --no-tags origin main:refs/remotes/origin/main" in script
+    )
+    assert 'git merge-base --is-ancestor "$TAG_SHA" "origin/main"' in script
 
 
 def test_environment_audit_fails_closed_without_leaking_tokens(
