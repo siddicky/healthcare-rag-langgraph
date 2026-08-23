@@ -1,0 +1,129 @@
+# Decision: 142 Dependabot alerts — delete the stale `requirements.txt`, upgrade `cryptography`, assess the rest
+
+- **Verdict: DELETE `requirements.txt` (136 alerts), UPGRADE `cryptography` 46.0.7 → 50.0.0 (4 alerts), ASSESS-AND-DEFER the remaining 2.**
+  `pyproject.toml` + `uv.lock` remain the only dependency source. `tests/server/oracle/requirements.txt` is untouched.
+- Date: 2026-08-23 · Commit: `6651537` · Trigger: GitHub reported 142 open alerts on `main` before the first prod deploy.
+- Evidence: `gh api repos/siddicky/healthcare-rag-langgraph/dependabot/alerts?state=open --paginate`, `uv lock` resolver output, full offline suite.
+
+## Before
+
+| severity | count |
+|---|---|
+| critical | 2 |
+| high | 61 |
+| medium | 56 |
+| low | 23 |
+| **total** | **142** |
+
+Grouped by the manifest that raised them:
+
+| manifest | alerts |
+|---|---|
+| `requirements.txt` | **136** |
+| `uv.lock` | 6 |
+
+## Why deleting `requirements.txt` is a fix and not suppression
+
+The file was a frozen `pip freeze` inherited from the original template. Three separate documents already
+warned against using it (`AGENTS.md`, `README.md`, `openwiki/operations/runbook.md`), each stating that its
+pins are mutually unsatisfiable — `grpcio==1.67.1` conflicts with the surrounding `grpcio-*` pins, so
+`pip install -r requirements.txt` cannot succeed at all.
+
+Nothing built from it. Verified by search across `Makefile`, `Dockerfile`, `server/Dockerfile`,
+`docker-compose.yml`, `docker-compose.server.yml`, `langgraph.json`, `pyproject.toml` and every file in
+`.github/workflows/`: the only match is `server-parity.yml:73`, which reads
+`tests/server/oracle/requirements.txt` — a different, deliberate file that pins the oracle environment the
+contract suite runs against. That one is preserved.
+
+So the 136 alerts described the security posture of an environment nobody could install and nothing
+deployed. **Both criticals were in this group:**
+
+- `authlib` — JWS JWK header injection, signature verification bypass
+- `langchain-core` — serialization injection enabling secret extraction
+
+Neither package version was ever resolved into the real dependency graph. Deleting the file removes the
+alerts because the vulnerable manifest genuinely no longer exists, not because anything was dismissed.
+
+A file that must be warned against in three places is a file that should not exist.
+
+## The 6 real alerts, in `uv.lock`
+
+| severity | package | vulnerable range | patched | action |
+|---|---|---|---|---|
+| high | cryptography | `>= 0.5.0, < 48.0.1` | 48.0.1 | **upgraded** |
+| high | cryptography | `<= 48.0.0` | 49.0.0 | **upgraded** |
+| high | cryptography | `>= 44.0.0, < 50.0.0` | 50.0.0 | **upgraded** |
+| medium | cryptography | `<= 48.0.0` | 49.0.0 | **upgraded** |
+| medium | langchain | `<= 1.3.8` | 1.3.9 | deferred, not reachable |
+| low | langchain-openai | `< 1.1.14` | 1.1.14 | deferred, not reachable |
+
+`cryptography` is transitive, so `uv lock --upgrade-package cryptography` was enough; no floor was added to
+`pyproject.toml`, because nothing was holding it back and an undeclared pin would be a lie about what this
+project directly depends on. 46.0.7 → 50.0.0 clears all four ranges at once.
+
+## Why the last two are deferred
+
+Both upgrades are blocked by pins this repo holds deliberately, and forcing either would mean a cascading
+dependency migration during a submission freeze.
+
+**`langchain >= 1.3.9`** requires `langgraph-sdk >= 0.4.2, < 0.5.0` and `langgraph >= 1.3.0`. This project
+pins `langgraph-sdk >= 0.3, < 0.4` and `langgraph >= 1.2, < 2`, with a `constraint-dependencies` entry of
+`langgraph-api >= 0.13, < 0.14`. The resolver output is unambiguous:
+
+```
+And because your project depends on langgraph-sdk>=0.3,<0.4 and
+your project requires healthcare-rag[dev], we can conclude that your
+project's requirements are unsatisfiable.
+```
+
+**`langchain-openai >= 1.1.14`** requires `openai >= 2.26.0`. This project pins `openai >= 1.76, < 2`, and
+that pin is load-bearing: `pyproject.toml` records that `openevals` — the multi-turn simulator behind
+`evals/multiturn_harness.py` — must resolve against `openai < 2` (see `evals/README.md`, "Multi-turn
+evals"). Loosening it to clear a low-severity advisory would trade a working regression harness for a
+vulnerability that is not reachable here.
+
+### Neither vulnerable code path exists in this repo
+
+This was checked by search, not assumed:
+
+- The **langchain** advisory affects file-search agent middleware and filesystem loaders — path traversal
+  and sandbox escape where a resolved path is not confined to its intended root. A search across
+  `healthcare_rag/`, `server/` and `evals/` for `file_search`, `FileSearch`, `DirectoryLoader`,
+  `GlobLoader`, `TextLoader`, `UnstructuredFileLoader` and `filesystem` returns **zero matches**. This
+  application loads no documents from disk through langchain; retrieval reads pre-built chunks from
+  Weaviate.
+- The **langchain-openai** advisory affects `_url_to_size()` via `get_num_tokens_from_messages`, a
+  TOCTOU/DNS-rebinding SSRF window in **image** token counting. A search for `get_num_tokens_from_messages`,
+  `_url_to_size`, `image_url` and image message parts returns **zero matches**. The pipeline is text-only
+  and never sends an image to a model.
+
+### What would change this verdict
+
+Revisit immediately if either becomes true:
+
+1. Any langchain filesystem loader or file-search middleware is introduced anywhere in the pipeline.
+2. Any image input reaches a model — uploads currently go through
+   `healthcare_rag/agent/uploads.py` as text extraction, not image messages.
+
+Also revisit when the `langgraph` / `langgraph-sdk` / `langgraph-api` stack is next upgraded as a set, since
+that unblocks `langchain >= 1.3.9` without touching the `openai` pin.
+
+## Verification
+
+- Full offline suite: **1729 passed, 1 skipped, 0 failed** (baseline before this work: 1725 passed,
+  3 skipped — `cryptography` 50.0.0 un-skips two conditional tests).
+- `tests/server` the way CI runs it: **89 passed, 1 skipped**.
+- Credential-free (`env -u LANGSMITH_API_KEY -u OPENAI_API_KEY -u LANGSMITH_FEEDBACK_PROJECT_ID`):
+  **1729 passed, 1 skipped, 0 failed**.
+- PHI-path subsets (`test_safety_gate.py`, `test_privacy_sanitizer.py`, `graph/test_graph_privacy.py`):
+  **116 passed** — `cryptography` sits under the privacy and auth paths, so these were run specifically.
+- `uv lock --check` passes; the lockfile is consistent with `pyproject.toml`.
+
+## Expected alert count after this lands
+
+Dependabot closes alerts on its next scan **after the manifest is removed from the default branch**, so the
+count does not drop at commit time — it drops after this reaches `main`. Expected steady state: **6 → 2**,
+both deferred and recorded above, neither critical or high, neither reachable.
+
+Anyone reading the alert page before that scan completes will still see 142. That lag is expected and is
+not evidence the work did not happen.
