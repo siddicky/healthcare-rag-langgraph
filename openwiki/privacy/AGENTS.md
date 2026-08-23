@@ -1,3 +1,9 @@
+---
+type: "Reference"
+title: "openwiki/privacy/"
+openwiki_generated: true
+---
+
 <!-- Parent: ../AGENTS.md -->
 <!-- Generated: 2026-08-22 | Updated: 2026-08-22 -->
 

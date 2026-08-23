@@ -1,74 +1,42 @@
 ---
-type: runbook
-title: Production deploy (Fly, tag pipeline)
-description: Prod-only Fly deploy of the server image - compliance gate, GitHub Environment production as the single secrets source, immutable-digest tag pipeline in .github/workflows/deploy.yml, Weaviate companion app, prod ingest, and the synthetic-account deployed smoke. Summarizes docs/deploy.md.
-tags: [deploy, fly, operations, ci]
-openwiki:
-  roles: [operations, delivery]
-  change_kinds: [release, infrastructure]
-  source_paths: [docs/deploy.md, deploy/fly.prod.toml, deploy/fly.weaviate-prod.toml, .github/workflows/deploy.yml, Makefile, scripts/deployed_smoke.py, scripts/forget_member.py, server/Dockerfile]
-  symbols: [make release, make ingest-fly, make deployed-smoke, make forget-member, deploy-prod]
-  invariants: [Only immutable image digests are deployed - never a mutable tag., Secrets have exactly one source of truth: the GitHub Environment production; the workflow syncs them to Fly and verifies names only., The production environment requires a reviewer and a strict ^v\d+\.\d+\.\d+$ tag policy; the workflow fails closed if protection rules are missing., The deployed smoke always uses synthetic accounts (LANGGRAPH_U1_TOKEN/LANGGRAPH_U2_TOKEN) with LANGSMITH_TRACING=false.]
-  validation_commands: [make release TAG=v0.0.1-rc, make deployed-smoke]
+type: deployment runbook
+title: Deployment topology and release acceptance
+description: Local and Fly topology, configuration ownership, persistence boundaries, tag-triggered immutable release flow, readiness, and deployed smoke acceptance.
+tags: [operations, deployment, fly, release]
 ---
 
-# Production deploy (Fly, tag pipeline)
+# Deployment topology and release acceptance
 
-Production-only (no staging): the [server](../server/agent-server.md) runs as the
-Fly app `hc-rag-server-prod` (`deploy/fly.prod.toml`) next to a private Weaviate
-companion `hc-rag-weaviate-prod` (`deploy/fly.weaviate-prod.toml`, region `iad`,
-the only persistent volume). `docs/deploy.md` is the canonical step-by-step
-runbook — this page is the map; paste commands from there.
+The base runtime, clean-room [agent server](../server/agent-server.md), and member frontend have distinct configuration owners. `pyproject.toml` and `uv.lock` own Python dependencies; do not restore the removed root `requirements.txt` (decision `docs/decisions/dependabot-requirements-txt.md`). `langgraph.json` owns graph/auth/custom-app selection; graph settings own model/pipeline knobs; compose/Fly files own topology-specific environment overrides. Read [models and runtime](../configuration/models-and-runtime.md) before changing an environment variable.
 
-## Compliance gate (pre-condition of the first approval)
+## Topology and persistence
 
-No prod deploy of real member data runs until the operator records a dated
-sign-off in `.omo/evidence/task-12-oss-agent-server-tag-deploys.md` (mirrored to
-`.omo/notepads/oss-agent-server-tag-deploys/decisions.md`) stating they reviewed
-`docs/safety.md`, that release checks use synthetic test accounts only with
-`LANGSMITH_TRACING=false`, and the `production` protection rule is in place.
-The workflow's required-reviewer click is still mandatory for every deploy.
+Local base RAG compose runs Weaviate on 8080/50051 with persistent `weaviate_data`, anonymous access, and `restart: on-failure:0`. The app profile waits for health and forces tracing off. The server compose stack similarly waits for Weaviate, exposes server port 8000, uses read-only filesystem/tmpfs, and remains in-memory.
 
-## Pipeline shape
+Fly deploys the server as an **immutable image digest** on internal port `8000` and a private-DNS Weaviate app in `iad`. `LANGGRAPH_API_URL=http://127.0.0.1:8000` is a loopback callback used by reminder/cron behavior, not a public endpoint. The HTTP service forces HTTPS, maintains one minimum running machine with auto-stop disabled, and health-checks `GET /ok`. Weaviate alone mounts a persistent volume; server `SERVER_STORAGE=memory`, threads/runs/store/crons/checkpoints disappear on deploy/restart. `WEAVIATE_HOST` is the private Fly hostname. Production must not enable `SERVER_LOCAL_DEV`.
 
-<!-- openwiki: mermaid parse failed and this diagram was converted to a text fence so it does not break rendering. Fix the diagram source and restore the mermaid fence. Parser error: Heuristic: a semicolon inside a label breaks rendering; rephrase the label. -->
-```text
-flowchart LR
-    T["git push origin vX.Y.Z (human; make release TAG=... validated first)"] --> B["build job: image -> ghcr.io, semver+sha tags, digest output"]
-    B --> D["deploy-prod job (environment: production, concurrency lock)"]
-    D --> A{"required reviewer approves"}
-    A --> F["fly deploy --image <digest> --config deploy/fly.prod.toml"]
-    F --> S["sync secrets GitHub Env -> Fly, verify names"]
-    S --> W["wait /ok"] --> SM["scripts/deployed_smoke.py (10 checks, synthetic accounts, tracing off)"]
+## Tag release path
+
+`.github/workflows/deploy.yml` is tag-triggered (`v*.*.*`). It verifies tag ancestry/HEAD, requires production policy checks, builds GHCR, mirrors and deploys an immutable Fly Registry digest, stages required secrets before deployment, polls `/ok`, then executes deployed smoke with tracing off. Smoke failure fails the deployment; there is no automatic rollback. `make release TAG=vX.Y.Z` only validates and prints tag commands; it does not push.
+
+```mermaid
+flowchart TD
+  T["release tag"] --> V["verify tag and production policy"]
+  V --> B["build GHCR image"]
+  B --> M["mirror immutable digest to Fly"]
+  M --> S["stage secrets then deploy"]
+  S --> R["poll readiness endpoint"]
+  R --> SM["deployed smoke"]
+  SM -->|"pass"| A["accepted"]
+  SM -->|"fail"| F["failed release requires human action"]
 ```
 
-- `make release TAG=vX.Y.Z` is hermetic: it validates the tag shape
-  (`^v[0-9]+\.[0-9]+\.[0-9]+(-…)?$` locally; the workflow enforces the strict
-  no-suffix form) and prints the push commands without pushing.
-- Secrets: GitHub Environment `production` is the single source of truth
-  (including `FLY_API_TOKEN`). The workflow syncs every secret to Fly and asserts
-  the expected names via `fly secrets list` (names only, values never echoed).
-  Never put secret values in `deploy/*.toml`, compose files, or docs.
-- Weaviate is reached only over the Fly private network
-  (`WEAVIATE_HOST=hc-rag-weaviate-prod.internal`); no public Weaviate URL.
+Caption: image identity and smoke acceptance are deployment gates, not optional post-deploy diagnostics.
 
-## Post-deploy operations
+## Configuration and recovery rules
 
-- **Ingest**: `make ingest-fly` currently prints the exact `fly machines run`
-  one-off (documented in `docs/deploy.md` §4) that runs
-  `healthcare_rag.storage.vector_store --delete-all` against prod Weaviate using
-  the last green build's digest. Idempotent; run after bootstrap and after any
-  chunk update.
-- **Deployed smoke**: `make deployed-smoke` runs `scripts/deployed_smoke.py`
-  against `LANGGRAPH_DEPLOYMENT_URL`; it fail-fasts unless all six env vars are
-  present (`LANGGRAPH_DEPLOYMENT_URL`, `LANGGRAPH_U1_TOKEN`, `LANGGRAPH_U2_TOKEN`,
-  `LANGSMITH_API_KEY`, `COACH_INTERNAL_TOKEN`, `LANGSMITH_FEEDBACK_PROJECT_ID`).
-  `--allow-insecure-staging` is for http harnesses only, never prod.
-- **Member erasure**: `make forget-member` drives `scripts/forget_member.py`
-  through the deployed coach self-erase flow (see [coach agent](../agent/coach.md)).
-- **Frontend E2E against prod**: the deployed mode of the
-  [member frontend](../frontend/member-frontend.md) Playwright suite consumes the
-  same synthetic identities and runfile contract.
+`OPENAI_API_KEY` is required for the base RAG/Weaviate vectorizer. LangSmith, Supabase, internal tokens, and feedback configuration have topology-specific owners; never copy values into docs. The custom coach app can fail startup on malformed feedback-project configuration. The server's storage-index initialization may explicitly fall back to lexical search for recognized index/dependency/auth failures; it does not create durable server storage.
 
-Local setup (uv, Docker/Weaviate, ingestion) lives in the
-[local runbook](runbook.md); this page covers production only.
+If Weaviate exits cleanly or fails, run `make weaviate` again; restart policy does not retry it. Re-ingestion deletes all collections when using `make ingest`; follow [retrieval ingestion](../retrieval/weaviate-and-ingestion.md). Use `make server-image`, `make container-server-smoke`, `make server-test`, and `make parity` for server changes. Use `make deployed-smoke` only with a real deployment and required configured synthetic accounts/tokens.
+
+`tests/test_deploy_workflow.py` verifies tag/policy checks, immutable image flow, secret staging, and smoke enforcement. Treat historical deployment docs as supporting material when they disagree with current workflow source; source and tests are authoritative.

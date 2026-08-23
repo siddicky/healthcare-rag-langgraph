@@ -60,4 +60,4 @@ Two `evals/` tools watch LangSmith projects while experiments run; both need `LA
 
 The rationale, findings (F-ids), and experiment history behind these tools and the decomposition/synthesis fix live in `docs/journey.json`, rendered by `make journey` into `docs/journey.html` (`docs/build_journey_html.py`). Treat journey entries as the decision log when justifying config or model changes.
 
-Routing decisions are gated separately: see [routing gates](routing-evals.md) for the paired query/safety arm comparison, and the [retrieval-arm gate](../retrieval/arms-and-reranking.md) for backend comparisons.
+Routing decisions are gated separately: see [routing gates](routing-evals.md) for the paired query/safety arm comparison, and the [retrieval-arm gate](../retrieval/arms-and-reranking.md) for backend comparisons. Dataset, calibration, provenance, seal, report-publication, adoption, and deployment-acceptance rules have one canonical home in [evaluation governance](evaluation-governance.md).

@@ -3,7 +3,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatShell } from "@/chat/components/ChatShell";
 import type { CoachApiBundle, CoachChatDeps, CoachStreamBundle } from "@/chat/useCoachChat";
-import type { ThreadSummary } from "@/chat/coachApi";
+import { CoachApiError, type ThreadSummary } from "@/chat/coachApi";
 import { ERASE_MARKER_NAME, SENTINEL_QUESTION } from "@/chat/coachProtocol";
 import {
   aiMessage,
@@ -100,6 +100,100 @@ describe("thread switch via latest-state read", () => {
     await screen.findByText("second answer");
     expect(deps.api.getThreadState).toHaveBeenCalledWith("t-2");
     expect(screen.queryByText("first answer")).toBeNull();
+  });
+
+  it("removes a missing thread when the server resets before it is selected", async () => {
+    window.localStorage.setItem(
+      "nymble:thread-titles",
+      JSON.stringify({ "t-current": "Current chat", "t-missing": "Missing chat" }),
+    );
+    let searchCount = 0;
+    const searchThreads = vi.fn(async () => {
+      searchCount += 1;
+      return searchCount === 1
+        ? [thread("t-current"), thread("t-missing")]
+        : [thread("t-current")];
+    });
+    const getThreadState = vi.fn(async (id: string) => {
+      if (id === "t-missing") throw new CoachApiError(404, "Thread not found");
+      return {
+        values: {
+          messages: [
+            humanMessage("current question", "h-current"),
+            aiMessage("current answer", "a-current"),
+          ],
+        },
+        interrupts: [],
+      };
+    });
+    const deps = fakeDeps({ searchThreads, getThreadState }, emptyStream());
+    shell(deps);
+    await screen.findByText("current answer");
+
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Missing chat" }));
+
+    expect(
+      await screen.findByText("That conversation is no longer available. Start a new one."),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Missing chat" })).toBeNull();
+    expect(screen.queryByText("Thread not found")).toBeNull();
+    expect(screen.getByText("current answer")).toBeInTheDocument();
+  });
+});
+
+describe("server reset during an active conversation", () => {
+  it("starts fresh when the active thread disappears before a send", async () => {
+    window.localStorage.setItem(
+      "nymble:thread-titles",
+      JSON.stringify({ "t-missing": "Missing chat" }),
+    );
+    let searchCount = 0;
+    const searchThreads = vi.fn(async () => {
+      searchCount += 1;
+      return searchCount === 1 ? [thread("t-missing")] : [];
+    });
+    const stream: CoachStreamBundle & { calls: StreamCall[] } = {
+      calls: [],
+      streamRun(threadId, payload) {
+        stream.calls.push({ threadId, payload });
+        return (async function* () {
+          throw Object.assign(
+            new Error('HTTP 404: {"detail":"Thread not found"}'),
+            { status: 404 },
+          );
+        })();
+      },
+    };
+    const deps = fakeDeps(
+      {
+        searchThreads,
+        getThreadState: vi.fn(async () => ({
+          values: {
+            messages: [
+              humanMessage("old question", "h-old"),
+              aiMessage("old answer", "a-old"),
+            ],
+          },
+          interrupts: [],
+        })),
+      },
+      stream,
+    );
+    shell(deps);
+    await screen.findByText("old answer");
+
+    const user = userEvent.setup();
+    await user.type(screen.getByLabelText("Message your coach"), "Are you there?");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(
+      await screen.findByText("That conversation is no longer available. Start a new one."),
+    ).toBeInTheDocument();
+    expect(screen.queryByText('HTTP 404: {"detail":"Thread not found"}')).toBeNull();
+    expect(screen.queryByText("old answer")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Missing chat" })).toBeNull();
+    expect(screen.getByRole("heading", { name: "Nymble Coach" })).toBeInTheDocument();
   });
 });
 

@@ -1,8 +1,10 @@
 ---
 type: planning skeleton
-title: Wiki skeleton (removed)
-description: Planning skeleton was completed and removed; all planned pages are published in this wiki.
-tags: [documentation]
+title: Completed documentation plan
+description: Temporary planning artifact retained because the filesystem interface cannot delete files.
+tags: [documentation, planning]
 ---
 
-This planning artifact has been retired. All pages it tracked were written, reviewed by the skeleton critic, and verified by the wiki answer verifiers. See [quickstart](quickstart.md).
+# Completed documentation plan
+
+All planned pages were written and verified. See [quickstart](quickstart.md).
