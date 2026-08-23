@@ -244,43 +244,6 @@ jobs:
         uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
         # This action installs flyctl at a pinned version; token is not needed for install.
 
-      - name: Deploy to Fly (immutable digest)
-        env:
-          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
-        run: |
-          set -euo pipefail
-          DIGEST='${{ needs.build.outputs.digest }}'
-          if [ -z "$DIGEST" ]; then
-            echo "::error::build digest is empty — refusing to deploy mutable tag"
-            exit 1
-          fi
-          if ! printf '%s' "$DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
-            echo "::error::digest '$DIGEST' is not a valid sha256 digest — refusing to deploy"
-            exit 1
-          fi
-          SOURCE_IMAGE="ghcr.io/${{ github.repository }}@${DIGEST}"
-          FLY_IMAGE_TAG="registry.fly.io/hc-rag-server-prod:${{ github.ref_name }}"
-          echo "Config: deploy/fly.prod.toml"
-          echo "App: hc-rag-server-prod"
-
-          flyctl auth docker
-          docker buildx imagetools create \
-            --tag "$FLY_IMAGE_TAG" \
-            "$SOURCE_IMAGE"
-          FLY_DIGEST="$(docker buildx imagetools inspect "$FLY_IMAGE_TAG" --format '{{json .Manifest}}' | jq -r '.digest')"
-          if ! printf '%s' "$FLY_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
-            echo "::error::Fly registry digest '$FLY_DIGEST' is not a valid sha256 digest"
-            exit 1
-          fi
-          IMAGE="registry.fly.io/hc-rag-server-prod@${FLY_DIGEST}"
-          echo "Deploying immutable Fly registry image: $IMAGE"
-
-          flyctl deploy \
-            -a hc-rag-server-prod \
-            --config deploy/fly.prod.toml \
-            --image "$IMAGE" \
-            --strategy immediate
-          echo "Fly deploy command completed."
       - name: Sync runtime secrets (GitHub Environment → Fly, NAME-only verification)
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
@@ -360,7 +323,7 @@ jobs:
           fi
 
           echo "Importing ${#SET_ARGS[@]} secrets into Fly in one update (values not shown)..."
-          if ! printf '%s\n' "${SET_ARGS[@]}" | FLY_API_TOKEN="$FLY_API_TOKEN" flyctl secrets import -a hc-rag-server-prod >/dev/null 2>&1; then
+          if ! printf '%s\n' "${SET_ARGS[@]}" | FLY_API_TOKEN="$FLY_API_TOKEN" flyctl secrets import -a hc-rag-server-prod --stage >/dev/null 2>&1; then
             echo "::error::Fly secrets import failed"
             exit 1
           fi
@@ -376,6 +339,44 @@ jobs:
             fi
           done
           echo "Secrets NAME-only verification done."
+
+      - name: Deploy to Fly (immutable digest)
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+        run: |
+          set -euo pipefail
+          DIGEST='${{ needs.build.outputs.digest }}'
+          if [ -z "$DIGEST" ]; then
+            echo "::error::build digest is empty — refusing to deploy mutable tag"
+            exit 1
+          fi
+          if ! printf '%s' "$DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::digest '$DIGEST' is not a valid sha256 digest — refusing to deploy"
+            exit 1
+          fi
+          SOURCE_IMAGE="ghcr.io/${{ github.repository }}@${DIGEST}"
+          FLY_IMAGE_TAG="registry.fly.io/hc-rag-server-prod:${{ github.ref_name }}"
+          echo "Config: deploy/fly.prod.toml"
+          echo "App: hc-rag-server-prod"
+
+          flyctl auth docker
+          docker buildx imagetools create \
+            --tag "$FLY_IMAGE_TAG" \
+            "$SOURCE_IMAGE"
+          FLY_DIGEST="$(docker buildx imagetools inspect "$FLY_IMAGE_TAG" --format '{{json .Manifest}}' | jq -r '.digest')"
+          if ! printf '%s' "$FLY_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::Fly registry digest '$FLY_DIGEST' is not a valid sha256 digest"
+            exit 1
+          fi
+          IMAGE="registry.fly.io/hc-rag-server-prod@${FLY_DIGEST}"
+          echo "Deploying immutable Fly registry image: $IMAGE"
+
+          flyctl deploy \
+            -a hc-rag-server-prod \
+            --config deploy/fly.prod.toml \
+            --image "$IMAGE" \
+            --strategy immediate
+          echo "Fly deploy command completed."
 
       - name: Wait for /ok (readiness-gated)
         run: |
