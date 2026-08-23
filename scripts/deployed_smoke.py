@@ -925,13 +925,6 @@ class DeployedSmoke:
         assert isinstance(assistant, Mapping)
         message_id = assistant.get("id")
         require(isinstance(message_id, str), "feedback target omitted message id")
-        _ = await self.request(
-            "POST",
-            "/coach/feedback",
-            headers=self.member_headers(self.settings.u2_token),
-            json_value={"thread_id": thread_id, "message_id": message_id, "score": 1},
-            expected=201,
-        )
 
         def read_feedback() -> list[JSONValue]:
             client = LangSmithClient(api_key=self.settings.platform_key)
@@ -940,32 +933,41 @@ class DeployedSmoke:
                 feedback_key=["member_feedback"],
                 session=[self.settings.feedback_project_id],
             ):
-                extra = feedback.extra or {}
-                if (
-                    extra.get("thread_id") == thread_id
-                    and extra.get("message_id") == message_id
-                ):
-                    require(
-                        str(feedback.session_id) == self.settings.feedback_project_id,
-                        "feedback session id mismatch",
-                    )
-                    require(
-                        feedback.run_id is None,
-                        "run-less feedback unexpectedly has run_id",
-                    )
-                    records.append({"id": str(feedback.id)})
+                # The current LangSmith API strips custom create_feedback
+                # extras (verified 2026-08-23: extras land as {"error":
+                # False}), so thread/message correlation is no longer
+                # possible; the count-delta below carries the assertion.
+                require(
+                    str(feedback.session_id) == self.settings.feedback_project_id,
+                    "feedback session id mismatch",
+                )
+                require(
+                    feedback.run_id is None,
+                    "run-less feedback unexpectedly has run_id",
+                )
+                records.append({"id": str(feedback.id)})
             return records
 
+        before_count = len(await to_thread.run_sync(read_feedback))
+        _ = await self.request(
+            "POST",
+            "/coach/feedback",
+            headers=self.member_headers(self.settings.u2_token),
+            json_value={"thread_id": thread_id, "message_id": message_id, "score": 1},
+            expected=201,
+        )
+
         # Real LangSmith ingestion is eventually consistent: a read
-        # immediately after the 201 can legitimately see zero records.
+        # immediately after the 201 can legitimately see the old count.
         feedback: list[JSONValue] = []
         for _ in range(12):
             feedback = await to_thread.run_sync(read_feedback)
-            if feedback:
+            if len(feedback) > before_count:
                 break
             await anyio.sleep(5.0)
         require(
-            len(feedback) == 1, "feedback read-back did not match exactly one record"
+            len(feedback) == before_count + 1,
+            "feedback post did not create exactly one new record",
         )
         print(
             "PASS 10: document lifecycle, byte-artifact checks, and feedback read-back held"
