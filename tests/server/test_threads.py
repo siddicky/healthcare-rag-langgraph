@@ -393,3 +393,50 @@ async def test_crud_roundtrip_within_one_app() -> None:
         assert (await c.get(f"/threads/{tid}")).status_code == 404
         # copied still exists
         assert (await c.get(f"/threads/{new_id}")).status_code == 200
+
+
+@pytest.mark.anyio
+async def test_state_lookup_saver_fault_is_not_masked(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # F2 regression: a saver fault during state lookup must surface as a 500,
+    # never a fake 200 {"values": {}, ...}.
+    auth = _make_auth("member-1")
+    app = _app_with_auth(auth)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+        tid = str(uuid4())
+        await c.post("/threads", json={"thread_id": tid})
+
+        async def boom(config: object) -> object:
+            raise RuntimeError("saver fault")
+
+        monkeypatch.setattr(app.state.storage.saver, "aget_tuple", boom)  # type: ignore[attr-defined]
+        with pytest.raises(RuntimeError, match="saver fault"):
+            await c.get(f"/threads/{tid}/state")
+
+
+@pytest.mark.anyio
+async def test_copy_logs_checkpoint_history_failure(
+    monkeypatch: pytest.MonkeyPatch, caplog: pytest.LogCaptureFixture
+) -> None:
+    # F2 regression: a checkpoint-history copy failure degrades the copy but
+    # must be logged, never silent.
+    auth = _make_auth("member-1")
+    app = _app_with_auth(auth)
+    transport = httpx.ASGITransport(app=app)
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
+        tid = str(uuid4())
+        await c.post("/threads", json={"thread_id": tid, "metadata": {"k": "v"}})
+
+        async def boom(from_id: str, to_id: str) -> None:
+            raise RuntimeError("checkpoint copy fault")
+
+        monkeypatch.setattr(app.state.storage.saver, "acopy_thread", boom)  # type: ignore[attr-defined]
+        with caplog.at_level("WARNING", logger="MedicalRAG"):
+            copied = await c.post(f"/threads/{tid}/copy")
+    assert copied.status_code == 200
+    assert copied.json()["thread_id"] != tid
+    assert any(
+        "checkpoint history copy" in rec.getMessage() for rec in caplog.records
+    )

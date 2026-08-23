@@ -267,3 +267,39 @@ async def test_malformed_and_forbidden_requests_are_rejected(
 @pytest.mark.anyio
 async def test_bare_runs_manifest_remains_unimplemented(harness: Harness) -> None:
     assert (await harness.client.post("/runs/stream", json={})).status_code == 501
+
+
+@pytest.mark.anyio
+async def test_queue_bound_applies_to_idle_threads(harness: Harness) -> None:
+    # F2 regression: the server-wide QUEUE_LIMIT must hold even when the
+    # submitting thread has NO active run (the old check was gated on
+    # active_id and let idle-thread submissions grow the queue unbounded).
+    active = await create(harness, body({"mode": "block"}))
+    await harness.control.started.wait()
+    queued_ids: list[str] = []
+    try:
+        for value in range(100):
+            response = await create(
+                harness,
+                body({"value": value, "mode": "increment"}, multitask_strategy="enqueue"),
+            )
+            assert response.status_code == 200
+            queued_ids.append(response.json()["run_id"])
+
+        storage = harness.app.state.storage  # type: ignore[attr-defined]
+        storage.threads["thread-2"] = {"thread_id": "thread-2"}
+        idle_submit = await harness.client.post(
+            "/threads/thread-2/runs", json=body({"value": 1})
+        )
+        assert idle_submit.status_code == 503 and idle_submit.headers["retry-after"] == "1"
+    finally:
+        for run_id in queued_ids:
+            await harness.client.post(
+                f"/threads/thread-1/runs/{run_id}/cancel",
+                json={"action": "interrupt", "wait": True},
+            )
+        await harness.client.post(
+            f"/threads/thread-1/runs/{active.json()['run_id']}/cancel",
+            json={"action": "interrupt", "wait": True},
+        )
+        harness.control.release.set()

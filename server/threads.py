@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import inspect
 import json
 import logging
 from datetime import UTC, datetime, timedelta
@@ -7,8 +8,6 @@ from typing import ClassVar, Literal
 from uuid import UUID, uuid4
 
 logger = logging.getLogger("MedicalRAG")
-
-import json as _json
 
 from langgraph_sdk import Auth
 
@@ -31,7 +30,7 @@ def _to_jsonable(obj: object) -> object:
         except Exception:
             pass
     try:
-        _json.dumps(obj)
+        json.dumps(obj)
         return obj
     except Exception:
         return str(obj)
@@ -529,7 +528,14 @@ async def get_thread_state(request: Request) -> Response:
     try:
         tup = await storage.saver.aget_tuple(config)  # type: ignore[arg-type]
     except Exception:
-        tup = None
+        # A saver fault is a data-plane error: surface it (500) instead of
+        # masquerading as an empty thread state. Unknown checkpoint ids and
+        # fresh threads legitimately return None from aget_tuple — those do
+        # not raise and keep their 200-empty parity shape.
+        logger.warning(
+            "state lookup failed for thread %s: saver fault", thread_id, exc_info=True
+        )
+        raise
 
     if tup is None:
         return JSONResponse({"values": {}, "next": [], "checkpoint": None, "interrupts": []})
@@ -537,11 +543,13 @@ async def get_thread_state(request: Request) -> Response:
     # Extract checkpoint values
     try:
         values = dict(tup.checkpoint.get("channel_values", {})) if hasattr(tup, "checkpoint") else {}
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        logger.debug("thread %s: unremarkable checkpoint channel_values shape", thread_id, exc_info=True)
         values = {}
     try:
         nxt = list(tup.next) if hasattr(tup, "next") else []
-    except Exception:
+    except (AttributeError, TypeError, KeyError):
+        logger.debug("thread %s: unremarkable checkpoint next shape", thread_id, exc_info=True)
         nxt = []
     # LangGraph state shape for OSS parity: return values + next + config
     payload: dict[str, object] = {
@@ -606,12 +614,15 @@ async def copy_thread(request: Request) -> Response:
         copier = getattr(storage.saver, "acopy_thread", None) or getattr(storage.saver, "copy_thread", None)
         if callable(copier):
             res = copier(thread_id, new_id)
-            import inspect
-
             if inspect.isawaitable(res):
                 await res
     except Exception:
-        pass
+        # The thread record copy above already succeeded; a checkpoint-copy
+        # failure degrades history, it does not invalidate the copy. But it
+        # must be visible, not silent (matches the delete-cascade warnings).
+        logger.warning(
+            "checkpoint history copy %s -> %s failed", thread_id, new_id, exc_info=True
+        )
     return JSONResponse(new_record)
 
 

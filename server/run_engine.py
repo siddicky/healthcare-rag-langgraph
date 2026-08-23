@@ -174,7 +174,9 @@ class RunEngine:
             await self.cancel(
                 thread_id, active_id, CancelRequest(action="interrupt", wait=True)
             )
-        if active_id is not None and self.pending_count >= QUEUE_LIMIT:
+        # Queue bound is server-wide: it must hold regardless of whether THIS
+        # thread already has an active run (an idle thread must not bypass it).
+        if self.pending_count >= QUEUE_LIMIT:
             raise QueueFull
         run_id = str(uuid4())
         record: dict[str, object] = {
