@@ -6,7 +6,6 @@ import signal
 import subprocess
 import sys
 import time
-from collections.abc import AsyncIterator
 
 import httpx
 import pytest
