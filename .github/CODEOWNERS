@@ -1,0 +1,16 @@
+# Default owner for everything not matched below.
+*                                       @siddicky
+
+# Safety gate — the runtime PHI/refusal boundary. Changes here must be
+# checked against evals/golden_dataset.json and the multi-turn safety set
+# (see AGENTS.md "Safety gate").
+healthcare_rag/processors/safety.py            @siddicky
+healthcare_rag/processors/safety_responses.py  @siddicky
+healthcare_rag/graph/nodes/safety.py           @siddicky
+healthcare_rag/prompts/safety_gate.yaml.j2     @siddicky
+docs/safety.md                                 @siddicky
+
+# Production deploy pipeline — tag-triggered, immutable-digest Fly deploy.
+deploy/                                        @siddicky
+docs/deploy.md                                 @siddicky
+.github/workflows/deploy.yml                   @siddicky
