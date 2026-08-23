@@ -12,6 +12,10 @@ WEAVIATE_PORT = "8080"
 # add "50051" here only if a future server build needs gRPC.
 SERVER_STORAGE = "memory"
 SERVER_PORT = "8000"
+# The coach reminder tools call the Agent Server cron API from inside the
+# graph run (reminders.py:531 defaults to localhost:2024 — the langgraph dev
+# port). In production the server must loop back to ITSELF:
+LANGGRAPH_API_URL = "http://127.0.0.1:8000"
 # SERVER_LOCAL_DEV must remain unset/0 in production. The Dockerfile
 # already sets ENV SERVER_LOCAL_DEV=0; do not override it here.
 # CORS / allowed-origins and all secrets are injected via `fly secrets set`

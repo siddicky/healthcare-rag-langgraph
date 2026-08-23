@@ -110,6 +110,20 @@ WEAVIATE_HOST = "hc-rag-weaviate-prod.internal"
 WEAVIATE_PORT = "8080"
 ```
 
+The coach reminder tools also call back into the Agent Server itself
+(`healthcare_rag/agent/reminders.py` defaults to `localhost:2024`, the
+`langgraph dev` port). The prod config pins the loopback to the server's own
+port — do not remove it, or every reminder create/edit silently fails with
+"reminder service unavailable":
+
+```toml
+# deploy/fly.prod.toml [env]
+LANGGRAPH_API_URL = "http://127.0.0.1:8000"
+```
+
+The same variable must be set for any local OSS-server run on a non-2024 port
+(e.g. `LANGGRAPH_API_URL=http://127.0.0.1:8000 make server-test-live`).
+
 No public Weaviate URL is exposed. Scaling or re-creating the volume is a separate migration (not covered here).
 
 **Create the pipeline deploy token now that the apps exist:**
