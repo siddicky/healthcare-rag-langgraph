@@ -28,7 +28,10 @@ Please make sure the wiki covers, as separate pages where sensible:
    experiments, where reports land (`evals/results/`).
 7. **Runbook** — local setup with `uv`, Docker/Weaviate, ingestion, CLI, the
    Makefile targets, required env vars, known gotchas (Python ≥3.11 needed;
-   `requirements.txt` pins are unsatisfiable; Weaviate `restart` policy).
+   dependencies come from `pyproject.toml` + `uv.lock`; Weaviate `restart`
+   policy). Note: the stale root `requirements.txt` was deleted (see
+   `docs/decisions/dependabot-requirements-txt.md`) — do not reintroduce a
+   warning about it.
 8. **Safety posture** — what the app currently does and does not do about
    out-of-scope questions, personal medical advice, PII; point to the eval
    categories that measure this.

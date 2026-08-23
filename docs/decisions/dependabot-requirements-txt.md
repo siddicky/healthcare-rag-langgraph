@@ -2,7 +2,7 @@
 
 - **Verdict: DELETE `requirements.txt` (136 alerts), UPGRADE `cryptography` 46.0.7 → 50.0.0 (4 alerts), ASSESS-AND-DEFER the remaining 2.**
   `pyproject.toml` + `uv.lock` remain the only dependency source. `tests/server/oracle/requirements.txt` is untouched.
-- Date: 2026-08-23 · Commit: `6651537` · Trigger: GitHub reported 142 open alerts on `main` before the first prod deploy.
+- Date: 2026-08-23 · Commit: `2494ae8` · Trigger: GitHub reported 142 open alerts on `main` before the first prod deploy.
 - Evidence: `gh api repos/siddicky/healthcare-rag-langgraph/dependabot/alerts?state=open --paginate`, `uv lock` resolver output, full offline suite.
 
 ## Before
@@ -66,21 +66,27 @@ project directly depends on. 46.0.7 → 50.0.0 clears all four ranges at once.
 Both upgrades are blocked by pins this repo holds deliberately, and forcing either would mean a cascading
 dependency migration during a submission freeze.
 
-**`langchain >= 1.3.9`** requires `langgraph-sdk >= 0.4.2, < 0.5.0` and `langgraph >= 1.3.0`. This project
-pins `langgraph-sdk >= 0.3, < 0.4` and `langgraph >= 1.2, < 2`, with a `constraint-dependencies` entry of
-`langgraph-api >= 0.13, < 0.14`. The resolver output is unambiguous:
+**`langchain >= 1.3.9`** is blocked by the **`langgraph-sdk`** pin, not by the `langgraph` range. The
+project's `langgraph >= 1.2, < 2` is not itself contradictory; the chain is that `langgraph >= 1.2.4`
+requires `langgraph-sdk >= 0.4.2, < 0.5.0`, while this project pins `langgraph-sdk >= 0.3, < 0.4`:
 
 ```
+Because langgraph>=1.2.4 depends on langgraph-sdk>=0.4.2,<0.5.0 ...
 And because your project depends on langgraph-sdk>=0.3,<0.4 and
 your project requires healthcare-rag[dev], we can conclude that your
 project's requirements are unsatisfiable.
 ```
 
-**`langchain-openai >= 1.1.14`** requires `openai >= 2.26.0`. This project pins `openai >= 1.76, < 2`, and
-that pin is load-bearing: `pyproject.toml` records that `openevals` — the multi-turn simulator behind
-`evals/multiturn_harness.py` — must resolve against `openai < 2` (see `evals/README.md`, "Multi-turn
-evals"). Loosening it to clear a low-severity advisory would trade a working regression harness for a
-vulnerability that is not reachable here.
+Reproduce with `uv lock --dry-run --upgrade-package 'langchain>=1.3.9'`.
+
+**`langchain-openai >= 1.1.14`** requires `openai >= 2.26.0`, against this project's direct
+`openai >= 1.76, < 2` pin (`pyproject.toml:8`). To be precise about what that pin is and is not:
+`openevals` does not itself require OpenAI 1.x. The `< 2` bound is a deliberate project-wide compatibility
+boundary — the evals extra notes that `openevals` pulls in `langchain-openai`, which must resolve against
+it — and **whether relaxing it would actually break anything has not been tested**. Crossing a major
+version of the OpenAI SDK during a submission freeze, to clear a low-severity advisory that is not
+reachable here, is not a trade worth making blind. An OpenAI 2.x migration is the honest prerequisite, not
+a pin bump.
 
 ### Neither vulnerable code path exists in this repo
 
@@ -110,13 +116,20 @@ that unblocks `langchain >= 1.3.9` without touching the `openai` pin.
 
 ## Verification
 
-- Full offline suite: **1729 passed, 1 skipped, 0 failed** (baseline before this work: 1725 passed,
-  3 skipped — `cryptography` 50.0.0 un-skips two conditional tests).
+- Full offline suite (macOS, local): **1729 passed, 1 skipped, 0 failed** (baseline before this work:
+  1725 passed, 3 skipped — `cryptography` 50.0.0 un-skips two conditional tests). On Linux CI the same
+  suite reports **1728 passed, 2 skipped** — one further test skips there. Quote the platform with the
+  number; neither is "the" suite count.
 - `tests/server` the way CI runs it: **89 passed, 1 skipped**.
-- Credential-free (`env -u LANGSMITH_API_KEY -u OPENAI_API_KEY -u LANGSMITH_FEEDBACK_PROJECT_ID`):
-  **1729 passed, 1 skipped, 0 failed**.
+- Credential-free: **1729 passed, 1 skipped, 0 failed**, verified by removing `.env` from disk entirely,
+  in a fresh venv, with the Weaviate container stopped. Note that `env -u VAR` does **not** produce a
+  credential-free run — `tests/conftest.py` calls `load_dotenv()` and reads the file straight back. The
+  authoritative evidence is GitHub Actions, which checks out without a `.env` at all.
 - PHI-path subsets (`test_safety_gate.py`, `test_privacy_sanitizer.py`, `graph/test_graph_privacy.py`):
-  **116 passed** — `cryptography` sits under the privacy and auth paths, so these were run specifically.
+  **116 passed**. To be accurate about why: `uv tree --locked --invert --package cryptography` resolves it
+  through `authlib -> weaviate-client`, `joserfc -> authlib`, and the dev-only `langgraph-api` — **not**
+  through the Presidio/spaCy privacy sanitizer. These subsets are useful regression coverage around the
+  auth and PHI paths, but they do not exercise the cryptography advisories themselves.
 - `uv lock --check` passes; the lockfile is consistent with `pyproject.toml`.
 
 ## Expected alert count after this lands
