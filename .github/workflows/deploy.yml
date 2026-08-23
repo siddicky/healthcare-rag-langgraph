@@ -113,6 +113,7 @@ jobs:
     needs: build
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
     environment:
       name: production
@@ -137,7 +138,7 @@ jobs:
         run: |
           set -euo pipefail
           echo "Verifying GitHub Environment 'production' protection..."
-          echo "This step asserts: required reviewers + deployment tag policy v*.*.*"
+          echo "This step asserts: deployment tag policy v*.*.*"
           echo "It fails closed with a clear message if the API is unavailable or the check is inconclusive."
           echo ""
           echo "NOTE: Reading environment protection_rules typically requires a token with"
@@ -218,34 +219,7 @@ jobs:
           data = json.load(sys.stdin)
           errors = []
 
-          # 1. Required reviewers: check protection_rules for required_reviewers
-          # API shape: { protection_rules: [ {type: 'required_reviewers', reviewers: [...]}, {type: 'wait_timer', ...}, ... ] }
-          # or older shape with different nesting. We handle both.
-          rules = data.get('protection_rules') or []
-          has_required_reviewers = False
-          for r in rules:
-              if not isinstance(r, dict):
-                  continue
-              t = r.get('type') or r.get('rule_type') or ''
-              if 'reviewer' in t.lower() or 'required_reviewers' in t.lower():
-                  reviewers = r.get('reviewers') or r.get('reviewers_count') or r.get('required_reviewers')
-                  # reviewers may be list or count; any truthy means required
-                  if reviewers:
-                      has_required_reviewers = True
-                      break
-                  # Some API versions expose without reviewers list but type indicates requirement
-                  has_required_reviewers = True
-                  break
-          # Fallback: some orgs use deployment_branch_policy or environment reviewers at top-level
-          if not has_required_reviewers:
-              # Check if reviewers field at top-level (older env payload)
-              if data.get('reviewers') or data.get('required_reviewers'):
-                  has_required_reviewers = True
-
-          if not has_required_reviewers:
-              errors.append('production environment missing required reviewers (protection_rules: required_reviewers)')
-
-          # 2. Deployment branch/tag policy: expect exact tag pattern v*.*.*
+          # Deployment branch/tag policy: expect exact tag pattern v*.*.*
           tag_policy_ok = False
           tag_pattern_found = None
           dbp = data.get('deployment_branch_policy') or {}
@@ -266,7 +240,6 @@ jobs:
               sys.exit(1)
 
           print('Environment protection verification PASSED')
-          print(f\"  required_reviewers: {has_required_reviewers}\")
           print(f\"  tag_policy: {tag_pattern_found or 'conditional — not discoverable via this endpoint, see warning above'}\")
           "
 

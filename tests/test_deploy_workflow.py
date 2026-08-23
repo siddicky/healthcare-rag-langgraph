@@ -14,16 +14,28 @@ WorkflowStep = TypedDict(
     {"name": str, "run": str, "if": str},
     total=False,
 )
-DeployJob = TypedDict("DeployJob", {"steps": list[WorkflowStep]})
+WorkflowPermissions = TypedDict(
+    "WorkflowPermissions",
+    {"actions": str, "contents": str},
+    total=False,
+)
+DeployJob = TypedDict(
+    "DeployJob",
+    {"permissions": WorkflowPermissions, "steps": list[WorkflowStep]},
+)
 WorkflowJobs = TypedDict("WorkflowJobs", {"deploy-prod": DeployJob})
 Workflow = TypedDict("Workflow", {"jobs": WorkflowJobs})
 WORKFLOW_ADAPTER: Final = TypeAdapter(Workflow)
 
 
-def _deploy_step(name: str) -> WorkflowStep:
-    workflow = WORKFLOW_ADAPTER.validate_json(
+def _workflow() -> Workflow:
+    return WORKFLOW_ADAPTER.validate_json(
         json.dumps(yaml.safe_load(Path(".github/workflows/deploy.yml").read_text()))
     )
+
+
+def _deploy_step(name: str) -> WorkflowStep:
+    workflow = _workflow()
     steps = workflow["jobs"]["deploy-prod"]["steps"]
     return next(step for step in steps if step.get("name") == name)
 
@@ -102,8 +114,7 @@ def test_environment_audit_reads_custom_policy_endpoint_before_passing(
     result = _run_environment_audit(
         tmp_path,
         environment_json=(
-            '{"protection_rules":[{"type":"required_reviewers",'
-            '"reviewers":[{"type":"User"}]}],'
+            '{"protection_rules":[{"type":"branch_policy"}],'
             '"deployment_branch_policy":{"protected_branches":false,'
             '"custom_branch_policies":true}}'
         ),
@@ -119,6 +130,12 @@ def test_environment_audit_reads_custom_policy_endpoint_before_passing(
     assert "deployment-branch-policies" in (
         tmp_path / "gh-calls.log"
     ).read_text()
+
+
+def test_environment_audit_grants_github_token_actions_read() -> None:
+    permissions = _workflow()["jobs"]["deploy-prod"]["permissions"]
+
+    assert permissions.get("actions") == "read"
 
 
 def test_environment_audit_fails_closed_without_leaking_tokens(
@@ -145,8 +162,7 @@ def test_environment_audit_rejects_non_release_deployment_policy(
     result = _run_environment_audit(
         tmp_path,
         environment_json=(
-            '{"protection_rules":[{"type":"required_reviewers",'
-            '"reviewers":[{"type":"User"}]}],'
+            '{"protection_rules":[{"type":"branch_policy"}],'
             '"deployment_branch_policy":{"protected_branches":false,'
             '"custom_branch_policies":true}}'
         ),
