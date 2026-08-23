@@ -396,22 +396,22 @@ async def test_crud_roundtrip_within_one_app() -> None:
 
 
 @pytest.mark.anyio
-async def test_state_lookup_saver_fault_is_not_masked(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    # F2 regression: a saver fault during state lookup must surface as a 500,
-    # never a fake 200 {"values": {}, ...}.
+async def test_state_lookup_saver_fault_is_not_masked() -> None:
+    # F2 regression: a state-plane fault during lookup must surface, never a
+    # fake 200 {"values": {}, ...}. The route resolves state through
+    # graph.aget_state, so the fault is raised from there.
     auth = _make_auth("member-1")
     app = _app_with_auth(auth)
+
+    class _BoomGraph:
+        async def aget_state(self, config: object) -> object:
+            raise RuntimeError("saver fault")
+
+    app.state.graphs = {"toy": _BoomGraph()}  # type: ignore[attr-defined]
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())
         await c.post("/threads", json={"thread_id": tid})
-
-        async def boom(config: object) -> object:
-            raise RuntimeError("saver fault")
-
-        monkeypatch.setattr(app.state.storage.saver, "aget_tuple", boom)  # type: ignore[attr-defined]
         with pytest.raises(RuntimeError, match="saver fault"):
             await c.get(f"/threads/{tid}/state")
 

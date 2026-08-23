@@ -3,6 +3,7 @@ from __future__ import annotations
 import inspect
 import json
 import logging
+from collections.abc import Mapping
 from datetime import UTC, datetime, timedelta
 from typing import ClassVar, Literal
 from uuid import UUID, uuid4
@@ -500,6 +501,19 @@ async def search_threads(request: Request) -> Response:
     return JSONResponse(sliced)
 
 
+def _thread_graph(request: Request, storage: Storage, thread_id: str) -> object | None:
+    graphs: Mapping[str, object] = request.app.state.graphs
+    if not graphs:
+        return None
+    for record in reversed(list(storage.runs.values())):
+        if record.get("thread_id") != thread_id:
+            continue
+        graph = graphs.get(str(record.get("assistant_id")))
+        if graph is not None:
+            return graph
+    return next(iter(graphs.values()))
+
+
 async def get_thread_state(request: Request) -> Response:
     storage: Storage = request.app.state.storage
     thread_id = request.path_params["thread_id"]
@@ -525,42 +539,31 @@ async def get_thread_state(request: Request) -> Response:
         # Validate UUID for checkpoint_id is not strictly required; treat as opaque
         config["configurable"] = {"thread_id": thread_id, "checkpoint_ns": "", "checkpoint_id": checkpoint_id}  # type: ignore[dict-item]
 
+    graph = _thread_graph(request, storage, thread_id)
+    if graph is None:
+        return JSONResponse({"values": {}, "next": [], "interrupts": []})
     try:
-        tup = await storage.saver.aget_tuple(config)  # type: ignore[arg-type]
+        snapshot = await graph.aget_state(config)  # type: ignore[attr-defined]
     except Exception:
-        # A saver fault is a data-plane error: surface it (500) instead of
-        # masquerading as an empty thread state. Unknown checkpoint ids and
-        # fresh threads legitimately return None from aget_tuple — those do
-        # not raise and keep their 200-empty parity shape.
+        # A state-plane fault must surface (500 on a live server), never
+        # masquerade as an empty thread state. Fresh threads return an empty
+        # snapshot without raising and keep the 200-empty parity shape.
         logger.warning(
-            "state lookup failed for thread %s: saver fault", thread_id, exc_info=True
+            "state lookup failed for thread %s: snapshot fault", thread_id, exc_info=True
         )
         raise
-
-    if tup is None:
-        return JSONResponse({"values": {}, "next": [], "checkpoint": None, "interrupts": []})
-
-    # Extract checkpoint values
-    try:
-        values = dict(tup.checkpoint.get("channel_values", {})) if hasattr(tup, "checkpoint") else {}
-    except (AttributeError, TypeError, KeyError):
-        logger.debug("thread %s: unremarkable checkpoint channel_values shape", thread_id, exc_info=True)
-        values = {}
-    try:
-        nxt = list(tup.next) if hasattr(tup, "next") else []
-    except (AttributeError, TypeError, KeyError):
-        logger.debug("thread %s: unremarkable checkpoint next shape", thread_id, exc_info=True)
-        nxt = []
-    # LangGraph state shape for OSS parity: return values + next + config
+    # Pending interrupts live on the graph snapshot's tasks, never in channel
+    # values — the oracle surfaces them as {id, value} entries.
+    interrupts = [
+        {"id": pending.id, "value": pending.value}
+        for task in snapshot.tasks
+        for pending in (task.interrupts or [])
+    ]
     payload: dict[str, object] = {
-        "values": values,
-        "next": nxt,
-        "checkpoint": getattr(tup, "checkpoint", None),
-        "config": getattr(tup, "config", None),
-        "interrupts": values.get("interrupts", []) if isinstance(values, dict) else [],
+        "values": snapshot.values,
+        "next": list(snapshot.next),
+        "interrupts": interrupts,
     }
-    if hasattr(tup, "metadata"):
-        payload["metadata"] = tup.metadata
     return JSONResponse(_to_jsonable(payload))  # type: ignore[arg-type]
 
 

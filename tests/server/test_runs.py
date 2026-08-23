@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import AsyncIterator
 from dataclasses import dataclass
 from typing import TypedDict
+from uuid import uuid4
 
 import anyio
 import httpx
@@ -394,3 +395,37 @@ async def test_client_principal_dropped_when_server_supplies_none(harness: Harne
     assert isinstance(stored_configurable, dict)
     assert "langgraph_auth_user" not in stored_configurable
     assert stored_configurable["unrelated"] == "preserved"
+
+
+@pytest.mark.anyio
+async def test_state_surfaces_pending_interrupts(harness: Harness) -> None:
+    # Regression (deployed-smoke check 3, second root cause): pending
+    # interrupts live on the graph snapshot's tasks, not channel values —
+    # GET /threads/{id}/state must surface them as {id, value} entries the
+    # way the pinned oracle does, or a member never sees the interrupt card.
+    # The harness thread ("thread-1") is not a UUID, so this test drives a
+    # properly-shaped thread of its own.
+    thread_id = str(uuid4())
+    storage = harness.app.state.storage  # type: ignore[attr-defined]
+    storage.threads[thread_id] = {"thread_id": thread_id}
+    created = await harness.client.post(
+        f"/threads/{thread_id}/runs", json=body({"mode": "interrupt"})
+    )
+    assert created.status_code == 200
+    run_id = created.json()["run_id"]
+    with anyio.fail_after(5):
+        while True:
+            record = (
+                await harness.client.get(f"/threads/{thread_id}/runs/{run_id}")
+            ).json()
+            if record["status"] == "interrupted":
+                break
+            await checkpoint()
+    state = await harness.client.get(f"/threads/{thread_id}/state")
+    assert state.status_code == 200
+    interrupts = state.json().get("interrupts")
+    assert isinstance(interrupts, list) and len(interrupts) == 1
+    entry = interrupts[0]
+    assert isinstance(entry, dict)
+    assert isinstance(entry.get("id"), str) and entry["id"]
+    assert entry.get("value") == {"kind": "approval"}
