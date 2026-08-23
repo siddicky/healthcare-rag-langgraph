@@ -20,6 +20,7 @@ This orchestrated approach, powered by technologies like Weaviate, OpenAI, LangG
 - [Coach Agent Platform](#coach-agent-platform)
 - [Retrieval Engine Details](#retrieval-engine-details)
 - [Setup & Execution](#setup--execution)
+- [Deploying](#deploying)
 - [Routing Experiment Status](#routing-experiment-status)
 - [Example Query Flow](#example-query-flow)
 - [Detailed Answer Validation and Hallucination Handling](#detailed-answer-validation-and-hallucination-handling)
@@ -238,6 +239,37 @@ through the real pipeline as a LangSmith experiment and writes `evals/results/<e
 
 **Docs for humans and agents** — `AGENTS.md` (conventions), `openwiki/` (generated repo wiki,
 `make wiki-update` to refresh).
+
+---
+
+## Deploying
+
+Production runs the clean-room OSS Agent Server (`server/`) on Fly.io — prod-only,
+no staging. Releases are tag-driven with a human approval click:
+
+1. `make release TAG=vX.Y.Z` — hermetic validation only; it prints the exact
+   `git tag` / `git push` commands, the human runs them.
+2. The pushed tag triggers `.github/workflows/deploy.yml`: build the image to
+   GHCR, then the `deploy-prod` job waits for the GitHub `production`
+   environment approval (required reviewer + `v*.*.*` tag policy, verified via API).
+3. On approval it deploys the immutable image digest to Fly, waits on `/ok`,
+   and runs the live synthetic smoke (`scripts/deployed_smoke.py`, 10 checks,
+   tracing off, redacted log artifact).
+
+Rollback is manual by design (a red pipeline leaves the running version in
+place): `fly deploy --image ghcr.io/<repo>@sha256:<previous-digest>` then re-run
+the smoke — full runbook in [`docs/deploy.md`](docs/deploy.md), including the
+one-time bootstrap, secret seeding, ingest, and the post-first-deploy rollback
+exercise.
+
+Caveats: server state (threads/store/runs/crons) is **in-memory** — a deploy or
+restart wipes it (deliberate this stage; the storage seam in `server/storage.py`
+limits a future persistence migration). The first production deploy additionally
+requires the recorded compliance sign-off (§0 of the runbook). Infrastructure
+cost is ~$18–25/month (two always-on Fly machines + one 1 GB Weaviate volume)
+plus per-release synthetic smoke AI usage. The credential-less Studio path
+(`SERVER_LOCAL_DEV=1`, `make server-dev`) is a **development-only** convenience —
+it is provably off in the Fly image and production environments.
 
 ---
 
