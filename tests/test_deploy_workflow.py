@@ -16,7 +16,7 @@ WorkflowStep = TypedDict(
 )
 WorkflowPermissions = TypedDict(
     "WorkflowPermissions",
-    {"actions": str, "contents": str},
+    {"actions": str, "contents": str, "packages": str},
     total=False,
 )
 DeployJob = TypedDict(
@@ -146,6 +146,21 @@ def test_deploy_workflow_has_no_manual_dispatch_trigger() -> None:
     workflow_text = Path(".github/workflows/deploy.yml").read_text()
 
     assert "workflow_dispatch" not in workflow_text
+
+
+def test_fly_deploy_mirrors_private_ghcr_image_to_fly_registry() -> None:
+    workflow = _workflow()
+    deploy_job = workflow["jobs"]["deploy-prod"]
+    step_names = {step.get("name") for step in deploy_job["steps"]}
+    deploy_script = _deploy_step("Deploy to Fly (immutable digest)").get("run")
+
+    assert deploy_job["permissions"].get("packages") == "read"
+    assert "Log in to GHCR (for registry mirror)" in step_names
+    assert deploy_script is not None
+    assert "docker buildx imagetools create" in deploy_script
+    assert 'IMAGE="registry.fly.io/hc-rag-server-prod@${FLY_DIGEST}"' in (
+        deploy_script
+    )
 
 
 def test_release_tag_commit_must_be_reachable_from_origin_main() -> None:
