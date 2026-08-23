@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json as _json
+import logging
 from collections import deque
 from collections.abc import AsyncIterator, Mapping
 from dataclasses import dataclass, field
@@ -13,11 +14,27 @@ from anyio.abc import TaskGroup
 from langgraph.types import Command
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
+logger = logging.getLogger("MedicalRAG")
+
 from server.storage import Storage
 
 JSONValue: TypeAlias = JsonValue
 
 QUEUE_LIMIT: Final = 100
+
+# The authenticated principal is server-controlled state. It has exactly one
+# writer (`RunEngine._graph_config`, from the request's authenticated user) and
+# a client-supplied value is never trusted anywhere.
+AUTH_USER_KEY: Final = "langgraph_auth_user"
+
+
+def _sanitized_config(config: dict[str, JSONValue]) -> dict[str, JSONValue]:
+    """Strip any client-supplied principal from a run config."""
+    configurable = config.get("configurable")
+    if not isinstance(configurable, dict) or AUTH_USER_KEY not in configurable:
+        return config
+    scrubbed = {k: v for k, v in configurable.items() if k != AUTH_USER_KEY}
+    return {**config, "configurable": scrubbed}
 
 
 def _to_jsonable(obj: object) -> object:
@@ -114,6 +131,7 @@ class RunRuntime:
 
     request: RunRequest
     thread_id: str
+    auth_user: dict[str, JSONValue] | None = None
     done: anyio.Event = field(default_factory=anyio.Event)
     changed: anyio.Event = field(default_factory=anyio.Event)
     events: list[tuple[str, JSONValue]] = field(default_factory=list)
@@ -163,7 +181,13 @@ class RunEngine:
             if scope is not None:
                 scope.cancel()
 
-    async def submit(self, thread_id: str, request: RunRequest) -> dict[str, object]:
+    async def submit(
+        self,
+        thread_id: str,
+        request: RunRequest,
+        *,
+        auth_user: dict[str, JSONValue] | None = None,
+    ) -> dict[str, object]:
         replay_key = self._replay_key(thread_id, request)
         if replay_key is not None and replay_key in self.command_replays:
             return self.storage.runs[self.command_replays[replay_key]]
@@ -184,14 +208,21 @@ class RunEngine:
             "thread_id": thread_id,
             "assistant_id": request.assistant_id,
             "input": request.input,
-            "config": request.config,
+            # The persisted record must describe the run that actually happened.
+            # `_graph_config` drops any client-supplied `langgraph_auth_user`
+            # before execution, so storing the raw client config would echo a
+            # forged principal back on GET /runs/{id} and hand it to anything
+            # that reads the record instead of the runtime.
+            "config": _sanitized_config(request.config),
             "status": "pending",
             "created_at": datetime.now(UTC).isoformat(),
         }
         if request.command is not None:
             record["command"] = request.command.model_dump(mode="json")
         self.storage.runs[run_id] = record
-        self.runtime[run_id] = RunRuntime(request=request, thread_id=thread_id)
+        self.runtime[run_id] = RunRuntime(
+            request=request, thread_id=thread_id, auth_user=auth_user
+        )
         if replay_key is not None:
             self.command_replays[replay_key] = run_id
         if thread_id in self.active:
@@ -243,6 +274,7 @@ class RunEngine:
         except anyio.get_cancelled_exc_class():
             cancelled = True
         except Exception:  # noqa: BLE001 - executor boundary records arbitrary graph failures.
+            logger.error("run %s failed on graph execution", run_id, exc_info=True)
             record["status"] = "error"
         if cancelled:
             record["status"] = "interrupted"
@@ -267,6 +299,13 @@ class RunEngine:
     def _graph_config(self, runtime: RunRuntime) -> dict[str, JSONValue]:
         configurable = runtime.request.config.get("configurable", {})
         merged = dict(configurable) if isinstance(configurable, dict) else {}
+        # The authenticated principal is server-controlled state, mirroring the
+        # real Agent Server: a client-supplied `langgraph_auth_user` is never
+        # trusted, and graphs (coach memory/gate) read the member identity
+        # from it.
+        merged.pop(AUTH_USER_KEY, None)
+        if runtime.auth_user is not None:
+            merged[AUTH_USER_KEY] = dict(runtime.auth_user)
         merged["thread_id"] = runtime.thread_id
         return {**runtime.request.config, "configurable": merged}
 

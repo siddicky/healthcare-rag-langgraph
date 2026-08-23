@@ -5,10 +5,13 @@ Audience: the next engineer or AI coding agent working on this repo. Optimise fo
 
 Please make sure the wiki covers, as separate pages where sensible:
 
-1. **Architecture overview** — the speculative-execution orchestrator
-   (`healthcare_rag/orch/`): branches, supersession, how the "best" answer is
-   selected, and the exact stage order (clarify / decompose / retrieve /
-   evaluate / answer / validate / follow-ups). Include a diagram.
+1. **Architecture overview** — the LangGraph `StateGraph` runtime
+   (`healthcare_rag/graph/`): graph shape (`build.py`), routing decisions
+   (`routers.py`), the nodes in `graph/nodes/`, and the exact stage order
+   (safety gate / clarify / decompose / retrieve / evaluate / answer / validate
+   / follow-ups). Include a diagram. Note: the pre-port speculative-execution
+   orchestrator (`healthcare_rag/orch/`) was deleted in the Phase-2 port
+   (`3435caf`) — do not document it.
 2. **Processors** (`healthcare_rag/processors/`) — one section per processor,
    which prompt template it uses (`prompts/*.yaml.j2`), which Pydantic model it
    returns, and which model tier it runs on.

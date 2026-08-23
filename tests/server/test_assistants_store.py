@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import json
-import os
 from typing import Any
 
 import httpx
@@ -16,7 +15,7 @@ from starlette.routing import Route
 from server.auth import AuthMiddleware, ScopeUser
 from server.config import ServerConfig
 from server.manifest import UNIMPLEMENTED_PATHS
-from server.storage import Storage, create_storage
+from server.storage import Storage
 
 # ---------------------------------------------------------------------------
 # Helpers to build minimal apps mounting the routes under test
@@ -188,10 +187,9 @@ class FakeEmbeddings:
 
 
 def _make_semantic_store() -> Storage:
-    # If OPENAI_API_KEY available, use real embeddings; else fake
-    if os.getenv("OPENAI_API_KEY"):
-        cfg = _make_graph_config()
-        return create_storage(cfg)
+    # Always fake: the offline suite must not depend on an OpenAI credential
+    # (a placeholder key from .env.example would still reach the network), and
+    # fake embeddings make the ranking assertion deterministic.
     fake = FakeEmbeddings()
     # InMemoryStore expects Embeddings object with embed_documents etc.
     # Wrap FakeEmbeddings as Embeddings-like via duck typing: InMemoryStore checks via ensure_embeddings
@@ -318,13 +316,8 @@ async def test_store_put_get_search_roundtrip_with_semantic():
         fval = first.get("value", first) if isinstance(first, dict) else {}
         # fval may be dict with text
         text0 = fval.get("text") if isinstance(fval, dict) else ""
-        if os.getenv("OPENAI_API_KEY"):
-            # real embeddings may rank slightly differently but cats should be in top
-            texts = [(it.get("value", {}).get("text") if isinstance(it.get("value"), dict) else str(it)) for it in items]
-            assert "cats meow" in texts[:2], f"semantic ranking expected cats in top2, got {texts}"
-        else:
-            # mocked deterministic: cats first
-            assert text0 == "cats meow", f"expected cats first with mocked embeddings, got {first}"
+        # mocked deterministic: cats first
+        assert text0 == "cats meow", f"expected cats first with mocked embeddings, got {first}"
         print(json.dumps({"search": search.json()}, indent=2))
 
 

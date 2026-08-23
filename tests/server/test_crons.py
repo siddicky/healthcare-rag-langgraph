@@ -31,9 +31,17 @@ NOW = datetime(2026, 1, 1, 12, tzinfo=UTC)
 @dataclass(slots=True)
 class FakeRunEngine(RunEngine):
     submissions: list[tuple[str, RunRequest]] = field(default_factory=list)
+    submitted_principals: list[dict[str, object] | None] = field(default_factory=list)
 
-    async def submit(self, thread_id: str, request: RunRequest) -> dict[str, object]:
+    async def submit(
+        self,
+        thread_id: str,
+        request: RunRequest,
+        *,
+        auth_user: dict[str, object] | None = None,
+    ) -> dict[str, object]:
         self.submissions.append((thread_id, request))
+        self.submitted_principals.append(auth_user)
         return {"run_id": f"run-{len(self.submissions)}"}
 
 

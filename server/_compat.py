@@ -3,6 +3,7 @@ from __future__ import annotations
 import sys
 from dataclasses import dataclass
 from importlib import import_module
+from importlib.machinery import ModuleSpec
 from types import ModuleType
 from typing import Any, Final, Literal
 
@@ -75,8 +76,16 @@ async def _get_store() -> _StoreCompat:
     return _shared_store
 
 
-def install_langgraph_api_compat(store: InMemoryStore) -> bool:
-    """Install the original compatibility modules only when the real API is absent."""
+def install_langgraph_api_compat(store: InMemoryStore, *, force: bool = False) -> bool:
+    """Install the original compatibility modules.
+
+    With ``force=False`` the modules are installed only when the real
+    ``langgraph_api`` package is absent (dev venvs keep the real package for
+    ``langgraph dev`` parity). With ``force=True`` the shim always replaces
+    ``langgraph_api`` in this process: the OSS server serves graphs through
+    its own shared store, and request-time imports of the real package (whose
+    module-level config demands REDIS_URI and friends) must not execute.
+    """
     global _shared_store
     try:
         _ = import_module("langgraph_api")
@@ -84,11 +93,14 @@ def install_langgraph_api_compat(store: InMemoryStore) -> bool:
         if error.name != "langgraph_api":
             raise
     else:
-        return False
+        if not force:
+            return False
 
     _shared_store = _StoreCompat(store)
     api_module = ModuleType("langgraph_api")
+    api_module.__spec__ = ModuleSpec("langgraph_api", None)
     store_module = ModuleType("langgraph_api.store")
+    store_module.__spec__ = ModuleSpec("langgraph_api.store", None)
     api_module.__dict__["__version__"] = API_VERSION
     store_module.__dict__["get_store"] = _get_store
     api_module.__dict__["store"] = store_module

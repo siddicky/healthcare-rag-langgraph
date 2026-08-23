@@ -177,3 +177,43 @@ def test_no_langgraph_api_import():
         text = p.read_text()
         assert "from langgraph_api" not in text, f"{p} imports langgraph_api"
         assert "import langgraph_api" not in text, f"{p} imports langgraph_api"
+
+
+def test_compat_shim_force_overrides_real_package(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Regression (venv REDIS_URI crash): with force=True the shim must
+    # replace langgraph_api even when a real module is already importable,
+    # so request-time imports never execute the real package's config.
+    import sys
+    from importlib.machinery import ModuleSpec
+    from types import ModuleType
+
+    from langgraph.store.memory import InMemoryStore
+
+    from server import _compat
+
+    original_api = sys.modules.get("langgraph_api")
+    original_store = sys.modules.get("langgraph_api.store")
+    fake = ModuleType("langgraph_api")
+    fake.__spec__ = ModuleSpec("langgraph_api", None)
+    fake.__dict__["__version__"] = "9.9.9"
+    try:
+        sys.modules["langgraph_api"] = fake
+
+        assert _compat.install_langgraph_api_compat(InMemoryStore(), force=True) is True
+        assert sys.modules["langgraph_api"] is not fake
+        assert sys.modules["langgraph_api"].__version__ == "0.12.6"  # type: ignore[attr-defined]
+
+        sys.modules["langgraph_api"] = fake
+        assert _compat.install_langgraph_api_compat(InMemoryStore(), force=False) is False
+        assert sys.modules["langgraph_api"] is fake
+    finally:
+        for key, module in (
+            ("langgraph_api", original_api),
+            ("langgraph_api.store", original_store),
+        ):
+            if module is None:
+                sys.modules.pop(key, None)
+            else:
+                sys.modules[key] = module

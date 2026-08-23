@@ -68,6 +68,11 @@ async def _client(
     import healthcare_rag.agent.http_app as custom
     import server.app as app_module
 
+    # Topology is not about embeddings: with any OPENAI_API_KEY present (a
+    # placeholder from .env.example included) create_storage builds a real
+    # OpenAI-backed index and store writes reach the network. Drop the key so
+    # these suites take the documented index=None fallback and stay offline.
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
     if feedback_error is None:
         monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")

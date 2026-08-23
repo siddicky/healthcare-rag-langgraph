@@ -148,7 +148,7 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
         app.state.storage = storage
         await _setup_component(storage.saver)
         await _setup_component(storage.store)
-        _ = install_langgraph_api_compat(storage.store)
+        _ = install_langgraph_api_compat(storage.store, force=True)
         raw_graphs = load_raw_graphs(cfg)
         attached_graphs = attach_graphs(raw_graphs, storage)
         app.state.graphs = attached_graphs

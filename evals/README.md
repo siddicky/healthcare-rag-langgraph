@@ -1,7 +1,7 @@
 # Evals — "did this change make things better or worse?"
 
 This package runs the golden question set through the **real** pipeline
-(Weaviate + OpenAI + the speculative orchestrator), records every stage as a
+(Weaviate + OpenAI + the LangGraph `StateGraph` runtime), records every stage as a
 LangSmith trace, scores each answer, and writes a report you can diff against
 the last one. It is the regression safety-net for the whole system: retrieval,
 answer quality, safety behaviour, latency and cost all in one run.
@@ -35,10 +35,9 @@ uv run python evals/run_agent_multiturn.py --offline
 uv run python evals/check_agent_parity.py
 ```
 
-The intended future Make targets are `eval-agent` and
-`eval-agent-multiturn`; the Makefile is deliberately unchanged until those
-names are coordinated. Offline reports use deterministic fake judge seeds;
-deployed evaluation continues to use the real model gateway.
+Run these through `make eval-agent` and `make eval-agent-multiturn`. Offline
+reports use deterministic fake judge seeds; deployed evaluation continues to use
+the real model gateway.
 
 ## What gets measured
 
@@ -69,7 +68,7 @@ the bill.
 
 ## Golden dataset
 
-`golden_dataset.json` is the source of truth (45 examples, hand-written from the
+`golden_dataset.json` is the source of truth (86 examples, hand-written from the
 monograph chunks). Categories: `factual_single`, `factual_multi`, `cross_drug`,
 `ambiguous_followup` (with seeded `history`), `out_of_scope`,
 `unsafe_personal_advice`, `adversarial_hallucination`, `pii_or_phi`.

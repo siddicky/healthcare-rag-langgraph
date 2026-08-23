@@ -26,7 +26,13 @@ from starlette.responses import JSONResponse, Response
 from starlette.routing import Route
 
 from server.auth import require_scope_match
-from server.run_engine import QueueFull, RunConflict, RunEngine, RunRequest
+from server.run_engine import (
+    JSONValue,
+    QueueFull,
+    RunConflict,
+    RunEngine,
+    RunRequest,
+)
 from server.storage import Storage
 
 CRON_LIMIT: Final = 500
@@ -100,7 +106,11 @@ class CronSearch(BaseModel):
 
 class RunSubmitter(Protocol):
     async def submit(
-        self, thread_id: str, request: RunRequest
+        self,
+        thread_id: str,
+        request: RunRequest,
+        *,
+        auth_user: dict[str, JSONValue] | None = None,
     ) -> dict[str, object]: ...
 
 
@@ -134,8 +144,19 @@ async def _scope(
         return JSONResponse({"detail": error.detail}, status_code=error.status_code)
 
 
+def _principal(request: Request) -> dict[str, object]:
+    user = request.scope.get("user")
+    if isinstance(user, Mapping):
+        return dict(user)
+    identity = getattr(user, "identity", None)
+    return {"identity": identity} if isinstance(identity, str) else {}
+
+
 def _record(
-    payload: CronPayload, thread_id: str | None, now: datetime
+    payload: CronPayload,
+    thread_id: str | None,
+    now: datetime,
+    auth_user: dict[str, object] | None = None,
 ) -> dict[str, object]:
     cron_id = str(uuid4())
     following = next_run_date(payload.schedule, payload.timezone, now)
@@ -162,6 +183,7 @@ def _record(
         "enabled": payload.enabled,
         "user_id": payload.metadata.get("user_id"),
         "_timezone": payload.timezone,
+        "auth_user": auth_user,
     }
 
 
@@ -182,7 +204,7 @@ async def _create(request: Request, thread_id: str | None) -> Response:
             status_code=503,
             headers={"Retry-After": "1"},
         )
-    record = _record(parsed, thread_id, datetime.now(UTC))
+    record = _record(parsed, thread_id, datetime.now(UTC), _principal(request))
     if scope is not None:
         require_scope_match(record, scope)
     storage.crons[str(record["cron_id"])] = record
@@ -308,8 +330,13 @@ async def run_due_crons(engine: RunSubmitter, storage: Storage, now: datetime) -
         request = RunRequest.model_validate(
             payload_value | {"multitask_strategy": "enqueue"}
         )
+        cron_principal = record.get("auth_user")
         try:
-            _ = await engine.submit(target, request)
+            _ = await engine.submit(
+                target,
+                request,
+                auth_user=dict(cron_principal) if isinstance(cron_principal, dict) else None,
+            )
         except (QueueFull, RunConflict):
             continue
         following = next_run_date(

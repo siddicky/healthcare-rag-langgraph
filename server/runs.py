@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator
+from collections.abc import AsyncIterator, Mapping
 
 from langgraph_sdk import Auth
 from pydantic import ValidationError
@@ -24,6 +24,14 @@ from server.run_engine import (
 
 def _engine(request: Request) -> RunEngine:
     return request.app.state.run_engine
+
+
+def _auth_user(request: Request) -> dict[str, JSONValue]:
+    user = request.scope.get("user")
+    if isinstance(user, Mapping):
+        return dict(user)
+    identity = getattr(user, "identity", None)
+    return {"identity": identity} if isinstance(identity, str) else {}
 
 
 def _lookup(request: Request) -> tuple[RunEngine, str, str]:
@@ -67,7 +75,7 @@ async def create_run(request: Request) -> Response:
         )
         if scope_filter is not None:
             require_scope_match(engine.storage.threads[thread_id], scope_filter)
-        record = await engine.submit(thread_id, parsed)
+        record = await engine.submit(thread_id, parsed, auth_user=_auth_user(request))
     except Auth.exceptions.HTTPException as exc:
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
     except RunConflict:

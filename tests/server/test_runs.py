@@ -9,6 +9,7 @@ import httpx
 import pytest
 from anyio.lowlevel import checkpoint
 from httpx_sse import aconnect_sse
+from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
 from langgraph.types import interrupt
 from langgraph_sdk import Auth
@@ -36,6 +37,9 @@ class ToyFailure(RuntimeError):
     pass
 
 
+_AUTH_USER_SEEN: list[object] = []
+
+
 @dataclass(frozen=True, slots=True)
 class Harness:
     app: object
@@ -46,8 +50,25 @@ class Harness:
 @pytest.fixture
 async def harness(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[Harness]:
     control = ToyControl(started=anyio.Event(), release=anyio.Event())
+    # Reset per test, not per node call: clearing inside the node would make
+    # `len(_AUTH_USER_SEEN) == 1` trivially true and stop it proving that the
+    # graph ran exactly once.
+    _AUTH_USER_SEEN.clear()
 
-    async def step(state: ToyState) -> ToyState:
+    # `config` MUST be annotated exactly `RunnableConfig` (not `RunnableConfig |
+    # None`): this module uses `from __future__ import annotations`, so LangGraph
+    # sees the raw annotation *string* and only matches "RunnableConfig" /
+    # "Optional[RunnableConfig]" (langgraph/_internal/_runnable.py KWARGS_CONFIG_KEYS).
+    # Any other spelling silently stops config injection and this node would
+    # observe nothing at all — which is exactly how the principal assertion below
+    # rotted into a no-op.
+    async def step(state: ToyState, config: RunnableConfig) -> ToyState:
+        configurable = config.get("configurable", {})
+        _AUTH_USER_SEEN.append(
+            configurable.get("langgraph_auth_user")
+            if isinstance(configurable, dict)
+            else None
+        )
         match state.get("mode"):
             case "block":
                 control.started.set()
@@ -303,3 +324,37 @@ async def test_queue_bound_applies_to_idle_threads(harness: Harness) -> None:
             json={"action": "interrupt", "wait": True},
         )
         harness.control.release.set()
+
+
+@pytest.mark.anyio
+async def test_run_config_receives_server_principal_not_client(harness: Harness) -> None:
+    # Regression (deployed-smoke check 3): the real Agent Server injects the
+    # authenticated principal as configurable.langgraph_auth_user; a
+    # client-supplied value must never survive.
+    forged = await create(
+        harness,
+        body(
+            {"value": 1},
+            config={"configurable": {"langgraph_auth_user": {"identity": "forged"}}},
+        ),
+    )
+    assert forged.status_code == 200
+    record = await wait_status(harness, forged.json()["run_id"], "success")
+    assert record["status"] == "success"
+    # The node must have actually run and actually received a config. An empty
+    # list here means config injection is broken, NOT that the invariant holds.
+    assert len(_AUTH_USER_SEEN) == 1, "graph node never observed a RunnableConfig"
+    injected = _AUTH_USER_SEEN[0]
+    assert isinstance(injected, dict)
+    # Server principal wins...
+    assert injected.get("identity") == "member-1"
+    # ...and the client's forged principal is gone, not merged alongside it.
+    assert injected == {"identity": "member-1", "is_authenticated": True}
+    assert "forged" not in str(injected)
+    # The forged value must also not survive on the persisted run record, which
+    # is what a later resume/replay would read back.
+    stored_config = record["config"]
+    assert isinstance(stored_config, dict)
+    stored_configurable = stored_config.get("configurable", {})
+    assert isinstance(stored_configurable, dict)
+    assert stored_configurable.get("langgraph_auth_user") != {"identity": "forged"}
