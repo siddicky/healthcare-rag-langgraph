@@ -956,7 +956,14 @@ class DeployedSmoke:
                     records.append({"id": str(feedback.id)})
             return records
 
-        feedback = await to_thread.run_sync(read_feedback)
+        # Real LangSmith ingestion is eventually consistent: a read
+        # immediately after the 201 can legitimately see zero records.
+        feedback: list[JSONValue] = []
+        for _ in range(12):
+            feedback = await to_thread.run_sync(read_feedback)
+            if feedback:
+                break
+            await anyio.sleep(5.0)
         require(
             len(feedback) == 1, "feedback read-back did not match exactly one record"
         )
