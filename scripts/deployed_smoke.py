@@ -897,11 +897,14 @@ class DeployedSmoke:
                 PROJECT_ROOT / "healthcare_rag/agent/documents.py",
             )
         )
+        # Raw strings: the parens are literal API names; unescaped "(" is an
+        # re.error that only fires when this scan actually runs (never did on
+        # the hermetic platform).
         forbidden_writes = (
-            "write_bytes(",
+            r"write_bytes\(",
             "NamedTemporaryFile",
-            "mkstemp(",
-            "open(.*wb",
+            r"mkstemp\(",
+            r"open\(.*wb",
         )
         require(
             all(re.search(pattern, source) is None for pattern in forbidden_writes),
