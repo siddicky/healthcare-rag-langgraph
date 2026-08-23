@@ -153,14 +153,21 @@ def make_settings(*disabled: str) -> GraphSettings:
 
 
 @pytest.fixture
-def install_resources() -> Iterator[ResourceInstaller]:
+def install_resources(seal_offline_resources) -> Iterator[ResourceInstaller]:
+    """Install a fully faked `Resources` as the process-wide singleton.
+
+    `seal_offline_resources` is not optional: the retrieve node opens the
+    Weaviate client before handing it to the search callable, so without it
+    these tests only pass on a machine that happens to be running Weaviate.
+    """
+
     def install(
         gateway: FakeGateway,
         *,
         retriever: FakeRetriever | None = None,
         disabled: tuple[str, ...] = (),
     ) -> Resources:
-        resources = Resources(make_settings(*disabled))
+        resources = seal_offline_resources(Resources(make_settings(*disabled)))
         resources._gateway = gateway
         if retriever is not None:
             resources.hybrid_search = retriever
@@ -168,4 +175,4 @@ def install_resources() -> Iterator[ResourceInstaller]:
         return resources
 
     yield install
-    override(Resources(make_settings()))
+    override(seal_offline_resources(Resources(make_settings())))

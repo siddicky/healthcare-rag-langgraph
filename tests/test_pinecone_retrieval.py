@@ -436,16 +436,19 @@ def _retrieve_state() -> dict[str, Any]:
 
 
 @pytest.fixture
-def node_resources(monkeypatch: pytest.MonkeyPatch):
+def node_resources(monkeypatch: pytest.MonkeyPatch, seal_offline_resources):
+    """Install a faked `Resources`; see `seal_offline_resources` for why sealing
+    the client slots is what keeps these tests off the network."""
+
     def install(search: RecordingSearch, **overrides: Any) -> Resources:
-        resources = Resources(make_settings(**overrides))
+        resources = seal_offline_resources(Resources(make_settings(**overrides)))
         resources._gateway = RoutingGateway()
         resources.hybrid_search = search
         resources_module.override(resources)
         return resources
 
     yield install
-    resources_module.override(Resources(make_settings()))
+    resources_module.override(seal_offline_resources(Resources(make_settings())))
 
 
 async def test_default_path_passes_no_limit_and_never_reranks(
@@ -494,7 +497,7 @@ async def test_reranking_widens_the_search_then_trims_to_top_k(
 
 
 async def test_a_search_without_a_limit_kwarg_is_never_handed_one(
-    node_resources, monkeypatch: pytest.MonkeyPatch
+    node_resources, seal_offline_resources, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     """Injected fixtures predate the kwarg; passing it would be a TypeError."""
     monkeypatch.setattr(
@@ -507,7 +510,7 @@ async def test_a_search_without_a_limit_kwarg_is_never_handed_one(
         return QueryResultList(results=[])
 
     assert retrieve_node.accepts_limit(legacy_search) is False
-    resources = Resources(make_settings(reranker="pinecone"))
+    resources = seal_offline_resources(Resources(make_settings(reranker="pinecone")))
     resources._gateway = RoutingGateway()
     resources.hybrid_search = legacy_search
     resources_module.override(resources)
