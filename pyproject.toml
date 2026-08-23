@@ -80,7 +80,14 @@ include = ["healthcare_rag*", "evals*", "server*"]
 healthcare_rag = ["prompts/*.yaml.j2"]
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
+# strict, not "auto": in auto mode pytest-asyncio hooks `pytest_fixture_setup`
+# for every unmarked async fixture and races the anyio plugin for ownership of
+# the async-generator fixtures in tests/server (see tests/server/conftest.py).
+# Strict mode makes ownership explicit -- each async test carries its own
+# runner marker (`pytest.mark.asyncio` or `pytest.mark.anyio`) -- so the two
+# plugins never contend and the outcome no longer depends on plugin
+# registration order.
+asyncio_mode = "strict"
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-m 'not judge'"   # judge tests are opt-in: pytest -m judge

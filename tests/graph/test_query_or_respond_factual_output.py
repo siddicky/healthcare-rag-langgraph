@@ -9,6 +9,7 @@ from healthcare_rag.processors.social_responses import social_response
 from .query_or_respond_fakes import _install, _state
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "content",
     [
@@ -85,6 +86,7 @@ async def test_social_factual_medical_prose_uses_deterministic_fallback(
     assert model.bound.messages[-1].content == "Hello"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("intent", "content"),
     [

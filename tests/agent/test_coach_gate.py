@@ -62,6 +62,7 @@ async def _route(
     return command.update["route"], command.goto
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("question", "category"),
     [
@@ -85,6 +86,7 @@ async def test_safety_decisions_route_to_s(
     assert target == "short_circuit"
 
 
+@pytest.mark.asyncio
 async def test_erasure_routes_before_coaching() -> None:
     # Given/When
     route, target = await _route("Please help me delete my medication history")
@@ -94,6 +96,7 @@ async def test_erasure_routes_before_coaching() -> None:
     assert target == "erase_my_data"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "question",
     [
@@ -112,6 +115,7 @@ async def test_medical_content_and_residue_route_to_a(question: str) -> None:
     assert target == "rag_relay"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("question", "expected_parse"),
     [
@@ -138,6 +142,7 @@ async def test_explained_coaching_intents_route_to_b(
     assert target == "coach_agent"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "question",
     [
@@ -161,6 +166,7 @@ async def test_unexplained_mixed_medical_tokens_route_to_a(question: str) -> Non
     assert target == "rag_relay"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("question", ["Hello", "Thanks", "How are you?"])
 async def test_smalltalk_routes_to_b(question: str) -> None:
     # Given/When
@@ -171,6 +177,7 @@ async def test_smalltalk_routes_to_b(question: str) -> None:
     assert target == "coach_agent"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "question", ["Tell me more", "Can you help?", "Something unclear"]
 )
@@ -183,6 +190,7 @@ async def test_ambiguous_default_routes_to_a(question: str) -> None:
     assert target == "rag_relay"
 
 
+@pytest.mark.asyncio
 async def test_anaphoric_followup_after_tool_card_routes_to_b() -> None:
     # Given/When
     command = await coach_gate(
@@ -199,6 +207,7 @@ async def test_anaphoric_followup_after_tool_card_routes_to_b() -> None:
     assert command.goto == "coach_agent"
 
 
+@pytest.mark.asyncio
 async def test_attachment_routes_to_document_without_clearing_attachment() -> None:
     # Given
     calls = 0
@@ -227,6 +236,7 @@ async def test_attachment_routes_to_document_without_clearing_attachment() -> No
     assert calls == 0
 
 
+@pytest.mark.asyncio
 async def test_valid_cron_wake_routes_to_delivery_without_classifier() -> None:
     # Given
     calls = 0
@@ -270,6 +280,7 @@ async def test_valid_cron_wake_routes_to_delivery_without_classifier() -> None:
     assert calls == 0
 
 
+@pytest.mark.asyncio
 async def test_member_context_cron_wake_fails_closed_without_store_registration() -> (
     None
 ):
@@ -300,6 +311,7 @@ async def test_member_context_cron_wake_fails_closed_without_store_registration(
     assert command.goto == "short_circuit"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("mode", ["exception", "timeout", "none"])
 async def test_classifier_failure_modes_set_instance_flag(
     monkeypatch: pytest.MonkeyPatch,
@@ -329,6 +341,7 @@ async def test_classifier_failure_modes_set_instance_flag(
     assert assessment.category == "ambiguous"
 
 
+@pytest.mark.asyncio
 async def test_classifier_failure_routes_fail_closed() -> None:
     # Given
     async def unavailable(**_kwargs: str) -> SafetyAssessment:
@@ -347,6 +360,7 @@ async def test_classifier_failure_routes_fail_closed() -> None:
     assert command.goto == "short_circuit"
 
 
+@pytest.mark.asyncio
 async def test_classifier_failure_flag_is_isolated_across_concurrent_turns() -> None:
     # Given
     async def classify(**kwargs: str) -> SafetyAssessment | None:
@@ -365,6 +379,7 @@ async def test_classifier_failure_flag_is_isolated_across_concurrent_turns() -> 
     assert healthy.classifier_failed is False
 
 
+@pytest.mark.asyncio
 async def test_graph_schemas_expose_only_safe_output_and_never_checkpoint_inputs() -> (
     None
 ):

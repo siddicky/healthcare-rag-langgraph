@@ -213,6 +213,7 @@ def pinecone_resources(monkeypatch: pytest.MonkeyPatch):
     resources_module.override(Resources(make_settings()))
 
 
+@pytest.mark.asyncio
 async def test_pinecone_search_queries_the_namespace_with_scaled_vectors(
     pinecone_resources,
 ) -> None:
@@ -234,6 +235,7 @@ async def test_pinecone_search_queries_the_namespace_with_scaled_vectors(
     assert [doc.metadata["id_"] for doc in query_result.docs] == [7]
 
 
+@pytest.mark.asyncio
 async def test_pinecone_search_embeds_the_query_with_query_input_type(
     pinecone_resources,
 ) -> None:
@@ -243,6 +245,7 @@ async def test_pinecone_search_embeds_the_query_with_query_input_type(
     assert sparse["input_type"] == "query"
 
 
+@pytest.mark.asyncio
 async def test_pinecone_search_honours_the_limit(pinecone_resources) -> None:
     pinecone_resources()
     index = StubIndex([])
@@ -251,6 +254,7 @@ async def test_pinecone_search_honours_the_limit(pinecone_resources) -> None:
     assert index.calls[0]["namespace"] == "metformin"
 
 
+@pytest.mark.asyncio
 async def test_pinecone_search_uses_the_alpha_knob(pinecone_resources) -> None:
     pinecone_resources(settings=make_settings(retriever="pinecone", pinecone_alpha=0.25))
     index = StubIndex([])
@@ -259,6 +263,7 @@ async def test_pinecone_search_uses_the_alpha_knob(pinecone_resources) -> None:
     assert index.calls[0]["sparse_vector"]["values"] == pytest.approx([3.0])
 
 
+@pytest.mark.asyncio
 async def test_pinecone_resources_fail_fast_without_a_key() -> None:
     resources = Resources(make_settings(retriever="pinecone", pinecone_api_key=""))
     with pytest.raises(ValueError, match="PINECONE_API_KEY is not set"):
@@ -440,6 +445,12 @@ def node_resources(monkeypatch: pytest.MonkeyPatch, seal_offline_resources):
     """Install a faked `Resources`; see `seal_offline_resources` for why sealing
     the client slots is what keeps these tests off the network."""
 
+    # Restore *this* instance in teardown -- see tests/graph/conftest.py's
+    # `install_resources` and tests/graph/test_resources_restore.py: installing
+    # a freshly sealed `Resources` would leak the fake clients into the
+    # process-wide singleton for every test that runs after this one.
+    previous = resources_module.get()
+
     def install(search: RecordingSearch, **overrides: Any) -> Resources:
         resources = seal_offline_resources(Resources(make_settings(**overrides)))
         resources._gateway = RoutingGateway()
@@ -448,9 +459,41 @@ def node_resources(monkeypatch: pytest.MonkeyPatch, seal_offline_resources):
         return resources
 
     yield install
-    resources_module.override(seal_offline_resources(Resources(make_settings())))
+    resources_module.override(previous)
 
 
+def test_node_resources_restores_the_previous_singleton(
+    assert_resources_restored,
+    node_resources,
+) -> None:
+    """Teardown must put back the pre-test `Resources`, not a fresh sealed one.
+
+    `assert_resources_restored` is requested first, so it is torn down last and
+    sees whatever `node_resources` left in the global singleton. Installing a
+    new sealed `Resources` there would leak `_OfflineClient` fakes into every
+    test that runs afterwards. This one is sync on purpose: the restoration
+    contract has nothing to do with the event loop.
+    """
+    previous = assert_resources_restored
+    assert resources_module.get() is previous
+
+    installed = node_resources(RecordingSearch())
+
+    assert resources_module.get() is installed
+    assert installed is not previous
+    assert installed._weaviate is not None  # sealed; the restored one is not
+
+
+def test_pinecone_module_left_no_offline_fakes_behind() -> None:
+    """Runs after the test above -- with the leak, these slots hold the fakes."""
+    current = resources_module.get()
+
+    assert current._weaviate is None
+    assert current._pinecone_client is None
+    assert current._pinecone_index is None
+
+
+@pytest.mark.asyncio
 async def test_default_path_passes_no_limit_and_never_reranks(
     node_resources, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -473,6 +516,7 @@ async def test_default_path_passes_no_limit_and_never_reranks(
     assert len(output["retrievals"][0]["results"]["results"][0]["docs"]) == 4
 
 
+@pytest.mark.asyncio
 async def test_reranking_widens_the_search_then_trims_to_top_k(
     node_resources, monkeypatch: pytest.MonkeyPatch
 ) -> None:
@@ -496,6 +540,7 @@ async def test_reranking_widens_the_search_then_trims_to_top_k(
     assert [doc["metadata"]["id_"] for doc in docs] == [11, 10, 9, 8]
 
 
+@pytest.mark.asyncio
 async def test_a_search_without_a_limit_kwarg_is_never_handed_one(
     node_resources, seal_offline_resources, monkeypatch: pytest.MonkeyPatch
 ) -> None:

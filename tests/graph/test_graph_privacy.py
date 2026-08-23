@@ -66,6 +66,7 @@ def _tool_call(query: str) -> ToolCall:
     }
 
 
+@pytest.mark.asyncio
 async def test_model_authored_routed_query_is_sanitized_before_retrieval(
     install_resources: ResourceInstaller,
 ) -> None:
@@ -89,6 +90,7 @@ async def test_model_authored_routed_query_is_sanitized_before_retrieval(
     assert identifier not in retriever.calls[0][1]
 
 
+@pytest.mark.asyncio
 async def test_generation_is_sanitized_before_validator_and_monitor(
     install_resources: ResourceInstaller,
 ) -> None:
@@ -175,6 +177,7 @@ def test_initialization_failure_is_raw_free_and_sticky(
     assert sanitizer.readiness is Readiness.FAILED
 
 
+@pytest.mark.asyncio
 async def test_engine_failure_sets_stable_monitor_channels(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -205,6 +208,7 @@ async def test_engine_failure_sets_stable_monitor_channels(
     assert monitor.final_answer_event.is_set()
 
 
+@pytest.mark.asyncio
 async def test_runtime_failure_logs_and_monitor_surfaces_are_raw_free(
     install_resources: ResourceInstaller,
     caplog: pytest.LogCaptureFixture,

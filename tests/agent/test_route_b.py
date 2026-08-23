@@ -54,6 +54,7 @@ def _config() -> RunnableConfig:
     }
 
 
+@pytest.mark.asyncio
 async def test_route_b_tool_round_trip_preserves_call_correlation() -> None:
     model = ToolCapableFakeModel(
         responses=[
@@ -82,6 +83,7 @@ async def test_route_b_tool_round_trip_preserves_call_correlation() -> None:
     assert result["messages"][-1].content == "Done."
 
 
+@pytest.mark.asyncio
 async def test_invalid_composition_is_rewritten_and_model_is_reprompted() -> None:
     invalid = {"tree": [{"component": "TrendCard", "props": {"value": "literal"}}]}
     model = ToolCapableFakeModel(
@@ -117,6 +119,7 @@ async def test_invalid_composition_is_rewritten_and_model_is_reprompted() -> Non
     assert result["messages"][-1].content == "Corrected in plain text."
 
 
+@pytest.mark.asyncio
 async def test_always_invalid_composition_stops_at_retry_cap() -> None:
     invalid_call = AIMessage(
         content="",
@@ -143,6 +146,7 @@ async def test_always_invalid_composition_stops_at_retry_cap() -> None:
     assert result["messages"][-1].tool_calls == []
 
 
+@pytest.mark.asyncio
 async def test_change_schedule_parallel_batch_allows_only_first_interrupt() -> None:
     calls = [
         {
@@ -170,6 +174,7 @@ async def test_change_schedule_parallel_batch_allows_only_first_interrupt() -> N
     assert result["__interrupt__"][0].value["status"] == "pending"
 
 
+@pytest.mark.asyncio
 async def test_erase_coordinator_orders_remote_sweeps_before_store_delete(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -297,6 +302,7 @@ def test_composition_requires_same_turn_resolved_fact_refs() -> None:
     assert not validate_composition({"tree": tree}, [envelope], "scope-1").valid
 
 
+@pytest.mark.asyncio
 async def test_namespace_sweep_enumerates_root_and_finished_child_records() -> None:
     # Given
     saver = InMemorySaver()

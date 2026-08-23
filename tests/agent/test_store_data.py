@@ -65,6 +65,7 @@ def _event(
     )
 
 
+@pytest.mark.asyncio
 async def test_schedule_is_derived_from_append_cancel_readd_and_stale_reschedule() -> (
     None
 ):
@@ -115,6 +116,7 @@ async def test_schedule_is_derived_from_append_cancel_readd_and_stale_reschedule
     assert (await store_data.schedule_state(store, "user-1"))["dose-1"].active is True
 
 
+@pytest.mark.asyncio
 async def test_schedule_fold_paginates_and_breaks_equal_timestamp_ties_by_event_key() -> (
     None
 ):
@@ -184,6 +186,7 @@ async def test_schedule_fold_paginates_and_breaks_equal_timestamp_ties_by_event_
     assert tied["same-entry"].active is False
 
 
+@pytest.mark.asyncio
 async def test_schedule_readers_list_resolve_and_find_next_dose() -> None:
     # Given
     store = InMemoryStore()
@@ -218,6 +221,7 @@ async def test_schedule_readers_list_resolve_and_find_next_dose() -> None:
     assert next_entry == listing[1]
 
 
+@pytest.mark.asyncio
 async def test_event_log_is_append_only_and_lookup_by_op_is_direct() -> None:
     # Given
     store = InMemoryStore()
@@ -242,6 +246,7 @@ async def test_event_log_is_append_only_and_lookup_by_op_is_direct() -> None:
     assert len(await store.asearch(("users", "user-1", "events"), limit=20)) == 1
 
 
+@pytest.mark.asyncio
 async def test_op_ledger_put_if_absent_round_trips_declined_stale() -> None:
     # Given
     store = InMemoryStore()
@@ -289,6 +294,7 @@ def _reminder(index: int, *, active: bool = True) -> ReminderRecord:
     )
 
 
+@pytest.mark.asyncio
 async def test_reminders_create_list_edit_rotate_token_cap_and_soft_cancel() -> None:
     # Given
     store = InMemoryStore()
@@ -321,6 +327,7 @@ async def test_reminders_create_list_edit_rotate_token_cap_and_soft_cancel() -> 
     assert len(reminders) == 10
 
 
+@pytest.mark.asyncio
 async def test_metric_and_injection_helpers_scrub_and_sort_by_date() -> None:
     # Given
     store = InMemoryStore()
@@ -387,6 +394,7 @@ async def test_metric_and_injection_helpers_scrub_and_sort_by_date() -> None:
     )
 
 
+@pytest.mark.asyncio
 async def test_real_privacy_scan_error_stores_nothing() -> None:
     # Given
     store = InMemoryStore()
@@ -406,6 +414,7 @@ async def test_real_privacy_scan_error_stores_nothing() -> None:
     assert await store.asearch(("users", "user-1", "metrics"), limit=10) == []
 
 
+@pytest.mark.asyncio
 async def test_upload_registry_is_owner_bound_scrubbed_and_expired_in_code() -> None:
     # Given
     store = InMemoryStore()
@@ -481,6 +490,7 @@ def test_make_envelope_has_stable_turn_scope() -> None:
     assert parallel_a["turn_scope_id"] == resumed["turn_scope_id"]
 
 
+@pytest.mark.asyncio
 async def test_erasure_gate_blocks_ordinary_writes_and_privileged_delete_is_paginated() -> (
     None
 ):
@@ -519,6 +529,7 @@ async def test_erasure_gate_blocks_ordinary_writes_and_privileged_delete_is_pagi
     assert await store.aget(("users", "user-2", "feedback"), "keep") is not None
 
 
+@pytest.mark.asyncio
 async def test_erasure_rejects_malformed_user_namespace_before_deleting() -> None:
     # Given
     store = InMemoryStore()

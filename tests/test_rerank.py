@@ -116,6 +116,7 @@ def test_reorder_reads_dict_shaped_rankings() -> None:
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.asyncio
 async def test_rerank_sends_id_and_text_and_asks_for_top_n() -> None:
     inference = StubInference(ranking((2, 0.9), (0, 0.8)))
     resources = StubResources(inference)
@@ -134,6 +135,7 @@ async def test_rerank_sends_id_and_text_and_asks_for_top_n() -> None:
     assert [doc.metadata["id_"] for doc in result] == [2, 0]
 
 
+@pytest.mark.asyncio
 async def test_rerank_honours_the_configured_model() -> None:
     inference = StubInference(ranking((0, 1.0)))
     resources = StubResources(inference, model="cohere-rerank-3.5")
@@ -141,6 +143,7 @@ async def test_rerank_honours_the_configured_model() -> None:
     assert inference.calls[0]["model"] == "cohere-rerank-3.5"
 
 
+@pytest.mark.asyncio
 async def test_rerank_failure_falls_back_to_search_order(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -153,6 +156,7 @@ async def test_rerank_failure_falls_back_to_search_order(
     assert "RERANK_FAILED" in caplog.text
 
 
+@pytest.mark.asyncio
 async def test_a_missing_pinecone_key_degrades_instead_of_failing_the_turn(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -170,6 +174,7 @@ async def test_a_missing_pinecone_key_degrades_instead_of_failing_the_turn(
     assert "RERANK_FAILED" in caplog.text
 
 
+@pytest.mark.asyncio
 async def test_an_empty_ranking_falls_back_to_search_order(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -181,6 +186,7 @@ async def test_an_empty_ranking_falls_back_to_search_order(
     assert "RERANK_EMPTY" in caplog.text
 
 
+@pytest.mark.asyncio
 async def test_no_candidates_means_no_network_call() -> None:
     inference = StubInference(ranking((0, 1.0)))
     resources = StubResources(inference)
@@ -189,12 +195,14 @@ async def test_no_candidates_means_no_network_call() -> None:
     assert resources.client_calls == 0
 
 
+@pytest.mark.asyncio
 async def test_fewer_candidates_than_top_k_still_reranks() -> None:
     inference = StubInference(ranking((1, 0.9), (0, 0.1)))
     result = await rerank_documents(StubResources(inference), "q", make_docs(2), 4)
     assert [doc.metadata["id_"] for doc in result] == [1, 0]
 
 
+@pytest.mark.asyncio
 async def test_rerank_logs_the_applied_stage_with_timing(
     caplog: pytest.LogCaptureFixture,
 ) -> None:

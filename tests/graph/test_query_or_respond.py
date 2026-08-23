@@ -16,6 +16,7 @@ def test_llm_keeps_query_response_contract_reexports() -> None:
     assert llm.QUERY_OR_RESPOND_TOOL is query_response.QUERY_OR_RESPOND_TOOL
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("response", "reason", "model_action"),
     [
@@ -82,6 +83,7 @@ async def test_social_invalid_decisions_use_gate_invalid_deterministic_fallback(
     assert "messages" not in update
 
 
+@pytest.mark.asyncio
 async def test_medical_valid_tool_uses_sanitized_tool_query(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -115,6 +117,7 @@ async def test_medical_valid_tool_uses_sanitized_tool_query(
     assert "messages" not in update
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("response", "reason", "model_action"),
     [
@@ -187,6 +190,7 @@ async def test_medical_invalid_decisions_discard_output_and_use_original_query(
     assert "messages" not in update
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("arm", ["current", "deterministic"])
 async def test_non_tool_arms_preserve_state_without_model_calls(
     monkeypatch: pytest.MonkeyPatch,

@@ -9,6 +9,7 @@ import pytest
 from langchain_core.messages import ToolCall
 
 from healthcare_rag.graph.llm import LangChainLLMGateway, QueryOrRespondDecision
+from healthcare_rag.graph import resources as resources_module
 from healthcare_rag.graph.resources import Resources, override
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.models.retrieval import QueryResultList
@@ -161,6 +162,13 @@ def install_resources(seal_offline_resources) -> Iterator[ResourceInstaller]:
     these tests only pass on a machine that happens to be running Weaviate.
     """
 
+    # Restore *this* instance in teardown. Installing a freshly sealed
+    # `Resources` instead would leave the fake offline clients in the
+    # process-wide singleton, so a later test could pass without declaring the
+    # fixture -- order-dependent leakage that hides accidental client
+    # acquisition. Regression: tests/graph/test_resources_restore.py.
+    previous = resources_module.get()
+
     def install(
         gateway: FakeGateway,
         *,
@@ -175,4 +183,4 @@ def install_resources(seal_offline_resources) -> Iterator[ResourceInstaller]:
         return resources
 
     yield install
-    override(seal_offline_resources(Resources(make_settings())))
+    override(previous)

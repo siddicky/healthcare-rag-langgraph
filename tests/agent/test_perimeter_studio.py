@@ -3,6 +3,8 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import pytest
+
 from langgraph_api.auth.studio_user import StudioUser
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
@@ -83,6 +85,7 @@ def _ctx(user):
     return SimpleNamespace(user=user)
 
 
+@pytest.mark.asyncio
 async def test_studio_principal_is_allowed_by_every_authorization_handler() -> None:
     from healthcare_rag.agent import auth as auth_module
 
@@ -96,6 +99,7 @@ async def test_studio_principal_is_allowed_by_every_authorization_handler() -> N
     assert await auth_module._cron_scope(studio, {}) is None
 
 
+@pytest.mark.asyncio
 async def test_member_authorization_is_unchanged_by_the_studio_allowance() -> None:
     from healthcare_rag.agent import auth as auth_module
 

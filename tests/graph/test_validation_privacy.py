@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from typing import cast
 
+import pytest
+
 from healthcare_rag.graph.nodes.generate import validate_answer
 from healthcare_rag.graph.state import dump_results
 from healthcare_rag.models.answers import Citation, CitedAnswerResult, StatementWithCitations
@@ -10,6 +12,7 @@ from healthcare_rag.models.retrieval import QueryDocument, QueryResult, QueryRes
 from .conftest import FakeGateway, ResourceInstaller
 
 
+@pytest.mark.asyncio
 async def test_trusted_quote_is_validated_before_state_copy_is_sanitized(
     install_resources: ResourceInstaller,
 ) -> None:

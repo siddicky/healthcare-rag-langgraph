@@ -157,6 +157,7 @@ def test_reported_kinds_follow_identifier_text_order() -> None:
     assert kinds.index("PHONE") < kinds.index("EMAIL")
 
 
+@pytest.mark.asyncio
 async def test_gate_off_still_sanitizes_question(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -172,6 +173,7 @@ async def test_gate_off_still_sanitizes_question(
     assert working == scrubbed
 
 
+@pytest.mark.asyncio
 async def test_safety_prompt_receives_sanitized_current_and_history(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -68,3 +68,28 @@ def seal_offline_resources():
         return resources
 
     return seal
+
+
+@pytest.fixture
+def assert_resources_restored():
+    """Fail if the test leaves a different `Resources` in the global singleton.
+
+    Request this *before* a fixture that calls `resources.override(...)`: pytest
+    sets fixtures up in argument order and tears them down LIFO, so this one is
+    entered first and its check runs after the installer's teardown has had its
+    chance to restore.
+
+    The bug it guards: an installer fixture that tears down by overriding with a
+    *new* sealed `Resources` leaves the offline fake clients in place for every
+    later test, which can make a test pass without declaring the fixture it
+    actually depends on.
+    """
+    from healthcare_rag.graph import resources as resources_module
+
+    before = resources_module.get()
+    yield before
+    after = resources_module.get()
+    assert after is before, (
+        "the resources singleton was not restored: teardown installed "
+        f"{after!r} instead of the pre-test {before!r}"
+    )

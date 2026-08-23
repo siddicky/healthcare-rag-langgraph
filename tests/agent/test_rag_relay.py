@@ -64,6 +64,7 @@ def _result(
     }
 
 
+@pytest.mark.asyncio
 async def test_relay_assembles_exact_informational_message_and_propagates_config(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -91,6 +92,7 @@ async def test_relay_assembles_exact_informational_message_and_propagates_config
     assert scripted.calls == [(({"question": "scrubbed question"}), config)]
 
 
+@pytest.mark.asyncio
 async def test_relay_preserves_refusal_bytes_without_framing_or_follow_ups(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -111,6 +113,7 @@ async def test_relay_preserves_refusal_bytes_without_framing_or_follow_ups(
     assert update.get("follow_ups") == []
 
 
+@pytest.mark.asyncio
 async def test_relay_returns_safe_error_and_remains_usable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -139,6 +142,7 @@ async def test_relay_returns_safe_error_and_remains_usable(
     ]
 
 
+@pytest.mark.asyncio
 async def test_relay_makes_no_gateway_calls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -189,6 +193,7 @@ def _memory_child():
     return builder.compile(checkpointer=True, name="test_healthcare_child")
 
 
+@pytest.mark.asyncio
 async def test_nested_child_carries_history_per_parent_thread_without_bleed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -250,6 +255,7 @@ class CompileRecorder:
         return Compiled()
 
 
+@pytest.mark.asyncio
 async def test_pipeline_mode_compiles_fresh_saver_and_thread_each_turn(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

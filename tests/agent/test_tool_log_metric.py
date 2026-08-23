@@ -93,6 +93,7 @@ def clean_privacy(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(log_metric_tool, "get_resources", lambda: resources)
 
 
+@pytest.mark.asyncio
 async def test_first_log_omits_delta_and_persists_server_date() -> None:
     # Given
     store = InMemoryStore()
@@ -119,6 +120,7 @@ async def test_first_log_omits_delta_and_persists_server_date() -> None:
     assert entries[0].date == FROZEN_THURSDAY
 
 
+@pytest.mark.asyncio
 async def test_second_log_emits_delta_points_and_new_turn_scope() -> None:
     # Given
     store = InMemoryStore()
@@ -140,6 +142,7 @@ async def test_second_log_emits_delta_points_and_new_turn_scope() -> None:
     assert len(await store_data.list_metrics(store, "user-a")) == 2
 
 
+@pytest.mark.asyncio
 async def test_upward_delta_is_flagged_bad() -> None:
     # Given
     store = InMemoryStore()
@@ -153,6 +156,7 @@ async def test_upward_delta_is_flagged_bad() -> None:
     assert _data(result)["deltaGood"] is False
 
 
+@pytest.mark.asyncio
 async def test_invalid_metric_returns_error_and_leaves_store_unchanged() -> None:
     # Given
     store = InMemoryStore()
@@ -165,6 +169,7 @@ async def test_invalid_metric_returns_error_and_leaves_store_unchanged() -> None
     assert await store.asearch(("users", "user-a", "metrics")) == []
 
 
+@pytest.mark.asyncio
 async def test_identifier_unit_is_scrubbed_in_store_and_envelope(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -186,6 +191,7 @@ async def test_identifier_unit_is_scrubbed_in_store_and_envelope(
     assert [entry.unit for entry in entries] == ["lb [REDACTED_PERSON]"]
 
 
+@pytest.mark.asyncio
 async def test_real_sanitizer_scrubs_identifier_unit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -207,6 +213,7 @@ async def test_real_sanitizer_scrubs_identifier_unit(
     assert [entry.unit for entry in entries] == ["lb [REDACTED_PHONE]"]
 
 
+@pytest.mark.asyncio
 async def test_points_are_capped_at_eight_and_ascending() -> None:
     # Given
     store = InMemoryStore()
@@ -242,6 +249,7 @@ async def test_points_are_capped_at_eight_and_ascending() -> None:
     ]
 
 
+@pytest.mark.asyncio
 async def test_history_is_scoped_per_user() -> None:
     # Given
     store = InMemoryStore()
@@ -257,6 +265,7 @@ async def test_history_is_scoped_per_user() -> None:
     assert len(await store_data.list_metrics(store, "user-b")) == 1
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("missing", ["coach_human_msg_id", "thread_id"])
 async def test_missing_turn_scope_key_raises(missing: str) -> None:
     # Given
@@ -272,6 +281,7 @@ async def test_missing_turn_scope_key_raises(missing: str) -> None:
     assert await store.asearch(("users", "user-a", "metrics")) == []
 
 
+@pytest.mark.asyncio
 async def test_missing_identity_raises() -> None:
     # Given
     store = InMemoryStore()
@@ -285,6 +295,7 @@ async def test_missing_identity_raises() -> None:
     assert await store.asearch(("users", "user-a", "metrics")) == []
 
 
+@pytest.mark.asyncio
 async def test_store_failure_returns_error_string(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -303,6 +314,7 @@ async def test_store_failure_returns_error_string(
     assert result == log_metric_tool.STORE_REFUSAL
 
 
+@pytest.mark.asyncio
 async def test_scanner_failure_refuses_without_storing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

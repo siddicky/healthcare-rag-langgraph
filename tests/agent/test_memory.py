@@ -61,6 +61,7 @@ def clean_privacy(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(memory, "get_resources", lambda: resources)
 
 
+@pytest.mark.asyncio
 async def test_clean_fact_is_stored_and_surfaced_in_dynamic_prompt() -> None:
     # Given
     store = InMemoryStore()
@@ -76,6 +77,7 @@ async def test_clean_fact_is_stored_and_surfaced_in_dynamic_prompt() -> None:
     assert "Prefers morning check-ins" in segment
 
 
+@pytest.mark.asyncio
 async def test_name_bearing_fact_is_stored_scrubbed_and_rescans_clean(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -96,6 +98,7 @@ async def test_name_bearing_fact_is_stored_scrubbed_and_rescans_clean(
     assert privacy.scan(stored).kinds == ()
 
 
+@pytest.mark.asyncio
 async def test_residual_identifier_after_first_scrub_is_refused(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -121,6 +124,7 @@ async def test_residual_identifier_after_first_scrub_is_refused(
     assert await store.asearch(("users", "user-a", "episodic")) == []
 
 
+@pytest.mark.asyncio
 async def test_scanner_exception_refuses_memory(monkeypatch: pytest.MonkeyPatch) -> None:
     # Given
     def fail_scan(_value: str) -> PrivacyScan:
@@ -141,6 +145,7 @@ async def test_scanner_exception_refuses_memory(monkeypatch: pytest.MonkeyPatch)
     assert await store.asearch(("users", "user-a", "profile")) == []
 
 
+@pytest.mark.asyncio
 async def test_dynamic_prompt_only_reads_authenticated_users_memories() -> None:
     # Given
     store = InMemoryStore()
@@ -155,6 +160,7 @@ async def test_dynamic_prompt_only_reads_authenticated_users_memories() -> None:
     assert "User A preference" not in segment
 
 
+@pytest.mark.asyncio
 async def test_dynamic_prompt_is_blank_without_memories() -> None:
     # Given
     store = InMemoryStore()
@@ -166,6 +172,7 @@ async def test_dynamic_prompt_is_blank_without_memories() -> None:
     assert segment == ""
 
 
+@pytest.mark.asyncio
 async def test_missing_authenticated_identity_raises() -> None:
     # Given
     store = InMemoryStore()
@@ -176,6 +183,7 @@ async def test_missing_authenticated_identity_raises() -> None:
         _ = await _remember("Prefers mornings", "profile", store, config)
 
 
+@pytest.mark.asyncio
 async def test_caller_supplied_user_id_is_ignored() -> None:
     # Given
     store = InMemoryStore()
@@ -261,6 +269,7 @@ def test_sanitize_memory_field_returns_none_on_scanner_exception(
     assert result is None
 
 
+@pytest.mark.asyncio
 async def test_store_failure_returns_error_and_writes_nothing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

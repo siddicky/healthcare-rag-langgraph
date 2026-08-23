@@ -71,6 +71,7 @@ def _envelope(result: str) -> dict[str, JsonValue]:
     return cast("dict[str, JsonValue]", json.loads(result))
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("weekday", "time", "expected"),
     [("Mon", "09:00", "0 9 * * 1"), ("Sun", "23:05", "5 23 * * 0")],
@@ -120,6 +121,7 @@ async def test_cron_client_creates_authenticated_thread_cron(
     assert cron.next_run_date == "2026-08-24T09:00:00Z"
 
 
+@pytest.mark.asyncio
 async def test_search_by_metadata_paginates_to_exhaustion() -> None:
     # Given
     offsets: list[int] = []
@@ -148,6 +150,7 @@ async def test_search_by_metadata_paginates_to_exhaustion() -> None:
     assert [cron.cron_id for cron in crons] == ["cron-0", "cron-1", "cron-2"]
 
 
+@pytest.mark.asyncio
 async def test_create_is_pending_inactive_before_cron_then_finalizes() -> None:
     # Given
     store = InMemoryStore()
@@ -193,6 +196,7 @@ async def test_create_is_pending_inactive_before_cron_then_finalizes() -> None:
     assert cast("dict[str, JsonValue]", envelope["data"])["items"]
 
 
+@pytest.mark.asyncio
 async def test_ambiguous_create_reconciles_and_removes_duplicates() -> None:
     # Given
     store = InMemoryStore()
@@ -240,6 +244,7 @@ async def test_ambiguous_create_reconciles_and_removes_duplicates() -> None:
     assert "reminders:list" in result
 
 
+@pytest.mark.asyncio
 async def test_hard_create_failure_leaves_inactive_and_returns_fixed_error() -> None:
     # Given
     store = InMemoryStore()
@@ -271,6 +276,7 @@ async def test_hard_create_failure_leaves_inactive_and_returns_fixed_error() -> 
     assert "sentinel" not in result
 
 
+@pytest.mark.asyncio
 async def test_active_cap_applies_across_threads() -> None:
     # Given
     store = InMemoryStore()
@@ -318,6 +324,7 @@ async def test_active_cap_applies_across_threads() -> None:
     assert len(await store_data.list_reminders(store, "user-1")) == 10
 
 
+@pytest.mark.asyncio
 async def test_edit_toggle_and_cancel_call_cron_api_and_update_record() -> None:
     # Given
     store = InMemoryStore()
@@ -379,6 +386,7 @@ async def test_edit_toggle_and_cancel_call_cron_api_and_update_record() -> None:
     assert cancelled.cron_id is None
 
 
+@pytest.mark.asyncio
 async def test_edit_failure_leaves_rotated_record_inactive() -> None:
     # Given
     store = InMemoryStore()
@@ -421,6 +429,7 @@ async def test_edit_failure_leaves_rotated_record_inactive() -> None:
     assert paused.wake_token != "old-token"
 
 
+@pytest.mark.asyncio
 async def test_graph_delivery_consumes_gate_handoff_without_gateway_call() -> None:
     # Given
     store = InMemoryStore()
@@ -471,6 +480,7 @@ async def test_graph_delivery_consumes_gate_handoff_without_gateway_call() -> No
     assert "secret-token" not in cast("str", messages[0].content)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("case", ["forged", "mismatched", "inactive", "missing"])
 async def test_delivery_fails_closed_for_invalid_identity_chain(case: str) -> None:
     # Given
@@ -508,6 +518,7 @@ async def test_delivery_fails_closed_for_invalid_identity_chain(case: str) -> No
     assert update == {"cron_wake": None, "reminder_wake": None}
 
 
+@pytest.mark.asyncio
 async def test_valid_delivery_is_model_free_and_emits_full_reminder_card() -> None:
     # Given
     store = InMemoryStore()
@@ -557,6 +568,7 @@ async def test_valid_delivery_is_model_free_and_emits_full_reminder_card() -> No
     assert "secret-token" not in content
 
 
+@pytest.mark.asyncio
 async def test_erasure_sweeps_known_orphan_crons_and_upload_reservations() -> None:
     # Given
     store = InMemoryStore()
@@ -623,6 +635,7 @@ async def test_erasure_sweeps_known_orphan_crons_and_upload_reservations() -> No
     )
 
 
+@pytest.mark.asyncio
 async def test_tool_node_runtime_injection_reaches_create_reminder_impl(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -221,6 +221,7 @@ def test_change_schedule_schema_rejects_off_contract_variants(
         ChangeScheduleInput.model_validate({"request": raw_request})
 
 
+@pytest.mark.asyncio
 async def test_add_interrupts_then_approved_event_confirms_same_card() -> None:
     # Given
     harness = _harness()
@@ -258,6 +259,7 @@ async def test_add_interrupts_then_approved_event_confirms_same_card() -> None:
     assert harness.store.search(("users", "user-1", "schedule"), limit=10) == []
 
 
+@pytest.mark.asyncio
 async def test_decline_and_malformed_resume_preserve_ledger_contract() -> None:
     # Given
     request: dict[str, JsonValue] = {
@@ -288,6 +290,7 @@ async def test_decline_and_malformed_resume_preserve_ledger_contract() -> None:
     assert ops[0].value["status"] == "pending"
 
 
+@pytest.mark.asyncio
 async def test_interrupt_is_scrubbed_and_byte_equal_to_persisted_card() -> None:
     # Given
     harness = _harness(thread_id="scrub")
@@ -315,6 +318,7 @@ async def test_interrupt_is_scrubbed_and_byte_equal_to_persisted_card() -> None:
     assert len(ops[0].value["resolved_entry_id"]) == 64
 
 
+@pytest.mark.asyncio
 async def test_calendar_card_fields_match_design_contract() -> None:
     # Given
     contract = json.loads(
@@ -344,6 +348,7 @@ async def test_calendar_card_fields_match_design_contract() -> None:
     assert set(pending) == prompt_fields | set(contract["post_decision_props"])
 
 
+@pytest.mark.asyncio
 async def test_target_resolution_fails_closed_and_freezes_unique_entry() -> None:
     # Given
     store = InMemoryStore()
@@ -414,6 +419,7 @@ async def test_target_resolution_fails_closed_and_freezes_unique_entry() -> None
     assert frozen.value["status"] == "declined-stale"
 
 
+@pytest.mark.asyncio
 async def test_crash_replay_reuses_existing_event_and_terminalizes() -> None:
     # Given
     store = InMemoryStore()
@@ -458,6 +464,7 @@ async def test_crash_replay_reuses_existing_event_and_terminalizes() -> None:
     )
 
 
+@pytest.mark.asyncio
 async def test_lifecycle_reactivation_supersession_independence_and_non_merge() -> None:
     # Given
     store = InMemoryStore()
@@ -527,6 +534,7 @@ async def test_lifecycle_reactivation_supersession_independence_and_non_merge() 
     assert len({entry.entry_id for entry in final}) == 3
 
 
+@pytest.mark.asyncio
 async def test_same_add_across_two_threads_has_independent_ops() -> None:
     # Given
     store = InMemoryStore()
@@ -548,6 +556,7 @@ async def test_same_add_across_two_threads_has_independent_ops() -> None:
     assert len({item.value["resolved_entry_id"] for item in ops}) == 1
 
 
+@pytest.mark.asyncio
 async def test_tool_events_fold_beyond_page_size_without_merging_dates() -> None:
     # Given
     store = InMemoryStore()
@@ -571,6 +580,7 @@ async def test_tool_events_fold_beyond_page_size_without_merging_dates() -> None
     assert state["page-entry-0"].date != state["page-entry-1"].date
 
 
+@pytest.mark.asyncio
 async def test_same_entry_order_uses_timestamp_then_max_event_key() -> None:
     # Given
     store = InMemoryStore()

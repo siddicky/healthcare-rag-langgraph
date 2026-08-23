@@ -176,6 +176,7 @@ def test_invalid_social_intent_proposal_is_rejected_at_model_boundary() -> None:
         _assessment("out_of_scope", benign_social=True, social_intent="small_talk")
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("query", "intent"), PROPOSAL_CASES)
 async def test_typed_proposal_selects_static_response_without_phrase_recognition(
     monkeypatch: pytest.MonkeyPatch,
@@ -197,6 +198,7 @@ async def test_typed_proposal_selects_static_response_without_phrase_recognition
     assert outcome.social_intent == intent
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("query", "intent"), PUNCTUATED_PROPOSALS)
 async def test_real_node_accepts_punctuated_typed_social_proposal(
     monkeypatch: pytest.MonkeyPatch,
@@ -216,6 +218,7 @@ async def test_real_node_accepts_punctuated_typed_social_proposal(
     assert result["response_action"] == "direct"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("query", "intent"), MODAL_SOCIAL_PROPOSALS)
 @pytest.mark.parametrize("arm", ["current", "deterministic", "tool"])
 async def test_real_node_trusts_typed_social_speech_act_proposal(
@@ -254,6 +257,7 @@ async def test_real_node_trusts_typed_social_speech_act_proposal(
             assert_never(unreachable)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("arm", ["current", "deterministic", "tool"])
 async def test_real_node_accepts_generic_domain_scope_capability(
     monkeypatch: pytest.MonkeyPatch,
@@ -278,6 +282,7 @@ async def test_real_node_accepts_generic_domain_scope_capability(
         assert result["response_action"] == "direct"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("query", "intent"), DOMAIN_SOCIAL_PROPOSALS)
 @pytest.mark.parametrize("arm", ["current", "deterministic", "tool"])
 async def test_typed_domain_social_proposal_is_wording_invariant(
@@ -304,6 +309,7 @@ async def test_typed_domain_social_proposal_is_wording_invariant(
         assert result["response_action"] == "direct"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("query", "proposed_intent"), CLASSIFIER_ACCURACY_CASES)
 async def test_well_formed_proposal_semantics_belong_to_classifier_boundary(
     monkeypatch: pytest.MonkeyPatch,
@@ -326,6 +332,7 @@ async def test_well_formed_proposal_semantics_belong_to_classifier_boundary(
     assert result["response_action"] == "direct"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("benign_social", "intent"),
     [(True, None), (False, "greeting")],
@@ -353,6 +360,7 @@ async def test_missing_or_inconsistent_social_proposal_cannot_route_direct(
     assert result["response_action"] is None
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("query", "intent"), SOCIAL_CASES)
 @pytest.mark.parametrize("arm", ["current", "deterministic", "tool"])
 async def test_social_turn_uses_arm_specific_channels(
@@ -391,6 +399,7 @@ async def test_social_turn_uses_arm_specific_channels(
             assert_never(unreachable)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("query", "category", "expected_kind"),
     [

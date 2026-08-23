@@ -59,6 +59,7 @@ def _openai_response_server() -> Generator[str]:
         thread.join()
 
 
+@pytest.mark.asyncio
 async def test_failed_connect_does_not_poison_the_singleton(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -90,6 +91,7 @@ async def test_failed_connect_does_not_poison_the_singleton(
     assert resources._weaviate is None
 
 
+@pytest.mark.asyncio
 async def test_aclose_nulls_weaviate_so_resources_is_not_reused_half_open(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -125,6 +127,7 @@ async def test_aclose_nulls_weaviate_so_resources_is_not_reused_half_open(
     assert second.is_connected()
 
 
+@pytest.mark.asyncio
 async def test_aclose_rebuilds_usable_sync_and_async_model_clients(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -150,6 +153,7 @@ async def test_aclose_rebuilds_usable_sync_and_async_model_clients(
         await resources.aclose()
 
 
+@pytest.mark.asyncio
 async def test_aclose_skips_injected_gateway_without_close() -> None:
     class GatewayDouble:
         pass

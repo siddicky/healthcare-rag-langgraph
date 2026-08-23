@@ -99,6 +99,7 @@ def test_refusal_result_suppresses_conflicting_direct_and_medical_channels() -> 
     assert result["selected_branch_query"] is None
 
 
+@pytest.mark.asyncio
 async def test_compiled_graph_refusal_clears_conflicting_direct_checkpoint_state(
     install_resources: ResourceInstaller,
 ) -> None:
@@ -142,6 +143,7 @@ async def test_compiled_graph_refusal_clears_conflicting_direct_checkpoint_state
     await engine.aclose()
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("arm", ["deterministic", "tool"])
 async def test_direct_turn_completes_monitor_and_checkpoint_history(
     install_resources: ResourceInstaller,
