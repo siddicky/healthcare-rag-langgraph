@@ -141,40 +141,22 @@ jobs:
           echo "It fails closed with a clear message if the API is unavailable or the check is inconclusive."
           echo ""
           echo "NOTE: Reading environment protection_rules typically requires a token with"
-          echo "admin:read or repo scope. The default GITHUB_TOKEN often lacks sufficient scope"
+          echo "Actions: read or classic repo scope. The default GITHUB_TOKEN often lacks sufficient scope"
           echo "to read protection_rules. If so, set a minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT"
-          echo "(classic PAT: repo scope, or fine-grained PAT with Repository administration: read"
-          echo "or Environment: read on this repo). The workflow tries GITHUB_TOKEN first, then the PAT."
+          echo "(classic PAT: repo scope, or fine-grained PAT with Actions: read on this repo)."
+          echo "The workflow tries ENVIRONMENT_AUDIT_PAT first, then GITHUB_TOKEN."
           echo ""
-
-          # Choose token: prefer AUDIT_PAT if provided, else GITHUB_TOKEN.
-          # GITHUB_TOKEN is always set but may lack scope.
-          TOKEN_TO_TRY=""
-          if [ -n "${AUDIT_PAT:-}" ]; then
-            echo "ENVIRONMENT_AUDIT_PAT is set — will try it (and fall back to GITHUB_TOKEN if needed)."
-            TOKEN_TO_TRY="$AUDIT_PAT"
-          fi
-          # Helper to query environment protection
-          query_env() {
-            local tok="$1"
-            echo "--- Querying /repos/$REPO/environments/production with token prefix ${tok:0:4}**** ---"
-            # Capture HTTP status + body
-            set +e
-            BODY="$(gh api "repos/${REPO}/environments/production" --jq '.' 2>&1)"
-            RC=$?
-            set -e
-            echo "$BODY" | head -n 200
-            return $RC
-          }
 
           # Try PAT first if available, then GITHUB_TOKEN
           SUCCESS=0
           RAW_JSON=""
+          TOKEN_USED=""
           if [ -n "${AUDIT_PAT:-}" ]; then
             echo "Trying ENVIRONMENT_AUDIT_PAT..."
             if RAW_JSON="$(GH_TOKEN="$AUDIT_PAT" gh api "repos/${REPO}/environments/production" 2>&1)"; then
               echo "PAT query succeeded."
               SUCCESS=1
+              TOKEN_USED="$AUDIT_PAT"
             else
               echo "PAT query failed (first 500 chars):"
               echo "$RAW_JSON" | head -c 500; echo ""
@@ -182,6 +164,7 @@ jobs:
               if RAW_JSON="$(GH_TOKEN="$GH_TOKEN" gh api "repos/${REPO}/environments/production" 2>&1)"; then
                 echo "GITHUB_TOKEN query succeeded."
                 SUCCESS=1
+                TOKEN_USED="$GH_TOKEN"
               else
                 echo "GITHUB_TOKEN query also failed."
                 echo "$RAW_JSON" | head -c 500; echo ""
@@ -192,6 +175,7 @@ jobs:
             if RAW_JSON="$(GH_TOKEN="$GH_TOKEN" gh api "repos/${REPO}/environments/production" 2>&1)"; then
               echo "GITHUB_TOKEN query succeeded."
               SUCCESS=1
+              TOKEN_USED="$GH_TOKEN"
             else
               echo "GITHUB_TOKEN query failed (first 500 chars):"
               echo "$RAW_JSON" | head -c 500; echo ""
@@ -203,11 +187,26 @@ jobs:
             echo "::error::Environment protection verification FAILED (inconclusive API response)."
             echo "::error::The production environment 'production' could not be read via the GitHub API."
             echo "::error::If GITHUB_TOKEN lacks scope to read environment protection_rules, set a"
-            echo "::error::minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT (repo admin:read) in the"
+            echo "::error::minimally-scoped PAT as ENVIRONMENT_AUDIT_PAT (Actions: read) in the"
             echo "::error::'production' environment secrets. See decisions.md for scope details."
             echo "::error::Failing closed — refusing to deploy."
             exit 1
           fi
+
+          POLICY_JSON='{"total_count":0,"branch_policies":[]}'
+          CUSTOM_POLICIES="$(ENVIRONMENT_JSON="$RAW_JSON" python3 -c "import json, os; data=json.loads(os.environ['ENVIRONMENT_JSON']); print(str(bool((data.get('deployment_branch_policy') or {}).get('custom_branch_policies'))).lower())")"
+          if [ "$CUSTOM_POLICIES" = "true" ]; then
+            echo "Reading custom deployment branch/tag policies..."
+            if POLICY_RESPONSE="$(GH_TOKEN="$TOKEN_USED" gh api "repos/${REPO}/environments/production/deployment-branch-policies?per_page=100" 2>&1)"; then
+              POLICY_JSON="$POLICY_RESPONSE"
+            else
+              echo "$POLICY_RESPONSE" | head -c 500; echo ""
+              echo "::error::Deployment policy verification FAILED (policy list unavailable)."
+              echo "::error::Failing closed — refusing to deploy."
+              exit 1
+            fi
+          fi
+          RAW_JSON="$(ENVIRONMENT_JSON="$RAW_JSON" POLICY_JSON="$POLICY_JSON" python3 -c "import json, os; data=json.loads(os.environ['ENVIRONMENT_JSON']); policies=json.loads(os.environ['POLICY_JSON']); data['deployment_branch_policies']=policies.get('branch_policies', []); print(json.dumps(data))")"
 
           echo ""
           echo "Raw environment JSON (truncated):"
@@ -246,54 +245,19 @@ jobs:
           if not has_required_reviewers:
               errors.append('production environment missing required reviewers (protection_rules: required_reviewers)')
 
-          # 2. Deployment branch/tag policy: expect tag pattern v*.*.*
-          # API field varies: deployment_branch_policy, branch_policy, or not exposed via this endpoint.
-          # Check multiple locations.
+          # 2. Deployment branch/tag policy: expect exact tag pattern v*.*.*
           tag_policy_ok = False
           tag_pattern_found = None
-          # Check deployment_branch_policy.custom_branch_policies or similar
           dbp = data.get('deployment_branch_policy') or {}
-          # Some payloads nest under 'deployment_branch_policy': {'protected_branches':..., 'custom_branch_policies':...}
-          # For tag policy, Fly/GH may use 'branch_tag_pattern' or custom.
-          # Broader scan: stringify and look for v* pattern
-          import re
-          raw_str = json.dumps(data)
-          # Look for explicit v*.*.* or v* pattern
-          if 'v*.*.*' in raw_str or 'v*.*' in raw_str:
-              tag_policy_ok = True
-              tag_pattern_found = 'v*.*.*'
-          elif re.search(r'v\\\*', raw_str):
-              tag_policy_ok = True
-              tag_pattern_found = 'v*'
-          # Also accept custom_branch_policies containing a tag pattern
+          if not dbp.get('custom_branch_policies'):
+              errors.append('production environment custom deployment policies are disabled')
+          for policy in data.get('deployment_branch_policies') or []:
+              if policy.get('name') == 'v*.*.*' and policy.get('type') in (None, 'tag'):
+                  tag_policy_ok = True
+                  tag_pattern_found = 'v*.*.*'
+                  break
           if not tag_policy_ok:
-              cbp = dbp.get('custom_branch_policies') if isinstance(dbp, dict) else None
-              if cbp and isinstance(cbp, list):
-                  for p in cbp:
-                      pat = str(p.get('pattern') or p.get('name_pattern') or '')
-                      if 'v*' in pat:
-                          tag_policy_ok = True
-                          tag_pattern_found = pat
-                          break
-
-          # If the API did not expose a tag policy at all, we fail closed ONLY if we could determine it is missing.
-          # When the endpoint simply does not return that field (common without Deployment protection rule),
-          # we warn but allow if reviewers are present — but the step must still note the gap.
-          # Spec says deployment tag policy verification is conditional 'if discoverable via the API'.
-          if not tag_policy_ok:
-              # Check if the payload even had a policy section at all — if it did but without v*, it's a hard fail.
-              if dbp or 'branch' in raw_str.lower() or 'policy' in raw_str.lower():
-                  errors.append(f\"deployment tag policy not found or not matching 'v*.*.*' (found: {tag_pattern_found or dbp or 'none'}). Expected tag policy 'v*.*.*'.\")
-              else:
-                  print(\"WARN: Could not discover deployment tag policy via this API endpoint — field not present.\")
-                  print(\"WARN: This may mean the PAT/GITHUB_TOKEN lacks scope or the environment has no deployment branch/tag policy configured.\")
-                  print(\"WARN: Reviewers check is authoritative; tag policy is conditional on API discoverability per spec.\")
-                  print(\"WARN: Configure a tag protection rule 'v*.*.*' on the production environment and ensure the audit token has environment admin:read.\")
-                  # Do not hard-fail when the field is absent and not discoverable — but surface the gap.
-                  # However, spec says fail-safe: step fails closed if verification is inconclusive.
-                  # We treat missing discoverable field as soft-warn only if no policy object existed at all.
-                  # If the environment has zero policy objects (empty protection_rules), reviewers already failed.
-                  pass
+              errors.append(\"deployment tag policy 'v*.*.*' is missing\")
 
           if errors:
               for e in errors:
@@ -573,7 +537,7 @@ jobs:
           if-no-files-found: warn
 
       - name: Fail job if smoke failed (no auto-rollback)
-        if: always()
+        if: ${{ always() && steps.smoke.outcome != 'skipped' }}
         run: |
           RC='${{ steps.smoke.outputs.smoke_exit_code }}'
           if [ -z "$RC" ]; then
