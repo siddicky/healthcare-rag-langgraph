@@ -265,7 +265,6 @@ jobs:
             echo "::error::build digest is empty — refusing to deploy mutable tag"
             exit 1
           fi
-          # Digest from build-push is like sha256:abcd... — ensure it is a valid sha256 digest.
           if ! printf '%s' "$DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
             echo "::error::digest '$DIGEST' is not a valid sha256 digest — refusing to deploy"
             exit 1
@@ -274,13 +273,16 @@ jobs:
           echo "Deploying immutable image: $IMAGE"
           echo "Config: deploy/fly.prod.toml"
           echo "App: hc-rag-server-prod"
+          
+          # Add GHCR authentication for Fly
+          flyctl auth docker
+          
           flyctl deploy \
             -a hc-rag-server-prod \
             --config deploy/fly.prod.toml \
             --image "$IMAGE" \
             --strategy immediate
           echo "Fly deploy command completed."
-
       - name: Sync runtime secrets (GitHub Environment → Fly, NAME-only verification)
         env:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
