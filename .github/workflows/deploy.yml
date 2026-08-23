@@ -3,12 +3,6 @@ name: Deploy
 on:
   push:
     tags: ["v*.*.*"]
-  workflow_dispatch:
-    inputs:
-      tag:
-        description: "Tag to deploy (e.g. v1.2.3) — must match ^v\\d+\\.\\d+\\.\\d+$ and exist on origin"
-        required: true
-        type: string
 
 permissions:
   contents: read
@@ -17,7 +11,7 @@ permissions:
 concurrency:
   # Top-level concurrency only scopes workflow runs; the real prod lock is
   # the per-job `concurrency:` on deploy-prod (env-wide, non-cancelling).
-  group: deploy-${{ github.ref_name || inputs.tag }}
+  group: deploy-${{ github.ref_name }}
   cancel-in-progress: false
 
 jobs:
@@ -30,32 +24,16 @@ jobs:
       digest: ${{ steps.build.outputs.digest }}
       version: ${{ steps.meta.outputs.version }}
     steps:
-      - name: Validate workflow_dispatch tag format
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          set -euo pipefail
-          TAG='${{ inputs.tag }}'
-          echo "Validating workflow_dispatch tag: $TAG"
-          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::tag '$TAG' does not match required pattern ^v\\d+\\.\\d+\\.\\d+$ (e.g. v1.2.3)"
-            exit 1
-          fi
-          echo "Tag format OK: $TAG"
-
       - name: Check out repository (tag ref)
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ github.ref }}
           fetch-depth: 0
 
       - name: Verify tag exists on origin and checkout is at tag commit
         run: |
           set -euo pipefail
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            TAG='${{ inputs.tag }}'
-          else
-            TAG='${{ github.ref_name }}'
-          fi
+          TAG='${{ github.ref_name }}'
           echo "Verifying tag refs/tags/$TAG exists on origin..."
           if ! git ls-remote --tags origin | grep -q "refs/tags/${TAG}$"; then
             echo "::error::tag refs/tags/$TAG not found on origin — push the tag first"
@@ -132,7 +110,7 @@ jobs:
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
         with:
           # Use the same tag ref that was built; keeps deploy/fly.prod.toml pinned to the built commit.
-          ref: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || github.ref }}
+          ref: ${{ github.ref }}
           fetch-depth: 1
 
       - name: Verify production environment protection (fail-closed)
