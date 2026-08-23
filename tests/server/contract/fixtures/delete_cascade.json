@@ -1,0 +1,22 @@
+{
+  "fixture_id": "delete-thread cascade",
+  "oracle": "langgraph-api==0.12.6",
+  "observed": {
+    "delete_thread": "DELETE /threads/{id} → 204",
+    "cascades": [
+      "checkpoints removed (storage.saver.adelete_thread)",
+      "runs for that thread removed from registry (all statuses)",
+      "thread-scoped crons removed (records where thread_id == deleted id)",
+      "run_engine runtime state and per-thread queues pruned"
+    ],
+    "post_delete_get": "GET /threads/{id} or /state → 404",
+    "post_delete_runs_list": "GET /threads/{id}/runs → 404 (thread gone, not empty list)",
+    "isolation": "Other threads unaffected"
+  },
+  "assertions_for_oss": [
+    "DELETE returns 204",
+    "Subsequent GET thread → 404",
+    "Runs and crons for deleted thread are gone",
+    "Create new thread with same id after delete succeeds"
+  ]
+}

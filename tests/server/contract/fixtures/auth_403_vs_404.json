@@ -1,0 +1,44 @@
+{
+  "fixture_id": "403 vs 404 status choices",
+  "oracle": "langgraph-api==0.12.6 + healthcare_rag/agent/auth.py policies",
+  "sources": [
+    "scripts/deployed_smoke.py",
+    "healthcare_rag/agent/auth.py:130-135 deny_all, scope filters",
+    "server/auth.py run_policy"
+  ],
+  "observed": {
+    "deny_all": {
+      "description": "auth.on handler returns False",
+      "status": 403,
+      "example": "member POST /store/items → 403 (deny_all)"
+    },
+    "scope_mismatch_hides_404": {
+      "description": "auth.on handler returns dict filter; target metadata does not match",
+      "status": 404,
+      "example": "u2 GET /threads/{u1_thread}/state → 404 not 403 (require_scope_match hide)",
+      "note": "Search scopes AND-merge into filter and return empty list, not 403"
+    },
+    "unauthenticated": {
+      "description": "No credential, local_dev off",
+      "status": 401,
+      "paths": ["/threads/*", "/runs/*", "/assistants/*", "/store/*", "/runs/crons/*", "/coach/*"]
+    },
+    "public_paths": {
+      "paths": ["/ok", "/info"],
+      "status": 200,
+      "note": "Never 401, even unauthenticated"
+    },
+    "perimeter_forbidden_shapes": {
+      "description": "Member sending forbidden envelope keys (perimeter_middleware.py allow-list)",
+      "status": "403 or 404 per check_perimeter in deployed_smoke.py:407-453",
+      "examples": ["messages input → 403/404", "alternate assistant_id → 403", "MCP/A2A when disabled → 404/405"]
+    }
+  },
+  "assertions_for_oss": [
+    "Missing auth → 401 on protected endpoints",
+    "Scope filter mismatch on specific resource → 404",
+    "Explicit deny → 403",
+    "Public endpoints never 401",
+    "Search with scope filter returns filtered list, not 403"
+  ]
+}

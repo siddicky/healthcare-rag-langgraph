@@ -1,0 +1,25 @@
+{
+  "fixture_id": "copy-thread semantics",
+  "oracle": "langgraph-api==0.12.6",
+  "sources": ["healthcare_rag/agent/perimeter.py:149-161", "todo 3 decisions.md copy section"],
+  "observed": {
+    "endpoint": "POST /threads/{id}/copy → 200 new thread record",
+    "new_thread": {
+      "thread_id": "new UUID, distinct from source",
+      "created_at": "now ISO",
+      "updated_at": "now ISO",
+      "metadata": "deep copy of source metadata + policy mutation",
+      "expires_at": "NOT copied (reservation TTL not cloned)"
+    },
+    "scope": "Requires threads.read on source (404 if fails) + threads.create for new id",
+    "checkpoints": "Best-effort copy via saver.acopy_thread if present; failure swallowed, new thread usable empty",
+    "runs_crons_copied": "NOT copied — only checkpoints (to verify against oracle; record if oracle differs)"
+  },
+  "assertions_for_oss": [
+    "Copy returns 200 with new thread_id",
+    "Source metadata deep-copied into new thread",
+    "expires_at not preserved on copy",
+    "Copy of nonexistent source → 404",
+    "Cross-scope copy → 404"
+  ]
+}

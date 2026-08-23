@@ -105,6 +105,7 @@ def test_parity_checker_uses_judge_medians_and_allows_safety_improvement(
     assert result.failures == ()
 
 
+@pytest.mark.asyncio
 async def test_coach_engine_correlates_route_a_informational_leaf() -> None:
     # Given
     engine = build_offline_coach_engine()
@@ -122,6 +123,7 @@ async def test_coach_engine_correlates_route_a_informational_leaf() -> None:
     assert "PRODUCT MONOGRAPH" in result.answer
 
 
+@pytest.mark.asyncio
 async def test_coach_engine_correlates_inner_short_circuit_leaf() -> None:
     # Given
     engine = build_offline_coach_engine()
@@ -138,6 +140,7 @@ async def test_coach_engine_correlates_inner_short_circuit_leaf() -> None:
     assert result.answer == personal_advice_response()
 
 
+@pytest.mark.asyncio
 async def test_coach_engine_does_not_require_route_a_lineage_for_route_b() -> None:
     # Given
     engine = build_offline_coach_engine()
@@ -151,6 +154,7 @@ async def test_coach_engine_does_not_require_route_a_lineage_for_route_b() -> No
     assert result.answer == "Offline coach reply."
 
 
+@pytest.mark.asyncio
 async def test_coach_engine_routes_document_and_reminder_without_route_a_lineage() -> (
     None
 ):
@@ -188,6 +192,7 @@ def test_coach_state_has_no_eval_telemetry_channels() -> None:
     )
 
 
+@pytest.mark.asyncio
 async def test_agent_specific_tagged_cases_all_pass() -> None:
     # Given / When
     results = await run_agent_cases()
@@ -197,6 +202,7 @@ async def test_agent_specific_tagged_cases_all_pass() -> None:
     assert [result.case_id for result in results if not result.passed] == []
 
 
+@pytest.mark.asyncio
 async def test_multiturn_reuses_dataset_and_enforces_boundary_precision() -> None:
     # Given / When
     result = await run_boundary_conversation()

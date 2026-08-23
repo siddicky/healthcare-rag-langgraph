@@ -77,6 +77,50 @@ def test_feedback_startup_validation_probes_dedicated_project(
     assert calls == [{"feedback_key": ["member_feedback"], "session": [PROJECT_ID]}]
 
 
+def test_feedback_startup_validation_skips_probe_without_platform_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """No LANGSMITH_API_KEY means no client to probe with; shape check still runs."""
+    from healthcare_rag.agent import http_app
+
+    monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", PROJECT_ID)
+    monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
+
+    def _forbidden(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("built a LangSmith client without a platform key")
+
+    monkeypatch.setattr(http_app, "Client", _forbidden)
+
+    assert http_app.validate_feedback_project() == PROJECT_ID
+
+
+def test_feedback_startup_validation_still_fails_closed_with_platform_key(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """With a credential configured the probe runs and a bad project is fatal."""
+    from langsmith.utils import LangSmithError
+
+    from healthcare_rag.agent import http_app
+
+    monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", PROJECT_ID)
+    monkeypatch.setenv("LANGSMITH_API_KEY", "lsv2_test")
+    calls: list[dict[str, list[str]]] = []
+
+    class _RejectingClient:
+        def list_feedback(self, **kwargs: list[str]) -> object:
+            calls.append(kwargs)
+            raise LangSmithError("403 Forbidden")
+
+    monkeypatch.setattr(http_app, "Client", _RejectingClient)
+
+    with pytest.raises(
+        http_app.FeedbackProjectConfigurationError,
+        match="project existence probe failed",
+    ):
+        _ = http_app.validate_feedback_project()
+    assert calls == [{"feedback_key": ["member_feedback"], "session": [PROJECT_ID]}]
+
+
 @pytest.mark.anyio
 async def test_internal_version_route_requires_internal_identity_and_role() -> None:
     from healthcare_rag.agent.http_app import internal_version

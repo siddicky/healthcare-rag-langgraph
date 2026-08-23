@@ -5,10 +5,13 @@ Audience: the next engineer or AI coding agent working on this repo. Optimise fo
 
 Please make sure the wiki covers, as separate pages where sensible:
 
-1. **Architecture overview** — the speculative-execution orchestrator
-   (`healthcare_rag/orch/`): branches, supersession, how the "best" answer is
-   selected, and the exact stage order (clarify / decompose / retrieve /
-   evaluate / answer / validate / follow-ups). Include a diagram.
+1. **Architecture overview** — the LangGraph `StateGraph` runtime
+   (`healthcare_rag/graph/`): graph shape (`build.py`), routing decisions
+   (`routers.py`), the nodes in `graph/nodes/`, and the exact stage order
+   (safety gate / clarify / decompose / retrieve / evaluate / answer / validate
+   / follow-ups). Include a diagram. Note: the pre-port speculative-execution
+   orchestrator (`healthcare_rag/orch/`) was deleted in the Phase-2 port
+   (`3435caf`) — do not document it.
 2. **Processors** (`healthcare_rag/processors/`) — one section per processor,
    which prompt template it uses (`prompts/*.yaml.j2`), which Pydantic model it
    returns, and which model tier it runs on.
@@ -25,7 +28,10 @@ Please make sure the wiki covers, as separate pages where sensible:
    experiments, where reports land (`evals/results/`).
 7. **Runbook** — local setup with `uv`, Docker/Weaviate, ingestion, CLI, the
    Makefile targets, required env vars, known gotchas (Python ≥3.11 needed;
-   `requirements.txt` pins are unsatisfiable; Weaviate `restart` policy).
+   dependencies come from `pyproject.toml` + `uv.lock`; Weaviate `restart`
+   policy). Note: the stale root `requirements.txt` was deleted (see
+   `docs/decisions/dependabot-requirements-txt.md`) — do not reintroduce a
+   warning about it.
 8. **Safety posture** — what the app currently does and does not do about
    out-of-scope questions, personal medical advice, PII; point to the eval
    categories that measure this.

@@ -391,6 +391,7 @@ def test_personal_advice_template_says_why_and_names_a_human():
 # --------------------------------------------------------------------------- #
 
 
+@pytest.mark.asyncio
 async def test_in_scope_question_passes_through():
     gate = gate_for("in_scope_informational")
     decision = await gate.evaluate("What are the most common side effects of Lipitor?")
@@ -399,12 +400,14 @@ async def test_in_scope_question_passes_through():
     assert decision.notices == []
 
 
+@pytest.mark.asyncio
 async def test_ambiguous_is_passed_to_the_clarify_stage():
     gate = gate_for("ambiguous")
     decision = await gate.evaluate("What about the other one?")
     assert decision.short_circuit is False and decision.kind == "none"
 
 
+@pytest.mark.asyncio
 async def test_personal_dosing_question_is_refused_without_numbers():
     gate = gate_for("personal_medical_advice")
     decision = await gate.evaluate(
@@ -416,6 +419,7 @@ async def test_personal_dosing_question_is_refused_without_numbers():
     assert "pharmacist" in body
 
 
+@pytest.mark.asyncio
 async def test_personal_non_dosing_advice_question_is_terminal():
     gate = gate_for("personal_medical_advice")
     decision = await gate.evaluate("Is the tiredness I get on Lipitor normal for me?")
@@ -423,6 +427,7 @@ async def test_personal_non_dosing_advice_question_is_terminal():
     assert decision.render() == tpl.personal_advice_response()
 
 
+@pytest.mark.asyncio
 async def test_red_flag_beats_whatever_the_model_said():
     """Deterministic checks are the floor: they escalate, the model cannot relax them."""
     gate = gate_for("in_scope_informational")
@@ -437,6 +442,7 @@ async def test_red_flag_beats_whatever_the_model_said():
     assert "emergency" in body.lower()
 
 
+@pytest.mark.asyncio
 async def test_overdose_red_flag_adds_poison_control():
     gate = gate_for("in_scope_informational")
     decision = await gate.evaluate("I took the whole bottle of metformin by mistake.")
@@ -444,6 +450,7 @@ async def test_overdose_red_flag_adds_poison_control():
     assert "poison control" in decision.render().lower()
 
 
+@pytest.mark.asyncio
 async def test_out_of_scope_question_is_declined_helpfully():
     gate = gate_for("out_of_scope")
     decision = await gate.evaluate("How much ibuprofen can I take for a headache?")
@@ -453,6 +460,7 @@ async def test_out_of_scope_question_is_declined_helpfully():
     assert "Lipitor" in body and "metformin" in body
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("text", "category", "annotated", "expected"),
     [
@@ -492,6 +500,7 @@ async def test_benign_social_annotation_survives_only_for_standalone_social_turn
     assert decision.assessment.benign_social is expected
 
 
+@pytest.mark.asyncio
 async def test_identifier_recall_is_refused_even_when_the_model_says_in_scope():
     gate = gate_for("in_scope_informational")
     decision = await gate.evaluate(
@@ -502,6 +511,7 @@ async def test_identifier_recall_is_refused_even_when_the_model_says_in_scope():
     assert "not kept" in decision.render()
 
 
+@pytest.mark.asyncio
 async def test_unsalvageable_injection_is_refused_in_one_pass():
     gate = gate_for("in_scope_informational")
     decision = await gate.evaluate(
@@ -517,6 +527,7 @@ async def test_unsalvageable_injection_is_refused_in_one_pass():
     assert "persona" in body
 
 
+@pytest.mark.asyncio
 async def test_injection_wrapping_a_real_question_is_answered_after_one_more_pass():
     gate = StubGate(
         lambda q: (
@@ -535,6 +546,7 @@ async def test_injection_wrapping_a_real_question_is_answered_after_one_more_pas
     assert decision.llm_calls == 2 and len(gate.calls) == 2
 
 
+@pytest.mark.asyncio
 async def test_injection_that_is_still_an_override_on_the_second_pass_is_refused():
     gate = gate_for("prompt_injection")
     decision = await gate.evaluate(
@@ -543,6 +555,7 @@ async def test_injection_that_is_still_an_override_on_the_second_pass_is_refused
     assert decision.kind == "injection" and decision.short_circuit is True
 
 
+@pytest.mark.asyncio
 async def test_phi_is_scrubbed_and_flagged_even_when_the_model_misses_it():
     gate = gate_for("in_scope_informational")
     decision = await gate.evaluate(
@@ -558,6 +571,7 @@ async def test_phi_is_scrubbed_and_flagged_even_when_the_model_misses_it():
     )
 
 
+@pytest.mark.asyncio
 async def test_phi_notice_and_refusal_are_combined():
     gate = gate_for("personal_medical_advice")
     decision = await gate.evaluate(
@@ -569,6 +583,7 @@ async def test_phi_notice_and_refusal_are_combined():
     assert no_numeric_dose(body)
 
 
+@pytest.mark.asyncio
 async def test_llm_failure_still_leaves_the_deterministic_floor():
     """``_call_llm`` returns the default on any error; the pre-checks must still fire."""
 

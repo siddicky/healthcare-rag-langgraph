@@ -1,0 +1,332 @@
+from __future__ import annotations
+
+import json as _json
+import logging
+from collections import deque
+from collections.abc import AsyncIterator, Mapping
+from dataclasses import dataclass, field
+from datetime import UTC, datetime
+from typing import ClassVar, Final, Literal, Protocol, TypeAlias, runtime_checkable
+from uuid import uuid4
+
+import anyio
+from anyio.abc import TaskGroup
+from langgraph.types import Command
+from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
+
+logger = logging.getLogger("MedicalRAG")
+
+from server.storage import Storage
+
+JSONValue: TypeAlias = JsonValue
+
+QUEUE_LIMIT: Final = 100
+
+# The authenticated principal is server-controlled state. It has exactly one
+# writer (`RunEngine._graph_config`, from the request's authenticated user) and
+# a client-supplied value is never trusted anywhere.
+AUTH_USER_KEY: Final = "langgraph_auth_user"
+
+
+def _sanitized_config(config: dict[str, JSONValue]) -> dict[str, JSONValue]:
+    """Strip any client-supplied principal from a run config."""
+    configurable = config.get("configurable")
+    if not isinstance(configurable, dict) or AUTH_USER_KEY not in configurable:
+        return config
+    scrubbed = {k: v for k, v in configurable.items() if k != AUTH_USER_KEY}
+    return {**config, "configurable": scrubbed}
+
+
+def _to_jsonable(obj: object) -> object:
+    if obj is None or isinstance(obj, (bool, int, float, str)):
+        return obj
+    if isinstance(obj, dict):
+        return {str(k): _to_jsonable(v) for k, v in obj.items()}  # type: ignore[arg-type]
+    if isinstance(obj, (list, tuple, set)):
+        return [_to_jsonable(v) for v in obj]  # type: ignore[arg-type]
+    if hasattr(obj, "model_dump"):
+        try:
+            return _to_jsonable(obj.model_dump(mode="json"))  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    if hasattr(obj, "dict"):
+        try:
+            return _to_jsonable(obj.dict())  # type: ignore[attr-defined]
+        except Exception:
+            pass
+    try:
+        _json.dumps(obj)
+        return obj
+    except Exception:
+        return str(obj)
+
+
+class ResumeCommand(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    resume: JSONValue
+
+
+class RunRequest(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    assistant_id: str
+    input: dict[str, JSONValue] | None = None
+    command: ResumeCommand | None = None
+    config: dict[str, JSONValue] = Field(default_factory=dict)
+    stream_mode: list[Literal["updates", "custom", "values"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
+    stream_subgraphs: Literal[False] = False
+    stream_resumable: Literal[False] = False
+    durability: Literal["exit"] = "exit"
+    if_not_exists: Literal["reject"] = "reject"
+    multitask_strategy: Literal["reject", "enqueue", "interrupt"] = "reject"
+
+    @model_validator(mode="before")
+    @classmethod
+    def coerce_stream_mode(cls, data: object) -> object:
+        if isinstance(data, dict) and "stream_mode" in data:
+            sm = data["stream_mode"]
+            if isinstance(sm, str):
+                data = dict(data)
+                data["stream_mode"] = [sm]
+        return data
+
+    @model_validator(mode="after")
+    def exactly_one_payload(self) -> RunRequest:
+        if (self.input is None) == (self.command is None):
+            raise ValueError("exactly one of input or command is required")
+        return self
+
+
+class CancelRequest(BaseModel):
+    model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
+    action: Literal["rollback", "interrupt"]
+    wait: bool = False
+
+
+class StateSnapshot(Protocol):
+    values: Mapping[str, JSONValue]
+    next: tuple[str, ...]
+
+
+@runtime_checkable
+class GraphRunner(Protocol):
+    def astream(
+        self,
+        input: dict[str, JSONValue] | Command[str],
+        config: dict[str, JSONValue],
+        *,
+        stream_mode: list[str],
+        durability: Literal["exit"],
+    ) -> AsyncIterator[tuple[str, JSONValue]]: ...
+
+    async def aget_state(self, config: dict[str, JSONValue]) -> StateSnapshot: ...
+
+    async def aupdate_state(
+        self, config: dict[str, JSONValue], values: Mapping[str, JSONValue]
+    ) -> None: ...
+
+
+@dataclass(slots=True)
+class RunRuntime:
+    """Mutable execution signals and output for one run."""
+
+    request: RunRequest
+    thread_id: str
+    auth_user: dict[str, JSONValue] | None = None
+    done: anyio.Event = field(default_factory=anyio.Event)
+    changed: anyio.Event = field(default_factory=anyio.Event)
+    events: list[tuple[str, JSONValue]] = field(default_factory=list)
+    output: dict[str, JSONValue] = field(default_factory=dict)
+    pre_values: dict[str, JSONValue] = field(default_factory=dict)
+    scope: anyio.CancelScope | None = None
+    rollback: bool = False
+
+
+class RunConflict(Exception):
+    pass
+
+
+class QueueFull(Exception):
+    pass
+
+
+class RunMissing(Exception):
+    pass
+
+
+class RunEngine:
+    """Mutable queue coordinator for checkpointed graph runs."""
+
+    def __init__(
+        self, storage: Storage, graphs: Mapping[str, object], tasks: TaskGroup
+    ) -> None:
+        self.storage: Storage = storage
+        self.graphs: Mapping[str, object] = graphs
+        self.tasks: TaskGroup = tasks
+        self.runtime: dict[str, RunRuntime] = {}
+        self.queues: dict[str, deque[str]] = {}
+        self.active: dict[str, str] = {}
+        self.command_replays: dict[str, str] = {}
+        self.stopping: bool = False
+
+    def shutdown(self) -> None:
+        self.stopping = True
+        for queue in self.queues.values():
+            for run_id in queue:
+                self.storage.runs[run_id]["status"] = "interrupted"
+                self.runtime[run_id].done.set()
+                self.runtime[run_id].changed.set()
+            queue.clear()
+        for run_id in self.active.values():
+            scope = self.runtime[run_id].scope
+            if scope is not None:
+                scope.cancel()
+
+    async def submit(
+        self,
+        thread_id: str,
+        request: RunRequest,
+        *,
+        auth_user: dict[str, JSONValue] | None = None,
+    ) -> dict[str, object]:
+        replay_key = self._replay_key(thread_id, request)
+        if replay_key is not None and replay_key in self.command_replays:
+            return self.storage.runs[self.command_replays[replay_key]]
+        active_id = self.active.get(thread_id)
+        if active_id is not None and request.multitask_strategy == "reject":
+            raise RunConflict
+        if active_id is not None and request.multitask_strategy == "interrupt":
+            await self.cancel(
+                thread_id, active_id, CancelRequest(action="interrupt", wait=True)
+            )
+        # Queue bound is server-wide: it must hold regardless of whether THIS
+        # thread already has an active run (an idle thread must not bypass it).
+        if self.pending_count >= QUEUE_LIMIT:
+            raise QueueFull
+        run_id = str(uuid4())
+        record: dict[str, object] = {
+            "run_id": run_id,
+            "thread_id": thread_id,
+            "assistant_id": request.assistant_id,
+            "input": request.input,
+            # The persisted record must describe the run that actually happened.
+            # `_graph_config` drops any client-supplied `langgraph_auth_user`
+            # before execution, so storing the raw client config would echo a
+            # forged principal back on GET /runs/{id} and hand it to anything
+            # that reads the record instead of the runtime.
+            "config": _sanitized_config(request.config),
+            "status": "pending",
+            "created_at": datetime.now(UTC).isoformat(),
+        }
+        if request.command is not None:
+            record["command"] = request.command.model_dump(mode="json")
+        self.storage.runs[run_id] = record
+        self.runtime[run_id] = RunRuntime(
+            request=request, thread_id=thread_id, auth_user=auth_user
+        )
+        if replay_key is not None:
+            self.command_replays[replay_key] = run_id
+        if thread_id in self.active:
+            self.queues.setdefault(thread_id, deque()).append(run_id)
+        else:
+            self._start(run_id)
+        return record
+
+    @property
+    def pending_count(self) -> int:
+        return sum(len(queue) for queue in self.queues.values())
+
+    def _start(self, run_id: str) -> None:
+        runtime = self.runtime[run_id]
+        self.active[runtime.thread_id] = run_id
+        _ = self.tasks.start_soon(self._execute, run_id)
+
+    async def _execute(self, run_id: str) -> None:
+        runtime = self.runtime[run_id]
+        record = self.storage.runs[run_id]
+        graph = self.graphs[runtime.request.assistant_id]
+        assert isinstance(graph, GraphRunner)
+        graph_config = self._graph_config(runtime)
+        snapshot = await graph.aget_state(graph_config)
+        runtime.pre_values = dict(snapshot.values)
+        record["status"] = "running"
+        cancelled = False
+        try:
+            with anyio.CancelScope() as scope:
+                runtime.scope = scope
+                graph_input: dict[str, JSONValue] | Command[str]
+                if runtime.request.command is None:
+                    graph_input = runtime.request.input or {}
+                else:
+                    graph_input = Command(resume=runtime.request.command.resume)
+                async for mode, data in graph.astream(
+                    graph_input,
+                    graph_config,
+                    stream_mode=["updates", "custom"],
+                    durability="exit",
+                ):
+                    runtime.events.append((mode, _to_jsonable(data)))  # type: ignore[arg-type]
+                    runtime.changed.set()
+                    runtime.changed = anyio.Event()
+            cancelled = scope.cancel_called
+            final = await graph.aget_state(graph_config)
+            runtime.output = _to_jsonable(dict(final.values))  # type: ignore[arg-type]
+            record["status"] = "interrupted" if final.next else "success"
+        except anyio.get_cancelled_exc_class():
+            cancelled = True
+        except Exception:  # noqa: BLE001 - executor boundary records arbitrary graph failures.
+            logger.error("run %s failed on graph execution", run_id, exc_info=True)
+            record["status"] = "error"
+        if cancelled:
+            record["status"] = "interrupted"
+        if runtime.rollback:
+            await self._restore(graph, graph_config, runtime.pre_values)
+        runtime.done.set()
+        runtime.changed.set()
+        _ = self.active.pop(runtime.thread_id, None)
+        queue = self.queues.get(runtime.thread_id)
+        if queue and not self.stopping:
+            self._start(queue.popleft())
+
+    async def _restore(
+        self, graph: GraphRunner, config: dict[str, JSONValue], values: dict[str, JSONValue]
+    ) -> None:
+        configurable = config["configurable"]
+        assert isinstance(configurable, dict)
+        await self.storage.saver.adelete_thread(str(configurable["thread_id"]))
+        if values:
+            await graph.aupdate_state(config, values)
+
+    def _graph_config(self, runtime: RunRuntime) -> dict[str, JSONValue]:
+        configurable = runtime.request.config.get("configurable", {})
+        merged = dict(configurable) if isinstance(configurable, dict) else {}
+        # The authenticated principal is server-controlled state, mirroring the
+        # real Agent Server: a client-supplied `langgraph_auth_user` is never
+        # trusted, and graphs (coach memory/gate) read the member identity
+        # from it.
+        merged.pop(AUTH_USER_KEY, None)
+        if runtime.auth_user is not None:
+            merged[AUTH_USER_KEY] = dict(runtime.auth_user)
+        merged["thread_id"] = runtime.thread_id
+        return {**runtime.request.config, "configurable": merged}
+
+    def _replay_key(self, thread_id: str, request: RunRequest) -> str | None:
+        if request.command is None:
+            return None
+        return f"{thread_id}:{request.assistant_id}:{request.command.model_dump_json()}"
+
+    async def cancel(self, thread_id: str, run_id: str, request: CancelRequest) -> None:
+        runtime = self.runtime[run_id]
+        if runtime.thread_id != thread_id:
+            raise RunMissing
+        record = self.storage.runs[run_id]
+        if record["status"] == "pending":
+            self.queues.get(thread_id, deque()).remove(run_id)
+            record["status"] = "interrupted"
+            runtime.done.set()
+            runtime.changed.set()
+            return
+        if record["status"] == "running" and runtime.scope is not None:
+            runtime.rollback = request.action == "rollback"
+            runtime.scope.cancel()
+        if request.wait:
+            await runtime.done.wait()

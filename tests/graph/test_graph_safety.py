@@ -61,6 +61,7 @@ async def _gate_and_finalize(
     return gated, finished
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("question", "assessment", "kind"),
     [
@@ -96,6 +97,7 @@ async def test_short_circuit_finalizes_template_and_persists_scrubbed_turn(
     ]
 
 
+@pytest.mark.asyncio
 async def test_personal_advice_refusal_never_reenters_generation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -118,6 +120,7 @@ async def test_personal_advice_refusal_never_reenters_generation(
     ]
 
 
+@pytest.mark.asyncio
 async def test_salvageable_injection_uses_second_pass_answer(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -142,6 +145,7 @@ async def test_salvageable_injection_uses_second_pass_answer(
     assert finished["answer"].endswith("A validated answer.")
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     ("name", "value"),
     [("HC_RAG_SAFETY_GATE", "false"), ("HC_RAG_DISABLE_STAGES", "safety")],
@@ -163,6 +167,7 @@ async def test_gate_off_bypasses_llm_and_clears_question(
     assert gateway.calls["safety_gate"] == []
 
 
+@pytest.mark.asyncio
 async def test_gate_gateway_failure_uses_ambiguous_default_and_clears_question(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -183,6 +188,7 @@ def test_refusal_templates_never_contain_a_numeric_clinical_unit() -> None:
     assert all(not NUMERIC_DOSE.search(template) for template in ALL_TEMPLATES)
 
 
+@pytest.mark.asyncio
 async def test_safety_gate_resets_per_turn_pipeline_state(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -210,6 +216,7 @@ async def test_safety_gate_resets_per_turn_pipeline_state(
     assert result["branch_events"] == []
 
 
+@pytest.mark.asyncio
 async def test_history_views_and_stored_rationale_are_scrubbed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -236,6 +243,7 @@ async def test_history_views_and_stored_rationale_are_scrubbed(
     assert "12345" not in repr(result["safety"])
 
 
+@pytest.mark.asyncio
 async def test_raw_question_is_cleared_in_updates_and_absent_from_checkpoints(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -252,6 +260,7 @@ async def test_raw_question_is_cleared_in_updates_and_absent_from_checkpoints(
     assert all(raw not in repr(item.values) for item in graph.get_state_history(config))
 
 
+@pytest.mark.asyncio
 async def test_simple_and_clarified_turns_seed_one_parent_event(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -279,6 +288,7 @@ async def test_simple_and_clarified_turns_seed_one_parent_event(
     assert decomposed["selected_branch_type"] == "clarified"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(("only_complex", "complexity", "expected"), [("true", "complex", 3), ("false", "simple", 3)])
 async def test_decomposition_caps_after_two_query_gate(
     monkeypatch: pytest.MonkeyPatch,
@@ -307,6 +317,7 @@ async def test_decomposition_caps_after_two_query_gate(
     assert result["selected_branch_type"] == "synthesized"
 
 
+@pytest.mark.asyncio
 async def test_disabled_preprocess_stages_make_no_llm_calls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -323,6 +334,7 @@ async def test_disabled_preprocess_stages_make_no_llm_calls(
     assert gateway.calls == {}
 
 
+@pytest.mark.asyncio
 async def test_context_extraction_skips_llm_without_history_and_uses_default_on_failure(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -363,6 +375,7 @@ def _compile_safety_node_graph():
     return builder.compile(checkpointer=InMemorySaver())
 
 
+@pytest.mark.asyncio
 async def test_personal_advice_refusal_writes_boundary(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -403,6 +416,7 @@ async def test_personal_advice_refusal_writes_boundary(
     assert datetime.fromisoformat(boundary["created_ts"]).utcoffset() == timedelta(0)
 
 
+@pytest.mark.asyncio
 async def test_identifier_recall_and_out_of_scope_write_nothing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -424,6 +438,7 @@ async def test_identifier_recall_and_out_of_scope_write_nothing(
     assert graph.get_state(config).values.get("refusal_boundaries", []) == []
 
 
+@pytest.mark.asyncio
 async def test_gate_off_writes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
     gateway = FakeLLMGateway(safety_gate=[_assessment("personal_medical_advice")])
     monkeypatch.setattr(safety, "GATEWAY", gateway)
@@ -439,6 +454,7 @@ async def test_gate_off_writes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
     assert graph.get_state(config).values.get("refusal_boundaries", []) == []
 
 
+@pytest.mark.asyncio
 async def test_knob_off_writes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
     gateway = FakeLLMGateway(safety_gate=[_assessment("personal_medical_advice")])
     monkeypatch.setattr(safety, "GATEWAY", gateway)
@@ -454,6 +470,7 @@ async def test_knob_off_writes_nothing(monkeypatch: pytest.MonkeyPatch) -> None:
     assert graph.get_state(config).values.get("refusal_boundaries", []) == []
 
 
+@pytest.mark.asyncio
 async def test_stale_entry_survives_new_write(monkeypatch: pytest.MonkeyPatch) -> None:
     from healthcare_rag.processors.safety_responses import personal_advice_response
 
@@ -484,6 +501,7 @@ async def test_stale_entry_survives_new_write(monkeypatch: pytest.MonkeyPatch) -
     assert boundaries[1]["template_version"] == 1
 
 
+@pytest.mark.asyncio
 async def test_emergency_refusal_writes_variant_boundary(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -509,6 +527,7 @@ async def test_emergency_refusal_writes_variant_boundary(
     assert boundary["template_version"] == 1
 
 
+@pytest.mark.asyncio
 async def test_boundary_replay_short_circuit(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -552,6 +571,7 @@ async def test_boundary_replay_short_circuit(
     assert result["refusal_boundaries"] == [first_boundary]
 
 
+@pytest.mark.asyncio
 async def test_informational_followup_not_replayed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -587,6 +607,7 @@ async def test_informational_followup_not_replayed(
     assert result["safety"]["boundaries_active"] == 1
 
 
+@pytest.mark.asyncio
 async def test_full_gate_outcome_carries_boundary_fields(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -619,6 +640,7 @@ async def test_full_gate_outcome_carries_boundary_fields(
     assert result["safety"]["boundaries_active"] == 1
 
 
+@pytest.mark.asyncio
 async def test_gate_off_skips_precheck(monkeypatch: pytest.MonkeyPatch) -> None:
     from healthcare_rag.processors.safety_responses import personal_advice_response
 
@@ -647,6 +669,7 @@ async def test_gate_off_skips_precheck(monkeypatch: pytest.MonkeyPatch) -> None:
     assert gateway.calls["safety_gate"] == []
 
 
+@pytest.mark.asyncio
 async def test_boundary_persists_and_replays_without_a_second_gate_call(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -691,6 +714,7 @@ async def test_boundary_persists_and_replays_without_a_second_gate_call(
     )
 
 
+@pytest.mark.asyncio
 async def test_corrupted_boundary_is_inert_and_retained(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -728,6 +752,7 @@ async def test_corrupted_boundary_is_inert_and_retained(
     assert graph.get_state(config).values["refusal_boundaries"] == [corrupted]
 
 
+@pytest.mark.asyncio
 async def test_phi_canary_is_absent_from_all_checkpoint_surfaces(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -768,6 +793,7 @@ async def test_phi_canary_is_absent_from_all_checkpoint_surfaces(
     assert all(canary not in payload for canary in forbidden for payload in rendered)
 
 
+@pytest.mark.asyncio
 async def test_emergency_boundary_replays_symptoms_but_not_monograph_question(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -812,6 +838,7 @@ async def test_emergency_boundary_replays_symptoms_but_not_monograph_question(
     assert informational["safety"]["boundary_hit"] is False
 
 
+@pytest.mark.asyncio
 async def test_emergency_variant_mismatch_runs_the_full_gate(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -847,6 +874,7 @@ async def test_emergency_variant_mismatch_runs_the_full_gate(
     assert result["safety"]["boundary_hit"] is False
 
 
+@pytest.mark.asyncio
 async def test_personal_boundary_carves_out_information_and_suppresses_decision_request(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -903,6 +931,7 @@ async def test_personal_boundary_carves_out_information_and_suppresses_decision_
     assert decision["safety"]["response_kind"] == "boundary_replay"
 
 
+@pytest.mark.asyncio
 async def test_knob_off_never_writes_boundary_and_retries_reask(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -949,6 +978,7 @@ async def test_knob_off_never_writes_boundary_and_retries_reask(
     ) in (None, [])
 
 
+@pytest.mark.asyncio
 async def test_gate_off_retains_preseeded_boundary_without_replay_or_write(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -987,6 +1017,7 @@ async def test_gate_off_retains_preseeded_boundary_without_replay_or_write(
     assert graph.get_state(config).values["refusal_boundaries"] == [boundary]
 
 
+@pytest.mark.asyncio
 async def test_terminal_refusal_writes_boundary_and_replays_without_generation(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

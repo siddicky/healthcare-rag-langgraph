@@ -1,0 +1,7 @@
+# Pinned oracle environment — langgraph-api==0.12.6 + compatible CLI.
+# The repo dev extra resolves langgraph-api==0.13.0 (via constraint-dependencies)
+# and is NOT the characterization source. This file is the oracle source of truth.
+# Install with: uv pip install --no-config --python tests/server/oracle/.venv/bin/python -r tests/server/oracle/requirements.txt
+# The --no-config flag bypasses pyproject.toml's constraint-dependencies which would otherwise force 0.13.
+langgraph-cli[inmem]==0.4.31
+langgraph-api==0.12.6

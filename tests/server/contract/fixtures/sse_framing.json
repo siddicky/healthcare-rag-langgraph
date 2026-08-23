@@ -1,0 +1,20 @@
+{
+  "fixture_id": "SSE byte framing",
+  "oracle": "langgraph-api==0.12.6 stream_mode=['updates','custom']",
+  "source": "protocol-v2 docs + scripts/langgraph_smoke.py:179-197 + oracle capture (todo 4 note)",
+  "observed": {
+    "content_type": "text/event-stream",
+    "event_lines": "event: <stream_mode>\\ndata: <compact-json>\\n\\n",
+    "example_bytes": "event: updates\\ndata: {\"step\":{\"value\":5}}\\n\\n",
+    "ordering": "events in order yielded by graph.astream(..., stream_mode=[\"updates\",\"custom\"]); no synthetic metadata or terminal event",
+    "oracle_capture_note": "No metadata/id/retry fields injected; each data line is compact JSON (json.dumps without indent). The SDK exposes each as event.event=stream_mode, event.data=chunk. Todo 8 must capture pinned oracle and correct if it emits metadata, ids, spaces or terminal frames — until then the SDK shape from smoke is the fixture."
+  },
+  "accepted_deviation": "None yet — if oracle emits additional framing (e.g. 'id:' or 'retry:' lines) the OSS must match. Record deviation with fixture evidence and fix server/run_engine.py StreamingResponse construction.",
+  "assertions_for_oss": [
+    "Content-Type is text/event-stream",
+    "Each event has exactly one event: line and one data: line, terminated by \\n\\n",
+    "data payload is valid JSON",
+    "event names are subset of requested stream_modes",
+    "No extra metadata events before first graph yield"
+  ]
+}

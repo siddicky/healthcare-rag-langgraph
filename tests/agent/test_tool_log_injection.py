@@ -147,6 +147,7 @@ def clean_privacy(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setattr(log_injection_tool, "get_resources", lambda: resources)
 
 
+@pytest.mark.asyncio
 async def test_no_schedule_emits_exactly_today_logged_and_no_next_dose() -> None:
     # Given a member with no approved schedule entries, frozen on a Thursday.
     store = InMemoryStore()
@@ -170,6 +171,7 @@ async def test_no_schedule_emits_exactly_today_logged_and_no_next_dose() -> None
     assert injections[0].date == FROZEN_THURSDAY
 
 
+@pytest.mark.asyncio
 async def test_future_dose_schedule_adds_upcoming_day_and_next_dose_label() -> None:
     # Given an approved injection entry the Monday after the frozen Thursday.
     store = InMemoryStore()
@@ -190,6 +192,7 @@ async def test_future_dose_schedule_adds_upcoming_day_and_next_dose_label() -> N
     }
 
 
+@pytest.mark.asyncio
 async def test_next_week_same_weekday_dose_stays_distinct() -> None:
     # Given an approved injection entry on next week's Thursday.
     store = InMemoryStore()
@@ -206,6 +209,7 @@ async def test_next_week_same_weekday_dose_stays_distinct() -> None:
     assert _data(result).get("nextDoseLabel") == "Thursday"
 
 
+@pytest.mark.asyncio
 async def test_multiple_future_doses_are_date_sorted_and_deduplicated() -> None:
     # Given two approved entries on the same Monday plus one on Wednesday.
     store = InMemoryStore()
@@ -230,6 +234,7 @@ async def test_multiple_future_doses_are_date_sorted_and_deduplicated() -> None:
     ]
 
 
+@pytest.mark.asyncio
 async def test_past_dose_schedule_does_not_project() -> None:
     # Given an approved injection entry dated before today.
     store = InMemoryStore()
@@ -245,6 +250,7 @@ async def test_past_dose_schedule_does_not_project() -> None:
     assert "nextDoseLabel" not in _data(result)
 
 
+@pytest.mark.asyncio
 async def test_non_dose_schedule_kinds_do_not_project() -> None:
     # Given an approved check-in entry after today.
     store = InMemoryStore()
@@ -260,6 +266,7 @@ async def test_non_dose_schedule_kinds_do_not_project() -> None:
     assert "nextDoseLabel" not in _data(result)
 
 
+@pytest.mark.asyncio
 async def test_identifier_medication_is_scrubbed_in_store_and_envelope(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -281,6 +288,7 @@ async def test_identifier_medication_is_scrubbed_in_store_and_envelope(
     assert [entry.medication for entry in injections] == ["[REDACTED_PERSON] titration"]
 
 
+@pytest.mark.asyncio
 async def test_real_sanitizer_scrubs_identifier_medication(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -304,6 +312,7 @@ async def test_real_sanitizer_scrubs_identifier_medication(
     ]
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("missing", ["coach_human_msg_id", "thread_id"])
 async def test_missing_turn_scope_key_raises_and_stores_nothing(missing: str) -> None:
     # Given
@@ -319,6 +328,7 @@ async def test_missing_turn_scope_key_raises_and_stores_nothing(missing: str) ->
     assert await store.asearch(("users", "user-a", "injection_log")) == []
 
 
+@pytest.mark.asyncio
 async def test_missing_identity_raises_and_stores_nothing() -> None:
     # Given
     store = InMemoryStore()
@@ -332,6 +342,7 @@ async def test_missing_identity_raises_and_stores_nothing() -> None:
     assert await store.asearch(("users", "user-a", "injection_log")) == []
 
 
+@pytest.mark.asyncio
 async def test_store_failure_returns_error_string_without_partial_envelope(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -352,6 +363,7 @@ async def test_store_failure_returns_error_string_without_partial_envelope(
     assert await store.asearch(("users", "user-a", "injection_log")) == []
 
 
+@pytest.mark.asyncio
 async def test_scanner_failure_refuses_without_storing(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

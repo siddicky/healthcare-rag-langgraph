@@ -29,7 +29,16 @@ dependencies = [
     "presidio-analyzer==2.2.364",
     "spacy==3.8.15",
     "en-core-web-sm @ https://github.com/explosion/spacy-models/releases/download/en_core_web_sm-3.8.0/en_core_web_sm-3.8.0-py3-none-any.whl#sha256=1932429db727d4bff3deed6b34cfc05df17794f4a52eeb26cf8928f7c1a0fb85",
+    "starlette>=0.40",
+    "uvicorn>=0.30,<1",
+    "croniter>=3,<4",
+    "tzdata",
+    "langgraph-sdk>=0.3,<0.4",
+    "langsmith>=0.4",
 ]
+
+[tool.uv]
+constraint-dependencies = ["langgraph-api>=0.13,<0.14"]
 
 [project.optional-dependencies]
 # LangSmith tracing + the evals/ harness
@@ -46,6 +55,7 @@ ingest = [
     "transformers>=4.51",
 ]
 dev = [
+    "httpx-sse>=0.4,<1",
     "pytest>=8",
     "pytest-asyncio>=0.26",
     "rich>=14",
@@ -64,13 +74,20 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
-include = ["healthcare_rag*", "evals*"]
+include = ["healthcare_rag*", "evals*", "server*"]
 
 [tool.setuptools.package-data]
 healthcare_rag = ["prompts/*.yaml.j2"]
 
 [tool.pytest.ini_options]
-asyncio_mode = "auto"
+# strict, not "auto": in auto mode pytest-asyncio hooks `pytest_fixture_setup`
+# for every unmarked async fixture and races the anyio plugin for ownership of
+# the async-generator fixtures in tests/server (see tests/server/conftest.py).
+# Strict mode makes ownership explicit -- each async test carries its own
+# runner marker (`pytest.mark.asyncio` or `pytest.mark.anyio`) -- so the two
+# plugins never contend and the outcome no longer depends on plugin
+# registration order.
+asyncio_mode = "strict"
 testpaths = ["tests"]
 pythonpath = ["."]
 addopts = "-m 'not judge'"   # judge tests are opt-in: pytest -m judge

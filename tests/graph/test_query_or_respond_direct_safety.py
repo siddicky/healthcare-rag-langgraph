@@ -15,6 +15,7 @@ from healthcare_rag.processors.social_responses import social_response
 from .query_or_respond_fakes import _gateway, _install, _state
 
 
+@pytest.mark.asyncio
 async def test_social_no_tool_phi_content_uses_deterministic_fallback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -43,6 +44,7 @@ async def test_social_no_tool_phi_content_uses_deterministic_fallback(
     assert model.bound.messages[-1].content == "Hello"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "content",
     [
@@ -97,6 +99,7 @@ async def test_gateway_rejects_clinical_direct_content(
     assert decision.fallback_reason == "clinical_direct_content"
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "content",
     [
@@ -148,6 +151,7 @@ async def test_social_clinical_direct_content_uses_deterministic_fallback(
     assert model.bound.messages[-1].content == "Hello"
 
 
+@pytest.mark.asyncio
 async def test_social_injection_direct_content_uses_deterministic_fallback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -166,6 +170,7 @@ async def test_social_injection_direct_content_uses_deterministic_fallback(
     assert "messages" not in update
 
 
+@pytest.mark.asyncio
 async def test_social_policy_exception_fails_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -195,6 +200,7 @@ async def test_social_policy_exception_fails_closed(
     assert "messages" not in update
 
 
+@pytest.mark.asyncio
 async def test_social_privacy_scanner_exception_fails_closed(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

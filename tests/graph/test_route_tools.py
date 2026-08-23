@@ -35,6 +35,7 @@ def _gateway_with_fake_model() -> tuple[LangChainLLMGateway, MagicMock]:
     return gateway, model
 
 
+@pytest.mark.asyncio
 async def test_aroute_tools_binds_every_configured_collection() -> None:
     gateway, model = _gateway_with_fake_model()
     calls = await gateway.aroute_tools("What are Lipitor side effects?")
@@ -61,6 +62,7 @@ class _Outcome(BaseModel):
     ok: bool = True
 
 
+@pytest.mark.asyncio
 async def test_astructured_calls_run_concurrently(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

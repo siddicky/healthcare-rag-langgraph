@@ -9,6 +9,7 @@ from healthcare_rag.processors.social_responses import social_response
 from .query_or_respond_fakes import _gateway, _install, _state, _tool_call
 
 
+@pytest.mark.asyncio
 async def test_gateway_binds_exact_tool_options_and_scrubbed_capped_messages(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -60,6 +61,7 @@ async def test_gateway_binds_exact_tool_options_and_scrubbed_capped_messages(
     assert canary not in repr(model.bound.messages)
 
 
+@pytest.mark.asyncio
 async def test_inconsistent_social_state_cannot_enable_direct_output(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -91,6 +93,7 @@ async def test_inconsistent_social_state_cannot_enable_direct_output(
     }
 
 
+@pytest.mark.asyncio
 async def test_non_out_of_scope_social_proposal_cannot_enable_direct_output(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -122,6 +125,7 @@ async def test_non_out_of_scope_social_proposal_cannot_enable_direct_output(
     }
 
 
+@pytest.mark.asyncio
 async def test_gateway_projects_history_as_sanitized_content_only_messages(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -160,6 +164,7 @@ async def test_gateway_projects_history_as_sanitized_content_only_messages(
     assert retained.name is None
 
 
+@pytest.mark.asyncio
 async def test_oversized_social_direct_content_uses_deterministic_fallback(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -185,6 +190,7 @@ async def test_oversized_social_direct_content_uses_deterministic_fallback(
     }
 
 
+@pytest.mark.asyncio
 async def test_oversized_medical_tool_query_uses_original_query(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -216,6 +222,7 @@ async def test_oversized_medical_tool_query_uses_original_query(
     }
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize("oversized_channel", ["history", "current"])
 async def test_oversized_gateway_input_uses_original_query_without_model_call(
     monkeypatch: pytest.MonkeyPatch,

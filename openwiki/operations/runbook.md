@@ -11,7 +11,7 @@ tags: [operations, setup, weaviate]
 
 1. Install `uv`, Docker, and Docker Compose. Use Python **3.11 or newer**; the project metadata requires `>=3.11` because models use `typing.Self` (`pyproject.toml#L1-L16`).
 2. Put only required values in local `.env`: `OPENAI_API_KEY` is required. Optionally set `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`, model variables, LangSmith variables, and `PINECONE_API_KEY` (needed only for the [pinecone arm and reranker](../retrieval/arms-and-reranking.md)). Never commit or document secret values.
-3. Run `make venv`. It intentionally creates Python 3.12 and installs `.[evals,dev,graph-sqlite]` via uv (`Makefile#L11-L13`). Do **not** use `requirements.txt`: it is a large frozen list whose pins conflict with the declared constrained dependencies and is known unsatisfiable for this project brief.
+3. Run `make venv`. It intentionally creates Python 3.12 and installs `.[evals,dev,graph-sqlite]` via uv (`Makefile#L11-L13`).
 4. Run `make weaviate`; it starts Compose and polls `http://127.0.0.1:8080/v1/.well-known/ready`.
 5. Run `make ingest`, then `make run` for `python -m healthcare_rag`.
 

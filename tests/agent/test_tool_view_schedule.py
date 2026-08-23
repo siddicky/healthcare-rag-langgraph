@@ -152,6 +152,7 @@ async def _seed_june(store: InMemoryStore) -> None:
     )
 
 
+@pytest.mark.asyncio
 async def test_june_entries_emit_exact_calendar_envelope_with_agent_listing() -> (
     None
 ):
@@ -203,6 +204,7 @@ async def test_june_entries_emit_exact_calendar_envelope_with_agent_listing() ->
     assert "entry_id" not in json.dumps(envelope["data"])
 
 
+@pytest.mark.asyncio
 async def test_empty_month_returns_no_highlights() -> None:
     # Given
     store = InMemoryStore()
@@ -219,6 +221,7 @@ async def test_empty_month_returns_no_highlights() -> None:
     assert envelope["text"] == "No schedule entries for July 2026."
 
 
+@pytest.mark.asyncio
 async def test_member_b_sees_no_entries_for_member_a() -> None:
     # Given
     store = InMemoryStore()
@@ -233,6 +236,7 @@ async def test_member_b_sees_no_entries_for_member_a() -> None:
     assert envelope["text"] == "No schedule entries for June 2026."
 
 
+@pytest.mark.asyncio
 async def test_entries_outside_requested_month_are_excluded() -> None:
     # Given
     store = InMemoryStore()
@@ -247,6 +251,7 @@ async def test_entries_outside_requested_month_are_excluded() -> None:
     assert "dose-may" not in envelope["text"]
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "month",
     ["2026-6", "26-06", "2026-13", "2026-00", "2026/06", "june", "", "2026-06-01"],
@@ -262,6 +267,7 @@ async def test_malformed_month_returns_error_string(month: str) -> None:
     assert result == "Schedule unavailable: month must use YYYY-MM."
 
 
+@pytest.mark.asyncio
 async def test_missing_authenticated_identity_raises() -> None:
     # Given
     store = InMemoryStore()
@@ -272,6 +278,7 @@ async def test_missing_authenticated_identity_raises() -> None:
         _ = await _view(store, config=config)
 
 
+@pytest.mark.asyncio
 @pytest.mark.parametrize(
     "configurable",
     [
@@ -300,6 +307,7 @@ async def test_missing_thread_context_returns_error_string(
     assert result == "Schedule unavailable: thread context missing."
 
 
+@pytest.mark.asyncio
 async def test_envelope_scope_tracks_configured_thread_and_human_message() -> None:
     # Given
     store = InMemoryStore()

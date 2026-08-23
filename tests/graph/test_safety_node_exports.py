@@ -47,6 +47,7 @@ def test_finalizer_old_and_new_import_paths_have_identical_objects() -> None:
     )
 
 
+@pytest.mark.asyncio
 async def test_classifier_without_llm_uses_ambiguous_fail_soft_assessment() -> None:
     assessment = await safety.LangChainSafetyGate()._llm_assess("What about it?")
 
@@ -59,6 +60,7 @@ async def test_classifier_without_llm_uses_ambiguous_fail_soft_assessment() -> N
     )
 
 
+@pytest.mark.asyncio
 async def test_finalize_refusal_has_no_followups_and_persists_displayed_turn() -> None:
     result = await safety.finalize(
         {
@@ -79,6 +81,7 @@ async def test_finalize_refusal_has_no_followups_and_persists_displayed_turn() -
     ]
 
 
+@pytest.mark.asyncio
 async def test_finalize_refusal_clears_conflicting_direct_routing_state() -> None:
     result = await safety.finalize(
         {
@@ -109,6 +112,7 @@ async def test_finalize_refusal_clears_conflicting_direct_routing_state() -> Non
     assert result.get("selected_branch_query") is None
 
 
+@pytest.mark.asyncio
 async def test_finalize_validated_answer_persists_displayed_turn_and_followups() -> (
     None
 ):
@@ -131,6 +135,7 @@ async def test_finalize_validated_answer_persists_displayed_turn_and_followups()
     ]
 
 
+@pytest.mark.asyncio
 async def test_finalize_direct_response_has_priority_and_clears_medical_channels() -> (
     None
 ):
@@ -154,6 +159,7 @@ async def test_finalize_direct_response_has_priority_and_clears_medical_channels
     ]
 
 
+@pytest.mark.asyncio
 async def test_safety_gate_resolves_live_classifier_module_global(
     monkeypatch: pytest.MonkeyPatch,
     install_resources: ResourceInstaller,

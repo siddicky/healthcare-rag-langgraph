@@ -1,0 +1,23 @@
+{
+  "fixture_id": "resume idempotency / interrupt replay",
+  "oracle": "langgraph-api==0.12.6 + coach agent interrupts",
+  "sources": ["scripts/deployed_smoke.py:339-365,760-781", "healthcare_rag/graph interrupt semantics"],
+  "observed": {
+    "interrupt_produces_state": "After a run that hits interrupt(), GET /threads/{id}/state returns interrupts list non-empty and values/interrupts projected",
+    "resume": "POST /threads/{id}/runs/stream with command: {resume: {accept: False}} or {accept: true, fields: [...] } maps to graph Command(resume=...)",
+    "replay": {
+      "description": "Second identical resume after first completed should be idempotent: either 409 or state values unchanged",
+      "assertion": "replay.status 409 OR first.values == second.values (deployed_smoke.py:357-364)",
+      "note": "OSS RunEngine must enforce at-least-once deduplication or surface 409 for duplicate command; both satisfy oracle observation"
+    },
+    "invalid_resume": "malformed command → 4xx (422 or 400) per fixture; executor must not crash",
+    "concurrent_run_rejected": "Second concurrent run on same thread with multitask_strategy reject → 409"
+  },
+  "assertions_for_oss": [
+    "Interrupt after first turn is observable via state interrupts",
+    "Resume with command resumes and produces new state",
+    "Identical replay is idempotent (409 or same values)",
+    "Invalid command shape → 4xx",
+    "Concurrent second run with reject → 409"
+  ]
+}

@@ -6,9 +6,9 @@ tags: [agent, langgraph, coach, server]
 openwiki:
   roles: [architecture, domain, integration]
   change_kinds: [public-api, lifecycle]
-  source_paths: [healthcare_rag/agent/build.py, healthcare_rag/agent/gate.py, healthcare_rag/agent/rag_relay.py, healthcare_rag/agent/coach_agent.py, langgraph.json]
-  symbols: [coach, build_coach_graph, coach_gate, CoachSafetyGate, rag_relay, erase_my_data, coach_agent, CoachState]
-  test_paths: [tests/agent/test_coach_gate.py, tests/agent/test_rag_relay.py, tests/agent/test_route_b.py, tests/agent/test_server_perimeter.py]
+  source_paths: [healthcare_rag/agent/build.py, healthcare_rag/agent/gate.py, healthcare_rag/agent/rag_relay.py, healthcare_rag/agent/coach_agent.py, healthcare_rag/agent/cleanup.py, langgraph.json]
+  symbols: [coach, build_coach_graph, coach_gate, CoachSafetyGate, rag_relay, erase_my_data, coach_agent, CoachState, prepare_thread_deletion, clear_cleanup_marker, _is_studio, _PRIVATE_SENTINELS]
+  test_paths: [tests/agent/test_coach_gate.py, tests/agent/test_rag_relay.py, tests/agent/test_route_b.py, tests/agent/test_server_perimeter.py, tests/agent/test_perimeter_studio.py, tests/agent/test_perimeter_composed.py]
   invariants: [Every turn is scrubbed through the shared PrivacySanitizer before routing or persistence., Medical monograph questions go through the full healthcare graph via rag_relay; the coach agent itself never gives medical advice., The erase flow is fail-closed: the confirmation marker is only emitted when remote cron and upload cleanup both succeed.]
   validation_commands: [make test, make eval-agent]
 ---
@@ -87,8 +87,34 @@ composed with `agent/perimeter.py`) and CORS restricted to
 `LANGSMITH_FEEDBACK_PROJECT_ID` names a valid, probe-able LangSmith feedback
 project — feedback is stored run-less, so it cannot leak member content into
 traces. Auth (`agent/auth.py`) maps principals to member/coordinator roles;
-`tests/agent/test_auth.py` and `tests/agent/test_server_perimeter.py` pin the
-perimeter. `langgraph.json` also pins the Presidio/spaCy models into the
+`tests/agent/test_auth.py`, `tests/agent/test_perimeter_composed.py`, and
+`tests/agent/test_server_perimeter.py` pin the perimeter.
+
+**LangSmith Studio principals.** `langgraph.json` keeps
+`auth.disable_studio_auth: false`, so workspace operators reach the deployment
+as `StudioUser` principals. `MemberPerimeterMiddleware` passes them straight
+through (`perimeter_middleware.py` — a Studio user is an operator, not a
+member), and every authorization handler in `agent/auth.py` short-circuits
+`_is_studio(ctx)` to an allow (`deny_all`, thread create/read/search/delete,
+coach assistant read, cron scopes). Members and anonymous requests are held to
+exactly the previous contract; `tests/agent/test_perimeter_studio.py` pins all
+three outcomes and asserts the config flag stays false.
+
+**Member thread deletion.** A member `DELETE /threads/{id}` is gated by an
+ownership pre-check plus `prepare_thread_deletion` (`agent/cleanup.py`): it
+writes a `cleanup_pending` gate marker, pauses the thread's reminders in the
+store, then deletes their platform crons over the internal headers. If any
+remote step fails the response is a retryable `503` with a "Reminders are
+paused; deletion cleanup can be retried" notice — reminders stay paused, so a
+retry cannot fire an orphaned cron. After the platform confirms deletion, the
+middleware synthesizes `204` and clears the marker
+(`clear_cleanup_marker`). Member-facing `GET .../state` responses are
+re-projected through `perimeter.py:project_state`, which strips the private
+sentinels `question`, `attachment_id`, `cron_wake`, and
+`pending_document_op_id` (filtered out, not denied — the whole response is
+never 500'd for their presence).
+
+`langgraph.json` also pins the Presidio/spaCy models into the
 deployed image via `dockerfile_lines` (see
 [PrivacySanitizer](../privacy/sanitizer.md) for why exact versions matter).
 Reminders fire through the cron client (`agent/cron_client.py`,
@@ -110,7 +136,9 @@ Ten-check deployment validation is `make deployed-smoke`
 member-data tools by `tests/agent/test_store_data.py`,
 `test_tool_log_metric.py`, `test_tool_log_injection.py`,
 `test_tool_change_schedule.py`, `test_tool_view_schedule.py`; reminders by
-`tests/agent/test_reminders.py`. Deployed-surface changes
+`tests/agent/test_reminders.py`; the perimeter/auth contract by
+`tests/agent/test_perimeter_composed.py` and
+`tests/agent/test_perimeter_studio.py`. Deployed-surface changes
 (`langgraph.json`, auth, perimeter, HTTP routes) additionally need
 `tests/agent/test_deploy_config.py` plus `make deployed-smoke`. Run
 `make test` first — all of `tests/agent/` is offline.

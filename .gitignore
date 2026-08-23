@@ -34,3 +34,10 @@ uv.lock
 # oh-my-claudecode operational state (any level); project skills stay committable
 .omc/
 !.omc/skills/
+
+# --- submission hygiene ---
+.env.local
+.env.*.local
+.vercel/
+.DS_Store
+tmp/

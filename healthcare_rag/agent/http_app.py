@@ -25,6 +25,7 @@ from healthcare_rag.agent.uploads import (
 )
 
 FEEDBACK_PROJECT_ENV: Final = "LANGSMITH_FEEDBACK_PROJECT_ID"
+PLATFORM_KEY_ENV: Final = "LANGSMITH_API_KEY"
 
 
 class FeedbackProjectConfigurationError(RuntimeError):
@@ -40,12 +41,22 @@ class FeedbackProjectConfigurationError(RuntimeError):
 def validate_feedback_project(
     probe: Callable[[str], None] | None = None,
 ) -> str:
-    """Validate the dedicated run-less feedback project before serving traffic."""
+    """Validate the dedicated run-less feedback project before serving traffic.
+
+    The shape check always runs. The existence probe is a LangSmith API call, so
+    it only runs when there is a platform credential to make it with: without
+    `LANGSMITH_API_KEY` the client cannot authenticate and every feedback path
+    (`post_feedback`, `auth.py`) already fails closed on the missing key, so an
+    unauthenticated probe could only ever report a false configuration error.
+    Any deployment that can post feedback therefore still gets the probe.
+    """
     raw_project_id = os.getenv(FEEDBACK_PROJECT_ENV, "")
     try:
         project_id = str(UUID(raw_project_id))
     except ValueError:
         raise FeedbackProjectConfigurationError("missing or invalid UUID") from None
+    if probe is None and not os.getenv(PLATFORM_KEY_ENV, "").strip():
+        return project_id
     try:
         if probe is None:
             _ = next(

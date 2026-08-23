@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from langchain_core.messages import ToolCall
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
@@ -43,6 +45,7 @@ def _tool_call(query: str) -> ToolCall:
     }
 
 
+@pytest.mark.asyncio
 async def test_structured_citation_canaries_are_absent_from_updates_and_checkpoints(
     install_resources: ResourceInstaller,
 ) -> None:

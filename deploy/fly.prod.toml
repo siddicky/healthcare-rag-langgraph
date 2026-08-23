@@ -1,0 +1,43 @@
+# Fly.io production config for hc-rag-server-prod
+# Deploys are image-only: CI supplies --image ghcr.io/<repo>@sha256:<digest>
+# No [build] section — image is built and pushed by the release workflow.
+
+app = "hc-rag-server-prod"
+primary_region = "iad"
+
+[env]
+WEAVIATE_HOST = "hc-rag-weaviate-prod.internal"
+WEAVIATE_PORT = "8080"
+# WEAVIATE_GRPC_PORT is not required for the HTTP-only server path;
+# add "50051" here only if a future server build needs gRPC.
+SERVER_STORAGE = "memory"
+SERVER_PORT = "8000"
+# The coach reminder tools call the Agent Server cron API from inside the
+# graph run (reminders.py:531 defaults to localhost:2024 — the langgraph dev
+# port). In production the server must loop back to ITSELF:
+LANGGRAPH_API_URL = "http://127.0.0.1:8000"
+# SERVER_LOCAL_DEV must remain unset/0 in production. The Dockerfile
+# already sets ENV SERVER_LOCAL_DEV=0; do not override it here.
+# CORS / allowed-origins and all secrets are injected via `fly secrets set`
+# from the GitHub Environment `production` (see docs/deploy.md).
+
+[http_service]
+internal_port = 8000
+force_https = true
+auto_start_machines = true
+auto_stop_machines = false
+min_machines_running = 1
+processes = ["app"]
+
+[[http_service.checks]]
+grace_period = "10s"
+interval = "15s"
+method = "GET"
+path = "/ok"
+timeout = "5s"
+type = "http"
+
+# No [build] section — image-only deploys.
+# Health: Fly hits http://<machine>:8000/ok via the check above.
+# /ok is readiness-gated (200 only after lifespan completes) and is
+# public (no auth). /info is the other public endpoint.
