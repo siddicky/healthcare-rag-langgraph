@@ -53,14 +53,18 @@ def test_previous_singleton_carries_no_offline_fakes() -> None:
     assert current._pinecone_index is None
 
 
-@pytest.mark.parametrize("call", [1, 2])
+@pytest.mark.parametrize("installs", [1, 2, 3])
 def test_repeated_installs_still_restore_the_original(
-    call: int,
+    installs: int,
     assert_resources_restored,
     install_resources: ResourceInstaller,
 ) -> None:
-    """Multiple `install()` calls inside one test still restore one instance."""
-    install_resources(FakeGateway())
-    install_resources(FakeGateway())
+    """N `install()` calls inside one test still restore the one prior instance.
+
+    The teardown check lives in `assert_resources_restored`; varying the install
+    count is the point, so the parameter has to actually drive the loop.
+    """
+    for _ in range(installs):
+        install_resources(FakeGateway())
 
     assert resources_module.get() is not assert_resources_restored

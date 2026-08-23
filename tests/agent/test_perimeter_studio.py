@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 
 import pytest
-
 from langgraph_api.auth.studio_user import StudioUser
 from starlette.applications import Starlette
 from starlette.middleware import Middleware
