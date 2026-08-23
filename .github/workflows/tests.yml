@@ -29,7 +29,7 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install dependencies
-        run: uv sync --frozen
+        run: uv sync --frozen --extra evals --extra dev --extra graph-sqlite
       # No OPENAI_API_KEY / WEAVIATE_URL is provided on purpose: the offline
       # suite must stay runnable without credentials or network. A test that
       # needs either belongs behind a marker, not in this job.
