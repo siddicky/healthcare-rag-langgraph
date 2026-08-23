@@ -174,6 +174,20 @@ def test_runtime_secret_sync_imports_all_values_in_one_fly_update() -> None:
     assert "flyctl secrets set" not in sync_script
 
 
+def test_runtime_secrets_are_staged_before_the_first_fly_deploy() -> None:
+    deploy_steps = _workflow()["jobs"]["deploy-prod"]["steps"]
+    step_names = [step.get("name") for step in deploy_steps]
+    sync_name = (
+        "Sync runtime secrets (GitHub Environment → Fly, NAME-only verification)"
+    )
+    deploy_name = "Deploy to Fly (immutable digest)"
+    sync_script = _deploy_step(sync_name).get("run")
+
+    assert step_names.index(sync_name) < step_names.index(deploy_name)
+    assert sync_script is not None
+    assert "flyctl secrets import -a hc-rag-server-prod --stage" in sync_script
+
+
 def test_release_tag_commit_must_be_reachable_from_origin_main() -> None:
     workflow = _workflow()
     steps = workflow["jobs"]["build"]["steps"]
