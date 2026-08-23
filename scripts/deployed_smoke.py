@@ -645,12 +645,17 @@ class DeployedSmoke:
                 thread_id,
                 question=f"Create a reminder titled {title} every Monday at 09:00 UTC.",
             )
-            crons = await self._crons(u2_owner)
+            # The real server's cron search can lag the create turn's
+            # completion; poll before re-issuing the turn, or the retry
+            # itself duplicates the cron (observed on the pinned
+            # reference: two crons, one reminder, 9 s apart).
+            for _ in range(6):
+                crons = await self._crons(u2_owner)
+                if crons:
+                    break
+                await anyio.sleep(2.0)
             if crons:
                 break
-            # Model-side routing lottery, same as check 3: the turn can land
-            # on a clarifying reply. Retry only while nothing was created, so
-            # a successful create can never be duplicated.
         require(len(crons) == 1, "create_reminder did not create exactly one cron")
         cron = crons[0]
         require(isinstance(cron, Mapping), "cron response shape invalid")
