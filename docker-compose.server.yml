@@ -40,6 +40,7 @@ services:
         required: true
     environment:
       WEAVIATE_HOST: weaviate
+      LANGGRAPH_API_URL: http://127.0.0.1:8000
     ports:
       - "8000:8000"
     init: true

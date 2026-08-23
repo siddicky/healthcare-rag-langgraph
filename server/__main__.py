@@ -2,10 +2,13 @@ from __future__ import annotations
 
 import argparse
 
+from dotenv import load_dotenv
+
 from server.config import load_config
 
 
 def main() -> None:
+    load_dotenv()
     parser = argparse.ArgumentParser(prog="server")
     parser.add_argument("--port", type=int, default=None, help="Port to listen on")
     parser.add_argument("--host", type=str, default="0.0.0.0", help="Host to bind")

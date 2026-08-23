@@ -16,7 +16,7 @@ from langgraph_sdk import Auth
 
 from server.app import create_app
 from server.config import ServerConfig
-from server.run_engine import JSONValue
+from server.run_engine import JSONValue, RunRequest
 
 
 class ToyState(TypedDict, total=False):
@@ -358,3 +358,39 @@ async def test_run_config_receives_server_principal_not_client(harness: Harness)
     stored_configurable = stored_config.get("configurable", {})
     assert isinstance(stored_configurable, dict)
     assert stored_configurable.get("langgraph_auth_user") != {"identity": "forged"}
+
+
+@pytest.mark.anyio
+async def test_client_principal_dropped_when_server_supplies_none(harness: Harness) -> None:
+    # The HTTP route always supplies a principal, so the overwrite in
+    # `_graph_config` masks the strip. `server/crons.py` does NOT: a cron record
+    # with no stored `auth_user` submits `auth_user=None`, and then there is
+    # nothing to overwrite a client-supplied `langgraph_auth_user` with. The
+    # strip is the only thing standing between a cron payload and a forged
+    # principal reaching the graph, so pin it on that path.
+    engine = harness.app.state.run_engine  # type: ignore[attr-defined]
+    request = RunRequest(
+        assistant_id="toy",
+        input={"value": 1},
+        config={
+            "configurable": {
+                "langgraph_auth_user": {"identity": "forged"},
+                "unrelated": "preserved",
+            }
+        },
+    )
+    record = await engine.submit("thread-1", request, auth_user=None)
+    settled = await wait_status(harness, str(record["run_id"]), "success")
+    assert settled["status"] == "success"
+
+    # The graph saw no principal at all — not the forged one.
+    assert _AUTH_USER_SEEN == [None]
+
+    # Unrelated client configurable keys are still passed through untouched;
+    # the strip must be surgical, not a wholesale config wipe.
+    stored_config = settled["config"]
+    assert isinstance(stored_config, dict)
+    stored_configurable = stored_config.get("configurable", {})
+    assert isinstance(stored_configurable, dict)
+    assert "langgraph_auth_user" not in stored_configurable
+    assert stored_configurable["unrelated"] == "preserved"
