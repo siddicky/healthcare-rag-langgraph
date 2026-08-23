@@ -779,7 +779,7 @@
         "uv lock --dry-run --upgrade-package 'langchain-openai>=1.1.14': requires openai>=2.26.0 against the direct openai>=1.76,<2 pin (pyproject.toml:8)",
         "uv tree --locked --invert --package cryptography: reaches the tree via authlib -> weaviate-client, joserfc -> authlib, and dev-only langgraph-api \u2014 NOT the Presidio privacy sanitizer",
         "Reachability search returned zero matches for file_search/DirectoryLoader/GlobLoader/TextLoader and for get_num_tokens_from_messages/_url_to_size/image_url",
-        "Suite after upgrade: 1735 passed, 1 skipped on macOS; 1734 passed, 2 skipped on Linux CI. Verified with the Weaviate container stopped and .env removed from disk (env -u alone is insufficient: tests/conftest.py calls load_dotenv()).",
+        "Suite: 1736 passed, 1 skipped on macOS; Linux CI differs by one further skip. Verified with the Weaviate container stopped and .env removed from disk (env -u alone is insufficient: tests/conftest.py calls load_dotenv()). NOTE: the two conditional tests that began running are gated on the graph-sqlite extra (find_spec('langgraph.checkpoint.sqlite')), not on cryptography \u2014 they were un-skipped by the CI extras fix 02d0a01, not by the dependency upgrade.",
         "After merge, uv.lock alerts dropped 6 -> 2 as predicted; the 136 requirements.txt alerts clear on Dependabot's next scan of the default branch",
         "docs/decisions/dependabot-requirements-txt.md; commits 2494ae8 (deps), 48c8a94 (record corrections), 79618d1 (test fixes)"
       ]

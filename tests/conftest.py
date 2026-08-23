@@ -62,6 +62,13 @@ def seal_offline_resources():
     """
 
     def seal(resources):
+        # These are private slots; a rename upstream would make seal() silently
+        # do nothing and surface as a baffling `assert [] == [...]` in CI.
+        for slot in ("_weaviate", "_pinecone_client", "_pinecone_index"):
+            assert hasattr(resources, slot), (
+                f"Resources has no {slot!r} — seal_offline_resources is out of date "
+                "with healthcare_rag/graph/resources.py and is no longer sealing anything."
+            )
         resources._weaviate = _OfflineClient("weaviate")
         resources._pinecone_client = _OfflineClient("pinecone")
         resources._pinecone_index = _OfflineClient("pinecone index")
