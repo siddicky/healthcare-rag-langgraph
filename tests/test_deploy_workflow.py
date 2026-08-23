@@ -142,6 +142,12 @@ def test_environment_audit_grants_github_token_actions_read() -> None:
     assert permissions.get("actions") == "read"
 
 
+def test_deploy_workflow_has_no_manual_dispatch_trigger() -> None:
+    workflow_text = Path(".github/workflows/deploy.yml").read_text()
+
+    assert "workflow_dispatch" not in workflow_text
+
+
 def test_release_tag_commit_must_be_reachable_from_origin_main() -> None:
     workflow = _workflow()
     steps = workflow["jobs"]["build"]["steps"]
