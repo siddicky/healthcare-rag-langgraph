@@ -8,8 +8,8 @@ from typing import Any, Protocol
 import pytest
 from langchain_core.messages import ToolCall
 
-from healthcare_rag.graph.llm import LangChainLLMGateway, QueryOrRespondDecision
 from healthcare_rag.graph import resources as resources_module
+from healthcare_rag.graph.llm import LangChainLLMGateway, QueryOrRespondDecision
 from healthcare_rag.graph.resources import Resources, override
 from healthcare_rag.graph.settings import GraphSettings
 from healthcare_rag.models.retrieval import QueryResultList

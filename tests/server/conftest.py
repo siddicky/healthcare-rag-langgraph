@@ -50,9 +50,9 @@ os.environ.setdefault(
 # the reversed-registration command above passes too.
 #
 # The cost is that async tests must name their runner: the suites that relied on
-# auto mode now carry a module-level `pytestmark = pytest.mark.asyncio`.  Do not
-# re-enable auto mode to avoid adding a marker to a new async test -- that
-# resurrects the race.
+# auto mode now carry a per-test `@pytest.mark.asyncio`, and the suites here keep
+# their `@pytest.mark.anyio`.  Do not re-enable auto mode to avoid adding a marker
+# to a new async test -- that resurrects the race.
 #
 # Rejected alternatives: mutating `config.pluginmanager` from this conftest to
 # pin registration order (reaches into pluggy internals and mutates process-wide
