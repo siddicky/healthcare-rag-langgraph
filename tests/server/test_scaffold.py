@@ -212,7 +212,7 @@ def test_graph_storage_attachment_mutation():
         from server.config import load_config
 
         config = load_config()
-        storage = create_storage(config)
+        storage = await create_storage(config)
         raw = load_raw_graphs(config)
         attached = attach_graphs(raw, storage)
 
