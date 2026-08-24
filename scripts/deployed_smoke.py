@@ -1166,7 +1166,7 @@ async def async_main(settings: SmokeSettings, profile: str) -> None:
         transport=transport,
         follow_redirects=True,
     ) as client:
-        await DeployedSmoke(settings, client).run(profile=arguments.profile)
+        await DeployedSmoke(settings, client).run(profile=profile)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
