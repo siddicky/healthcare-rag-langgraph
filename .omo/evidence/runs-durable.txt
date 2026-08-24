@@ -1,0 +1,42 @@
+Durable run records, todo 13
+Date: 2026-08-23
+
+Persisted payload marker
+------------------------
+The Postgres registry stores the fixed string "[redacted]" in both `input` and
+`command`. `RunEngine.submit()` detects Postgres with
+`isinstance(self.storage.runs, PostgresRunRegistry)`. MemoryRegistry receives
+the original record, so memory-mode GET/list behavior remains unchanged.
+`RunRuntime.request` always keeps the original request for graph execution.
+
+Restart behavior
+----------------
+`reconcile_interrupted_runs(storage)` is Postgres-only. It changes only
+`pending` and `running` rows to `interrupted`; success, error, interrupted, and
+timeout rows remain untouched. The second call returns zero, proving idempotence.
+
+GET and list routes read terminal registry records when `RunEngine.runtime` has
+no entry. Join, join-stream, and cancel still use the live-runtime lookup and do
+not reconstruct execution or SSE state.
+
+Focused verification
+--------------------
+Command:
+POSTGRES_TEST_DSN=postgresql://postgres:postgres@localhost:55432/postgres \
+  uv run pytest tests/server/test_runs_durable.py -q
+
+Output:
+....                                                                     [100%]
+4 passed in 0.49s
+
+The restart test closes its first Storage, creates a second Storage against the
+same database, reconciles the stale running row, reads completed metadata with
+an empty runtime map, and confirms join/cancel return 404.
+
+Startup wiring intentionally remains outside this commit because `server/app.py`
+is owned by another todo. Its lifespan must call:
+
+    await reconcile_interrupted_runs(storage)
+
+after Postgres storage setup and before RunEngine construction or scheduler
+startup.

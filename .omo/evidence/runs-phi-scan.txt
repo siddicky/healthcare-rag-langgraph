@@ -1,0 +1,43 @@
+Durable run PHI scan, todo 13
+Date: 2026-08-23
+Probe literal: alice.patient@example.com
+
+Database connectivity
+---------------------
+Command:
+uv run python -c "import psycopg; c=psycopg.connect('postgresql://postgres:postgres@localhost:55432/postgres'); print(c.execute(\"SELECT current_database(), current_user, to_regclass('public.hc_runs')\").fetchone()); c.close()"
+
+Output:
+('postgres', 'postgres', 'hc_runs')
+
+Backend divergence scan
+-----------------------
+Command:
+POSTGRES_TEST_DSN=postgresql://postgres:postgres@localhost:55432/postgres \
+  uv run pytest \
+  tests/server/test_runs_durable.py::test_memory_registry_keeps_raw_run_input \
+  tests/server/test_runs_durable.py::test_postgres_row_redacts_payloads_and_runtime_keeps_input \
+  -vv
+
+Output:
+tests/server/test_runs_durable.py::test_memory_registry_keeps_raw_run_input[asyncio] PASSED [ 50%]
+tests/server/test_runs_durable.py::test_postgres_row_redacts_payloads_and_runtime_keeps_input[asyncio] PASSED [100%]
+2 passed in 0.71s
+
+The memory test reads the saved registry record and asserts that its JSON still
+contains `alice.patient@example.com`.
+
+The Postgres test submits raw input and a resume command containing the same
+literal, then opens a separate psycopg connection and executes:
+
+    SELECT run_id, record FROM hc_runs WHERE run_id = ANY(%s)
+
+Assertions against those JSONB rows prove:
+
+    alice.patient@example.com present in Postgres JSONB: false
+    input value: "[redacted]"
+    command value: "[redacted]"
+
+The same test separately asserts that the in-process RunRuntime request input is
+still `{"question": "alice.patient@example.com"}`. The database rows are
+deleted only after all assertions complete.

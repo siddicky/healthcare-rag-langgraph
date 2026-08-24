@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from collections.abc import AsyncIterator, Mapping
+from typing import Final
 
 from langgraph_sdk import Auth
 from pydantic import ValidationError
@@ -20,6 +21,10 @@ from server.run_engine import (
     RunRequest,
     RunRuntime,
     _to_jsonable,
+)
+
+TERMINAL_RUN_STATUSES: Final[frozenset[str]] = frozenset(
+    {"success", "error", "interrupted", "timeout"}
 )
 
 
@@ -105,12 +110,16 @@ async def wait_run(request: Request) -> Response:
 
 
 async def get_run(request: Request) -> Response:
-    try:
-        engine, _, run_id = await _lookup(request)
-    except RunMissing:
+    engine = _engine(request)
+    thread_id = request.path_params["thread_id"]
+    run_id = request.path_params["run_id"]
+    if not await engine.storage.threads.contains(thread_id):
         return JSONResponse({"detail": "Run not found"}, status_code=404)
     record = await engine.storage.runs.get(run_id)
-    if record is None:
+    if record is None or (
+        run_id not in engine.runtime
+        and record.get("status") not in TERMINAL_RUN_STATUSES
+    ):
         return JSONResponse({"detail": "Run not found"}, status_code=404)
     return JSONResponse(record)
 
@@ -124,6 +133,10 @@ async def list_runs(request: Request) -> Response:
         record
         for record in await engine.storage.runs.all()
         if record["thread_id"] == thread_id
+        and (
+            record.get("run_id") in engine.runtime
+            or record.get("status") in TERMINAL_RUN_STATUSES
+        )
     ]
     records.sort(key=lambda record: str(record["created_at"]), reverse=True)
     return JSONResponse(records)

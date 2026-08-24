@@ -15,16 +15,35 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 logger = logging.getLogger("MedicalRAG")
 
+from server.registries import PostgresRunRegistry
 from server.storage import Storage
 
 JSONValue: TypeAlias = JsonValue
 
 QUEUE_LIMIT: Final = 100
+PERSISTED_PAYLOAD_REDACTION: Final = "[redacted]"
+NONTERMINAL_RUN_STATUSES: Final[frozenset[str]] = frozenset({"pending", "running"})
 
 # The authenticated principal is server-controlled state. It has exactly one
 # writer (`RunEngine._graph_config`, from the request's authenticated user) and
 # a client-supplied value is never trusted anywhere.
 AUTH_USER_KEY: Final = "langgraph_auth_user"
+
+
+async def reconcile_interrupted_runs(storage: Storage) -> int:
+    """Interrupt Postgres runs that cannot survive a process restart."""
+    if not isinstance(storage.runs, PostgresRunRegistry):
+        return 0
+    reconciled = 0
+    for record in await storage.runs.all():
+        run_id = record.get("run_id")
+        if (
+            isinstance(run_id, str)
+            and record.get("status") in NONTERMINAL_RUN_STATUSES
+        ):
+            await storage.runs.set_status(run_id, "interrupted")
+            reconciled += 1
+    return reconciled
 
 
 def _sanitized_config(config: dict[str, JSONValue]) -> dict[str, JSONValue]:
@@ -219,7 +238,12 @@ class RunEngine:
         }
         if request.command is not None:
             record["command"] = request.command.model_dump(mode="json")
-        await self.storage.runs.save(run_id, record)
+        persisted_record = record
+        if isinstance(self.storage.runs, PostgresRunRegistry):
+            persisted_record = {**record, "input": PERSISTED_PAYLOAD_REDACTION}
+            if "command" in persisted_record:
+                persisted_record["command"] = PERSISTED_PAYLOAD_REDACTION
+        await self.storage.runs.save(run_id, persisted_record)
         self.runtime[run_id] = RunRuntime(
             request=request, thread_id=thread_id, auth_user=auth_user
         )
