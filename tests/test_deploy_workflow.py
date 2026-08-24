@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import subprocess
 from pathlib import Path
 from typing import Final, TypedDict
@@ -142,10 +143,33 @@ def test_environment_audit_grants_github_token_actions_read() -> None:
     assert permissions.get("actions") == "read"
 
 
-def test_deploy_workflow_has_no_manual_dispatch_trigger() -> None:
-    workflow_text = Path(".github/workflows/deploy.yml").read_text()
+def test_manual_dispatch_cannot_be_a_second_forward_deploy_path() -> None:
+    """A dispatch may roll back; it may never become another way to ship new code.
 
-    assert "workflow_dispatch" not in workflow_text
+    e7fcca4 removed a dispatch that rebuilt from an arbitrary ref and banned the
+    trigger outright. The rollback dispatch (docs/decisions/release-tags-and-rollback.md)
+    is allowed back under the constraints asserted here and in
+    tests/test_release_pipeline.py: it cannot build, and it can only deploy a
+    digest that a tag push already published.
+    """
+    workflow = yaml.safe_load(Path(".github/workflows/deploy.yml").read_text())
+    triggers = workflow.get("on") or workflow[True]
+    inputs = triggers["workflow_dispatch"]["inputs"]
+    jobs = workflow["jobs"]
+
+    # No ref-shaped input: the dispatch selects a *release*, never a branch.
+    assert set(inputs) == {"version", "reason", "image_digest"}
+    # The build job is the only thing that publishes an image, and only a tag
+    # push runs it.
+    assert jobs["build"]["if"] == "github.event_name == 'push'"
+    rollback_steps = " ".join(
+        str(step.get("run", "")) for step in jobs["rollback"]["steps"]
+    )
+    assert "build-push-action" not in str(jobs["rollback"])
+    # `docker buildx imagetools` (registry-side retag) is allowed; an actual
+    # image build is not.
+    assert "docker buildx build" not in rollback_steps
+    assert re.search(r"docker build\s+[.\-]", rollback_steps) is None
 
 
 def test_fly_deploy_mirrors_private_ghcr_image_to_fly_registry() -> None:

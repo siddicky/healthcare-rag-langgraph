@@ -3,6 +3,23 @@ name: Deploy
 on:
   push:
     tags: ["v*.*.*"]
+  # Rollback. Manual by policy (docs/decisions/release-tags-and-rollback.md):
+  # a red smoke leaves the bad version live and a human decides. This only makes
+  # that decision one click instead of a laptop flyctl session.
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Released tag to roll back to, e.g. v1.2.2. Its image AND its deploy/fly.prod.toml are deployed."
+        required: true
+        type: string
+      reason:
+        description: "Why this rollback is happening — recorded in the job summary."
+        required: true
+        type: string
+      image_digest:
+        description: "Break-glass override, sha256:<64 hex>. Only when the release's GHCR tag is gone."
+        required: false
+        type: string
 
 permissions:
   contents: read
@@ -16,6 +33,10 @@ concurrency:
 
 jobs:
   build:
+    # Tag pushes build; a dispatch is a rollback to an image that already
+    # exists, so it must never rebuild. deploy-prod needs this job, so gating
+    # here skips the forward path as a whole.
+    if: github.event_name == 'push'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -433,8 +454,8 @@ jobs:
           # Always produce an output file for the redaction step, even on failure.
           cp /tmp/smoke-raw.log /tmp/smoke-to-redact.log || true
           if [ "$SMOKE_RC" -ne 0 ]; then
-            echo "::error::Deployed smoke failed with exit code $SMOKE_RC — pipeline is RED. Bad version remains live until human runs the runbook (NO auto-rollback)."
-            echo "::error::Rollback: fly deploy --image ghcr.io/${{ github.repository }}@sha256:<previous> -a hc-rag-server-prod --config deploy/fly.prod.toml + /ok + smoke (see docs/deploy.md)"
+            echo "::error::Deployed smoke failed with exit code $SMOKE_RC — pipeline is RED. Bad version remains live until a human rolls back (NO auto-rollback)."
+            echo "::error::Rollback: gh workflow run deploy.yml -f version=<previous tag> -f reason='smoke red on ${{ github.ref_name }}' (see docs/deploy.md §6)"
           fi
           # Do not exit yet — let the redaction + artifact upload run before deciding.
 
@@ -448,50 +469,19 @@ jobs:
             echo "No smoke log found — creating empty placeholder"
             echo "no smoke log produced" > "$RAW"
           fi
-          # Redaction: strip Authorization header values, Bearer tokens, x-api-key, x-internal-token,
-          # and truncate response bodies to status+length only. Never leaves secret values.
-          # Strategy: sed for headers + python for body truncation.
-          python3 << 'PYREDACT'
-          import re
-          from pathlib import Path
-          raw = Path("/tmp/smoke-to-redact.log")
-          out = Path("/tmp/smoke-redacted.log")
-          text = raw.read_text(errors="replace") if raw.exists() else "no log"
-          # Strip Authorization / Bearer / api-key / internal-token values
-          text = re.sub(r"(?i)(authorization:\s*)\S.*", r"\1[REDACTED]", text)
-          text = re.sub(r"(?i)(bearer\s+)\S+", r"\1[REDACTED]", text)
-          text = re.sub(r"(?i)(x-api-key:\s*)\S.*", r"\1[REDACTED]", text)
-          text = re.sub(r"(?i)(x-internal-token:\s*)\S.*", r"\1[REDACTED]", text)
-          text = re.sub(r"(?i)(x-internal-owner:\s*)\S.*", r"\1[REDACTED]", text)
-          # Mask raw token patterns (long base64-like strings) conservatively
-          text = re.sub(r"lsv2_[A-Za-z0-9_\-]+", "[REDACTED_API_KEY]", text)
-          text = re.sub(r"sbp_[A-Za-z0-9_\-]+", "[REDACTED_SUPABASE_KEY]", text)
-          text = re.sub(r"eyJ[A-Za-z0-9_\-]+\.eyJ[A-Za-z0-9_\-]+\.[A-Za-z0-9_\-]+", "[REDACTED_JWT]", text)
-          # Truncate response bodies to status+length: replace large JSON blobs/bodies with length note
-          # Simple: any line >500 chars is truncated to first 300 + [TRUNCATED len=...]
-          lines = []
-          for line in text.splitlines():
-              if len(line) > 500:
-                  lines.append(line[:300] + f" [TRUNCATED len={len(line)}]")
-              else:
-                  lines.append(line)
-          text = "\n".join(lines)
-          # Ensure no secret-env var names followed by value leaks
-          text = re.sub(r"(LANGGRAPH_U[12]_TOKEN=)\S+", r"\1[REDACTED]", text)
-          text = re.sub(r"(COACH_INTERNAL_TOKEN=)\S+", r"\1[REDACTED]", text)
-          out.write_text(text)
-          print(f"Redacted log: {len(text)} chars, {len(lines)} lines")
-          PYREDACT
-          # Also verify redacted log contains no Bearer/token literal values (sanity)
+          # Redaction lives in scripts/redact_smoke_log.py: the rollback job
+          # redacts identically, and a heredoc in YAML cannot be tested.
+          # Auth headers stripped, credential shapes masked, long lines
+          # truncated to status + length.
+          python3 scripts/redact_smoke_log.py --in "$RAW" --out "$REDACTED"
+          # Sanity: the redacted log must not still carry a token-shaped value.
           if grep -qi "Bearer.*[A-Za-z0-9_\-]\{20\}" "$REDACTED" 2>/dev/null; then
             echo "::warning::Redacted log may still contain a Bearer token pattern — review manually"
           fi
           echo "Redacted log preview (first 80 lines):"
           head -n 80 "$REDACTED" || true
-          # Copy to workspace location for artifact upload (relative path required)
           mkdir -p /tmp/deploy-artifact
           cp "$REDACTED" /tmp/deploy-artifact/smoke-redacted.log
-          cp "$RAW" /tmp/deploy-artifact/smoke-raw.log 2>/dev/null || true
           echo "Artifact staged at /tmp/deploy-artifact/"
 
       - name: Upload redacted smoke log artifact
@@ -512,7 +502,277 @@ jobs:
             exit 1
           fi
           if [ "$RC" != "0" ]; then
-            echo "::error::Smoke failed (exit $RC) — pipeline is RED. Human must run rollback per docs/deploy.md (fly deploy --image ghcr.io/...@sha256:<previous> + /ok + smoke)."
+            echo "::error::Smoke failed (exit $RC) — pipeline is RED. Human must roll back per docs/deploy.md §6: gh workflow run deploy.yml -f version=<previous tag> -f reason='...'"
             exit 1
           fi
           echo "Smoke passed — deploy verified."
+
+  rollback:
+    # Re-deploy a previous release: its image digest AND its deploy/fly.prod.toml.
+    # Deploying the old image against the current TOML is the SERVER_STORAGE trap
+    # in docs/deploy.md §6.3 — checking out the target tag makes that pair
+    # impossible to get wrong.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: read
+    environment:
+      name: production
+      url: https://hc-rag-server-prod.fly.dev
+    concurrency:
+      # Same group as deploy-prod: a rollback and a tag deploy serialise.
+      group: deploy-production
+      cancel-in-progress: false
+    steps:
+      - name: Validate inputs
+        env:
+          VERSION: ${{ inputs.version }}
+          DIGEST_OVERRIDE: ${{ inputs.image_digest }}
+          REASON: ${{ inputs.reason }}
+        run: |
+          set -euo pipefail
+          if ! printf '%s' "$VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z._-]+)?$'; then
+            echo "::error::version '$VERSION' must be a released tag matching v[0-9]+.[0-9]+.[0-9]+ (optionally -suffix)"
+            exit 1
+          fi
+          if [ -z "${REASON// /}" ]; then
+            echo "::error::reason is required — it is the record of why prod changed"
+            exit 1
+          fi
+          if [ -n "${DIGEST_OVERRIDE:-}" ] && ! printf '%s' "$DIGEST_OVERRIDE" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::image_digest '$DIGEST_OVERRIDE' is not a sha256:<64 hex> digest"
+            exit 1
+          fi
+          echo "Rollback target: $VERSION"
+          echo "Reason: $REASON"
+
+      - name: Check out the target release
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: ${{ inputs.version }}
+          fetch-depth: 0
+
+      - name: Verify the tag is the one on origin and is reachable from main
+        env:
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          # Same ancestry rules as the forward path: a rollback must not be able
+          # to deploy a tag that never came from main.
+          if ! git ls-remote --tags origin | grep -q "refs/tags/${VERSION}$"; then
+            echo "::error::tag refs/tags/$VERSION not found on origin"
+            exit 1
+          fi
+          TAG_SHA="$(git rev-list -n 1 "refs/tags/$VERSION" 2>/dev/null || git rev-parse "refs/tags/$VERSION^{}" 2>/dev/null || true)"
+          HEAD_SHA="$(git rev-parse HEAD)"
+          echo "Tag $VERSION -> $TAG_SHA"
+          echo "HEAD     -> $HEAD_SHA"
+          if [ -n "$TAG_SHA" ] && [ "$TAG_SHA" != "$HEAD_SHA" ]; then
+            echo "::error::HEAD $HEAD_SHA does not match tag $VERSION ($TAG_SHA)"
+            exit 1
+          fi
+          git fetch --no-tags origin main:refs/remotes/origin/main
+          if ! git merge-base --is-ancestor "$TAG_SHA" "origin/main"; then
+            echo "::error::tag $VERSION points to $TAG_SHA, which is not reachable from origin/main"
+            exit 1
+          fi
+          echo "commit_sha=$TAG_SHA" >> "$GITHUB_ENV"
+          echo "Tag existence + checkout + main ancestry verification OK"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v4.3.0
+
+      - name: Log in to GHCR
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Resolve the release image digest
+        id: resolve
+        env:
+          VERSION: ${{ inputs.version }}
+          DIGEST_OVERRIDE: ${{ inputs.image_digest }}
+        run: |
+          set -euo pipefail
+          # The immutable {{version}} image tag is the ledger: one git tag, one
+          # build, one digest. No separate release database to drift.
+          SEMVER="${VERSION#v}"
+          SOURCE_REPO="ghcr.io/${{ github.repository }}"
+          if [ -n "${DIGEST_OVERRIDE:-}" ]; then
+            echo "Using break-glass digest override (release tag not consulted)."
+            DIGEST="$DIGEST_OVERRIDE"
+          else
+            echo "Resolving ${SOURCE_REPO}:${SEMVER} ..."
+            if ! DIGEST="$(docker buildx imagetools inspect "${SOURCE_REPO}:${SEMVER}" --format '{{json .Manifest}}' | jq -r '.digest')"; then
+              echo "::error::could not resolve ${SOURCE_REPO}:${SEMVER} — was the release tag deleted from GHCR? Re-run with image_digest set."
+              exit 1
+            fi
+          fi
+          if ! printf '%s' "$DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::resolved digest '$DIGEST' is not a valid sha256 digest — refusing to deploy"
+            exit 1
+          fi
+          # Prove the digest exists before it reaches a deploy.
+          docker buildx imagetools inspect "${SOURCE_REPO}@${DIGEST}" >/dev/null
+          echo "source_image=${SOURCE_REPO}@${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "digest=${DIGEST}" >> "$GITHUB_OUTPUT"
+          echo "Rollback image: ${SOURCE_REPO}@${DIGEST}"
+
+      - name: Set up Flyctl
+        uses: superfly/flyctl-actions/setup-flyctl@dfdfedc86b296f5e5384f755a18bf400409a15d0 # v1.4
+
+      # NOTE: no secret sync here, deliberately. A rollback must be able to
+      # recover from a bad secret sync; re-applying the current environment
+      # during one would re-apply the fault. See the decision record.
+
+      - name: Deploy the rollback target (immutable digest)
+        id: deploy
+        env:
+          FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
+          SOURCE_IMAGE: ${{ steps.resolve.outputs.source_image }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          FLY_IMAGE_TAG="registry.fly.io/hc-rag-server-prod:${VERSION}"
+          echo "Config: deploy/fly.prod.toml @ ${VERSION} (checked out above)"
+          echo "App: hc-rag-server-prod"
+
+          flyctl auth docker
+          docker buildx imagetools create \
+            --tag "$FLY_IMAGE_TAG" \
+            "$SOURCE_IMAGE"
+          FLY_DIGEST="$(docker buildx imagetools inspect "$FLY_IMAGE_TAG" --format '{{json .Manifest}}' | jq -r '.digest')"
+          if ! printf '%s' "$FLY_DIGEST" | grep -Eq '^sha256:[0-9a-f]{64}$'; then
+            echo "::error::Fly registry digest '$FLY_DIGEST' is not a valid sha256 digest"
+            exit 1
+          fi
+          IMAGE="registry.fly.io/hc-rag-server-prod@${FLY_DIGEST}"
+          echo "fly_image=${IMAGE}" >> "$GITHUB_OUTPUT"
+          echo "Deploying immutable Fly registry image: $IMAGE"
+
+          flyctl deploy \
+            -a hc-rag-server-prod \
+            --config deploy/fly.prod.toml \
+            --image "$IMAGE" \
+            --strategy immediate
+          echo "Fly deploy command completed."
+
+      - name: Wait for /ok (readiness-gated)
+        run: |
+          set -euo pipefail
+          PROD_URL="https://hc-rag-server-prod.fly.dev"
+          echo "Polling $PROD_URL/ok until 200 or timeout (5 minutes)..."
+          for i in $(seq 1 60); do
+            HTTP_CODE="$(curl -s -o /dev/null -w '%{http_code}' "$PROD_URL/ok" || echo 000)"
+            echo "  attempt $i: HTTP $HTTP_CODE"
+            if [ "$HTTP_CODE" = "200" ]; then
+              echo "/ok returned 200 — ready"
+              break
+            fi
+            if [ "$i" -eq 60 ]; then
+              echo "::error::/ok never returned 200 after 5 minutes — the rollback target did not boot. Check deploy/fly.prod.toml at this tag against the image (docs/deploy.md §6.3)."
+              exit 1
+            fi
+            sleep 5
+          done
+
+      - name: Set up uv (for smoke)
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          python-version: "3.12"
+
+      - name: Run deployed smoke against the rolled-back version
+        id: smoke
+        env:
+          LANGGRAPH_DEPLOYMENT_URL: https://hc-rag-server-prod.fly.dev
+          LANGGRAPH_U1_TOKEN: ${{ secrets.LANGGRAPH_U1_TOKEN }}
+          LANGGRAPH_U2_TOKEN: ${{ secrets.LANGGRAPH_U2_TOKEN }}
+          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
+          COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
+          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
+          LANGSMITH_TRACING: "false"
+          VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          for var in LANGGRAPH_U1_TOKEN LANGGRAPH_U2_TOKEN LANGSMITH_API_KEY COACH_INTERNAL_TOKEN; do
+            val="${!var:-}"
+            if [ -n "$val" ]; then
+              echo "::add-mask::$val"
+            fi
+          done
+          PROD_URL="https://hc-rag-server-prod.fly.dev"
+          set +e
+          uv run python scripts/deployed_smoke.py --url "$PROD_URL" 2>&1 | tee /tmp/smoke-raw.log
+          SMOKE_RC=${PIPESTATUS[0]}
+          set -e
+          echo "smoke_exit_code=$SMOKE_RC" >> "$GITHUB_OUTPUT"
+          cp /tmp/smoke-raw.log /tmp/smoke-to-redact.log || true
+          if [ "$SMOKE_RC" -ne 0 ]; then
+            echo "::error::Smoke failed on the ROLLED-BACK version — prod is now running ${VERSION} and it is also unhealthy. Escalate: docs/deploy.md §6."
+          fi
+
+      - name: Redact smoke log + upload artifact
+        if: always()
+        run: |
+          set -euo pipefail
+          RAW="/tmp/smoke-to-redact.log"
+          REDACTED="/tmp/smoke-redacted.log"
+          if [ ! -f "$RAW" ]; then
+            echo "no smoke log produced" > "$RAW"
+          fi
+          python3 scripts/redact_smoke_log.py --in "$RAW" --out "$REDACTED"
+          mkdir -p /tmp/deploy-artifact
+          cp "$REDACTED" /tmp/deploy-artifact/smoke-redacted.log
+          head -n 80 "$REDACTED" || true
+
+      - name: Upload redacted smoke log artifact
+        if: always()
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: rollback-prod-${{ inputs.version }}
+          path: /tmp/deploy-artifact/
+          retention-days: 7
+          if-no-files-found: warn
+
+      - name: Record the rollback
+        if: always()
+        env:
+          VERSION: ${{ inputs.version }}
+          REASON: ${{ inputs.reason }}
+          SOURCE_IMAGE: ${{ steps.resolve.outputs.source_image }}
+          FLY_IMAGE: ${{ steps.deploy.outputs.fly_image }}
+          SMOKE_RC: ${{ steps.smoke.outputs.smoke_exit_code }}
+          OPERATOR: ${{ github.actor }}
+        run: |
+          set -euo pipefail
+          # This summary is the evidence record docs/deploy.md §6.1 asks for.
+          {
+            echo "## Rollback to \`${VERSION}\`"
+            echo ""
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| target release | \`${VERSION}\` |"
+            echo "| commit | \`${commit_sha:-unknown}\` |"
+            echo "| source image | \`${SOURCE_IMAGE:-not resolved}\` |"
+            echo "| fly image | \`${FLY_IMAGE:-not deployed}\` |"
+            echo "| smoke | ${SMOKE_RC:-did not run} |"
+            echo "| operator | @${OPERATOR} |"
+            echo "| reason | ${REASON} |"
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Fail job if smoke failed
+        if: ${{ always() && steps.smoke.outcome != 'skipped' }}
+        run: |
+          RC='${{ steps.smoke.outputs.smoke_exit_code }}'
+          if [ -z "$RC" ]; then
+            echo "::error::Smoke step did not produce an exit code — failing closed"
+            exit 1
+          fi
+          if [ "$RC" != "0" ]; then
+            echo "::error::Smoke failed (exit $RC) on the rolled-back version — escalate per docs/deploy.md §6."
+            exit 1
+          fi
+          echo "Smoke passed — rollback verified."

@@ -14,7 +14,8 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
         eval-multiturn eval-multiturn-smoke eval-agent eval-agent-multiturn deployed-smoke forget-member \
         dataset-sync dataset-sync-multiturn \
         routing-gate-query-smoke routing-gate-safety-smoke wiki-init wiki-update \
-        server-dev server-test server-test-pg parity server-image container-server-smoke ingest-fly release
+        server-dev server-test server-test-pg parity server-image container-server-smoke ingest-fly release \
+        rollback release-digest
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -160,3 +161,23 @@ release: ## Validate TAG=vX.Y.Z and print the exact release push commands (herme
 	@echo "Would run (hermetic — human pushes):"
 	@echo "  git tag -s $(TAG) -m \"release $(TAG)\""
 	@echo "  git push origin $(TAG)"
+
+# The immutable ghcr `{{version}}` tag is the release ledger — see
+# docs/decisions/release-tags-and-rollback.md. GHCR_REPO derives the slug from
+# the origin remote so this works in a fork without editing the Makefile.
+GHCR_REPO := ghcr.io/$(shell git config --get remote.origin.url | sed -E 's#(git@|https://)github.com[:/]##; s#\.git$$##')
+
+release-digest: ## Resolve TAG=vX.Y.Z to the immutable image digest it deployed
+	@if [ -z "$(TAG)" ]; then echo "usage: make release-digest TAG=vX.Y.Z"; exit 1; fi
+	@echo "$(GHCR_REPO):$(patsubst v%,%,$(TAG))"
+	@docker buildx imagetools inspect "$(GHCR_REPO):$(patsubst v%,%,$(TAG))" --format '{{json .Manifest}}' | jq -r '"digest: " + .digest'
+
+rollback: ## Validate TAG=vX.Y.Z and print the exact rollback dispatch command (hermetic, no dispatch)
+	@if [ -z "$(TAG)" ]; then echo "usage: make rollback TAG=vX.Y.Z REASON='why'"; exit 1; fi
+	@if ! echo "$(TAG)" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z._-]+)?$$'; then echo "error: TAG='$(TAG)' must match ^v[0-9]+\.[0-9]+\.[0-9]+$$ (e.g. v1.2.3)"; exit 1; fi
+	@echo "Would run (hermetic — human dispatches):"
+	@echo "  gh workflow run deploy.yml -f version=$(TAG) -f reason='$(if $(REASON),$(REASON),<why prod is changing>)'"
+	@echo ""
+	@echo "Then approve the 'production' environment gate. The job deploys $(TAG)'s image digest"
+	@echo "AND $(TAG)'s deploy/fly.prod.toml, waits for /ok, and re-runs the deployed smoke."
+	@echo "Break-glass (release tag gone from GHCR): add -f image_digest=sha256:<64hex>"

@@ -365,14 +365,14 @@ make release TAG=v1.2.3
 # No tag is pushed by the target — the human pushes (next step).
 ```
 
-> **Tag contract note:** `make release` locally accepts `vX.Y.Z` and also `vX.Y.Z-<prerelease>` (e.g. `v0.0.1-rc`) to allow hermetic `-rc` verification probes without error. The **production workflow** enforces strict `^v\d+\.\d+\.\d+$` (no suffix) on both `push` and `workflow_dispatch` and will fail a `-rc` tag. Use strict `vX.Y.Z` for any real prod deploy. The Makefile prints `git tag -s $(TAG)` (annotated) while §3.2 shows `git tag v1.2.3` (lightweight) — both create the tag; the pipeline only cares that the tag exists on origin.
+> **Tag contract note:** `make release` accepts `vX.Y.Z` and `vX.Y.Z-<suffix>`. So do the workflow trigger (`tags: ["v*.*.*"]`) and the `production` environment's tag policy — which means **`v1.2.3-rc1` deploys to production like any other tag.** That is deliberate: there is one deployed environment, so the suffix is a human label about confidence, not a routing rule (`docs/decisions/release-tags-and-rollback.md`). If a staging app is ever added, tighten the policy to final versions only. The Makefile prints `git tag -s $(TAG)` (annotated) while §3.2 shows `git tag v1.2.3` (lightweight) — both create the tag; the pipeline requires only that it exists on origin and is reachable from `main`.
 
 ### 3.2 Push the tag (human)
 
 ```bash
 git tag v1.2.3
 git push origin v1.2.3
-# The workflow triggers on push: tags: ['v*.*.*'] and on workflow_dispatch with a required tag input.
+# The workflow triggers on push: tags: ['v*.*.*']. workflow_dispatch is rollback only (§6.1).
 ```
 
 ### 3.3 Pipeline (what happens after the push)
@@ -391,11 +391,39 @@ git push origin v1.2.3
 
 3. **Approval gate:** the `production` environment has a required reviewer (you) and a tag policy `v*.*.*`. The run pauses at `deploy-prod` until you click **Approve** in the GitHub Actions UI. The workflow also runs a verification step that fails closed if the protection rules are missing or misconfigured.
 
-### 3.4 Tags and dispatch notes
+### 3.4 Tag taxonomy — what is mutable, and what may be deployed
 
-- Tag format is strict: `^v\d+\.\d+\.\d+$` (e.g. `v1.2.3`). The workflow validates it on both `push` and `workflow_dispatch`.
-- `workflow_dispatch` requires an explicit `tag` input that must exist on `origin`, and the job checks out that tag commit — not `main`.
-- Mutable tags are never deployed — only the digest from the `build` job.
+Full rationale: `docs/decisions/release-tags-and-rollback.md`. The rules are asserted
+against the workflow by `tests/agent/test_release_pipeline.py`.
+
+| ref | example | mutability | may a deploy consume it? |
+|---|---|---|---|
+| git tag | `v1.2.3` | **immutable** — never re-pointed | yes: it selects the release |
+| image `{{version}}` | `ghcr.io/<repo>:1.2.3` | **immutable** — one tag, one build, one digest | only to *resolve* a digest |
+| image `{{major}}.{{minor}}` | `ghcr.io/<repo>:1.2` | rolling | no — humans reading the registry only |
+| image `sha-<short>` | `ghcr.io/<repo>:sha-e414846` | immutable | traceability only |
+| image digest | `ghcr.io/<repo>@sha256:…` | immutable by construction | **yes — the only thing ever deployed** |
+| `latest` | — | — | does not exist, deliberately |
+
+- **Machines deploy digests, humans read tags.** `fly deploy` never receives a tag; both
+  the tag deploy and the rollback validate `^sha256:[0-9a-f]{64}$` before deploying.
+- **A release is a triple:** `(git tag, image digest, deploy/fly.prod.toml at that tag)`.
+  Config travels with the image — that is what makes §6.3's `SERVER_STORAGE` trap
+  unreachable from the rollback workflow.
+- **Never delete a release tag from GHCR.** The immutable `{{version}}` tag *is* the
+  ledger that maps a release to its digest; an untagged digest is eligible for registry
+  GC, and GC-ing one deletes a rollback target.
+- `workflow_dispatch` on this workflow is **rollback only** (§6.1). It never builds: the
+  `build` job is gated to `github.event_name == 'push'`.
+
+Resolve any release to its digest locally:
+
+```bash
+make release-digest TAG=v1.2.2
+# ghcr.io/<owner>/<repo>:1.2.2
+# digest: sha256:<64 hex>
+```
+
 
 ---
 
@@ -518,35 +546,83 @@ curl -s -o /dev/null -w "%{http_code}\n" https://hc-rag-server-prod.fly.dev/thre
 
 Artifact: the workflow uploads a **redacted** smoke log as `deploy-prod-<version>` (7-day retention) — auth headers stripped, response bodies reduced to `status + length`, synthetic accounts only.
 
-Smoke failure does **not** auto-rollback. A red pipeline leaves the bad version running until the rollback runbook (§6) is executed by a human.
+Smoke failure does **not** auto-rollback. A red pipeline leaves the bad version running until a human dispatches the rollback (§6.1) — the failing step prints the exact `gh workflow run` command.
 
 ---
 
-## 6. Rollback — manual, deterministic (and the mandatory one-time exercise)
+## 6. Rollback — one dispatch, human-decided (and the mandatory one-time exercise)
 
-### 6.1 Rollback runbook (human, on smoke failure or bad deploy)
+### 6.1 Rollback (on smoke failure or a bad deploy)
 
-> **Policy:** NO auto-rollback on smoke failure. A red pipeline leaves the bad version running. A human runs this.
+> **Policy:** NO auto-rollback. A red smoke leaves the bad version live and a human
+> decides — a flaky smoke that redeploys prod on its own is a worse failure than a bad
+> version sitting still for the minutes it takes to click. What follows is only the
+> cheapest way to make that decision act.
 
 ```bash
-# 0. Identify the previous good digest (from the last green deploy-prod log or GHCR)
-#    The workflow logs the digest as ghcr.io/<owner>/<repo>@sha256:<digest> — copy the previous one.
-export PREV_DIGEST="sha256:<previous-good-digest>"
-export REPO="ghcr.io/<owner>/<repo>"   # e.g. ghcr.io/your-org/healthcare-rag-langgraph
+# 0. Pick the release to go back to (the previous green tag).
+make rollback TAG=v1.2.2 REASON="smoke red on v1.2.3"
+# Prints the exact dispatch command; pushes nothing.
 
-# 1. Roll back by digest (immutable — not a mutable tag)
+# 1. Dispatch it.
+gh workflow run deploy.yml -f version=v1.2.2 -f reason="smoke red on v1.2.3"
+
+# 2. Approve the `production` environment gate in the Actions UI (same reviewer
+#    as a forward deploy — a rollback is a prod change).
+```
+
+The `rollback` job then, without rebuilding anything:
+
+1. validates the version, verifies the tag exists on origin and is reachable from `main`;
+2. **checks the repo out at that tag**, so the image and `deploy/fly.prod.toml` come from
+   the same release (this is what makes §6.3's trap unreachable here);
+3. resolves `ghcr.io/<owner>/<repo>:<X.Y.Z>` → digest, validating the sha256 shape;
+4. mirrors it into the Fly registry and `fly deploy`s it **by digest**;
+5. waits for `/ok`, re-runs the deployed smoke (§5), uploads the redacted log as
+   `rollback-prod-<version>`;
+6. writes the evidence record — target, commit, source digest, Fly digest, smoke result,
+   operator, reason — to the job summary.
+
+It deliberately does **not** re-sync secrets from the GitHub Environment: a rollback must
+be able to recover from a bad secret sync, and re-applying the current environment during
+one would re-apply the fault. If the rollback is *for* a secret, fix the environment first,
+then dispatch.
+
+Break-glass, when the release's GHCR tag no longer resolves (someone deleted it — see
+§3.4): pass the digest explicitly.
+
+```bash
+gh workflow run deploy.yml -f version=v1.2.2 -f reason="..." -f image_digest=sha256:<64hex>
+# The config still comes from v1.2.2; only digest resolution is bypassed.
+```
+
+If the smoke fails on the rolled-back version too, the job goes red and stops. Prod is now
+running the older release and is still unhealthy — escalate; do not dispatch a third
+version blindly.
+
+### 6.1b Manual fallback (only when Actions itself is unavailable)
+
+The workflow is the supported path. Use this only if GitHub Actions is down — and mind
+§6.3, because here nothing pairs the config to the image for you.
+
+```bash
+export PREV_DIGEST="sha256:<previous-good-digest>"   # make release-digest TAG=v1.2.2
+export REPO="ghcr.io/<owner>/<repo>"
+
+# Check out the target release first — the TOML must match the image (§6.3).
+git checkout v1.2.2 -- deploy/fly.prod.toml
+
 fly deploy \
   --app hc-rag-server-prod \
   --config deploy/fly.prod.toml \
   --image "${REPO}@${PREV_DIGEST}"
 
-# 2. Wait for readiness
 until curl -sf https://hc-rag-server-prod.fly.dev/ok | jq -e '.ok == true' >/dev/null; do
   echo "waiting for /ok ..."; sleep 5
 done
 echo "rollback: /ok is 200"
 
-# 3. Smoke the rolled-back version (all six vars — see §5)
+# Smoke the rolled-back version (all six vars — see §5)
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
 LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
 LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
@@ -556,61 +632,45 @@ LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
 LANGSMITH_TRACING=false \
 uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
-# 4. Record the rollback (evidence)
-#    Append to .omo/evidence/task-12-oss-agent-server-tag-deploys.md (canonical) and
-#    mirror to .omo/notepads/oss-agent-server-tag-deploys/decisions.md:
-#    date, tag rolled back from, digest rolled back to, smoke result, operator.
+# Record it by hand — the dispatch path writes this record for you:
+#   date, tag rolled back from, digest rolled back to, smoke result, operator.
 ```
 
 ### 6.2 One-time rollback exercise — mandatory after the first prod deploy
 
-> **When:** immediately after the first production deploy goes green and its smoke passes.  
-> **Why:** to prove the rollback path works before it is needed under pressure.  
-> **Evidence:** paste the full output of every step below into **`.omo/evidence/task-12-oss-agent-server-tag-deploys.md`** (canonical; mirror the completion note to `decisions.md`). The exercise is not complete until the output is recorded.
+> **When:** immediately after the first production deploy goes green and its smoke passes.
+> **Why:** to prove the rollback path works before it is needed under pressure — and the
+> path that must be proven is the dispatch (§6.1), because that is the one an operator
+> will reach for at 3am.
+> **Evidence:** the two runs record themselves (job summary + `rollback-prod-<version>`
+> artifact). Link both run URLs in **`.omo/evidence/task-12-oss-agent-server-tag-deploys.md`**
+> (canonical; mirror the completion note to `decisions.md`). The exercise is not complete
+> until both links are recorded.
 
 ```bash
-# Capture digests: current (just deployed) and previous (the one before it).
-# If there is no previous prod digest (first-ever deploy), use the current digest
-# as both "current" and "previous" for the purpose of the exercise — the point
-# is to prove `fly deploy --image ...@sha256:<digest>` + /ok + smoke roundtrips.
-export CURRENT_DIGEST="sha256:<current-digest>"
-export PREV_DIGEST="sha256:<previous-digest>"   # or same as CURRENT_DIGEST if none
-export REPO="ghcr.io/<owner>/<repo>"
+# Step 1 — roll back to the previous release and prove it serves.
+gh workflow run deploy.yml -f version=v1.2.2 -f reason="one-time rollback exercise (step 1/2)"
+# Approve the production gate. Expect: /ok 200, smoke 10/10, green job.
 
-# Step 1 — deploy the previous digest (downgrade)
-fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image "${REPO}@${PREV_DIGEST}"
-until curl -sf https://hc-rag-server-prod.fly.dev/ok | jq -e '.ok == true' >/dev/null; do sleep 5; done
-LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
-LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
-LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
-LANGSMITH_API_KEY="<lsv2_...>" \
-COACH_INTERNAL_TOKEN="<internal>" \
-LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
-LANGSMITH_TRACING=false \
-uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
-# Expect: 10/10 PASS, /ok 200 — paste the full output
+# Step 2 — roll forward to the release that is meant to be live.
+gh workflow run deploy.yml -f version=v1.2.3 -f reason="one-time rollback exercise (step 2/2)"
+# Approve. Expect: /ok 200, smoke 10/10, green job.
 
-# Step 2 — restore the current digest
-fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image "${REPO}@${CURRENT_DIGEST}"
-until curl -sf https://hc-rag-server-prod.fly.dev/ok | jq -e '.ok == true' >/dev/null; do sleep 5; done
-LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
-LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
-LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
-LANGSMITH_API_KEY="<lsv2_...>" \
-COACH_INTERNAL_TOKEN="<internal>" \
-LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
-LANGSMITH_TRACING=false \
-uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
-# Expect: 10/10 PASS, /ok 200 — paste the full output
-
-# Step 3 — record both smoke outputs in evidence and mark the exercise complete
+# Step 3 — link both run URLs in the evidence file and mark the exercise complete.
 ```
 
-If either smoke in the exercise fails, fix the rollback path before considering the hosting work done — the exercise is a gate, not a formality.
+On a first-ever deploy there is no previous release: dispatch the *current* tag for both
+steps. The point is to prove the dispatch → approval → digest resolution → deploy → `/ok`
+→ smoke round trip, not that the version changed.
+
+If either run fails, fix the rollback path before considering the hosting work done — the
+exercise is a gate, not a formality.
 
 ### 6.3 Rollback trap — `SERVER_STORAGE=postgres` vs pre-Postgres images
 
 > **Staged-rollout trap.** After the flip to release N+1 (`SERVER_STORAGE=postgres` in `deploy/fly.prod.toml` + `DATABASE_URL` from `fly postgres attach`), rolling back to an image **predating this PR** while `SERVER_STORAGE` is still `postgres` will **fail to boot**. The old image's `server/config.py` does not accept `"postgres"` as a valid `SERVER_STORAGE` value — the container exits during config validation, `/ok` never becomes 200, and the rollback looks like an outage.
+
+> **The §6.1 dispatch already handles this**: it checks the repo out at the target tag, so the image and its `deploy/fly.prod.toml` always come from the same release. What follows matters for the §6.1b manual fallback, and for understanding why the pairing rule exists.
 
 **Safe rollback pairs:**
 
@@ -647,13 +707,18 @@ curl -sf https://hc-rag-server-prod.fly.dev/info | jq .
 # or: fly releases --app hc-rag-server-prod
 ```
 
-If the wrong tag won, **re-push the intended tag** to queue a fresh pipeline run:
+If the wrong tag won, **dispatch the intended one**. The §6.1 job deploys any released
+tag's image digest and its `deploy/fly.prod.toml`, so re-asserting a version is the same
+motion as rolling back to one:
 
 ```bash
-git push origin v1.2.4 --force   # re-push the intended tag; pipeline re-runs deploy-prod with that tag's digest
-# Or trigger via workflow_dispatch with the intended tag:
-gh workflow run deploy.yml --ref main -f tag=v1.2.4
+gh workflow run deploy.yml -f version=v1.2.4 -f reason="v1.2.3 won the race; re-asserting the intended release"
 ```
+
+> **Never force-push a git tag to re-run a deploy.** A re-pointed tag would name a
+> different commit than the image already published under that version, and the immutable
+> `ghcr.io/<repo>:1.2.4` → digest mapping the rollback path relies on would start lying
+> (§3.4). If a release is wrong, cut the next version.
 
 Do not rely on tag-push order alone. Always verify the running image:
 
@@ -774,10 +839,9 @@ fly tokens create deploy -x 8760h -a hc-rag-server-prod   # AFTER apps exist
 fly secrets set --app hc-rag-server-prod OPENAI_API_KEY="<...>" SUPABASE_URL="<...>" SUPABASE_SERVICE_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" CORS_ALLOW_ORIGINS="<...>" COACH_ALLOWED_ORIGINS="<...>" LANGSMITH_API_KEY="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGGRAPH_DEPLOYMENT_URL="<...>" LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>"
 fly secrets list --app hc-rag-server-prod
 
-# Release (strict vX.Y.Z for prod; -rc allowed only for local hermetic probes)
+# Release (vX.Y.Z; a -rc suffix also deploys to prod — see §3.1)
 make release TAG=v1.2.3
 git tag v1.2.3 && git push origin v1.2.3
-gh workflow run deploy.yml --ref main -f tag=v1.2.3   # alternative dispatch
 
 # Deploy (pipeline runs this; manual equivalent)
 fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image ghcr.io/<owner>/<repo>@sha256:<digest>
@@ -790,10 +854,12 @@ fly machines run ghcr.io/<owner>/<repo>@sha256:<digest> --app hc-rag-server-prod
 curl -sf https://hc-rag-server-prod.fly.dev/ok | jq .
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
-# Rollback
-fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image ghcr.io/<owner>/<repo>@sha256:<previous>
-curl -sf https://hc-rag-server-prod.fly.dev/ok | jq .
-LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
+# Rollback (§6.1 — dispatch, then approve the production gate)
+make rollback TAG=v1.2.2 REASON="smoke red on v1.2.3"     # prints the command, dispatches nothing
+gh workflow run deploy.yml -f version=v1.2.2 -f reason="smoke red on v1.2.3"
+make release-digest TAG=v1.2.2                            # resolve a release to its digest
+# Break-glass, GHCR tag gone: add -f image_digest=sha256:<64hex>
+# Actions itself down: §6.1b (check out the tag's fly.prod.toml first, then fly deploy by digest)
 
 # Status
 fly status --app hc-rag-server-prod
