@@ -33,6 +33,94 @@ def test_server_storage_bogus_raises():
                 pass
 
 
+def test_server_storage_defaults_to_memory(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.delenv("SERVER_STORAGE", raising=False)
+    monkeypatch.delenv("DATABASE_URI", raising=False)
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    from server.config import load_config
+
+    cfg = load_config()
+    assert cfg.storage == "memory"
+    assert cfg.database_uri is None
+
+
+def test_server_storage_bogus_message_lists_both_options(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SERVER_STORAGE", "bogus2")
+    from server.config import load_config
+
+    with pytest.raises(ValueError, match="memory") as exc:
+        load_config()
+    msg = str(exc.value)
+    assert "postgres" in msg
+    assert "memory" in msg
+
+
+def test_postgres_with_database_uri(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SERVER_STORAGE", "postgres")
+    monkeypatch.setenv("DATABASE_URI", "postgres://user:pass@localhost/db1")
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    from server.config import load_config
+
+    cfg = load_config()
+    assert cfg.storage == "postgres"
+    assert cfg.database_uri == "postgres://user:pass@localhost/db1"
+
+
+def test_postgres_with_database_url_fallback(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SERVER_STORAGE", "postgres")
+    monkeypatch.delenv("DATABASE_URI", raising=False)
+    monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@localhost/db2")
+    from server.config import load_config
+
+    cfg = load_config()
+    assert cfg.storage == "postgres"
+    assert cfg.database_uri == "postgres://user:pass@localhost/db2"
+
+
+def test_postgres_neither_raises(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SERVER_STORAGE", "postgres")
+    monkeypatch.delenv("DATABASE_URI", raising=False)
+    monkeypatch.delenv("DATABASE_URL", raising=False)
+    from server.config import load_config
+
+    with pytest.raises(ValueError, match="DATABASE_URI"):
+        load_config()
+
+
+def test_postgres_both_set_differing_raises(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SERVER_STORAGE", "postgres")
+    monkeypatch.setenv("DATABASE_URI", "postgres://user:pass@localhost/db_a")
+    monkeypatch.setenv("DATABASE_URL", "postgres://user:pass@localhost/db_b")
+    from server.config import load_config
+
+    with pytest.raises(ValueError, match="exactly one"):
+        load_config()
+
+
+def test_postgres_both_set_same_ok(monkeypatch: pytest.MonkeyPatch):
+    uri = "postgres://user:pass@localhost/db_same"
+    monkeypatch.setenv("SERVER_STORAGE", "postgres")
+    monkeypatch.setenv("DATABASE_URI", uri)
+    monkeypatch.setenv("DATABASE_URL", uri)
+    from server.config import load_config
+
+    cfg = load_config()
+    assert cfg.database_uri == uri
+
+
+def test_postgres_conflicting_uri_not_leaked(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("SERVER_STORAGE", "postgres")
+    monkeypatch.setenv("DATABASE_URI", "postgres://secret-a")
+    monkeypatch.setenv("DATABASE_URL", "postgres://secret-b")
+    from server.config import load_config
+
+    with pytest.raises(ValueError) as exc:
+        load_config()
+    msg = str(exc.value)
+    assert "secret-a" not in msg
+    assert "secret-b" not in msg
+
+
 def test_info_and_ok_public():
     import asyncio
 

@@ -15,6 +15,7 @@ class ServerConfig:
     store_index: dict[str, object]
     api_version: str
     storage: str = "memory"
+    database_uri: str | None = None
     port: int = 8000
     local_dev: bool = False
     raw: dict[str, object] = field(default_factory=dict, repr=False)
@@ -48,8 +49,22 @@ def load_config(path: str | Path = "langgraph.json") -> ServerConfig:
 
     # env
     storage = os.environ.get("SERVER_STORAGE", "memory")
-    if storage not in ("memory",):
-        raise ValueError(f"Unknown SERVER_STORAGE={storage!r}; expected 'memory'")
+    if storage not in ("memory", "postgres"):
+        raise ValueError(f"Unknown SERVER_STORAGE={storage!r}; expected 'memory', 'postgres'")
+
+    # database URI resolution (DATABASE_URI canonical, DATABASE_URL fallback for Fly)
+    _uri = os.environ.get("DATABASE_URI")
+    _url = os.environ.get("DATABASE_URL")
+    # treat empty string as unset
+    uri = _uri if _uri else None
+    url = _url if _url else None
+    if uri is not None and url is not None and uri != url:
+        raise ValueError(
+            "DATABASE_URI and DATABASE_URL are both set but differ; keep exactly one set"
+        )
+    database_uri: str | None = uri if uri is not None else url
+    if storage == "postgres" and database_uri is None:
+        raise ValueError("DATABASE_URI is required when SERVER_STORAGE=postgres")
 
     port_raw = os.environ.get("SERVER_PORT", "8000")
     try:
@@ -72,6 +87,7 @@ def load_config(path: str | Path = "langgraph.json") -> ServerConfig:
         store_index=dict(store_index),
         api_version=api_version,
         storage=storage,
+        database_uri=database_uri,
         port=port,
         local_dev=local_dev,
         raw=dict(data),

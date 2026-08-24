@@ -1,0 +1,25 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.6.0 -- /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, langsmith-0.11.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 14 items
+
+tests/server/test_scaffold.py::test_server_storage_bogus_raises PASSED   [  7%]
+tests/server/test_scaffold.py::test_server_storage_defaults_to_memory PASSED [ 14%]
+tests/server/test_scaffold.py::test_server_storage_bogus_message_lists_both_options PASSED [ 21%]
+tests/server/test_scaffold.py::test_postgres_with_database_uri PASSED    [ 28%]
+tests/server/test_scaffold.py::test_postgres_with_database_url_fallback PASSED [ 35%]
+tests/server/test_scaffold.py::test_postgres_neither_raises PASSED       [ 42%]
+tests/server/test_scaffold.py::test_postgres_both_set_differing_raises PASSED [ 50%]
+tests/server/test_scaffold.py::test_postgres_both_set_same_ok PASSED     [ 57%]
+tests/server/test_scaffold.py::test_postgres_conflicting_uri_not_leaked PASSED [ 64%]
+tests/server/test_scaffold.py::test_info_and_ok_public PASSED            [ 71%]
+tests/server/test_scaffold.py::test_manifest_501_and_404 PASSED          [ 78%]
+tests/server/test_scaffold.py::test_graph_storage_attachment_mutation PASSED [ 85%]
+tests/server/test_scaffold.py::test_no_langgraph_api_import PASSED       [ 92%]
+tests/server/test_scaffold.py::test_compat_shim_force_overrides_real_package PASSED [100%]
+
+============================== 14 passed in 1.45s ==============================
