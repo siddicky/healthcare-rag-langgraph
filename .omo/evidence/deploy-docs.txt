@@ -1,0 +1,81 @@
+# deploy-docs evidence — 2026-08-24T05:14:17Z
+# Branch: feat/cors-fix-postgres-persistence HEAD: fb8355e
+
+## rg -n SERVER_STORAGE deploy/fly.prod.toml docs/deploy.md .env.example
+```
+deploy/fly.prod.toml:13:SERVER_STORAGE = "memory"  # STAGED ROLLOUT — do NOT flip to "postgres" in this PR. Flip is release N+1, gated on Fly Postgres provisioning (todo 18: fly postgres create + fly postgres attach) + recorded compliance sign-off per docs/deploy.md §0b. See docs/deploy.md §6 for the rollback trap.
+docs/deploy.md:26:> **This PR is release N — `SERVER_STORAGE=memory` stays live.** The code for Postgres persistence is **delivered but not active**: `server/storage.py: create_storage(...)` now has a `postgres` path, `server/config.py` accepts `SERVER_STORAGE=postgres`, and `DATABASE_URI` wiring + `hc_*` DDL + pgvector are in the image. None of that is active in production until a human deliberately completes this checklist and ships release **N+1**. Do not flip `deploy/fly.prod.toml` until every box below is checked and recorded.
+docs/deploy.md:70:- **Scrubbed conversation state now persists.** Thread messages, resumable state, and store items that today vanish on every deploy will survive restarts once `SERVER_STORAGE=postgres` is live. Only scrubbed forms persist (PHI is scrubbed before storage), but durability itself is the change being accepted — data at rest now exists.
+docs/deploy.md:89:#   SERVER_STORAGE = "memory"  →  SERVER_STORAGE = "postgres"
+docs/deploy.md:208:> **Staged rollout.** Production stays `SERVER_STORAGE=memory` in this release (N). The steps below set up Fly Postgres for the **future** flip to `SERVER_STORAGE=postgres` (release N+1). They are instructions for the human operator to run **later** when executing the checklist in **§0b** — do not run them now, and do not change `deploy/fly.prod.toml` in this PR.
+docs/deploy.md:270:| `DATABASE_URI` / `DATABASE_URL` | attach-provided (N+1 only) | *(not set manually — see below)* | Set automatically by `fly postgres attach hc-rag-pg-prod --app hc-rag-server-prod` (see §1.2b / §0b). **Do NOT** add via `gh secret set` or `fly secrets set`. As of this release (N) production still runs `SERVER_STORAGE=memory` and this row is **not present**; it appears only after the human operator provisions Postgres and completes the activation checklist for release N+1. |
+docs/deploy.md:611:### 6.3 Rollback trap — `SERVER_STORAGE=postgres` vs pre-Postgres images
+docs/deploy.md:613:> **Staged-rollout trap.** After the flip to release N+1 (`SERVER_STORAGE=postgres` in `deploy/fly.prod.toml` + `DATABASE_URL` from `fly postgres attach`), rolling back to an image **predating this PR** while `SERVER_STORAGE` is still `postgres` will **fail to boot**. The old image's `server/config.py` does not accept `"postgres"` as a valid `SERVER_STORAGE` value — the container exits during config validation, `/ok` never becomes 200, and the rollback looks like an outage.
+docs/deploy.md:619:| Roll back to a pre-Postgres image (before this PR) | `fly deploy --image ghcr.io/<repo>@sha256:<pre-pg-digest>` | Must also set `SERVER_STORAGE=memory`: `fly secrets set --app hc-rag-server-prod SERVER_STORAGE=memory` is **not** correct — `SERVER_STORAGE` is an `[env]` in `deploy/fly.prod.toml`, not a Fly secret. Instead, re-deploy with a TOML that has `SERVER_STORAGE = "memory"` (e.g. `git checkout <pre-pg-tag> -- deploy/fly.prod.toml && fly deploy --config deploy/fly.prod.toml --image ...@sha256:<pre-pg-digest>`), or cherry-pick the `fly.prod.toml` from before the flip. |
+docs/deploy.md:620:| Roll back within Postgres-capable history (this PR onward) | Any digest at or after this PR | Keep `SERVER_STORAGE=postgres` as shipped in that digest's TOML — no extra step |
+docs/deploy.md:622:> **Simplest safe rollback after Postgres is live:** stay within Postgres-capable digests. If you must go pre-Postgres, first restore `deploy/fly.prod.toml` to `SERVER_STORAGE = "memory"` (the value as of this PR, release N) and deploy that TOML with the old digest — do not leave the env claiming `postgres` while the image only knows `memory`.
+docs/deploy.md:673:Production still runs `SERVER_STORAGE=memory` (see `deploy/fly.prod.toml` — flipped only in release N+1 per §0b). So **every `fly deploy`, every machine restart, every OOM or host migration still wipes** all Agent Server state — exactly as before this PR:
+docs/deploy.md:682:**After the flip to release N+1 (`SERVER_STORAGE=postgres`) — the delivered durable reality:**
+docs/deploy.md:698:> **Summary:** this PR delivers durable code (release N) but production is still ephemeral (`SERVER_STORAGE=memory`). Durability only takes effect after the separate, human-gated flip to N+1 per §0b. Until then, every deploy still wipes Agent Server state.
+docs/deploy.md:704:> **What NOW EXISTS IN CODE (this PR, release N) vs what is ACTIVE in production (still memory).** Everything below is **shipped in the image** and ready to activate — but it does nothing in production until the §0b flip sets `SERVER_STORAGE=postgres`. Today production still reads `SERVER_STORAGE=memory` and takes the in-memory path.
+docs/deploy.md:708:- **Single factory, two paths.** `server/storage.py:create_storage(...)` now has both arms: `memory` returns `InMemorySaver`/`InMemoryStore` + in-memory dicts `{threads,runs,crons}`; `postgres` returns `AsyncPostgresSaver`/`AsyncPostgresStore` against `DATABASE_URI` (or `DATABASE_URL` alias) plus **durable `hc_*` tables** that replace those dicts. `server/config.py` validates `SERVER_STORAGE` as `Literal["memory","postgres"]` — the `postgres` value is accepted as of this PR (pre-Postgres images reject it; see §6.3).
+docs/deploy.md:709:- **Registries are migration-complete — not future work.** The `hc_*` DDL (threads, runs, crons, store) ships in this PR and is applied on the `postgres` path. The seam made the cut point explicit; the migration is **delivered**, not pending. Switching `SERVER_STORAGE` to `postgres` therefore **does** persist threads/store/crons — the caveat in earlier docs ("registries need their own migration") is resolved as of this PR. What remains ephemeral even after activation is only the process-local pieces named in §8.
+docs/deploy.md:715:- No Postgres cluster exists until the operator runs §0b/§1.2b. No `DATABASE_URL`/`DATABASE_URI` is set. All three states above sit dormant — the image carries them, but `deploy/fly.prod.toml` still ships `SERVER_STORAGE = "memory"` and that is what Fly runs.
+docs/deploy.md:745:| Fly Postgres — `hc-rag-pg-prod` *(N+1 only, cost once activated)* | `shared-cpu-1x`, 10 GB volume, unmanaged single-node (`fly postgres create --vm-size shared-cpu-1x --volume-size 10 --initial-cluster-size 1`) | **~$5–10** | **Not spent yet — as of this release (N) production still runs `SERVER_STORAGE=memory` and this cluster does not exist.** Provisioned by the human operator in §0b/§1.2b for release N+1; includes `vector` (pgvector) extension. Fly Postgres is single-node, no automatic backups; see §0b sign-off item 3 |
+.env.example:84:# SERVER_STORAGE=memory            # only 'memory' this stage (no persistence)
+.env.example:87:# As of this release (N) production still runs SERVER_STORAGE=memory (see deploy/fly.prod.toml).
+.env.example:92:# SERVER_STORAGE=postgres          # flip from 'memory' to 'postgres' only in release N+1 per docs/deploy.md §0b
+```
+
+## git diff deploy/fly.prod.toml (must show ONLY comment, no value change)
+```
+diff --git a/deploy/fly.prod.toml b/deploy/fly.prod.toml
+index 330ff2a..642028f 100644
+--- a/deploy/fly.prod.toml
++++ b/deploy/fly.prod.toml
+@@ -10,7 +10,7 @@ WEAVIATE_HOST = "hc-rag-weaviate-prod.internal"
+ WEAVIATE_PORT = "8080"
+ # WEAVIATE_GRPC_PORT is not required for the HTTP-only server path;
+ # add "50051" here only if a future server build needs gRPC.
+-SERVER_STORAGE = "memory"
++SERVER_STORAGE = "memory"  # STAGED ROLLOUT — do NOT flip to "postgres" in this PR. Flip is release N+1, gated on Fly Postgres provisioning (todo 18: fly postgres create + fly postgres attach) + recorded compliance sign-off per docs/deploy.md §0b. See docs/deploy.md §6 for the rollback trap.
+ SERVER_PORT = "8000"
+ # The coach reminder tools call the Agent Server cron API from inside the
+ # graph run (reminders.py:531 defaults to localhost:2024 — the langgraph dev
+```
+
+## git diff docs/deploy.md (summary)
+```
+ docs/deploy.md | 190 ++++++++++++++++++++++++++++++++++++++++++++++++++++-----
+ 1 file changed, 175 insertions(+), 15 deletions(-)
+```
+
+## git diff .env.example
+```
+diff --git a/.env.example b/.env.example
+index e3daf18..8ef2c5f 100644
+--- a/.env.example
++++ b/.env.example
+@@ -83,6 +83,15 @@ LANGGRAPH_DEPLOYMENT_URL="https://your-deployment.us.langgraph.app"
+ # Server — OSS Agent Server (see server/config.py, deploy/fly.prod.toml)
+ # SERVER_STORAGE=memory            # only 'memory' this stage (no persistence)
+ # SERVER_PORT=8000
++# --- Postgres persistence — STAGED ROLLOUT, NOT YET ACTIVE IN PROD (see docs/deploy.md §0b) ---
++# As of this release (N) production still runs SERVER_STORAGE=memory (see deploy/fly.prod.toml).
++# The lines below are FUTURE placeholders for release N+1 — they do nothing until a human
++# operator completes the activation checklist (Fly Postgres provisioning + compliance sign-off).
++# Do NOT uncomment/flip until §0b is done. DATABASE_URI is attach-provided by
++# `fly postgres attach hc-rag-pg-prod --app hc-rag-server-prod` — never paste a real URI.
++# SERVER_STORAGE=postgres          # flip from 'memory' to 'postgres' only in release N+1 per docs/deploy.md §0b
++# DATABASE_URI="postgresql://<user>:<placeholder>@<host>:5432/<db>?sslmode=require"  # placeholder only — set by `fly postgres attach`, not by hand
++# DATABASE_URL="postgresql://<user>:<placeholder>@<host>:5432/<db>?sslmode=require"  # alias for DATABASE_URI — Fly creates DATABASE_URL; either name works
+ # LANGGRAPH_API_URL=http://127.0.0.1:8000   # coach reminder tools loop back to
+ #                                           # the Agent Server (default
+ #                                           # localhost:2024 is the langgraph
+```
+
+## Consistency story (human-readable)
+- deploy/fly.prod.toml still ships SERVER_STORAGE = "memory" (comment added, value unchanged)
+- .env.example documents SERVER_STORAGE=postgres + DATABASE_URI/DATABASE_URL as commented placeholders for N+1 only
+- docs/deploy.md describes staged rollout: code delivered (N), production still memory (N), activation is human-gated N+1
+- No real postgres:// connection string in edited files
