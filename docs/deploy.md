@@ -338,6 +338,16 @@ You are now ready to push the first tag (§3). The first deploy will boot with s
 
 **Source of truth:** GitHub Environment `production`. The deploy workflow syncs runtime secrets GitHub → Fly on every `deploy-prod` run and then verifies by name (`fly secrets list` — names only, values never echoed or logged).
 
+**Repository secret (not an environment secret): `RELEASE_TAG_TOKEN`.** The Release
+workflow (§3.1) pushes the tag with it; a tag pushed with `GITHUB_TOKEN` triggers no
+workflow, so the deploy would never start. Fine-grained PAT, this repo only,
+`contents: write`, nothing else — it can create a tag, not deploy one.
+
+```bash
+gh secret set RELEASE_TAG_TOKEN            # repo scope, NOT --env production
+gh secret list | grep RELEASE_TAG_TOKEN
+```
+
 **Never two manual stores.** After bootstrap (§1.3), do not manually diverge `fly secrets set` from the GitHub Environment. If a secret must change, change it in **GitHub Environment `production` first**, then let the next pipeline deploy sync it (or run a manual sync deploy of the current digest). Direct `fly secrets set` outside the pipeline is only for the initial bootstrap and for emergency rotation when the pipeline cannot run — and must be mirrored back to the GitHub Environment immediately.
 
 What the workflow does on each deploy:
@@ -356,23 +366,53 @@ fly secrets list --app hc-rag-server-prod   # names only — workflow asserts ev
 
 ## 3. Deploy — by immutable digest (tag → GHCR → prod approval → Fly)
 
-### 3.1 Release validation (hermetic, local)
+### 3.1 Cut the release (the tag is created for you)
+
+```bash
+make next-version                 # preview: current tag, bump, next tag, commits driving it
+make next-version BUMP=minor      # preview an explicit bump
+
+# If pyproject.toml is behind the version being cut, prep it first — this lands
+# as an ordinary PR, and it is where you get to disagree with the number:
+make release-prep BUMP=minor      # bumps pyproject + uv.lock, prints the commit/PR commands
+
+# Then cut it (dispatch from main):
+gh workflow run release.yml -f bump=minor
+gh workflow run release.yml -f bump=auto -f dry_run=true   # plan only, tags nothing
+```
+
+`bump=auto` derives the version from the Conventional Commit subjects since the
+last tag: `feat!`/`BREAKING CHANGE:` → major (minor while the major is still 0),
+`feat` → minor, everything else → patch. `make next-version` and the workflow run
+the same `scripts/next_version.py`, so the preview is the number CI will pick.
+
+The Release job refuses to tag unless: the dispatch is on `main`; the tag does not
+already exist on origin (release tags are immutable); `pyproject.toml` already
+carries the version being tagged; and the commit is green — no red or pending
+checks, with the offline suite green on that exact commit. It then creates an
+**annotated** tag whose message is the release notes, pushes it, and publishes a
+GitHub Release.
+
+> **Requires the `RELEASE_TAG_TOKEN` secret** — a fine-grained PAT with
+> `contents: write` on this repo. GitHub raises no workflow-triggering events for
+> refs pushed with `GITHUB_TOKEN`, so a tag created with the default token would
+> never deploy. The job fails closed with that explanation rather than creating a
+> tag that ships nothing. Without the secret, tag locally (§3.2).
+>
+> The token can create tags; it cannot deploy. The `production` environment's
+> required reviewers still gate what any tag ships.
+
+### 3.2 Tagging by hand (fallback)
+
+`make release TAG=vX.Y.Z` validates the format and prints the commands without
+pushing. Use this only when the Release workflow cannot run:
 
 ```bash
 make release TAG=v1.2.3
-# Expected: prints the exact git push command and exits 0 WITHOUT pushing.
-# Without TAG: exits non-zero and prints usage.
-# No tag is pushed by the target — the human pushes (next step).
-```
-
-> **Tag contract note:** `make release` accepts `vX.Y.Z` and `vX.Y.Z-<suffix>`. So do the workflow trigger (`tags: ["v*.*.*"]`) and the `production` environment's tag policy — which means **`v1.2.3-rc1` deploys to production like any other tag.** That is deliberate: there is one deployed environment, so the suffix is a human label about confidence, not a routing rule (`docs/decisions/release-tags-and-rollback.md`). If a staging app is ever added, tighten the policy to final versions only. The Makefile prints `git tag -s $(TAG)` (annotated) while §3.2 shows `git tag v1.2.3` (lightweight) — both create the tag; the pipeline requires only that it exists on origin and is reachable from `main`.
-
-### 3.2 Push the tag (human)
-
-```bash
-git tag v1.2.3
+git tag -a v1.2.3 -m "release v1.2.3"
 git push origin v1.2.3
-# The workflow triggers on push: tags: ['v*.*.*']. workflow_dispatch is rollback only (§6.1).
+# The workflow triggers on push: tags: ['v*.*.*']. workflow_dispatch on the
+# Deploy workflow is rollback only (§6.1).
 ```
 
 ### 3.3 Pipeline (what happens after the push)
@@ -415,6 +455,12 @@ against the workflow by `tests/agent/test_release_pipeline.py`.
   GC, and GC-ing one deletes a rollback target.
 - `workflow_dispatch` on this workflow is **rollback only** (§6.1). It never builds: the
   `build` job is gated to `github.event_name == 'push'`.
+- **A `-rc` suffix deploys to production like any other tag.** `tags: ["v*.*.*"]` and
+  the environment's tag policy both match `v1.2.3-rc1`. Deliberate: there is one
+  deployed environment, so the suffix is a human label about confidence, not a routing
+  rule. Note that `make next-version` only ever computes final versions — a prerelease
+  is a deliberate hand-tagged act (§3.2). If a staging app is ever added, tighten the
+  policy to final versions only.
 
 Resolve any release to its digest locally:
 
@@ -839,9 +885,13 @@ fly tokens create deploy -x 8760h -a hc-rag-server-prod   # AFTER apps exist
 fly secrets set --app hc-rag-server-prod OPENAI_API_KEY="<...>" SUPABASE_URL="<...>" SUPABASE_SERVICE_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" CORS_ALLOW_ORIGINS="<...>" COACH_ALLOWED_ORIGINS="<...>" LANGSMITH_API_KEY="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGGRAPH_DEPLOYMENT_URL="<...>" LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>"
 fly secrets list --app hc-rag-server-prod
 
-# Release (vX.Y.Z; a -rc suffix also deploys to prod — see §3.1)
-make release TAG=v1.2.3
-git tag v1.2.3 && git push origin v1.2.3
+# Release (§3.1 — the workflow creates the tag)
+make next-version                                    # preview the computed version
+make release-prep BUMP=minor                         # bump pyproject + uv.lock (PR it)
+gh workflow run release.yml -f bump=minor            # cut it
+gh workflow run release.yml -f bump=auto -f dry_run=true   # plan only
+# Fallback, no RELEASE_TAG_TOKEN / Actions down (§3.2):
+make release TAG=v1.2.3 && git tag -a v1.2.3 -m "release v1.2.3" && git push origin v1.2.3
 
 # Deploy (pipeline runs this; manual equivalent)
 fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image ghcr.io/<owner>/<repo>@sha256:<digest>

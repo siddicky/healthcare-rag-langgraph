@@ -66,6 +66,54 @@ Three rules follow from the table:
   a bad version sitting still for the minutes it takes a human to click. What
   changes here is only the *cost* of that click.
 
+## How a tag gets created
+
+`.github/workflows/release.yml`, dispatch-only:
+
+```bash
+make next-version                     # preview — same script CI runs
+gh workflow run release.yml -f bump=auto
+```
+
+`auto` derives the bump from the Conventional Commit subjects since the last
+tag (`feat!`/`BREAKING CHANGE:` → major, `feat` → minor, everything else →
+patch), with one carve-out: while the major is still `0`, a breaking change
+bumps the minor. Promoting `0.x` to `1.0.0` on the first `feat!` would declare
+API stability by accident. `scripts/next_version.py` is the single
+implementation, shared by CI and `make`, so the local preview is the number CI
+will pick rather than one that looks like it.
+
+Four things must hold before a tag exists:
+
+1. **Cut from `main` only.** A release from a branch would tag a commit that
+   never passed review.
+2. **The tag must not already exist.** Release tags are immutable; the job
+   refuses to re-point one rather than silently invalidating the digest already
+   published under that version.
+3. **`pyproject.toml` must already carry the version.** The wheel and the image
+   report that number, so a tag that disagrees with it turns provenance into a
+   guess. `make release-prep BUMP=…` writes the bump and re-locks; it lands as
+   an ordinary reviewed PR, which is also where a human gets to disagree with
+   the computed version.
+4. **The commit must be green.** No red or still-running checks, and the
+   offline suite must have succeeded on that exact commit.
+
+**Not on every merge.** Tagging automatically on merge to `main` is continuous
+deployment, and this repo is explicitly not that: production has required
+reviewers and a recorded compliance gate (`docs/deploy.md` §0). Every merge
+would queue a prod approval request, and approvals that arrive constantly stop
+being read. A human decides when a release happens; the automation decides what
+number it gets and does the mechanical part.
+
+**The tag is pushed with `RELEASE_TAG_TOKEN`, not `GITHUB_TOKEN`.** GitHub does
+not raise workflow-triggering events for refs pushed with `GITHUB_TOKEN`, so a
+tag created with it would sit in the repo and never deploy — "the release
+succeeded but nothing shipped", which is worse than a loud failure. The job
+refuses to tag when the secret is missing and prints the local commands
+instead. The secret is a fine-grained PAT with `contents: write` on this repo
+only; it can create a tag, and the `production` environment's reviewers still
+gate what that tag deploys.
+
 ## Prereleases deploy to production, by design
 
 `v1.2.3-rc1` matches the `v*.*.*` deployment policy and reaches prod like any
@@ -78,6 +126,11 @@ production environment's tag policy from `v*.*.*` to final versions only.
 
 ## Rejected
 
+- **Tagging every merge to `main`** — see above: it is continuous deployment,
+  which this repo's approval gate is designed not to be.
+- **A release PR bot (release-please style)** — the PR it would open is the one
+  `make release-prep` produces in a single command, and the bot adds a
+  changelog format, a config file and a bot identity to maintain.
 - **Auto-rollback on smoke failure** — reverses an explicit recorded policy, and
   couples prod stability to smoke flakiness.
 - **A committed release ledger** (`deploy/releases.jsonl` written by CI) — a

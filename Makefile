@@ -15,7 +15,7 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
         dataset-sync dataset-sync-multiturn \
         routing-gate-query-smoke routing-gate-safety-smoke wiki-init wiki-update \
         server-dev server-test server-test-pg parity server-image container-server-smoke ingest-fly release \
-        rollback release-digest
+        rollback release-digest next-version release-prep
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -154,6 +154,25 @@ ingest-fly: ## Ingest checked-in chunks into prod Weaviate via Fly machine (see 
 	# See docs/deploy.md for full context once written
 	@echo "fly machines run ingest against prod Weaviate — see docs/deploy.md for the exact command and required env (FLY_API_TOKEN, WEAVIATE_HOST=hc-rag-weaviate-prod.internal)"
 	@echo "Example: fly machines run --app hc-rag-server-prod -e WEAVIATE_HOST=hc-rag-weaviate-prod.internal ghcr.io/<repo>/hc-rag-server:latest python -m healthcare_rag.storage.vector_store --delete-all --collection Lipitor data/chunks_lipitor.json --collection Metformin data/chunks_metformin.json"
+
+next-version: ## Preview the version the Release workflow would cut (BUMP=auto|patch|minor|major)
+	@python3 scripts/next_version.py --bump $(if $(BUMP),$(BUMP),auto) --explain
+
+release-prep: ## Bump pyproject + uv.lock to the next version so the tag and the wheel agree (BUMP=...)
+	@VERSION="$$(python3 scripts/next_version.py --bump $(if $(BUMP),$(BUMP),auto))"; \
+	PROJECT="$${VERSION#v}"; \
+	CURRENT="$$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"; \
+	if [ "$$CURRENT" = "$$PROJECT" ]; then \
+		echo "pyproject.toml already at $$PROJECT — nothing to prep for $$VERSION"; \
+		exit 0; \
+	fi; \
+	sed -i.bak "0,/^version = \".*\"/s//version = \"$$PROJECT\"/" pyproject.toml && rm -f pyproject.toml.bak; \
+	$(UV) lock --quiet; \
+	echo "pyproject.toml: $$CURRENT -> $$PROJECT"; \
+	echo ""; \
+	echo "Commit it on a branch and merge, then cut the release:"; \
+	echo "  git checkout -b release/$$VERSION && git commit -am \"chore(release): $$VERSION\""; \
+	echo "  gh workflow run release.yml -f bump=$(if $(BUMP),$(BUMP),auto)   # after the PR merges"
 
 release: ## Validate TAG=vX.Y.Z and print the exact release push commands (hermetic, no push)
 	@if [ -z "$(TAG)" ]; then echo "usage: make release TAG=vX.Y.Z  (e.g. make release TAG=v1.2.3)"; echo "  TAG must match ^v[0-9]+\.[0-9]+\.[0-9]+$$ (e.g. v1.2.3, v0.1.0-rc)"; exit 1; fi

@@ -17,6 +17,7 @@ import pytest
 import yaml
 
 WORKFLOW: Final = Path(".github/workflows/deploy.yml")
+RELEASE_WORKFLOW: Final = Path(".github/workflows/release.yml")
 FLY_APP: Final = "hc-rag-server-prod"
 
 
@@ -156,3 +157,103 @@ def test_the_decision_record_backing_these_rules_exists() -> None:
 
     assert "**Verdict: ADOPT.**" in record
     assert "no auto-rollback" in record.lower()
+
+
+# --- tag creation (.github/workflows/release.yml) ----------------------------
+
+
+@pytest.fixture(scope="module")
+def release() -> dict[str, Any]:
+    parsed: dict[str, Any] = yaml.safe_load(RELEASE_WORKFLOW.read_text())
+    return parsed
+
+
+@pytest.fixture(scope="module")
+def release_source() -> str:
+    return RELEASE_WORKFLOW.read_text()
+
+
+@pytest.fixture(scope="module")
+def release_steps(release: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    return {str(step.get("name")): step for step in release["jobs"]["tag"]["steps"]}
+
+
+def test_releases_are_cut_by_hand_not_on_every_merge(release: dict[str, Any]) -> None:
+    triggers = release.get("on") or release[True]
+
+    # Tagging every merge would queue a production deploy request for every
+    # merge, against this repo's human-gated posture (docs/deploy.md §0).
+    assert set(triggers) == {"workflow_dispatch"}
+    assert set(triggers["workflow_dispatch"]["inputs"]) == {"bump", "dry_run"}
+
+
+def test_a_release_can_only_be_cut_from_main(
+    release_steps: dict[str, dict[str, Any]],
+) -> None:
+    guard: str = release_steps["Refuse to release from anything but main"]["run"]
+
+    assert "refs/heads/main" in guard
+    checkout = release_steps["Check out main with full history and tags"]
+    assert checkout["with"]["ref"] == "main"
+    # Tag history drives the version; a shallow clone would compute the wrong one.
+    assert checkout["with"]["fetch-depth"] == 0
+
+
+def test_the_release_refuses_to_move_an_existing_tag(
+    release_steps: dict[str, dict[str, Any]],
+) -> None:
+    guard: str = release_steps["Refuse to re-point an existing tag"]["run"]
+
+    assert "git ls-remote --tags origin" in guard
+    assert "immutable" in guard
+
+
+def test_the_tag_and_the_packaged_version_must_agree(
+    release_steps: dict[str, dict[str, Any]],
+) -> None:
+    # Otherwise the wheel and image keep reporting an older version than the
+    # tag that deployed them, and provenance becomes a guess.
+    guard: str = release_steps["Require pyproject to carry the version being tagged"]["run"]
+
+    assert "pyproject.toml" in guard
+    assert "make release-prep" in guard
+
+
+def test_a_red_or_pending_commit_cannot_be_released(
+    release_steps: dict[str, dict[str, Any]],
+) -> None:
+    guard: str = release_steps["Require the commit to be green"]["run"]
+
+    assert "check-runs" in guard
+    assert "red checks on this commit" in guard
+    assert "checks still running" in guard
+
+
+def test_the_tag_is_pushed_with_a_token_that_can_trigger_deploy(
+    release_steps: dict[str, dict[str, Any]],
+) -> None:
+    step = release_steps["Create and push the release tag"]
+    run: str = step["run"]
+
+    # GITHUB_TOKEN-pushed refs raise no workflow events, so a tag created with
+    # it would never deploy. The job refuses rather than making a dead tag.
+    assert step["env"]["RELEASE_TAG_TOKEN"] == "${{ secrets.RELEASE_TAG_TOKEN }}"
+    assert "RELEASE_TAG_TOKEN is not set" in run
+    assert "git tag -a" in run, "release tags are annotated"
+
+
+def test_a_dry_run_tags_nothing(release_steps: dict[str, dict[str, Any]]) -> None:
+    assert release_steps["Plan (dry run stops here)"]["if"] == "${{ inputs.dry_run }}"
+    for name in ("Create and push the release tag", "Publish the GitHub release"):
+        assert release_steps[name]["if"] == "${{ !inputs.dry_run }}", name
+
+
+def test_local_preview_and_ci_compute_the_version_the_same_way(
+    release_source: str,
+) -> None:
+    # `make next-version` and the workflow both shell out to the same script;
+    # a second implementation would drift.
+    makefile = Path("Makefile").read_text()
+
+    assert "scripts/next_version.py" in release_source
+    assert "scripts/next_version.py" in makefile
