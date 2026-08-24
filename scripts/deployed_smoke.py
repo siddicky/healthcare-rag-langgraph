@@ -1103,7 +1103,6 @@ class DeployedSmoke:
         fast_checks = (
             self.check_isolation,
             self.check_perimeter,
-            self.check_erasure,
             self.check_disabled_protocols,
         )
         if profile == "gate":
@@ -1120,6 +1119,7 @@ class DeployedSmoke:
                 self.check_projection,
                 *fast_checks[1:2],
                 self.check_route_a,
+                self.check_erasure,
                 *fast_checks[2:],
                 self.check_reminders,
                 self.check_documents_and_feedback,
