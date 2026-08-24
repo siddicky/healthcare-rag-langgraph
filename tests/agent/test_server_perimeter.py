@@ -90,6 +90,23 @@ def test_owned_delete_completes_cleanup_before_removing_thread(
     assert unauthorized.status_code in {403, 404}
 
 
+def test_owned_delete_does_not_depend_on_the_request_host(
+    agent_server: str,
+    member_headers: dict[str, str],
+) -> None:
+    """Regression: the perimeter's delete pre-check used to re-call the app
+    via ``request.base_url`` (client-controlled Host). Behind a proxy that
+    Host is the public domain, the self-fetch left the app and every member
+    delete 403'd. The check must read the registry, not the network."""
+    with httpx.Client(
+        base_url=agent_server,
+        headers={**member_headers, "host": "unreachable.invalid"},
+    ) as client:
+        thread_id = client.post("/threads", json={}).json()["thread_id"]
+        deleted = client.delete(f"/threads/{thread_id}")
+        assert deleted.status_code == 204
+
+
 def test_internal_reservation_requires_dual_secret_and_is_hidden_from_members(
     agent_server: str,
     member_headers: dict[str, str],
