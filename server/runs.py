@@ -19,6 +19,7 @@ from server.run_engine import (
     RunMissing,
     RunRequest,
     RunRuntime,
+    _to_jsonable,
 )
 
 
@@ -29,16 +30,17 @@ def _engine(request: Request) -> RunEngine:
 def _auth_user(request: Request) -> dict[str, JSONValue]:
     user = request.scope.get("user")
     if isinstance(user, Mapping):
-        return dict(user)
+        serialized = _to_jsonable(dict(user))
+        return serialized if isinstance(serialized, dict) else {}
     identity = getattr(user, "identity", None)
     return {"identity": identity} if isinstance(identity, str) else {}
 
 
-def _lookup(request: Request) -> tuple[RunEngine, str, str]:
+async def _lookup(request: Request) -> tuple[RunEngine, str, str]:
     engine = _engine(request)
     thread_id = request.path_params["thread_id"]
     run_id = request.path_params["run_id"]
-    if thread_id not in engine.storage.threads or run_id not in engine.runtime:
+    if not await engine.storage.threads.contains(thread_id) or run_id not in engine.runtime:
         raise RunMissing
     return engine, thread_id, run_id
 
@@ -53,7 +55,8 @@ async def _parse(request: Request) -> RunRequest | JSONResponse:
 async def create_run(request: Request) -> Response:
     engine = _engine(request)
     thread_id = request.path_params["thread_id"]
-    if thread_id not in engine.storage.threads:
+    thread = await engine.storage.threads.get(thread_id)
+    if thread is None:
         return JSONResponse({"detail": "Thread not found"}, status_code=404)
     parsed = await _parse(request)
     if isinstance(parsed, JSONResponse):
@@ -74,7 +77,7 @@ async def create_run(request: Request) -> Response:
             "threads", "create_run", request.user, policy_value
         )
         if scope_filter is not None:
-            require_scope_match(engine.storage.threads[thread_id], scope_filter)
+            require_scope_match(thread, scope_filter)
         record = await engine.submit(thread_id, parsed, auth_user=_auth_user(request))
     except Auth.exceptions.HTTPException as exc:
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
@@ -103,20 +106,23 @@ async def wait_run(request: Request) -> Response:
 
 async def get_run(request: Request) -> Response:
     try:
-        engine, _, run_id = _lookup(request)
+        engine, _, run_id = await _lookup(request)
     except RunMissing:
         return JSONResponse({"detail": "Run not found"}, status_code=404)
-    return JSONResponse(engine.storage.runs[run_id])
+    record = await engine.storage.runs.get(run_id)
+    if record is None:
+        return JSONResponse({"detail": "Run not found"}, status_code=404)
+    return JSONResponse(record)
 
 
 async def list_runs(request: Request) -> Response:
     engine = _engine(request)
     thread_id = request.path_params["thread_id"]
-    if thread_id not in engine.storage.threads:
+    if not await engine.storage.threads.contains(thread_id):
         return JSONResponse({"detail": "Thread not found"}, status_code=404)
     records = [
         record
-        for record in engine.storage.runs.values()
+        for record in await engine.storage.runs.all()
         if record["thread_id"] == thread_id
     ]
     records.sort(key=lambda record: str(record["created_at"]), reverse=True)
@@ -125,7 +131,7 @@ async def list_runs(request: Request) -> Response:
 
 async def join_run(request: Request) -> Response:
     try:
-        engine, _, run_id = _lookup(request)
+        engine, _, run_id = await _lookup(request)
     except RunMissing:
         return JSONResponse({"detail": "Run not found"}, status_code=404)
     runtime = engine.runtime[run_id]
@@ -165,7 +171,7 @@ async def stream_run(request: Request) -> Response:
 
 async def join_stream(request: Request) -> Response:
     try:
-        engine, _, run_id = _lookup(request)
+        engine, _, run_id = await _lookup(request)
     except RunMissing:
         return JSONResponse({"detail": "Run not found"}, status_code=404)
     return StreamingResponse(
@@ -175,7 +181,7 @@ async def join_stream(request: Request) -> Response:
 
 async def cancel_run(request: Request) -> Response:
     try:
-        engine, thread_id, run_id = _lookup(request)
+        engine, thread_id, run_id = await _lookup(request)
         try:
             body = await request.json()
         except Exception:
@@ -192,7 +198,10 @@ async def cancel_run(request: Request) -> Response:
         return JSONResponse({"detail": "Run not found"}, status_code=404)
     except (ValidationError, json.JSONDecodeError) as exc:
         return JSONResponse({"detail": str(exc)}, status_code=422)
-    return JSONResponse(engine.storage.runs[run_id])
+    record = await engine.storage.runs.get(run_id)
+    if record is None:
+        return JSONResponse({"detail": "Run not found"}, status_code=404)
+    return JSONResponse(record)
 
 
 routes = [

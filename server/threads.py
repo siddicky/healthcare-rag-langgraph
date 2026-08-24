@@ -20,14 +20,16 @@ def _to_jsonable(obj: object) -> object:
         return {str(k): _to_jsonable(v) for k, v in obj.items()}  # type: ignore[arg-type]
     if isinstance(obj, (list, tuple, set)):
         return [_to_jsonable(v) for v in obj]  # type: ignore[arg-type]
-    if hasattr(obj, "model_dump"):
+    model_dump = getattr(obj, "model_dump", None)
+    if callable(model_dump):
         try:
-            return _to_jsonable(obj.model_dump(mode="json"))  # type: ignore[attr-defined]
+            return _to_jsonable(model_dump(mode="json"))
         except Exception:
             pass
-    if hasattr(obj, "dict"):
+    to_dict = getattr(obj, "dict", None)
+    if callable(to_dict):
         try:
-            return _to_jsonable(obj.dict())  # type: ignore[attr-defined]
+            return _to_jsonable(to_dict())
         except Exception:
             pass
     try:
@@ -79,18 +81,22 @@ def _is_expired(record: dict[str, object]) -> bool:
     return _now() >= expires
 
 
-def _purge_expired(storage: Storage) -> None:
-    expired = [tid for tid, rec in storage.threads.items() if _is_expired(rec)]
+async def _purge_expired(storage: Storage) -> None:
+    expired = [
+        str(record["thread_id"])
+        for record in await storage.threads.all()
+        if _is_expired(record)
+    ]
     for tid in expired:
-        storage.threads.pop(tid, None)
+        await storage.threads.delete(tid)
 
 
-def _purge_if_expired(storage: Storage, thread_id: str) -> bool:
-    rec = storage.threads.get(thread_id)
+async def _purge_if_expired(storage: Storage, thread_id: str) -> bool:
+    rec = await storage.threads.get(thread_id)
     if rec is None:
         return False
     if _is_expired(rec):
-        storage.threads.pop(thread_id, None)
+        await storage.threads.delete(thread_id)
         return True
     return False
 
@@ -173,7 +179,7 @@ def _record_matches(record: dict[str, object], filt: dict[str, object]) -> bool:
 
 async def create_thread(request: Request) -> Response:
     storage: Storage = request.app.state.storage
-    _purge_expired(storage)
+    await _purge_expired(storage)
     try:
         body_bytes = await request.body()
         if not body_bytes:
@@ -214,7 +220,12 @@ async def create_thread(request: Request) -> Response:
             "threads", "create", request.user, policy_value  # type: ignore[arg-type]
         )
         # policy may have mutated policy_value["metadata"]
-        final_metadata: dict[str, object] = dict(policy_value.get("metadata", {})) if isinstance(policy_value.get("metadata"), dict) else {}  # type: ignore[arg-type]
+        policy_metadata = policy_value.get("metadata")
+        final_metadata: dict[str, object] = (
+            {str(key): value for key, value in policy_metadata.items()}
+            if isinstance(policy_metadata, dict)
+            else {}
+        )
         if scope_filter is not None:
             # For create, scope filter is not directly applied as 404; but if deny returns dict we treat as filter? deny is 403 already.
             # If scope filter present, future search would merge; no match check needed on create.
@@ -226,8 +237,8 @@ async def create_thread(request: Request) -> Response:
     thread_id = supplied_id if supplied_id is not None else str(uuid4())
 
     # Handle if_exists logic if thread already exists (and not expired)
-    existing = storage.threads.get(thread_id)
-    if existing is not None and _purge_if_expired(storage, thread_id):
+    existing = await storage.threads.get(thread_id)
+    if existing is not None and await _purge_if_expired(storage, thread_id):
         existing = None
 
     if existing is not None:
@@ -288,7 +299,7 @@ async def create_thread(request: Request) -> Response:
     if "updated_at" not in record:
         record["updated_at"] = now_iso
 
-    storage.threads[thread_id] = record
+    await storage.threads.save(thread_id, record)
     # Return 200 for reuse/do_nothing existing, otherwise 200 with record (200 is fine for create)
     return JSONResponse(record)
 
@@ -298,9 +309,9 @@ async def get_thread(request: Request) -> Response:
     thread_id = request.path_params["thread_id"]
     if not _validate_uuid(thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    if _purge_if_expired(storage, thread_id):
+    if await _purge_if_expired(storage, thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    record = storage.threads.get(thread_id)
+    record = await storage.threads.get(thread_id)
     if record is None:
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     # policy
@@ -320,9 +331,9 @@ async def patch_thread(request: Request) -> Response:
     thread_id = request.path_params["thread_id"]
     if not _validate_uuid(thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    if _purge_if_expired(storage, thread_id):
+    if await _purge_if_expired(storage, thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    record = storage.threads.get(thread_id)
+    record = await storage.threads.get(thread_id)
     if record is None:
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     try:
@@ -362,7 +373,7 @@ async def patch_thread(request: Request) -> Response:
             record[k] = v
         # Note: keys removed from metadata are not automatically removed top-level unless explicitly overwritten with None
     record["updated_at"] = _now().isoformat()
-    storage.threads[thread_id] = record
+    await storage.threads.save(thread_id, record)
     return JSONResponse(record)
 
 
@@ -372,9 +383,9 @@ async def delete_thread(request: Request) -> Response:
     if not _validate_uuid(thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     # Check expired -> treat as 404 (already gone)
-    if _purge_if_expired(storage, thread_id):
+    if await _purge_if_expired(storage, thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    record = storage.threads.get(thread_id)
+    record = await storage.threads.get(thread_id)
     if record is None:
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     try:
@@ -387,7 +398,7 @@ async def delete_thread(request: Request) -> Response:
         return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
 
     # Cascade delete
-    storage.threads.pop(thread_id, None)
+    await storage.threads.delete(thread_id)
     # checkpoints
     try:
         await storage.saver.adelete_thread(thread_id)
@@ -397,14 +408,22 @@ async def delete_thread(request: Request) -> Response:
             extra={"thread_id": thread_id, "error": str(exc), "exc_type": type(exc).__name__},
         )
     # runs cascade
-    to_delete = [rid for rid, rec in storage.runs.items() if rec.get("thread_id") == thread_id]
+    to_delete = [
+        str(record["run_id"])
+        for record in await storage.runs.all()
+        if record.get("thread_id") == thread_id
+    ]
     for rid in to_delete:
-        storage.runs.pop(rid, None)
+        await storage.runs.delete(rid)
     # thread-crons cascade placeholder (todo 6 owns real crons)
     try:
-        cron_ids = [cid for cid, rec in storage.crons.items() if rec.get("thread_id") == thread_id]
+        cron_ids = [
+            str(record["cron_id"])
+            for record in await storage.crons.all()
+            if record.get("thread_id") == thread_id
+        ]
         for cid in cron_ids:
-            storage.crons.pop(cid, None)
+            await storage.crons.delete(cid)
     except Exception as exc:  # noqa: BLE001 - cron cascade iterates over in-memory dict; any failure is unexpected and must be observable
         logger.warning(
             "delete_thread cron cascade failed",
@@ -432,7 +451,7 @@ async def delete_thread(request: Request) -> Response:
 
 async def search_threads(request: Request) -> Response:
     storage: Storage = request.app.state.storage
-    _purge_expired(storage)
+    await _purge_expired(storage)
     try:
         body_bytes = await request.body()
         payload: dict[str, object] = json.loads(body_bytes) if body_bytes else {}
@@ -470,7 +489,11 @@ async def search_threads(request: Request) -> Response:
         merged = merge_scope_filter(requested_filter, scope_filter)
 
     # Filter
-    items = [rec for rec in storage.threads.values() if _record_matches(rec, merged)]
+    items = [
+        record
+        for record in await storage.threads.all()
+        if _record_matches(record, merged)
+    ]
 
     # Sort
     sort_by = parsed.sort_by
@@ -501,11 +524,13 @@ async def search_threads(request: Request) -> Response:
     return JSONResponse(sliced)
 
 
-def _thread_graph(request: Request, storage: Storage, thread_id: str) -> object | None:
+async def _thread_graph(
+    request: Request, storage: Storage, thread_id: str
+) -> object | None:
     graphs: Mapping[str, object] = request.app.state.graphs
     if not graphs:
         return None
-    for record in reversed(list(storage.runs.values())):
+    for record in reversed(await storage.runs.all()):
         if record.get("thread_id") != thread_id:
             continue
         graph = graphs.get(str(record.get("assistant_id")))
@@ -519,9 +544,9 @@ async def get_thread_state(request: Request) -> Response:
     thread_id = request.path_params["thread_id"]
     if not _validate_uuid(thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    if _purge_if_expired(storage, thread_id):
+    if await _purge_if_expired(storage, thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    record = storage.threads.get(thread_id)
+    record = await storage.threads.get(thread_id)
     if record is None:
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     try:
@@ -539,11 +564,12 @@ async def get_thread_state(request: Request) -> Response:
         # Validate UUID for checkpoint_id is not strictly required; treat as opaque
         config["configurable"] = {"thread_id": thread_id, "checkpoint_ns": "", "checkpoint_id": checkpoint_id}  # type: ignore[dict-item]
 
-    graph = _thread_graph(request, storage, thread_id)
+    graph = await _thread_graph(request, storage, thread_id)
     if graph is None:
         return JSONResponse({"values": {}, "next": [], "interrupts": []})
     try:
-        snapshot = await graph.aget_state(config)  # type: ignore[attr-defined]
+        get_state = getattr(graph, "aget_state")
+        snapshot = await get_state(config)
     except Exception:
         # A state-plane fault must surface (500 on a live server), never
         # masquerade as an empty thread state. Fresh threads return an empty
@@ -572,9 +598,9 @@ async def copy_thread(request: Request) -> Response:
     thread_id = request.path_params["thread_id"]
     if not _validate_uuid(thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    if _purge_if_expired(storage, thread_id):
+    if await _purge_if_expired(storage, thread_id):
         return JSONResponse({"detail": "Not Found"}, status_code=404)
-    source = storage.threads.get(thread_id)
+    source = await storage.threads.get(thread_id)
     if source is None:
         return JSONResponse({"detail": "Not Found"}, status_code=404)
     # scope check on source
@@ -610,7 +636,7 @@ async def copy_thread(request: Request) -> Response:
     for k, v in final_meta.items():
         new_record[k] = v
     # Do not copy expires_at (new thread should not inherit TTL)
-    storage.threads[new_id] = new_record
+    await storage.threads.save(new_id, new_record)
     # Copy checkpoint history
     try:
         # Prefer adelete_thread semantic: copy_thread on saver if available

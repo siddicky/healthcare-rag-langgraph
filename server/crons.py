@@ -196,9 +196,9 @@ async def _create(request: Request, thread_id: str | None) -> Response:
     if isinstance(scope, JSONResponse):
         return scope
     storage: Storage = request.app.state.storage
-    if thread_id is not None and thread_id not in storage.threads:
+    if thread_id is not None and not await storage.threads.contains(thread_id):
         return JSONResponse({"detail": "Thread not found"}, status_code=404)
-    if len(storage.crons) >= CRON_LIMIT:
+    if await storage.crons.count() >= CRON_LIMIT:
         return JSONResponse(
             {"detail": "Cron registry is full"},
             status_code=503,
@@ -207,7 +207,7 @@ async def _create(request: Request, thread_id: str | None) -> Response:
     record = _record(parsed, thread_id, datetime.now(UTC), _principal(request))
     if scope is not None:
         require_scope_match(record, scope)
-    storage.crons[str(record["cron_id"])] = record
+    await storage.crons.save(str(record["cron_id"]), record)
     return JSONResponse(_public(record))
 
 
@@ -225,7 +225,9 @@ async def _authorized_record(
     scope = await _scope(request, action, {"cron_id": request.path_params["cron_id"]})
     if isinstance(scope, JSONResponse):
         return scope
-    record = request.app.state.storage.crons.get(request.path_params["cron_id"])
+    record = await request.app.state.storage.crons.get(
+        request.path_params["cron_id"]
+    )
     if record is None:
         return JSONResponse({"detail": "Cron not found"}, status_code=404)
     try:
@@ -249,7 +251,7 @@ async def search_crons(request: Request) -> Response:
     scope = await _scope(request, "search", parsed.model_dump(mode="json"))
     if isinstance(scope, JSONResponse):
         return scope
-    records = list(request.app.state.storage.crons.values())
+    records = await request.app.state.storage.crons.all()
     if scope is not None:
         records = [
             record
@@ -304,6 +306,9 @@ async def patch_cron(request: Request) -> Response:
         if record["enabled"]
         else None
     )
+    await request.app.state.storage.crons.save(
+        request.path_params["cron_id"], record
+    )
     return JSONResponse(_public(record))
 
 
@@ -311,12 +316,12 @@ async def delete_cron(request: Request) -> Response:
     record = await _authorized_record(request, "delete")
     if isinstance(record, JSONResponse):
         return record
-    del request.app.state.storage.crons[request.path_params["cron_id"]]
+    await request.app.state.storage.crons.delete(request.path_params["cron_id"])
     return Response(status_code=204)
 
 
 async def run_due_crons(engine: RunSubmitter, storage: Storage, now: datetime) -> None:
-    for record in tuple(storage.crons.values()):
+    for record in await storage.crons.all():
         next_value = record["next_run_date"]
         if (
             not record["enabled"]
@@ -343,12 +348,14 @@ async def run_due_crons(engine: RunSubmitter, storage: Storage, now: datetime) -
             str(record["schedule"]), str(record["_timezone"]), now
         )
         end_time = record["end_time"]
-        record["next_run_date"] = (
+        next_run_value = (
             following.isoformat()
             if end_time is None or following <= datetime.fromisoformat(str(end_time))
             else None
         )
-        record["updated_at"] = now.isoformat()
+        await storage.crons.set_schedule_state(
+            str(record["cron_id"]), next_run_value, now.isoformat()
+        )
 
 
 async def _scheduler(

@@ -9,6 +9,13 @@ from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.store.memory import InMemoryStore
 
 from server.config import ServerConfig
+from server.registries import (
+    CronRegistry,
+    MemoryRegistries,
+    MemoryRegistry,
+    Registry,
+    RunRegistry,
+)
 
 if TYPE_CHECKING:
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -22,9 +29,9 @@ logger = logging.getLogger("MedicalRAG")
 class Storage:
     saver: InMemorySaver | AsyncPostgresSaver  # type: ignore[no-redef]
     store: InMemoryStore | AsyncPostgresStore  # type: ignore[no-redef]
-    threads: dict[str, dict[str, object]] = field(default_factory=dict)
-    runs: dict[str, dict[str, object]] = field(default_factory=dict)
-    crons: dict[str, dict[str, object]] = field(default_factory=dict)
+    threads: Registry = field(default_factory=MemoryRegistry)
+    runs: RunRegistry = field(default_factory=MemoryRegistry)
+    crons: CronRegistry = field(default_factory=MemoryRegistry)
     _pool: AsyncConnectionPool | None = field(default=None, repr=False, compare=False)  # type: ignore[no-redef]
 
     async def aclose(self) -> None:
@@ -74,6 +81,7 @@ def _is_vector_extension_error(exc: BaseException) -> bool:
 
 
 async def create_storage(config: ServerConfig) -> Storage:
+    registries = MemoryRegistries()
     # Memory branch: UNCHANGED behavior
     if config.storage != "postgres":
         saver = InMemorySaver()
@@ -91,7 +99,13 @@ async def create_storage(config: ServerConfig) -> Storage:
                 exc,
             )
             store = InMemoryStore(index=None)
-        return Storage(saver=saver, store=store)
+        return Storage(
+            saver=saver,
+            store=store,
+            threads=registries.threads,
+            runs=registries.runs,
+            crons=registries.crons,
+        )
 
     # Postgres branch: one owned pool for both saver and store
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
@@ -186,4 +200,11 @@ async def create_storage(config: ServerConfig) -> Storage:
         # Note: saver.setup() is NOT called here; app.py lifespan calls
         # _setup_component on both saver and store via setup()/asetup().
 
-    return Storage(saver=saver, store=store, _pool=pool)
+    return Storage(
+        saver=saver,
+        store=store,
+        threads=registries.threads,
+        runs=registries.runs,
+        crons=registries.crons,
+        _pool=pool,
+    )

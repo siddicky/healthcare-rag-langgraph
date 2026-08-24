@@ -70,10 +70,34 @@ async def test_memory_mode_unchanged() -> None:
     assert isinstance(storage.saver, InMemorySaver)
     assert isinstance(storage.store, InMemoryStore)
     assert storage._pool is None
-    # threads/runs/crons stay plain dicts until todo 10
-    assert isinstance(storage.threads, dict)
-    assert storage.runs == {}
-    assert storage.crons == {}
+    assert await storage.threads.count() == 0
+    thread: dict[str, object] = {
+        "thread_id": "thread-1",
+        "metadata": {"owner": "member-1"},
+    }
+    await storage.threads.save("thread-1", thread)
+    assert await storage.threads.get("thread-1") == thread
+
+    run: dict[str, object] = {"run_id": "run-1", "status": "pending"}
+    await storage.runs.save("run-1", run)
+    await storage.runs.set_status("run-1", "success")
+    assert await storage.runs.get("run-1") == {
+        "run_id": "run-1",
+        "status": "success",
+    }
+
+    cron: dict[str, object] = {
+        "cron_id": "cron-1",
+        "next_run_date": None,
+        "updated_at": "old",
+    }
+    await storage.crons.save("cron-1", cron)
+    await storage.crons.set_schedule_state("cron-1", "next", "updated")
+    assert await storage.crons.get("cron-1") == {
+        "cron_id": "cron-1",
+        "next_run_date": "next",
+        "updated_at": "updated",
+    }
 
 
 @pytest.mark.anyio
@@ -293,13 +317,12 @@ async def test_setup_component_no_setup_is_noop() -> None:
     await _setup_component(Empty())
 
 
-def test_run_engine_shutdown_is_sync() -> None:
-    """RunEngine.shutdown must remain synchronous (todo 10 converts it)."""
+def test_run_engine_shutdown_is_async() -> None:
     import inspect as _inspect
 
     from server.run_engine import RunEngine
 
-    assert not _inspect.iscoroutinefunction(RunEngine.shutdown), "RunEngine.shutdown must be sync for todo 9"
+    assert _inspect.iscoroutinefunction(RunEngine.shutdown)
 
 
 @pytest.mark.anyio
@@ -595,12 +618,11 @@ async def test_lifespan_shutdown_order_is_five_steps(monkeypatch: pytest.MonkeyP
 
     monkeypatch.setattr(app_module, "start_scheduler", _fake_start_scheduler)
 
-    # --- Fake RunEngine (must stay sync) ---
     class _FakeRunEngine:
         def __init__(self, _storage, _graphs, _tasks):  # type: ignore[no-untyped-def]
             pass
 
-        def shutdown(self) -> None:
+        async def shutdown(self) -> None:
             events.append("run_engine_shutdown")
 
     monkeypatch.setattr(app_module, "RunEngine", _FakeRunEngine)

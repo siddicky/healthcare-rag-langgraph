@@ -177,7 +177,7 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
                         scheduler.cancel()
                         with suppress(anyio.get_cancelled_exc_class()):
                             await scheduler
-                        run_engine.shutdown()
+                        await run_engine.shutdown()
                         tasks.cancel_scope.cancel()
                 readiness.set_not_ready("custom_app")
         finally:
