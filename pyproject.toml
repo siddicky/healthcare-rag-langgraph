@@ -6,7 +6,16 @@ readme = "README.md"
 requires-python = ">=3.11,<3.15"
 dependencies = [
     "openai>=1.76,<2",
-    "weaviate-client>=4.14",
+    # Capped below 4.16.3: from that release weaviate-client requires
+    # grpcio<1.80, which is disjoint with the grpcio>=1.80 that langgraph-api
+    # 0.12.6 requires — and 0.12.6 is the api_version pinned in langgraph.json
+    # (the deployment image) and the version the parity oracle characterizes.
+    # Both of those resolve `.` from this file rather than from uv.lock, so
+    # without the cap the image build and tests/server/oracle/.venv silently
+    # pick weaviate-client 4.23 + grpcio 1.78 and the server dies on import
+    # ("generated code in core_api_pb2_grpc.py depends on grpcio>=1.80.0").
+    # Revisit once api_version moves past 0.12.x / the Weaviate Cloud migration.
+    "weaviate-client>=4.14,<4.16.3",
     # Pinecone A/B retrieval arm + the Inference reranker. Sync client only:
     # it is driven from anyio worker threads, so no aiohttp/asyncio extra is needed.
     "pinecone>=7,<10",

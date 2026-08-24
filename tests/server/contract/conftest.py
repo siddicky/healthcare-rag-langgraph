@@ -5,6 +5,7 @@ import pathlib
 import signal
 import subprocess
 import sys
+import tempfile
 import time
 
 import httpx
@@ -15,7 +16,10 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "oracle: tests that hit the pinned oracle server (need ORACLE=1 or CI)")
 
 
-ORACLE_PORT = 2025
+# 2025 is the langgraph dev default; ORACLE_PORT overrides it for a machine
+# where something else already holds that port (langgraph dev would silently
+# pick a free one and the readiness probe would then never find the server).
+ORACLE_PORT = int(os.getenv("ORACLE_PORT", "2025"))
 ORACLE_URL = f"http://127.0.0.1:{ORACLE_PORT}"
 ORACLE_CONFIG = "tests/server/oracle/langgraph.json"
 ORACLE_LANGGRAPH = "tests/server/oracle/.venv/bin/langgraph"
@@ -38,12 +42,24 @@ def oracle_server() -> None:
                 "Build it first (see .github/workflows/server-parity.yml, 'Build pinned oracle venv')."
             )
         pytest.skip(f"pinned oracle venv not built in this job ({ORACLE_LANGGRAPH})")
-    proc = subprocess.Popen(
-        [ORACLE_LANGGRAPH, "dev", "--config", ORACLE_CONFIG, "--port", str(ORACLE_PORT), "--no-browser", "--no-reload"],
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-        preexec_fn=os.setsid if sys.platform != "win32" else None,
-    )
+    # Keep the server's own output: a dead oracle is otherwise reported as a
+    # bare exit code, and the cause (a dependency downgrade, a missing env var)
+    # is only in the log the subprocess wrote.
+    log_dir = tempfile.TemporaryDirectory(prefix="oracle-")
+    log_path = pathlib.Path(log_dir.name) / "oracle.log"
+
+    def tail(limit: int = 40) -> str:
+        # Read through a fresh handle: the child owns the write end's offset.
+        text = log_path.read_text(encoding="utf-8", errors="replace")
+        return "\n".join(text.splitlines()[-limit:]) or "(no output)"
+
+    with log_path.open("w", encoding="utf-8") as log:
+        proc = subprocess.Popen(
+            [ORACLE_LANGGRAPH, "dev", "--config", ORACLE_CONFIG, "--port", str(ORACLE_PORT), "--no-browser", "--no-reload"],
+            stdout=log,
+            stderr=subprocess.STDOUT,
+            preexec_fn=os.setsid if sys.platform != "win32" else None,
+        )
     try:
         deadline = time.time() + 30
         ready = False
@@ -58,10 +74,14 @@ def oracle_server() -> None:
                 pass
             time.sleep(1)
             if proc.poll() is not None:
-                pytest.fail(f"oracle subprocess exited early with {proc.returncode}")
+                pytest.fail(
+                    f"oracle subprocess exited early with {proc.returncode}\n{tail()}"
+                )
         if not ready:
             proc.terminate()
-            pytest.fail("oracle did not become ready on :2025 within 30s")
+            pytest.fail(
+                f"oracle did not become ready on :{ORACLE_PORT} within 30s\n{tail()}"
+            )
         yield
     finally:
         try:
@@ -81,3 +101,4 @@ def oracle_server() -> None:
                     proc.kill()
             except ProcessLookupError:
                 pass
+        log_dir.cleanup()

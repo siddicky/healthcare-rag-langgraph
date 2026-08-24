@@ -1180,7 +1180,7 @@ requires-dist = [
     { name = "transformers", marker = "extra == 'ingest'", specifier = ">=4.51" },
     { name = "tzdata" },
     { name = "uvicorn", specifier = ">=0.30,<1" },
-    { name = "weaviate-client", specifier = ">=4.14" },
+    { name = "weaviate-client", specifier = ">=4.14,<4.16.3" },
 ]
 provides-extras = ["evals", "ingest", "dev", "graph-sqlite"]
 
