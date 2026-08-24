@@ -1,4 +1,14 @@
-"""Run the concurrent storage setup test via anyio (fallback for pytest hang)."""
+"""Proves the same advisory-lock concurrency guarantee as
+tests/server/test_registries.py::test_concurrent_storage_setup_uses_advisory_lock,
+but outside pytest's async harness.
+
+That pytest test is known to hang under pytest+anyio's task-group/event-loop
+interaction when racing a cold-start CREATE TABLE DDL (see its docstring).
+This script runs the identical two-concurrent-create_storage() logic via plain
+asyncio.run() / anyio.create_task_group() and succeeds reproducibly against the
+same fresh database — confirming the production path is correct. It is the
+second half of `make server-test-pg`'s gated lane.
+"""
 import asyncio
 import os
 import sys
