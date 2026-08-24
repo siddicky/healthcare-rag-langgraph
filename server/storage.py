@@ -13,14 +13,15 @@ from server.registries import (
     CronRegistry,
     MemoryRegistries,
     MemoryRegistry,
+    PostgresRegistries,
     Registry,
+    RegistryPool,
     RunRegistry,
 )
 
 if TYPE_CHECKING:
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
     from langgraph.store.postgres import AsyncPostgresStore
-    from psycopg_pool import AsyncConnectionPool
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -32,7 +33,7 @@ class Storage:
     threads: Registry = field(default_factory=MemoryRegistry)
     runs: RunRegistry = field(default_factory=MemoryRegistry)
     crons: CronRegistry = field(default_factory=MemoryRegistry)
-    _pool: AsyncConnectionPool | None = field(default=None, repr=False, compare=False)  # type: ignore[no-redef]
+    _pool: RegistryPool | None = field(default=None, repr=False, compare=False)
 
     async def aclose(self) -> None:
         pool = self._pool
@@ -40,7 +41,7 @@ class Storage:
             return
         self._pool = None
         try:
-            await pool.close()  # type: ignore[union-attr]
+            await pool.close()
         except Exception:
             logger.warning("storage pool close failed", exc_info=True)
 
@@ -73,21 +74,30 @@ def _is_vector_extension_error(exc: BaseException) -> bool:
     # Require vector keyword plus extension signal, or explicit pgvector messages.
     if vector_kw and extension_kw:
         return True
-    if "vector" in msg and ("does not exist" in msg or "not available" in msg or "not found" in msg):
+    if "vector" in msg and (
+        "does not exist" in msg or "not available" in msg or "not found" in msg
+    ):
         return True
-    if "pgvector" in msg:
-        return True
-    return False
+    return "pgvector" in msg
 
 
 async def create_storage(config: ServerConfig) -> Storage:
-    registries = MemoryRegistries()
     # Memory branch: UNCHANGED behavior
     if config.storage != "postgres":
+        registries = MemoryRegistries()
         saver = InMemorySaver()
-        index_cfg = config.store_index or {"embed": "openai:text-embedding-3-small", "dims": 1536, "fields": ["$"]}
+        index_cfg = config.store_index or {
+            "embed": "openai:text-embedding-3-small",
+            "dims": 1536,
+            "fields": ["$"],
+        }
         if "embed" not in index_cfg:
-            index_cfg = {"embed": "openai:text-embedding-3-small", "dims": 1536, "fields": ["$"], **index_cfg}
+            index_cfg = {
+                "embed": "openai:text-embedding-3-small",
+                "dims": 1536,
+                "fields": ["$"],
+                **index_cfg,
+            }
         try:
             store = InMemoryStore(index=index_cfg)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
         except Exception as exc:
@@ -110,6 +120,7 @@ async def create_storage(config: ServerConfig) -> Storage:
     # Postgres branch: one owned pool for both saver and store
     from langgraph.checkpoint.postgres.aio import AsyncPostgresSaver
     from langgraph.store.postgres import AsyncPostgresStore
+    from psycopg import Error as PsycopgError
     from psycopg.rows import dict_row
     from psycopg_pool import AsyncConnectionPool
 
@@ -126,7 +137,7 @@ async def create_storage(config: ServerConfig) -> Storage:
     # config.database_uri is guaranteed non-None when storage==postgres (validated in load_config)
     assert config.database_uri is not None, "DATABASE_URI required for postgres storage"
 
-    pool: AsyncConnectionPool = AsyncConnectionPool(  # type: ignore[no-untyped-call]
+    pool: RegistryPool = AsyncConnectionPool(  # type: ignore[no-untyped-call]
         conninfo=config.database_uri,
         open=False,
         min_size=min_size,
@@ -141,15 +152,34 @@ async def create_storage(config: ServerConfig) -> Storage:
     )
     await pool.open()
 
-    saver = AsyncPostgresSaver(conn=pool)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
+    registries = PostgresRegistries(pool)
+    try:
+        await registries.setup()
+    except PsycopgError:
+        await pool.close()
+        raise
 
-    index_cfg = config.store_index or {"embed": "openai:text-embedding-3-small", "dims": 1536, "fields": ["$"]}
+    saver = AsyncPostgresSaver(conn=pool)
+
+    index_cfg = config.store_index or {
+        "embed": "openai:text-embedding-3-small",
+        "dims": 1536,
+        "fields": ["$"],
+    }
     if "embed" not in index_cfg:
-        index_cfg = {"embed": "openai:text-embedding-3-small", "dims": 1536, "fields": ["$"], **index_cfg}
+        index_cfg = {
+            "embed": "openai:text-embedding-3-small",
+            "dims": 1536,
+            "fields": ["$"],
+            **index_cfg,
+        }
 
     # Try with semantic index; preserve embeddings-unavailable fallback
     try:
-        store: AsyncPostgresStore | InMemoryStore = AsyncPostgresStore(conn=pool, index=index_cfg)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
+        store: AsyncPostgresStore | InMemoryStore = AsyncPostgresStore(
+            conn=pool,
+            index=index_cfg,  # pyright: ignore[reportArgumentType]
+        )
     except Exception as exc:
         if _is_vector_extension_error(exc):
             logger.warning(
@@ -157,20 +187,20 @@ async def create_storage(config: ServerConfig) -> Storage:
                 exc.__class__.__name__,
                 exc,
             )
-            store = AsyncPostgresStore(conn=pool, index=None)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
+            store = AsyncPostgresStore(conn=pool, index=None)
         elif _is_embeddings_unavailable(exc):
             logger.warning(
                 "store index disabled: embeddings unavailable (%s: %s) — falling back to index=None; semantic search will be lexical only",
                 exc.__class__.__name__,
                 exc,
             )
-            store = AsyncPostgresStore(conn=pool, index=None)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
+            store = AsyncPostgresStore(conn=pool, index=None)
         else:
             # Must not leak pool if we re-raise
             try:
                 await pool.close()
-            except Exception:
-                pass
+            except PsycopgError:
+                logger.warning("storage pool close failed", exc_info=True)
             raise
 
     # Eagerly probe vector extension availability when index is active.
@@ -187,7 +217,7 @@ async def create_storage(config: ServerConfig) -> Storage:
                     exc.__class__.__name__,
                     exc,
                 )
-                store = AsyncPostgresStore(conn=pool, index=None)  # type: ignore[arg-type]  # pyright: ignore[reportArgumentType]
+                store = AsyncPostgresStore(conn=pool, index=None)
                 # Ensure non-vector tables exist (store_migrations etc.)
                 try:
                     await store.setup()  # type: ignore[union-attr]
