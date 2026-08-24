@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import logging
 import os
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
@@ -15,6 +16,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
+
+logger = logging.getLogger(__name__)
 
 from healthcare_rag.agent.perimeter_middleware import MemberPerimeterMiddleware
 from server._compat import install_langgraph_api_compat
@@ -67,14 +70,12 @@ class NativeCORSMiddleware:
             app,
             allow_origins=allow_origins,
             allow_credentials=True,
-            allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type"],
         )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        path = str(scope.get("path", ""))
-        target = self.app if path.startswith("/coach/") else self.native
-        await target(scope, receive, send)
+        await self.native(scope, receive, send)
 
 
 class PublicInfoPrincipalMiddleware:
@@ -202,11 +203,25 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
         for origin in os.getenv("CORS_ALLOW_ORIGINS", "").split(",")
         if origin.strip()
     ]
-    middleware = [AuthMiddleware.as_starlette(auth_instance, cfg.local_dev)]
+    if cfg.http_app is not None:
+        coach_origins = [
+            origin.strip()
+            for origin in os.getenv("COACH_ALLOWED_ORIGINS", "").split(",")
+            if origin.strip()
+        ]
+        misaligned = [o for o in coach_origins if o not in origins]
+        if misaligned:
+            logger.warning(
+                "COACH_ALLOWED_ORIGINS contains origins not in CORS_ALLOW_ORIGINS: %s",
+                ", ".join(misaligned),
+            )
+    middleware: list[Middleware] = [
+        Middleware(NativeCORSMiddleware, allow_origins=origins),
+        AuthMiddleware.as_starlette(auth_instance, cfg.local_dev),
+    ]
     if cfg.http_app is not None:
         middleware.extend(
             [
-                Middleware(NativeCORSMiddleware, allow_origins=origins),
                 Middleware(PublicInfoPrincipalMiddleware),
                 Middleware(MemberPerimeterMiddleware),
             ]
