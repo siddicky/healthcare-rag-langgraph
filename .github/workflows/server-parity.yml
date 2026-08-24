@@ -68,12 +68,19 @@ jobs:
       - name: Install main deps
         run: uv sync --frozen --extra evals --extra dev --extra graph-sqlite
       - name: Build pinned oracle venv
+        # One resolution pass over the oracle pins *and* this repo: installing
+        # them separately let the second pass silently downgrade a shared
+        # dependency of the first (grpcio 1.80 -> 1.78), which the oracle only
+        # reported as "subprocess exited early with 1". Together, a pin that is
+        # disjoint with langgraph-api 0.12.6 fails here, at resolve time.
         run: |
           uv venv tests/server/oracle/.venv --python 3.12
-          uv pip install --no-config --python tests/server/oracle/.venv/bin/python -r tests/server/oracle/requirements.txt
-          uv pip install --no-config --python tests/server/oracle/.venv/bin/python -e . --no-build-isolation
+          uv pip install --no-config --python tests/server/oracle/.venv/bin/python -r tests/server/oracle/requirements.txt -e . --no-build-isolation
           tests/server/oracle/.venv/bin/python -c "import langgraph_api; assert langgraph_api.__version__ == '0.12.6', langgraph_api.__version__"
           tests/server/oracle/.venv/bin/python -c "import importlib.metadata; print(importlib.metadata.version('langgraph-cli'))"
+          # The grpc stack is version-locked to its generated stubs; import it
+          # here so a mismatch is a build error, not a dead oracle subprocess.
+          tests/server/oracle/.venv/bin/python -c "import langgraph_grpc_common.proto"
       - name: Run oracle contract suite
         run: ORACLE=1 uv run pytest tests/server/contract -q --tb=short
         env:
