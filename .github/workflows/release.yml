@@ -1,0 +1,243 @@
+name: Release
+
+# Creates the release tag that Deploy triggers on. Dispatch-only, never on
+# merge: this repo gates production on a human (docs/deploy.md §0), and
+# tagging every merge would queue a prod deploy request for every merge.
+#
+# The tag is pushed with RELEASE_TAG_TOKEN, not GITHUB_TOKEN. GitHub does not
+# raise workflow-triggering events for refs pushed with GITHUB_TOKEN, so a tag
+# created with it would sit there and never deploy — the failure mode being
+# "the release worked but nothing shipped", which is the worst kind. The job
+# refuses to tag without that secret rather than creating a dead tag.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump. auto = derive from the Conventional Commit subjects since the last tag."
+        required: true
+        default: auto
+        type: choice
+        options: [auto, patch, minor, major]
+      dry_run:
+        description: "Print the plan and stop. Nothing is tagged or pushed."
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  # Serialise releases; never cancel one mid-tag.
+  group: release
+  cancel-in-progress: false
+
+jobs:
+  tag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: read
+      statuses: read
+    steps:
+      - name: Refuse to release from anything but main
+        run: |
+          set -euo pipefail
+          if [ "${{ github.ref }}" != "refs/heads/main" ]; then
+            echo "::error::releases are cut from main only — this run is on ${{ github.ref }}"
+            exit 1
+          fi
+
+      - name: Check out main with full history and tags
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Compute the next version
+        id: version
+        env:
+          BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+          python3 scripts/next_version.py --bump "$BUMP" --explain | tee /tmp/plan.txt
+          VERSION="$(python3 scripts/next_version.py --bump "$BUMP")"
+          if ! printf '%s' "$VERSION" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::computed version '$VERSION' is not vX.Y.Z"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "commit=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      - name: Refuse to re-point an existing tag
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # Release tags are immutable (docs/decisions/release-tags-and-rollback.md):
+          # a re-pointed tag would name a different commit than the image already
+          # published under that version.
+          if git ls-remote --tags origin | grep -q "refs/tags/${VERSION}$"; then
+            echo "::error::tag $VERSION already exists on origin. Release tags are immutable — cut the next version instead."
+            exit 1
+          fi
+
+      - name: Require pyproject to carry the version being tagged
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          # The wheel and the image report this version; a tag that disagrees
+          # with it makes provenance a guess. `make release-prep BUMP=...`
+          # produces the commit that fixes this.
+          PROJECT="$(python3 - <<'PY'
+          import pathlib
+
+          for line in pathlib.Path("pyproject.toml").read_text().splitlines():
+              if line.startswith("version = "):
+                  print(line.split("=", 1)[1].strip().strip('"'))
+                  break
+          PY
+          )"
+          EXPECTED="${VERSION#v}"
+          if [ "$PROJECT" != "$EXPECTED" ]; then
+            echo "::error::pyproject.toml says version = \"$PROJECT\" but this release is $VERSION."
+            echo "::error::Run 'make release-prep BUMP=${{ inputs.bump }}' on main, open the PR, merge it, then dispatch again."
+            exit 1
+          fi
+          echo "pyproject version matches $VERSION"
+
+      - name: Require the commit to be green
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          COMMIT: ${{ steps.version.outputs.commit }}
+          # Runs on every push to main, so it is the one check that must exist.
+          REQUIRED_CHECK: "Offline test suite"
+        run: |
+          set -euo pipefail
+          RUNS="$(gh api "repos/${{ github.repository }}/commits/${COMMIT}/check-runs?per_page=100")"
+          CHECKS_JSON="$RUNS" python3 - <<'PY'
+          import json
+          import os
+          import sys
+
+          data = json.loads(os.environ["CHECKS_JSON"])
+          runs = data.get("check_runs", [])
+          required = os.environ["REQUIRED_CHECK"]
+
+          for run in runs:
+              print(f"  {run['name']}: {run['status']}/{run['conclusion']}")
+
+          red = [
+              run["name"]
+              for run in runs
+              if run["status"] == "completed"
+              and run["conclusion"] in ("failure", "timed_out", "cancelled", "action_required")
+          ]
+          pending = [run["name"] for run in runs if run["status"] != "completed"]
+          green_required = any(
+              run["name"] == required and run["conclusion"] == "success" for run in runs
+          )
+
+          if red:
+              sys.exit(f"::error::red checks on this commit: {', '.join(red)}")
+          if pending:
+              sys.exit(f"::error::checks still running: {', '.join(pending)} — wait for them")
+          if not green_required:
+              sys.exit(f"::error::required check '{required}' did not succeed on this commit")
+          print(f"required check '{required}' green, no red checks")
+          PY
+
+      - name: Build the release notes
+        id: notes
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          PREVIOUS="$(git tag --list 'v*' --sort=-v:refname | head -n 1 || true)"
+          RANGE="${PREVIOUS:+${PREVIOUS}..}HEAD"
+          {
+            echo "## ${VERSION}"
+            echo ""
+            git log "$RANGE" --no-merges --format='- %s (%h)'
+            echo ""
+            if [ -n "$PREVIOUS" ]; then
+              echo "Full diff: https://github.com/${{ github.repository }}/compare/${PREVIOUS}...${VERSION}"
+            fi
+          } > /tmp/notes.md
+          cat /tmp/notes.md
+
+      - name: Plan (dry run stops here)
+        if: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Dry run — nothing was tagged"
+            echo ""
+            echo '```'
+            cat /tmp/plan.txt
+            echo '```'
+            echo ""
+            cat /tmp/notes.md
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "Dry run: would tag ${{ steps.version.outputs.version }} at ${{ steps.version.outputs.commit }}"
+
+      - name: Create and push the release tag
+        if: ${{ !inputs.dry_run }}
+        env:
+          # A PAT (or App token) with contents:write on this repo. GITHUB_TOKEN
+          # cannot be used: refs it pushes do not trigger the Deploy workflow.
+          RELEASE_TAG_TOKEN: ${{ secrets.RELEASE_TAG_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "${RELEASE_TAG_TOKEN:-}" ]; then
+            echo "::error::RELEASE_TAG_TOKEN is not set. A tag pushed with GITHUB_TOKEN does not trigger Deploy,"
+            echo "::error::so this job refuses to create one that would never ship. Add the secret (docs/deploy.md §3.1),"
+            echo "::error::or tag locally: git tag -a $VERSION -m 'release $VERSION' && git push origin $VERSION"
+            exit 1
+          fi
+          echo "::add-mask::$RELEASE_TAG_TOKEN"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Annotated, with the notes as the tag message: `git show <tag>` then
+          # explains the release without a network round trip.
+          git tag -a "$VERSION" -F /tmp/notes.md
+          git remote set-url origin "https://x-access-token:${RELEASE_TAG_TOKEN}@github.com/${{ github.repository }}.git"
+          git push origin "refs/tags/${VERSION}"
+          echo "Pushed $VERSION — the Deploy workflow now builds it and waits for the production approval."
+
+      - name: Publish the GitHub release
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_TAG_TOKEN }}
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          set -euo pipefail
+          gh release create "$VERSION" --title "$VERSION" --notes-file /tmp/notes.md --verify-tag
+
+      - name: Record the release
+        if: ${{ always() && !inputs.dry_run }}
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+          COMMIT: ${{ steps.version.outputs.commit }}
+          OPERATOR: ${{ github.actor }}
+          BUMP: ${{ inputs.bump }}
+        run: |
+          set -euo pipefail
+          {
+            echo "## Release \`${VERSION:-not computed}\`"
+            echo ""
+            echo "| field | value |"
+            echo "|---|---|"
+            echo "| tag | \`${VERSION:-not computed}\` |"
+            echo "| commit | \`${COMMIT:-unknown}\` |"
+            echo "| bump | ${BUMP} |"
+            echo "| cut by | @${OPERATOR} |"
+            echo ""
+            echo "Deploy runs next and pauses for the \`production\` approval."
+            echo ""
+            cat /tmp/notes.md 2>/dev/null || true
+          } >> "$GITHUB_STEP_SUMMARY"
