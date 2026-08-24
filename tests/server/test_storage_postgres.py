@@ -501,13 +501,27 @@ async def test_storage_aclose_called_on_custom_app_startup_failure(monkeypatch: 
     class _Empty:
         pass
 
+    class _FakeCronRegistry:
+        async def all(self):  # type: ignore[no-untyped-def]
+            return []
+
+        async def claim_due(self, *a, **kw):  # type: ignore[no-untyped-def]
+            return False
+
+    class _FakeRunRegistry:
+        async def all(self):  # type: ignore[no-untyped-def]
+            return []
+
+        async def set_status(self, *a, **kw):  # type: ignore[no-untyped-def]
+            return None
+
     class _FakeStorage:
         def __init__(self) -> None:
             self.saver = _Empty()
             self.store = _Empty()
             self.threads: dict[str, object] = {}
-            self.runs: dict[str, object] = {}
-            self.crons: dict[str, object] = {}
+            self.runs: _FakeRunRegistry = _FakeRunRegistry()  # type: ignore[no-redef]
+            self.crons: _FakeCronRegistry = _FakeCronRegistry()  # type: ignore[no-redef]
 
         async def aclose(self) -> None:
             events.append("storage_aclose")
@@ -583,13 +597,27 @@ async def test_lifespan_shutdown_order_is_five_steps(monkeypatch: pytest.MonkeyP
     class _Empty:
         pass
 
+    class _FakeCronRegistry2:
+        async def all(self):  # type: ignore[no-untyped-def]
+            return []
+
+        async def claim_due(self, *a, **kw):  # type: ignore[no-untyped-def]
+            return False
+
+    class _FakeRunRegistry2:
+        async def all(self):  # type: ignore[no-untyped-def]
+            return []
+
+        async def set_status(self, *a, **kw):  # type: ignore[no-untyped-def]
+            return None
+
     class _FakeStorage:
         def __init__(self) -> None:
             self.saver = _Empty()
             self.store = _Empty()
             self.threads: dict[str, object] = {}
-            self.runs: dict[str, object] = {}
-            self.crons: dict[str, object] = {}
+            self.runs: _FakeRunRegistry2 = _FakeRunRegistry2()  # type: ignore[no-redef]
+            self.crons: _FakeCronRegistry2 = _FakeCronRegistry2()  # type: ignore[no-redef]
 
         async def aclose(self) -> None:
             events.append("storage_aclose")
@@ -682,3 +710,139 @@ async def test_lifespan_shutdown_order_is_five_steps(monkeypatch: pytest.MonkeyP
         "custom_app_exit",
         "storage_aclose",
     ], f"Shutdown order wrong: {events}"
+
+
+# ---------------------------------------------------------------------------
+# Boot reconciliation wiring — proves app lifespan calls both reconcilers
+# ---------------------------------------------------------------------------
+
+@pytest.mark.skipif(not _is_postgres_available(), reason="POSTGRES_TEST_DSN not set")
+@pytest.mark.anyio
+async def test_boot_reconciliation_via_lifespan(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Seed pending run + overdue cron, boot lifespan, verify both reconciled."""
+    import uuid
+    from datetime import UTC, datetime
+
+    import server.app as app_module
+    from server.config import ServerConfig
+
+    from langgraph_sdk import Auth
+
+    def _auth() -> Auth:
+        auth = Auth()
+
+        @auth.authenticate
+        async def authenticate(method: str, path: str, headers: dict[bytes, bytes], authorization: str | None):  # type: ignore[no-untyped-def]
+            del path
+            if method == "OPTIONS":
+                return {"identity": "cors-preflight", "role": "preflight"}
+            raise Auth.exceptions.HTTPException(status_code=401)
+
+        @auth.on
+        async def allow(ctx, value):  # type: ignore[no-untyped-def]
+            del ctx, value
+
+        return auth
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
+    import healthcare_rag.agent.http_app as custom
+
+    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
+
+    dsn = _postgres_dsn()
+    assert dsn is not None
+
+    cfg = ServerConfig(
+        graphs={},
+        auth_path="fixture:auth",
+        http_app="./healthcare_rag/agent/http_app.py:app",
+        http_flags={},
+        store_index={},
+        api_version="test-boot-reconcile",
+        storage="postgres",
+        database_uri=dsn,
+    )
+
+    # --- Seed directly via a throwaway storage (same DB) BEFORE app boot ---
+    from server.storage import create_storage as _create_storage
+
+    seed_storage = await _create_storage(cfg)
+    try:
+        run_id = f"run-boot-{uuid.uuid4()}"
+        cron_id = f"cron-boot-{uuid.uuid4()}"
+        # Unique suffix to avoid collision across parallel runs
+        now = datetime.now(UTC)
+        past = "2000-01-01T00:00:00+00:00"
+
+        run_record: dict[str, object] = {
+            "run_id": run_id,
+            "thread_id": f"thread-boot-{uuid.uuid4()}",
+            "assistant_id": "agent",
+            "status": "running",
+            "created_at": now.isoformat(),
+        }
+        await seed_storage.runs.save(run_id, run_record)
+
+        cron_record: dict[str, object] = {
+            "cron_id": cron_id,
+            "thread_id": None,
+            "enabled": True,
+            "schedule": "* * * * *",
+            "_timezone": "UTC",
+            "next_run_date": past,
+            "updated_at": past,
+            "payload": {
+                "assistant_id": "agent",
+                "input": {"question": "hi"},
+                "config": {},
+                "multitask_strategy": "enqueue",
+            },
+            "metadata": {},
+            "end_time": None,
+            "created_at": past,
+            "user_id": None,
+            "auth_user": None,
+        }
+        await seed_storage.crons.save(cron_id, cron_record)
+
+        # Sanity: seed is visible
+        assert (await seed_storage.runs.get(run_id)) is not None  # type: ignore[arg-type]
+        assert (await seed_storage.crons.get(cron_id)) is not None  # type: ignore[arg-type]
+    finally:
+        await seed_storage.aclose()
+
+    # --- Boot the app lifespan (reconciliation should fire) ---
+    app = app_module.create_app(cfg)
+
+    async with app.router.lifespan_context(app):
+        # Inside lifespan, reconciliation has already run.
+        # Verify via app.state.storage (same DB)
+        storage_inside = app.state.storage  # type: ignore[attr-defined]
+        run_after = await storage_inside.runs.get(run_id)  # type: ignore[arg-type]
+        cron_after = await storage_inside.crons.get(cron_id)  # type: ignore[arg-type]
+
+        assert run_after is not None, "run disappeared after boot"
+        assert run_after.get("status") == "interrupted", f"expected interrupted, got {run_after.get('status')}"
+
+        assert cron_after is not None, "cron disappeared after boot"
+        new_next = cron_after.get("next_run_date")
+        assert new_next is not None, "cron next_run_date should have been recomputed, got None"
+        assert str(new_next) != past, f"cron next_run_date not recomputed: {new_next}"
+        # New date must be in future (or at least after past) and parseable
+        parsed_new = datetime.fromisoformat(str(new_next))
+        assert parsed_new > datetime.fromisoformat(past)
+        assert parsed_new > now, f"expected future next_run_date, got {new_next} vs now {now.isoformat()}"
+
+    # --- After lifespan, verify persistence via fresh connection ---
+    verify_storage = await _create_storage(cfg)
+    try:
+        run_final = await verify_storage.runs.get(run_id)  # type: ignore[arg-type]
+        cron_final = await verify_storage.crons.get(cron_id)  # type: ignore[arg-type]
+        assert run_final is not None and run_final.get("status") == "interrupted"
+        assert cron_final is not None and cron_final.get("next_run_date") != past
+        # Cleanup
+        await verify_storage.runs.delete(run_id)  # type: ignore[arg-type]
+        await verify_storage.crons.delete(cron_id)  # type: ignore[arg-type]
+    finally:
+        await verify_storage.aclose()

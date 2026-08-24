@@ -29,12 +29,14 @@ from server.auth import (
     load_auth_instance,
 )
 from server.config import ServerConfig, load_config
+from server.crons import reconcile_crons
 from server.crons import routes as cron_routes
 from server.crons import start_scheduler
 from server.graphs import attach_graphs, load_raw_graphs
 from server.manifest import UNIMPLEMENTED_PATHS, UNIMPLEMENTED_PREFIXES
 from server.routes.system import routes as system_routes
 from server.run_engine import RunEngine
+from server.run_engine import reconcile_interrupted_runs
 from server.runs import routes as run_routes
 from server.storage import create_storage
 from server.store_routes import routes as store_item_routes
@@ -153,6 +155,8 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
             await _setup_component(storage.saver)
             await _setup_component(storage.store)
             readiness.set_ready("storage")
+            await reconcile_interrupted_runs(storage)
+            await reconcile_crons(storage)
             _ = install_langgraph_api_compat(storage.store, force=True)
             raw_graphs = load_raw_graphs(cfg)
             attached_graphs = attach_graphs(raw_graphs, storage)
