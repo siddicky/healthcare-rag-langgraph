@@ -226,8 +226,20 @@ def test_a_red_or_pending_commit_cannot_be_released(
     guard: str = release_steps["Require the commit to be green"]["run"]
 
     assert "check-runs" in guard
-    assert "red checks on this commit" in guard
-    assert "checks still running" in guard
+    assert "actions/runs?head_sha=" in guard
+    assert "scripts/release_green_check.py" in guard
+
+
+def test_the_release_green_gate_has_the_scope_and_inputs_it_needs(
+    release: dict[str, Any],
+    release_steps: dict[str, dict[str, Any]],
+) -> None:
+    tag_job = release["jobs"]["tag"]
+    guard = release_steps["Require the commit to be green"]
+
+    assert tag_job["permissions"]["actions"] == "read"
+    assert guard["env"]["RELEASE_WORKFLOW_PATH"] == ".github/workflows/release.yml"
+    assert guard["env"]["REQUIRED_CHECK"] == "Offline test suite"
 
 
 def test_the_tag_is_pushed_with_a_token_that_can_trigger_deploy(
