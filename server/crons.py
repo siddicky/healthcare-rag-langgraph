@@ -120,6 +120,14 @@ def next_run_date(schedule: str, timezone: str, after: datetime) -> datetime:
     return upcoming.astimezone(UTC)
 
 
+def _next_run_value(record: Mapping[str, object], after: datetime) -> str | None:
+    following = next_run_date(str(record["schedule"]), str(record["_timezone"]), after)
+    end_time = record["end_time"]
+    if end_time is not None and following > datetime.fromisoformat(str(end_time)):
+        return None
+    return following.isoformat()
+
+
 def _public(record: Mapping[str, object]) -> dict[str, object]:
     return {field: record[field] for field in _PUBLIC_FIELDS}
 
@@ -329,6 +337,16 @@ async def run_due_crons(engine: RunSubmitter, storage: Storage, now: datetime) -
             or datetime.fromisoformat(str(next_value)) > now
         ):
             continue
+        seen_next_run = str(next_value)
+        following = _next_run_value(record, now)
+        claimed = await storage.crons.claim_due(
+            str(record["cron_id"]),
+            seen_next_run,
+            following,
+            now.isoformat(),
+        )
+        if not claimed:
+            continue
         payload_value = record["payload"]
         assert isinstance(payload_value, dict)
         target = str(record["thread_id"] or uuid4())
@@ -344,17 +362,27 @@ async def run_due_crons(engine: RunSubmitter, storage: Storage, now: datetime) -
             )
         except (QueueFull, RunConflict):
             continue
-        following = next_run_date(
-            str(record["schedule"]), str(record["_timezone"]), now
-        )
-        end_time = record["end_time"]
-        next_run_value = (
-            following.isoformat()
-            if end_time is None or following <= datetime.fromisoformat(str(end_time))
-            else None
-        )
-        await storage.crons.set_schedule_state(
-            str(record["cron_id"]), next_run_value, now.isoformat()
+
+
+async def reconcile_crons(
+    storage: Storage,
+    clock: Callable[[], datetime] | None = None,
+) -> None:
+    now = (clock or (lambda: datetime.now(UTC)))()
+    for record in await storage.crons.all():
+        next_value = record["next_run_date"]
+        if "schedule" not in record or "_timezone" not in record:
+            continue
+        if not record["enabled"] or (
+            next_value is not None and datetime.fromisoformat(str(next_value)) > now
+        ):
+            continue
+        expected = str(next_value) if next_value is not None else None
+        _ = await storage.crons.claim_due(
+            str(record["cron_id"]),
+            expected,
+            _next_run_value(record, now),
+            now.isoformat(),
         )
 
 

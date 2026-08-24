@@ -42,6 +42,14 @@ class CronRegistry(Registry, Protocol):
         self, record_id: str, next_run_date: str | None, updated_at: str
     ) -> None: ...
 
+    async def claim_due(
+        self,
+        record_id: str,
+        expected_next_run_date: str | None,
+        new_next_run_date: str | None,
+        updated_at: str,
+    ) -> bool: ...
+
 
 class MemoryRegistry:
     def __init__(self) -> None:
@@ -79,6 +87,20 @@ class MemoryRegistry:
         record = self._records[record_id]
         record["next_run_date"] = next_run_date
         record["updated_at"] = updated_at
+
+    async def claim_due(
+        self,
+        record_id: str,
+        expected_next_run_date: str | None,
+        new_next_run_date: str | None,
+        updated_at: str,
+    ) -> bool:
+        record = self._records.get(record_id)
+        if record is None or record.get("next_run_date") != expected_next_run_date:
+            return False
+        record["next_run_date"] = new_next_run_date
+        record["updated_at"] = updated_at
+        return True
 
     def __getitem__(self, record_id: str) -> Record:
         return self._records[record_id]
@@ -138,6 +160,13 @@ _SET_CRON_SCHEDULE: Final[LiteralString] = """UPDATE hc_crons SET record =
     COALESCE(to_jsonb(%s::text), 'null'::jsonb)),
     '{updated_at}', to_jsonb(%s::text)), next_run_date = %s
     WHERE cron_id = %s
+"""
+_CLAIM_CRON_DUE: Final[LiteralString] = """UPDATE hc_crons SET record =
+    jsonb_set(jsonb_set(record, '{next_run_date}',
+    COALESCE(to_jsonb(%s::text), 'null'::jsonb)),
+    '{updated_at}', to_jsonb(%s::text)), next_run_date = %s
+    WHERE cron_id = %s AND next_run_date IS NOT DISTINCT FROM %s
+    RETURNING cron_id
 """
 
 
@@ -255,6 +284,27 @@ class PostgresCronRegistry(PostgresRegistry):
                 _SET_CRON_SCHEDULE,
                 (next_run_date, updated_at, next_run_date, record_id),
             )
+
+    async def claim_due(
+        self,
+        record_id: str,
+        expected_next_run_date: str | None,
+        new_next_run_date: str | None,
+        updated_at: str,
+    ) -> bool:
+        async with self._pool.connection() as connection:
+            cursor = await connection.execute(
+                _CLAIM_CRON_DUE,
+                (
+                    new_next_run_date,
+                    updated_at,
+                    new_next_run_date,
+                    record_id,
+                    expected_next_run_date,
+                ),
+            )
+            row = await cursor.fetchone()
+        return row is not None
 
 
 @dataclass(frozen=True, slots=True)
