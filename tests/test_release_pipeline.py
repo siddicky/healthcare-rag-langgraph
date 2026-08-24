@@ -182,7 +182,8 @@ def test_releases_are_cut_by_hand_not_on_every_merge(release: dict[str, Any]) ->
     triggers = release.get("on") or release[True]
 
     # Tagging every merge would queue a production deploy request for every
-    # merge, against this repo's human-gated posture (docs/deploy.md §0).
+    # merge, against this repo's human-gated posture (production environment
+    # required reviewers).
     assert set(triggers) == {"workflow_dispatch"}
     assert set(triggers["workflow_dispatch"]["inputs"]) == {"bump", "dry_run"}
 

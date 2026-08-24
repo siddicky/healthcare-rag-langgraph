@@ -100,7 +100,7 @@ Four things must hold before a tag exists:
 
 **Not on every merge.** Tagging automatically on merge to `main` is continuous
 deployment, and this repo is explicitly not that: production has required
-reviewers and a recorded compliance gate (`docs/deploy.md` §0). Every merge
+reviewers on the `production` environment. Every merge
 would queue a prod approval request, and approvals that arrive constantly stop
 being read. A human decides when a release happens; the automation decides what
 number it gets and does the mechanical part.
