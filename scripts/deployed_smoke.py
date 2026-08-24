@@ -1098,22 +1098,36 @@ class DeployedSmoke:
             "PASS 10: document lifecycle, byte-artifact checks, and feedback read-back held"
         )
 
-    async def run(self) -> None:
+    async def run(self, profile: str = "full") -> None:
         await self.verify_version_gate()
-        checks = (
-            self.check_memory,
+        fast_checks = (
             self.check_isolation,
-            self.check_interrupts,
-            self.check_projection,
             self.check_perimeter,
-            self.check_route_a,
             self.check_erasure,
             self.check_disabled_protocols,
-            self.check_reminders,
-            self.check_documents_and_feedback,
         )
+        if profile == "gate":
+            # The fast checks read the latest u1/u2 threads; create them here
+            # (no graph turns) instead of depending on the slow checks.
+            self.u1_threads.append(await self.create_thread(self.settings.u1_token))
+            self.u2_threads.append(await self.create_thread(self.settings.u2_token))
+        checks = {
+            "gate": fast_checks,
+            "full": (
+                self.check_memory,
+                *fast_checks[:1],
+                self.check_interrupts,
+                self.check_projection,
+                *fast_checks[1:2],
+                self.check_route_a,
+                *fast_checks[2:],
+                self.check_reminders,
+                self.check_documents_and_feedback,
+            ),
+        }[profile]
         for check in checks:
             await check()
+        print(f"SMOKE PROFILE: {profile} ({len(checks)} checks)")
 
 
 def parser() -> argparse.ArgumentParser:
@@ -1126,10 +1140,17 @@ def parser() -> argparse.ArgumentParser:
         action="store_true",
         help="allow HTTP for an isolated non-local staging deployment",
     )
+    value.add_argument(
+        "--profile",
+        choices=("gate", "full"),
+        default="full",
+        help="gate: LLM-free checks only (seconds; CI post-deploy); "
+        "full: all ten checks incl. graph turns (minutes)",
+    )
     return value
 
 
-async def async_main(settings: SmokeSettings) -> None:
+async def async_main(settings: SmokeSettings, profile: str) -> None:
     limits = httpx.Limits(
         max_connections=20, max_keepalive_connections=10, keepalive_expiry=30
     )
@@ -1145,7 +1166,7 @@ async def async_main(settings: SmokeSettings) -> None:
         transport=transport,
         follow_redirects=True,
     ) as client:
-        await DeployedSmoke(settings, client).run()
+        await DeployedSmoke(settings, client).run(profile=arguments.profile)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -1158,11 +1179,11 @@ def main(argv: Sequence[str] | None = None) -> int:
             url=arguments.url,
             allow_insecure_staging=arguments.allow_insecure_staging,
         )
-        anyio.run(async_main, settings)
+        anyio.run(async_main, settings, arguments.profile)
     except (SmokeConfigurationError, SmokeFailure, httpx.HTTPError) as error:
         print(f"FAIL: {error}", file=sys.stderr)
         return 1
-    print("PASS: all ten deployed smoke checks completed")
+    print(f"PASS: deployed smoke completed ({arguments.profile} profile)")
     return 0
 
 

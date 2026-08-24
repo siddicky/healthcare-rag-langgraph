@@ -10,6 +10,7 @@ from pydantic import JsonValue
 from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
+from .self_call import self_client
 from .documents import (
     DOCUMENT_EXTRACTOR,
     RESERVATION_NS,
@@ -32,13 +33,12 @@ def internal_headers() -> dict[str, str]:
 
 
 async def _member_get(request: Request, path: str) -> httpx.Response:
-    async with httpx.AsyncClient(
-        base_url=str(request.base_url), timeout=10.0
-    ) as client:
-        return await client.get(
+    async with self_client(request) as client:
+        response = await client.get(
             path,
             headers={"authorization": request.headers.get("authorization", "")},
         )
+    return response
 
 
 def _valid_file_signature(mime_type: str, content: bytearray) -> bool:
@@ -83,9 +83,7 @@ async def post_upload(request: Request) -> Response:
                 "intended_thread": upload.thread_id,
             },
         }
-        async with httpx.AsyncClient(
-            base_url=str(request.base_url), timeout=10.0
-        ) as client:
+        async with self_client(request) as client:
             response = await client.post(
                 "/threads", headers=internal_headers(), json=reserve_payload
             )

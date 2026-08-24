@@ -327,3 +327,52 @@ async def test_smoke_orchestrates_all_ten_checks_after_version_gate() -> None:
         await FixtureSmoke(settings, client).run()
 
     assert events == ["version", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
+
+
+def test_smoke_profiles_split_fast_checks_from_llm_checks() -> None:
+    import inspect
+
+    import scripts.deployed_smoke as smoke
+
+    source = inspect.getsource(smoke.DeployedSmoke.run)
+    checks_block = source.split("checks = {")[1]
+    fast_tuple = source.split("fast_checks = (")[1].split(")")[0]
+    # gate must be exactly the LLM-free checks, referenced as one tuple
+    gate_section = checks_block.split('"gate":')[1].split('"full":')[0]
+    assert gate_section.strip() == "fast_checks,"
+    for fast in (
+        "check_isolation",
+        "check_perimeter",
+        "check_erasure",
+        "check_disabled_protocols",
+    ):
+        assert fast in fast_tuple
+    # no LLM-driven check may enter the fast tuple
+    for slow in (
+        "check_memory",
+        "check_interrupts",
+        "check_projection",
+        "check_route_a",
+        "check_reminders",
+        "check_documents_and_feedback",
+    ):
+        assert slow not in fast_tuple
+    # full must include every check exactly once: six by name plus the fast
+    # tuple sliced three ways ([ :1], [1:2], [2:]) = all four, original order
+    full_section = checks_block.split('"full":')[1].split("}[profile]")[0]
+    for check in (
+        "check_memory",
+        "check_interrupts",
+        "check_projection",
+        "check_route_a",
+        "check_reminders",
+        "check_documents_and_feedback",
+    ):
+        assert full_section.count(check) == 1, f"{check} missing/duplicated in full"
+    assert full_section.count("*fast_checks[:1],") == 1
+    assert full_section.count("*fast_checks[1:2],") == 1
+    assert full_section.count("*fast_checks[2:],") == 1
+    # gate threads are created without graph turns
+    gate_setup = source.split('if profile == "gate":')[1].split("checks = {")[0]
+    assert "create_thread" in gate_setup
+    assert "run_turn" not in gate_setup

@@ -6,8 +6,6 @@ from collections.abc import AsyncIterator, Mapping
 from typing import Final, Protocol, TypeAlias, override, runtime_checkable
 from uuid import UUID
 
-import httpx
-from httpx import ASGITransport, AsyncClient
 from pydantic import JsonValue, TypeAdapter, ValidationError
 from starlette.middleware.base import BaseHTTPMiddleware, RequestResponseEndpoint
 from starlette.requests import Request
@@ -78,21 +76,15 @@ async def _consume_attachment(request: Request, body: JSONBody) -> None:
 
 
 async def _thread_exists_for_member(request: Request) -> bool:
-    """In-process ASGI self-call — deliberately NOT a network self-fetch.
+    """Loopback self-call — never via ``request.base_url``, which reflects the
+    client-sent Host: behind a proxy the "self" request left the app (prod:
+    the Fly edge answered on a port the app doesn't serve) and every member
+    thread delete failed with an opaque 403. The port comes from
+    ``scope["server"]``, so the request never leaves the machine."""
+    from .self_call import self_client
 
-    The old implementation used ``httpx.AsyncClient(base_url=request.base_url)``,
-    and ``base_url`` reflects the client-sent Host/scheme. Behind a proxy the
-    Host is the public domain, so the "self" request left the app entirely
-    (prod: the Fly edge answered on a port the app doesn't serve) and every
-    member thread delete failed with an opaque 403. ASGITransport keeps the
-    check in-process: same route, same auth, same scope semantics, no
-    dependence on the request's Host header, and it works in both mounting
-    contexts (the Agent Server app and the standalone coach http_app)."""
     thread_id = request.url.path.split("/")[2]
-    async with AsyncClient(
-        transport=ASGITransport(app=request.app),
-        base_url="http://perimeter.internal",
-    ) as client:
+    async with self_client(request) as client:
         response = await client.get(
             f"/threads/{thread_id}",
             headers={"authorization": request.headers.get("authorization", "")},

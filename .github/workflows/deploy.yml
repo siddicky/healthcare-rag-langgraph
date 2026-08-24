@@ -449,7 +449,7 @@ jobs:
           echo "Running: uv run python scripts/deployed_smoke.py --url $PROD_URL"
           echo "Env: LANGSMITH_TRACING=$LANGSMITH_TRACING (tracing off for prod synthetic check)"
           set +e
-          uv run python scripts/deployed_smoke.py --url "$PROD_URL" 2>&1 | tee /tmp/smoke-raw.log
+          uv run python scripts/deployed_smoke.py --url "$PROD_URL" --profile gate 2>&1 | tee /tmp/smoke-raw.log
           SMOKE_RC=${PIPESTATUS[0]}
           set -e
           echo "smoke_exit_code=$SMOKE_RC" >> "$GITHUB_OUTPUT"
@@ -709,7 +709,7 @@ jobs:
           done
           PROD_URL="https://hc-rag-server-prod.fly.dev"
           set +e
-          uv run python scripts/deployed_smoke.py --url "$PROD_URL" 2>&1 | tee /tmp/smoke-raw.log
+          uv run python scripts/deployed_smoke.py --url "$PROD_URL" --profile gate 2>&1 | tee /tmp/smoke-raw.log
           SMOKE_RC=${PIPESTATUS[0]}
           set -e
           echo "smoke_exit_code=$SMOKE_RC" >> "$GITHUB_OUTPUT"
