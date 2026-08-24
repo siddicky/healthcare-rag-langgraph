@@ -463,7 +463,7 @@ Ingest is idempotent (`--delete-all` drops and recreates the collections). Run i
 
 ## 5. Smoke — post-deploy live check (synthetic accounts, tracing off, redacted logs)
 
-After every deploy, the pipeline runs the ten-check suite against the prod URL with synthetic accounts and no tracing. The pipeline's `Run deployed smoke` step sets all six required env vars from GitHub Environment `production` secrets — your manual command must do the same:
+After every deploy, the pipeline runs the fast `--profile gate` suite (LLM-free: isolation, perimeter, erasure, protocol checks — seconds) against the prod URL with synthetic accounts and no tracing. The full ten-check suite (graph turns, minutes) runs on demand: `make deployed-smoke`. The pipeline's `Run deployed smoke` step sets all six required env vars from GitHub Environment `production` secrets — your manual command must do the same:
 
 ```bash
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \

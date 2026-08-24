@@ -107,8 +107,11 @@ eval-agent: ## Offline in-process coach agent evaluation
 eval-agent-multiturn: ## Offline in-process coach multi-turn evaluation
 	$(PY) evals/run_agent_multiturn.py --offline
 
-deployed-smoke: ## Run the ten-check smoke against LANGGRAPH_DEPLOYMENT_URL
-	$(UV) run python scripts/deployed_smoke.py --url "$(LANGGRAPH_DEPLOYMENT_URL)"
+deployed-smoke: ## Run the full ten-check smoke against LANGGRAPH_DEPLOYMENT_URL
+	$(UV) run python scripts/deployed_smoke.py --url "$(LANGGRAPH_DEPLOYMENT_URL)" $(if $(PROFILE),--profile $(PROFILE),)
+
+deployed-smoke-gate: ## Run the fast LLM-free gate (seconds) against LANGGRAPH_DEPLOYMENT_URL
+	$(UV) run python scripts/deployed_smoke.py --url "$(LANGGRAPH_DEPLOYMENT_URL)" --profile gate
 
 forget-member: ## Self-erase a member through the deployed coach flow (FORGET_ARGS=--dry-run)
 	$(UV) run python scripts/forget_member.py --url "$(LANGGRAPH_DEPLOYMENT_URL)" $(FORGET_ARGS)

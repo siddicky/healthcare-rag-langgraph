@@ -74,15 +74,9 @@ async def prepare_thread_deletion(request: Request) -> CleanupResult:
 
     headers = internal_headers() | {"x-internal-owner": identity}
     try:
-        # In-process ASGI self-call, not a network fetch: request.base_url
-        # reflects the client-sent Host, which behind a proxy is the public
-        # domain — the self-request would leave the app and fail cleanup on
-        # every member thread deletion (same defect the delete pre-check had).
-        async with httpx.AsyncClient(
-            transport=httpx.ASGITransport(app=request.app),
-            base_url="http://perimeter.internal",
-            timeout=10.0,
-        ) as client:
+        from .self_call import self_client
+
+        async with self_client(request) as client:
             for reminder in paused:
                 if reminder.cron_id is None:
                     continue

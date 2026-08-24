@@ -20,6 +20,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 
 from healthcare_rag.processors.safety import scrub_phi
+from .self_call import self_client
 
 JSONValue: TypeAlias = JsonValue
 JSON_ADAPTER: Final = TypeAdapter(dict[str, JsonValue])
@@ -63,7 +64,7 @@ async def post_feedback(request: Request) -> Response:
     if payload.score not in {-1, 1}:
         return JSONResponse({"detail": "Invalid feedback"}, status_code=400)
     authorization = request.headers.get("authorization", "")
-    async with httpx.AsyncClient(base_url=str(request.base_url), timeout=5.0) as client:
+    async with self_client(request, timeout=5.0) as client:
         thread = await client.get(
             f"/threads/{payload.thread_id}",
             headers={"authorization": authorization},
