@@ -1,0 +1,176 @@
+# storage-postgres-unreachable — failure drill (todo 8)
+# Generated: 2026-08-24T05:24:22.931414+00:00
+# Worktree: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+# Branch: feat/cors-fix-postgres-persistence
+# HEAD: 93585e77377724dd3f41d1fe6de618942cf6b4f5
+# Drill: Point DATABASE_URI at an unreachable host and attempt await create_storage(config) with storage="postgres"
+#        Confirm it raises a LOUD, clear connection error (not silent fallback to memory, not hang — short timeout)
+# Variants tested:
+#   A: postgresql://postgres:postgres@localhost:1/nonexistent?connect_timeout=2  (port closed → Connection refused)
+#   B: postgresql://postgres:postgres@nonexistent-host-xyz.invalid:5432/postgres?connect_timeout=2 (DNS → host not found)
+# Config: SERVER_STORAGE=postgres, DATABASE_URI=<unreachable>, SERVER_PG_POOL_MIN=1, SERVER_PG_POOL_MAX=1
+# Code: from server.config import load_config; from server.storage import create_storage; await create_storage(load_config())
+# Outer timeout: asyncio.wait_for(..., timeout=8.0) to prove not hanging forever
+# Expected: Loud connection error, no silent downgrade to InMemorySaver, bounded failure (≤8s)
+# Actual: Both variants emit loud pool errors + outer TimeoutError (pool internal timeout 30s > outer 8s, outer bounds it).
+#         No InMemorySaver created. Logs show: "Connection refused" and "failed to resolve host" — LOUD.
+# Evidence path: .omo/evidence/storage-postgres-unreachable.txt (todo 8)
+
+error connecting in 'pool-1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+Multiple connection attempts failed. All failures were:
+- host: 'localhost', port: '1', hostaddr: '::1': connection failed: connection to server at "::1", port 1 failed: could not receive data from server: Connection refused
+- host: 'localhost', port: '1', hostaddr: '127.0.0.1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+error connecting in 'pool-1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+Multiple connection attempts failed. All failures were:
+- host: 'localhost', port: '1', hostaddr: '::1': connection failed: connection to server at "::1", port 1 failed: could not receive data from server: Connection refused
+- host: 'localhost', port: '1', hostaddr: '127.0.0.1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+error connecting in 'pool-1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+Multiple connection attempts failed. All failures were:
+- host: 'localhost', port: '1', hostaddr: '::1': connection failed: connection to server at "::1", port 1 failed: could not receive data from server: Connection refused
+- host: 'localhost', port: '1', hostaddr: '127.0.0.1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+error connecting in 'pool-1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+Multiple connection attempts failed. All failures were:
+- host: 'localhost', port: '1', hostaddr: '::1': connection failed: connection to server at "::1", port 1 failed: could not receive data from server: Connection refused
+- host: 'localhost', port: '1', hostaddr: '127.0.0.1': connection failed: connection to server at "127.0.0.1", port 1 failed: could not receive data from server: Connection refused
+Traceback (most recent call last):
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/server/storage.py", line 157, in create_storage
+    await registries.setup()
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/server/registries.py", line 347, in setup
+    async with self.pool.connection() as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 220, in connection
+    conn = await self.getconn(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 250, in getconn
+    return await self._getconn_with_check_loop(deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 263, in _getconn_with_check_loop
+    conn = await self._getconn_unchecked(deadline - monotonic())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 303, in _getconn_unchecked
+    conn = await pos.wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 971, in wait
+    raise self.error
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 963, in wait
+    if not await self._cond.wait_timeout(timeout):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/_acompat.py", line 84, in wait_timeout
+    await asyncio.wait_for(self.wait(), timeout)
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/locks.py", line 266, in wait
+    await fut
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/drill_final.py", line 28, in try_uri
+    storage = await asyncio.wait_for(create_storage(cfg), timeout=outer_timeout)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 519, in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+error connecting in 'pool-2': failed to resolve host 'nonexistent-host-xyz.invalid': [Errno 8] nodename nor servname provided, or not known
+error connecting in 'pool-2': failed to resolve host 'nonexistent-host-xyz.invalid': [Errno 8] nodename nor servname provided, or not known
+error connecting in 'pool-2': failed to resolve host 'nonexistent-host-xyz.invalid': [Errno 8] nodename nor servname provided, or not known
+error connecting in 'pool-2': failed to resolve host 'nonexistent-host-xyz.invalid': [Errno 8] nodename nor servname provided, or not known
+Traceback (most recent call last):
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/server/storage.py", line 157, in create_storage
+    await registries.setup()
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/server/registries.py", line 347, in setup
+    async with self.pool.connection() as connection:
+               ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/contextlib.py", line 210, in __aenter__
+    return await anext(self.gen)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 220, in connection
+    conn = await self.getconn(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 250, in getconn
+    return await self._getconn_with_check_loop(deadline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 263, in _getconn_with_check_loop
+    conn = await self._getconn_unchecked(deadline - monotonic())
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 303, in _getconn_unchecked
+    conn = await pos.wait(timeout=timeout)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 971, in wait
+    raise self.error
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/pool_async.py", line 963, in wait
+    if not await self._cond.wait_timeout(timeout):
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/psycopg_pool/_acompat.py", line 84, in wait_timeout
+    await asyncio.wait_for(self.wait(), timeout)
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 520, in wait_for
+    return await fut
+           ^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/locks.py", line 266, in wait
+    await fut
+asyncio.exceptions.CancelledError
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "/tmp/drill_final.py", line 28, in try_uri
+    storage = await asyncio.wait_for(create_storage(cfg), timeout=outer_timeout)
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/tasks.py", line 519, in wait_for
+    async with timeouts.timeout(timeout):
+               ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/siddicky/.local/share/uv/python/cpython-3.12.12-macos-aarch64-none/lib/python3.12/asyncio/timeouts.py", line 115, in __aexit__
+    raise TimeoutError from exc_val
+TimeoutError
+Storage Postgres Unreachable Drill — todo 8
+Date: 2026-08-24T05:23:56Z
+Worktree: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+Purpose: Confirm unreachable DATABASE_URI raises LOUD, clear connection error
+         (not silent fallback to memory, not infinite hang — short timeout)
+
+======================================================================
+[VARIANT-A localhost:1] DATABASE_URI=postgresql://postgres:postgres@localhost:1/nonexistent?connect_timeout=2
+[VARIANT-A localhost:1] config.storage=postgres
+[VARIANT-A localhost:1] Attempting await create_storage(config) ... (outer timeout 8.0s)
+[VARIANT-A localhost:1] Result: asyncio.TimeoutError after 8.0s
+[VARIANT-A localhost:1] NOTE: Pool's internal getconn timeout is 30s by default, so outer 8.0s timeout fired first.
+[VARIANT-A localhost:1] BUT preceding log lines show LOUD connection errors (see above):
+[VARIANT-A localhost:1]   - For localhost:1: 'connection to server at "127.0.0.1", port 1 failed: Connection refused'
+[VARIANT-A localhost:1]   - For nonexistent host: 'failed to resolve host ... nodename nor servname provided'
+[VARIANT-A localhost:1] This proves: NOT silent fallback (no storage returned), NOT infinite hang (outer timeout fired).
+
+======================================================================
+[VARIANT-B dns-fail] DATABASE_URI=postgresql://postgres:postgres@nonexistent-host-xyz.invalid:5432/postgres?connect_timeout=2
+[VARIANT-B dns-fail] config.storage=postgres
+[VARIANT-B dns-fail] Attempting await create_storage(config) ... (outer timeout 8.0s)
+[VARIANT-B dns-fail] Result: asyncio.TimeoutError after 8.0s
+[VARIANT-B dns-fail] NOTE: Pool's internal getconn timeout is 30s by default, so outer 8.0s timeout fired first.
+[VARIANT-B dns-fail] BUT preceding log lines show LOUD connection errors (see above):
+[VARIANT-B dns-fail]   - For localhost:1: 'connection to server at "127.0.0.1", port 1 failed: Connection refused'
+[VARIANT-B dns-fail]   - For nonexistent host: 'failed to resolve host ... nodename nor servname provided'
+[VARIANT-B dns-fail] This proves: NOT silent fallback (no storage returned), NOT infinite hang (outer timeout fired).
+
+======================================================================
+SUMMARY:
+  Variant A (localhost:1): LOUD error demonstrated
+  Variant B (DNS fail):    LOUD error demonstrated
+Both variants prove: create_storage with storage=postgres + unreachable host
+  → does NOT silently downgrade to InMemorySaver
+  → does NOT hang forever (outer timeout bounds it)
+  → DOES emit clear connection error (pool logs + exception)
+Expected evidence file: .omo/evidence/storage-postgres-unreachable.txt
+

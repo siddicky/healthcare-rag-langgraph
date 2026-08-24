@@ -1,0 +1,175 @@
+# cors-wrap-regression — failure drill (todo 1)
+# Generated: 2026-08-24T05:22:30.513923+00:00
+# Worktree: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+# Branch: feat/cors-fix-postgres-persistence
+# HEAD: 93585e77377724dd3f41d1fe6de618942cf6b4f5
+# Drill: Temporarily revert ONLY middleware order in server/app.py
+#        (put AuthMiddleware before NativeCORSMiddleware — the pre-fix order)
+#        while KEEPING the methods-widening change.
+#        allow_methods remains: ["GET","POST","PUT","PATCH","DELETE","HEAD","OPTIONS"]
+# Command: uv run pytest tests/server/test_cors.py -v
+# Middleware before drill (committed): NativeCORSMiddleware, AuthMiddleware
+# Middleware during drill (reverted):  AuthMiddleware, NativeCORSMiddleware
+# Expected: invalid-bearer-has-ACAO and other CORS cases FAIL with missing-ACAO-header
+#           or 401 instead of 200 on preflight (proves wrap fix is load-bearing)
+# Actual: 5 failed, 3 passed — see full output below
+# Evidence path: .omo/evidence/cors-wrap-regression.txt (todo 1)
+
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.6.0 -- /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, langsmith-0.11.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 8 items
+
+tests/server/test_cors.py::test_cors_preflight_post_threads_no_credentials[asyncio] FAILED [ 12%]
+tests/server/test_cors.py::test_cors_preflight_put_and_patch_methods[asyncio] FAILED [ 25%]
+tests/server/test_cors.py::test_cors_cross_origin_get_invalid_bearer_has_acao[asyncio] FAILED [ 37%]
+tests/server/test_cors.py::test_cors_cross_origin_delete_happy_path_carries_acao[asyncio] PASSED [ 50%]
+tests/server/test_cors.py::test_cors_disallowed_origin_no_acao[asyncio] PASSED [ 62%]
+tests/server/test_cors.py::test_cors_plain_options_without_origin_not_preflight[asyncio] PASSED [ 75%]
+tests/server/test_cors.py::test_cors_coach_uploads_preflight_single_acao[asyncio] FAILED [ 87%]
+tests/server/test_cors.py::test_cors_smith_langchain_origin_accepted[asyncio] FAILED [100%]
+
+=================================== FAILURES ===================================
+___________ test_cors_preflight_post_threads_no_credentials[asyncio] ___________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x10904d040>
+
+    @pytest.mark.anyio
+    async def test_cors_preflight_post_threads_no_credentials(monkeypatch: pytest.MonkeyPatch):
+        origin = "https://coach.test"
+        async with _client(monkeypatch, cors_origins=origin) as (client, _app):
+            r = await client.options(
+                "/threads",
+                headers={
+                    "origin": origin,
+                    "access-control-request-method": "POST",
+                    "access-control-request-headers": "authorization,content-type",
+                },
+            )
+>       assert r.status_code == 200
+E       assert 401 == 200
+E        +  where 401 = <Response [401 Unauthorized]>.status_code
+
+tests/server/test_cors.py:104: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  MedicalRAG:storage.py:106 store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+______________ test_cors_preflight_put_and_patch_methods[asyncio] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x113253590>
+
+    @pytest.mark.anyio
+    async def test_cors_preflight_put_and_patch_methods(monkeypatch: pytest.MonkeyPatch):
+        origin = "https://coach.test"
+        async with _client(monkeypatch, cors_origins=origin) as (client, _app):
+            r_put = await client.options(
+                "/store/items",
+                headers={
+                    "origin": origin,
+                    "access-control-request-method": "PUT",
+                    "access-control-request-headers": "authorization,content-type",
+                },
+            )
+            r_patch = await client.options(
+                "/threads/00000000-0000-0000-0000-000000000001",
+                headers={
+                    "origin": origin,
+                    "access-control-request-method": "PATCH",
+                    "access-control-request-headers": "authorization,content-type",
+                },
+            )
+        for r, method in ((r_put, "PUT"), (r_patch, "PATCH")):
+>           assert r.status_code == 200, f"{method} preflight failed: {r.status_code} {r.text}"
+E           AssertionError: PUT preflight failed: 401 {"detail":"Unauthorized"}
+E           assert 401 == 200
+E            +  where 401 = <Response [401 Unauthorized]>.status_code
+
+tests/server/test_cors.py:131: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  MedicalRAG:storage.py:106 store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+_________ test_cors_cross_origin_get_invalid_bearer_has_acao[asyncio] __________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x11380b440>
+
+    @pytest.mark.anyio
+    async def test_cors_cross_origin_get_invalid_bearer_has_acao(monkeypatch: pytest.MonkeyPatch):
+        origin = "https://coach.test"
+        tid = str(uuid.uuid4())
+        async with _client(monkeypatch, cors_origins=origin) as (client, _app):
+            r = await client.get(
+                f"/threads/{tid}",
+                headers={"origin": origin, "authorization": "Bearer invalid"},
+            )
+        assert r.status_code == 401
+>       assert r.headers.get("access-control-allow-origin") == origin
+E       AssertionError: assert None == 'https://coach.test'
+E        +  where None = get('access-control-allow-origin')
+E        +    where get = Headers({'content-length': '25', 'content-type': 'application/json'}).get
+E        +      where Headers({'content-length': '25', 'content-type': 'application/json'}) = <Response [401 Unauthorized]>.headers
+
+tests/server/test_cors.py:149: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  MedicalRAG:storage.py:106 store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+____________ test_cors_coach_uploads_preflight_single_acao[asyncio] ____________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1137f7890>
+
+    @pytest.mark.anyio
+    async def test_cors_coach_uploads_preflight_single_acao(monkeypatch: pytest.MonkeyPatch):
+        origin = "https://coach.test"
+        async with _client(monkeypatch, cors_origins=origin, coach_origins=origin) as (client, _app):
+            r = await client.options(
+                "/coach/uploads",
+                headers={
+                    "origin": origin,
+                    "access-control-request-method": "POST",
+                    "access-control-request-headers": "authorization,content-type",
+                },
+            )
+>       assert r.status_code == 200
+E       assert 401 == 200
+E        +  where 401 = <Response [401 Unauthorized]>.status_code
+
+tests/server/test_cors.py:225: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  MedicalRAG:storage.py:106 store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+______________ test_cors_smith_langchain_origin_accepted[asyncio] ______________
+
+monkeypatch = <_pytest.monkeypatch.MonkeyPatch object at 0x1137f7590>
+
+    @pytest.mark.anyio
+    async def test_cors_smith_langchain_origin_accepted(monkeypatch: pytest.MonkeyPatch):
+        origin = "https://smith.langchain.com"
+        # Include smith plus another for realism
+        cors = f"{origin},https://coach.test"
+        async with _client(monkeypatch, cors_origins=cors, coach_origins=cors) as (client, _app):
+            r = await client.options(
+                "/threads",
+                headers={
+                    "origin": origin,
+                    "access-control-request-method": "POST",
+                    "access-control-request-headers": "authorization,content-type",
+                },
+            )
+            simple = await client.get(
+                f"/threads/{uuid.uuid4()}",
+                headers={"origin": origin, "authorization": "Bearer invalid"},
+            )
+>       assert r.status_code == 200
+E       assert 401 == 200
+E        +  where 401 = <Response [401 Unauthorized]>.status_code
+
+tests/server/test_cors.py:253: AssertionError
+------------------------------ Captured log call -------------------------------
+WARNING  MedicalRAG:storage.py:106 store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+=========================== short test summary info ============================
+FAILED tests/server/test_cors.py::test_cors_preflight_post_threads_no_credentials[asyncio]
+FAILED tests/server/test_cors.py::test_cors_preflight_put_and_patch_methods[asyncio]
+FAILED tests/server/test_cors.py::test_cors_cross_origin_get_invalid_bearer_has_acao[asyncio]
+FAILED tests/server/test_cors.py::test_cors_coach_uploads_preflight_single_acao[asyncio]
+FAILED tests/server/test_cors.py::test_cors_smith_langchain_origin_accepted[asyncio]
+========================= 5 failed, 3 passed in 1.26s ==========================
+
