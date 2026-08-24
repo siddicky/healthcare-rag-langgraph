@@ -156,17 +156,17 @@ ingest-fly: ## Ingest checked-in chunks into prod Weaviate via Fly machine (see 
 	@echo "Example: fly machines run --app hc-rag-server-prod -e WEAVIATE_HOST=hc-rag-weaviate-prod.internal ghcr.io/<repo>/hc-rag-server:latest python -m healthcare_rag.storage.vector_store --delete-all --collection Lipitor data/chunks_lipitor.json --collection Metformin data/chunks_metformin.json"
 
 next-version: ## Preview the version the Release workflow would cut (BUMP=auto|patch|minor|major)
-	@python3 scripts/next_version.py --bump $(if $(BUMP),$(BUMP),auto) --explain
+	@$(PY) scripts/next_version.py --bump $(if $(BUMP),$(BUMP),auto) --explain
 
 release-prep: ## Bump pyproject + uv.lock to the next version so the tag and the wheel agree (BUMP=...)
-	@VERSION="$$(python3 scripts/next_version.py --bump $(if $(BUMP),$(BUMP),auto))"; \
+	@VERSION="$$( ${PY} scripts/next_version.py --bump $(if $(BUMP),$(BUMP),auto))"; \
 	PROJECT="$${VERSION#v}"; \
 	CURRENT="$$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"; \
 	if [ "$$CURRENT" = "$$PROJECT" ]; then \
 		echo "pyproject.toml already at $$PROJECT — nothing to prep for $$VERSION"; \
 		exit 0; \
 	fi; \
-	sed -i.bak "0,/^version = \".*\"/s//version = \"$$PROJECT\"/" pyproject.toml && rm -f pyproject.toml.bak; \
+	sed -i.bak "s/^version = \".*\"/version = \"$$PROJECT\"/" pyproject.toml && rm -f pyproject.toml.bak; \
 	$(UV) lock --quiet; \
 	echo "pyproject.toml: $$CURRENT -> $$PROJECT"; \
 	echo ""; \
@@ -184,7 +184,7 @@ release: ## Validate TAG=vX.Y.Z and print the exact release push commands (herme
 # The immutable ghcr `{{version}}` tag is the release ledger — see
 # docs/decisions/release-tags-and-rollback.md. GHCR_REPO derives the slug from
 # the origin remote so this works in a fork without editing the Makefile.
-GHCR_REPO := ghcr.io/$(shell git config --get remote.origin.url | sed -E 's#(git@|https://)github.com[:/]##; s#\.git$$##')
+GHCR_REPO := ghcr.io/$(shell git config --get remote.origin.url | sed -E 's,(git@|https://)github.com[:/],,; s,\.git$$,,')
 
 release-digest: ## Resolve TAG=vX.Y.Z to the immutable image digest it deployed
 	@if [ -z "$(TAG)" ]; then echo "usage: make release-digest TAG=vX.Y.Z"; exit 1; fi
