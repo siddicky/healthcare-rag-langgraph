@@ -7,7 +7,7 @@ from importlib.machinery import ModuleSpec
 from types import ModuleType
 from typing import Any, Final, Literal
 
-from langgraph.store.memory import InMemoryStore
+from langgraph.store.base import BaseStore
 
 API_VERSION: Final = "0.12.6"
 
@@ -19,7 +19,7 @@ class CompatStoreUnavailableError(RuntimeError):
 
 
 class _StoreCompat:
-    def __init__(self, store: InMemoryStore) -> None:
+    def __init__(self, store: BaseStore) -> None:
         self._store = store
 
     async def aput(
@@ -76,7 +76,7 @@ async def _get_store() -> _StoreCompat:
     return _shared_store
 
 
-def install_langgraph_api_compat(store: InMemoryStore, *, force: bool = False) -> bool:
+def install_langgraph_api_compat(store: BaseStore, *, force: bool = False) -> bool:
     """Install the original compatibility modules.
 
     With ``force=False`` the modules are installed only when the real

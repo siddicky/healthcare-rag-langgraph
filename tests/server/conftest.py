@@ -12,9 +12,20 @@ contract is asserted in `tests/agent/test_deploy_config.py`.
 
 import os
 
-os.environ.setdefault(
+import pytest
+
+_ = os.environ.setdefault(
     "LANGSMITH_FEEDBACK_PROJECT_ID", "00000000-0000-4000-8000-000000000fee"
 )
+
+
+@pytest.fixture
+def postgres_url() -> str:
+    dsn = os.environ.get("POSTGRES_TEST_DSN")
+    if dsn is None:
+        pytest.skip("POSTGRES_TEST_DSN not set")
+    return dsn
+
 
 # ---------------------------------------------------------------------------
 # anyio / pytest-asyncio interop -- why `asyncio_mode = "strict"`

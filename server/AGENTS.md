@@ -4,22 +4,31 @@
 # server/
 
 ## Purpose
-A clean-room, in-memory implementation of the LangGraph Agent Server HTTP API
-(threads, runs, crons, assistants, store, auth), built to be behaviourally
-compatible with the real `langgraph-api` package without depending on it. It
-exists so the healthcare RAG graph can be served self-hosted (Fly.io) with the
-same wire contract that `langgraph dev`/LangGraph Platform expose, while
-keeping the implementation OSS and auditable. `server._compat` installs a
-`langgraph_api` shim module only when the real package isn't importable, so
-graph code that does `from langgraph_api.store import get_store` keeps
-working either way. All state (threads/runs/crons/store) is in-process
-dicts/`InMemorySaver`/`InMemoryStore` — nothing survives a restart except the
-Weaviate vector data (`deploy/fly.weaviate-prod.toml`).
+A clean-room implementation of the LangGraph Agent Server HTTP API (threads,
+runs, crons, assistants, store, auth) with a **dual-backend storage seam**
+(`SERVER_STORAGE=memory` | `postgres`), built to be behaviourally compatible
+with the real `langgraph-api` package without depending on it. It exists so
+the healthcare RAG graph can be served self-hosted (Fly.io) with the same wire
+contract that `langgraph dev`/LangGraph Platform expose, while keeping the
+implementation OSS and auditable. `server._compat` installs a `langgraph_api`
+shim module only when the real package isn't importable, so graph code that
+does `from langgraph_api.store import get_store` keeps working either way.
+Storage is selected in `server/storage.py:create_storage(...)`: `memory`
+(default) uses in-process dicts/`InMemorySaver`/`InMemoryStore` and nothing
+survives a restart except the Weaviate vector data (`deploy/fly.weaviate-prod.toml`);
+`postgres` uses `AsyncPostgresSaver`/`AsyncPostgresStore` plus durable
+`hc_threads`/`hc_runs`/`hc_crons` tables via `server/registries.py`
+(`Registry`/`MemoryRegistry` vs `PostgresRegistry`/`PostgresRegistries` with
+advisory-locked DDL). Run payloads diverge between backends: in-memory echoes
+raw `input`/`command`, Postgres persists `[redacted]` (`PERSISTED_PAYLOAD_REDACTION`
+in `server/run_engine.py`). The code supports both backends but production
+still runs `memory` as of this PR — Postgres activation is a separate
+human-gated step per `docs/deploy.md` §0b.
 
 ## Key Files
 | File | Description |
 |------|-------------|
-| `app.py` | `create_app(config)` builds the Starlette `ASGIApp`: mounts all route modules, `AuthMiddleware`, `MemberPerimeterMiddleware`, CORS, lifespan (loads graphs, starts cron scheduler, flips `ReadinessState`), and the `UNIMPLEMENTED_PATHS`/`UNIMPLEMENTED_PREFIXES` → 501 fallback. |
+| `app.py` | `create_app(config)` builds the Starlette `ASGIApp`: mounts all route modules with **CORS outermost** wrapping `AuthMiddleware` + `MemberPerimeterMiddleware` (auth inner), so preflight `OPTIONS` are exempted from auth by construction and every response including `401` carries CORS headers; plus lifespan (loads graphs, starts cron scheduler, flips `ReadinessState`) and the `UNIMPLEMENTED_PATHS`/`UNIMPLEMENTED_PREFIXES` → 501 fallback. |
 | `__main__.py` | CLI entry (`python -m server`): loads `langgraph.json` via `load_config`, then `uvicorn.run`. |
 | `config.py` | `ServerConfig` dataclass + `load_config(path="langgraph.json")` — parses `graphs`, `auth.path`, `http`, `store.index`, `api_version`, `storage`, `port`. |
 | `_compat.py` | Installs the `langgraph_api`/`langgraph_api.store` shim (`get_store()`) backed by this server's `InMemoryStore`, but only if the real `langgraph_api` package is absent — never overrides a real install. |
@@ -31,7 +40,8 @@ Weaviate vector data (`deploy/fly.weaviate-prod.toml`).
 | `crons.py` | Cron CRUD routes + `start_scheduler()` — a `croniter`-driven asyncio loop that fires due crons as runs. Marked `SIZE_OK`/`ANYIO_OK` (intentionally one file; needs a real `asyncio.Task` handle). |
 | `assistants.py` | Read-only assistant records synthesized from `graphs.py`'s loaded graph IDs (this server doesn't support assistant *creation*, matching `manifest.py`'s 501 list). |
 | `graphs.py` | `load_raw_graphs`/`attach_graphs` — resolves `langgraph.json`'s `graphs` map (`"name": "./path/to/module.py:attr"`) via `importlib.util.spec_from_file_location`, attaches the compiled graphs to app state. |
-| `storage.py` | `Storage` dataclass (`saver: InMemorySaver`, `store: InMemoryStore`, plus `threads`/`runs`/`crons` dicts) and `create_storage(config)` — the single storage seam every route module reads/writes through. |
+| `storage.py` | `Storage` dataclass (`saver`/`store`/`threads`/`runs`/`crons`) and `create_storage(config)` — the single storage seam every route module reads/writes through; selects `memory` (`InMemorySaver`/`InMemoryStore` + `MemoryRegistries`) or `postgres` (`AsyncPostgresSaver`/`AsyncPostgresStore` + `PostgresRegistries` against `DATABASE_URI`/`DATABASE_URL` with pooled connections). |
+| `registries.py` | `Registry`/`RunRegistry`/`CronRegistry` protocols plus `MemoryRegistry`/`MemoryRegistries` (in-process dicts) and `PostgresRegistry`/`PostgresRunRegistry`/`PostgresCronRegistry`/`PostgresRegistries` (backed by `hc_threads`/`hc_runs`/`hc_crons` with advisory-locked DDL and `IS NOT DISTINCT FROM` cron claim) — the registry seam that `storage.py` selects between. |
 | `store_routes.py` | `/store/*` item routes (put/get/delete/search) with namespace validation (`_validate_namespace` rejects empty labels and periods in labels). |
 | `config.py` | (see above) |
 | `Dockerfile` | Container build for the server (see `deploy/fly.prod.toml` for the runtime env it expects). |
@@ -47,7 +57,7 @@ Weaviate vector data (`deploy/fly.weaviate-prod.toml`).
 - This is a **parity target**, not a place for creative API design: any behaviour change must be checked against `tests/server/oracle/` (a pinned real `langgraph-api` venv) via `make parity`, or it can silently diverge from the contract clients expect.
 - `manifest.py`'s two lists are the source of truth for "not implemented → 501" vs "not mounted → 404/405". Adding a real implementation for something in `UNIMPLEMENTED_PATHS`/`_PREFIXES` means removing it from the list, not adding a second route.
 - `_compat.py` must never install its shim when a real `langgraph_api` is present — it re-raises any `ModuleNotFoundError` whose name isn't exactly `langgraph_api`, so don't broaden that except with a matching test.
-- Everything is in-memory (`storage.py`). Don't add code elsewhere that assumes durability across a process restart.
+- Storage is dual-backend (`SERVER_STORAGE=memory` | `postgres` via `server/storage.py` + `server/registries.py`). Code must work correctly on BOTH backends and must assume NEITHER guaranteed wipe-on-restart NOR guaranteed persistence of raw run `input`/`command` — Postgres redacts them to `[redacted]` while memory echoes them, so do not add code that assumes a restart always wipes, nor that `input` survives in the stored run record. Tests for both backends live in `tests/server/` (see `POSTGRES_TEST_DSN` / `make server-test-pg`).
 - `SERVER_LOCAL_DEV` must stay unset/`0` in production (see `deploy/fly.prod.toml`); code paths gated on `config.local_dev` should not be reachable from a prod build.
 
 ### Testing Requirements

@@ -14,7 +14,7 @@ PAGEINDEX_RUN := $(UV) run --no-project --with pageindex --with python-dotenv --
         eval-multiturn eval-multiturn-smoke eval-agent eval-agent-multiturn deployed-smoke forget-member \
         dataset-sync dataset-sync-multiturn \
         routing-gate-query-smoke routing-gate-safety-smoke wiki-init wiki-update \
-        server-dev server-test parity server-image container-server-smoke ingest-fly release
+        server-dev server-test server-test-pg parity server-image container-server-smoke ingest-fly release
 
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN{FS=":.*?## "}{printf "  \033[36m%-16s\033[0m %s\n", $$1, $$2}'
@@ -133,6 +133,12 @@ server-dev: ## Run the OSS Agent Server locally (port 2024, local-dev auth bypas
 
 server-test: ## Run server unit tests
 	$(PY) -m pytest -q tests/server
+
+server-test-pg: ## Run Postgres-gated server tests via compose (gated lane; ephemeral, re-runnable)
+	docker compose -f docker-compose.server.yml up -d postgres
+	@for i in $$(seq 1 30); do docker exec healthcare-rag-cors-pg-postgres-1 pg_isready -U postgres >/dev/null 2>&1 && break; sleep 1; done; echo "postgres ready"
+	# test_concurrent_storage_setup_uses_advisory_lock is deselected here — see tests/server/test_registries.py docstring for full explanation; re-verified via scripts/pg_lane_concurrent.py
+	@POSTGRES_TEST_DSN=postgresql://postgres:postgres@127.0.0.1:55433/postgres $(PY) -m pytest -q -k "not test_concurrent_storage_setup_uses_advisory_lock" tests/server/test_registries.py tests/server/test_threads_postgres.py tests/server/test_runs_durable.py tests/server/test_crons_postgres.py tests/server/test_storage_postgres.py; RC1=$$?; POSTGRES_TEST_DSN=postgresql://postgres:postgres@127.0.0.1:55433/postgres $(PY) scripts/pg_lane_concurrent.py; RC2=$$?; if [ $$RC1 -ne 0 ] || [ $$RC2 -ne 0 ]; then RC=1; else RC=0; fi; docker rm -f healthcare-rag-cors-pg-postgres-1 >/dev/null 2>&1 || true; docker volume rm -f healthcare-rag-cors-pg_postgres_data >/dev/null 2>&1 || true; docker compose -f docker-compose.server.yml rm -s -f -v postgres >/dev/null 2>&1 || true; exit $$RC
 
 parity: ## Run oracle contract suite (ORACLE=1) — see tests/server/oracle/README.md for one-time pinned-venv setup
 	ORACLE=1 $(PY) -m pytest -q tests/server/contract

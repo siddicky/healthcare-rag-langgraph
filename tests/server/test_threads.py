@@ -62,9 +62,9 @@ def _make_auth(identity: str = "member-1") -> Auth:
     return auth
 
 
-def _app_with_auth(auth: Auth) -> Starlette:
+async def _app_with_auth(auth: Auth) -> Starlette:
     config = ServerConfig(graphs={}, auth_path=None, http_app=None, http_flags={}, store_index={}, api_version="test")
-    storage = create_storage(config)
+    storage = await create_storage(config)
     # Build app with threads + runs routes
     all_routes: list[Route] = []
     all_routes.extend(thread_routes)
@@ -93,7 +93,7 @@ def _app_with_auth(auth: Auth) -> Starlette:
 @pytest.fixture
 async def client():
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         yield c, app
@@ -108,7 +108,7 @@ async def client_other():
 @pytest.mark.anyio
 async def test_supplied_id_create_and_uuid_validation() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())
@@ -130,7 +130,7 @@ async def test_supplied_id_create_and_uuid_validation() -> None:
 @pytest.mark.anyio
 async def test_if_exists_modes() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())
@@ -162,7 +162,7 @@ async def test_if_exists_modes() -> None:
 @pytest.mark.anyio
 async def test_ttl_expiry_404(monkeypatch: pytest.MonkeyPatch) -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     # inject controllable clock
     base = datetime.now(UTC)
     # patch server.threads._now
@@ -197,7 +197,7 @@ async def test_ttl_expiry_404(monkeypatch: pytest.MonkeyPatch) -> None:
 async def test_search_scope_merge_and_params() -> None:
     # member-1 creates threads
     auth1 = _make_auth("member-1")
-    app1 = _app_with_auth(auth1)
+    app1 = await _app_with_auth(auth1)
     transport1 = httpx.ASGITransport(app=app1)
     # we need shared storage for isolation test with two principals against same storage
     # So we create one app with two possible auth identities via custom authenticate that reads header?
@@ -247,7 +247,7 @@ async def test_search_scope_merge_and_params() -> None:
 @pytest.mark.anyio
 async def test_patch_thread() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())
@@ -264,7 +264,7 @@ async def test_patch_thread() -> None:
 @pytest.mark.anyio
 async def test_delete_cascade() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())
@@ -288,7 +288,7 @@ async def test_delete_cascade() -> None:
 @pytest.mark.anyio
 async def test_state_shapes() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())
@@ -317,7 +317,7 @@ async def test_state_shapes() -> None:
 @pytest.mark.anyio
 async def test_copy_semantics() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())
@@ -344,7 +344,7 @@ async def test_copy_semantics() -> None:
 @pytest.mark.anyio
 async def test_malformed_and_scope_isolation() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         # bad if_exists
@@ -368,7 +368,7 @@ async def test_malformed_and_scope_isolation() -> None:
 @pytest.mark.anyio
 async def test_crud_roundtrip_within_one_app() -> None:
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         # create
@@ -401,7 +401,7 @@ async def test_state_lookup_saver_fault_is_not_masked() -> None:
     # fake 200 {"values": {}, ...}. The route resolves state through
     # graph.aget_state, so the fault is raised from there.
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
 
     class _BoomGraph:
         async def aget_state(self, config: object) -> object:
@@ -423,7 +423,7 @@ async def test_copy_logs_checkpoint_history_failure(
     # F2 regression: a checkpoint-history copy failure degrades the copy but
     # must be logged, never silent.
     auth = _make_auth("member-1")
-    app = _app_with_auth(auth)
+    app = await _app_with_auth(auth)
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as c:
         tid = str(uuid4())

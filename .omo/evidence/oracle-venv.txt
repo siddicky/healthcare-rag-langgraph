@@ -1,0 +1,21 @@
+$ tests/server/oracle/.venv/bin/python -c "import langgraph_api; print(langgraph_api.__version__)"
+0.12.6
+
+$ tests/server/oracle/.venv/bin/python --version
+Python 3.12.12
+
+$ uv venv tests/server/oracle/.venv --python 3.12
+Using CPython 3.12.12
+Creating virtual environment at: tests/server/oracle/.venv
+
+$ uv pip install --no-config --python tests/server/oracle/.venv/bin/python -r tests/server/oracle/requirements.txt
+Resolved 76 packages, Installed 76 packages (langgraph-api==0.12.6, langgraph-cli[inmem]==0.4.31)
+
+$ git check-ignore -v tests/server/oracle/.venv
+.gitignore:4:.venv/	tests/server/oracle/.venv
+
+$ git ls-files tests/server/oracle/.venv | wc -l
+0
+
+$ git status --short (filtered for oracle/.venv — no entries; venv untracked/gitignored)
+(clean for oracle venv — no tracked files added)

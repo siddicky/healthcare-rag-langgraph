@@ -1,0 +1,152 @@
+# Evidence: Postgres deps + license boundary (todo 6)
+# Date: 2026-08-24T02:11:18Z
+# Worktree: feat/cors-fix-postgres-persistence
+
+=== 1. Import check: langgraph.checkpoint.postgres + store ===
+ok
+exit:0
+
+=== 2. License metadata (importlib.metadata) ===
+psycopg: License=None License-Expression='LGPL-3.0-only' Version=3.3.4
+psycopg-binary: License=None License-Expression='LGPL-3.0-only' Version=3.3.4
+psycopg-pool: License=None License-Expression='LGPL-3.0-only' Version=3.3.1
+langgraph-checkpoint-postgres: License=None License-Expression='MIT' Version=3.1.2
+
+--- uv pip show ---
+Name: langgraph-checkpoint-postgres
+Version: 3.1.2
+Location: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages
+Requires: langgraph-checkpoint, orjson, psycopg, psycopg-pool
+Required-by: healthcare-rag
+---
+Name: psycopg
+Version: 3.3.4
+Location: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages
+Requires: typing-extensions
+Required-by: healthcare-rag, langgraph-checkpoint-postgres
+---
+Name: psycopg-binary
+Version: 3.3.4
+Location: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages
+Requires:
+Required-by:
+---
+Name: psycopg-pool
+Version: 3.3.1
+Location: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages
+Requires: typing-extensions
+Required-by: langgraph-checkpoint-postgres
+
+=== 3. License boundary test (pytest) ===
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.6.0
+rootdir: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, langsmith-0.11.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collected 3 items
+
+tests/server/test_license_boundary.py ...                                [100%]
+
+============================== 3 passed in 0.50s ===============================
+
+=== 4. uv sync --frozen ===
+# plain (production posture, no dev) — resolves by uninstalling dev extras (expected):
+Uninstalled 33 packages in 560ms
+ - basedpyright==1.39.10
+ - blockbuster==1.5.27
+ - cloudpickle==3.1.2
+ ... (33 dev packages) — exit 0
+# with --extra dev — resolves without changes:
+Checked 142 packages in 8ms — exit 0
+# (also verified: uv sync --frozen --extra dev => Checked 142 packages in 8ms)
+
+=== 5. Failure drill: narrow exemption holds, blanket GPL absent ===
+=== FAILURE DRILL: unlisted GPL package must be rejected ===
+PASS: fake GPL package correctly rejected: fake-gpl-lib has forbidden license: 'GPL-3.0-only GPL-3.0-only License :: OSI Approved :: GNU General Public License v3 (GPLv3)'
+
+=== PSYCOPG LGPL should be narrowly exempt ===
+PASS: psycopg correctly handled: exempted (LGPL) (LGPL-3.0-only)
+
+=== Blanket check: arbitrary GPL still fails ===
+PASS: arbitrary GPL correctly rejected (no blanket exemption): some-random-gpl-pkg has forbidden license: 'GPL-3.0-only GPL-3.0-only License :: OSI Approved :: GNU General Public License v3 (GPLv3)'
+
+=== MIT package should pass ===
+PASS: langgraph-checkpoint-postgres correctly allowed: allowed
+
+=== Drill complete: narrow name-based exemption holds; blanket GPL exemption absent ===
+
+=== 6. pyproject.toml deps diff ===
+diff --git a/pyproject.toml b/pyproject.toml
+index 1f92c6f..14c9477 100644
+--- a/pyproject.toml
++++ b/pyproject.toml
+@@ -30,6 +30,8 @@ dependencies = [
+     "tzdata",
+     "langgraph-sdk>=0.3,<0.4",
+     "langsmith>=0.4",
++    "langgraph-checkpoint-postgres>=3.1,<4",
++    "psycopg[binary,pool]>=3.2,<4",
+ ]
+ 
+ [tool.uv]
+
+=== 7. test_license_boundary.py diff ===
+diff --git a/tests/server/test_license_boundary.py b/tests/server/test_license_boundary.py
+index 2e3c59f..da621a2 100644
+--- a/tests/server/test_license_boundary.py
++++ b/tests/server/test_license_boundary.py
+@@ -65,6 +65,11 @@ def test_dependency_license_allowlist():
+         "langchain", "langchain-core", "langchain-openai", "httpx", "presidio",
+         "spacy", "en-core-web-sm", "starlette", "uvicorn", "croniter", "tzdata",
+         "langgraph-sdk", "langsmith", "anyio", "httpx-sse", "orjson", "xxhash",
++        # Postgres persistence: resolved distributions are psycopg 3.3.4
++        # (psycopg, psycopg-binary, psycopg-pool — all LGPL-3.0-only) and
++        # langgraph-checkpoint-postgres 3.1.2 (MIT, already covered by the
++        # "langgraph" prefix). Keep the allowlist explicit by exact name.
++        "psycopg", "psycopg-binary", "psycopg-pool",
+     }
+     # Read pyproject dependencies
+     import tomllib
+@@ -74,17 +79,37 @@ def test_dependency_license_allowlist():
+     for dep in deps:
+         name = re.split(r"[<>=!~\s\[]", dep.strip())[0].lower().replace("_", "-")
+         assert any(name == p or name.startswith(p) for p in allowed_prefixes) or name in allowed_prefixes, f"Unexpected runtime dep not in allowlist: {dep}"
+-    # If pip-licenses is installed, additionally check real license metadata
++    # Additionally check real license metadata via importlib.metadata.
+     try:
+         import importlib.metadata as im
+ 
++        # Narrowly-scoped exemption: psycopg 3 (psycopg, psycopg-binary,
++        # psycopg-pool) is LGPL-3.0-only (License-Expression: LGPL-3.0-only) —
++        # that is exactly why the existing '"GPL" not in lic' substring
++        # assertion fires on it (LGPL contains "GPL" as a substring).
++        # langgraph-checkpoint-postgres is MIT (License-Expression: MIT) and
++        # already covered by the "langgraph" prefix. The clean-room boundary
++        # this suite protects is against langgraph-api specifically, not
++        # against LGPL database drivers in general — these are unmodified,
++        # dynamically-imported drivers, not copied/vendored code. Do NOT
++        # blanket-exempt any package whose license string contains "GPL";
++        # exemption is by exact package name only.
++        _lgpl_exempt = {"psycopg", "psycopg-binary", "psycopg-pool"}
++
+         for dep in deps:
+             name = re.split(r"[<>=!~\s\[]", dep.strip())[0].strip()
++            norm = name.lower().replace("_", "-")
+             try:
+                 meta = im.metadata(name)
+-                lic = (meta.get("License") or meta.get("Classifier") or "")
+-                # Don't fail hard on empty classifier — just ensure no Elastic/GPL
+-                assert "Elastic" not in lic and "GPL" not in lic, f"{name} has forbidden license: {lic}"
++                lic = (meta.get("License") or "")
++                lic_expr = (meta.get("License-Expression") or "")
++                classifiers = " ".join(meta.get_all("Classifier") or [])
++                combined = f"{lic} {lic_expr} {classifiers}"
++                if norm in _lgpl_exempt:
++                    # Verify the exempt package is actually LGPL, not arbitrary GPL
++                    assert "LGPL" in combined, f"{name} exempt as LGPL but license is: {combined.strip()!r}"
++                    continue
++                assert "Elastic" not in combined and "GPL" not in combined, f"{name} has forbidden license: {combined.strip()!r}"
+             except importlib.metadata.PackageNotFoundError:
+                 continue
+     except Exception:

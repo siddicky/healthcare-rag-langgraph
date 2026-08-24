@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib
 import inspect
+import logging
 import os
 from contextlib import asynccontextmanager, suppress
 from dataclasses import dataclass
@@ -16,6 +17,8 @@ from starlette.responses import JSONResponse, PlainTextResponse
 from starlette.routing import Route
 from starlette.types import ASGIApp, Receive, Scope, Send
 
+logger = logging.getLogger(__name__)
+
 from healthcare_rag.agent.perimeter_middleware import MemberPerimeterMiddleware
 from server._compat import install_langgraph_api_compat
 from server.assistants import routes as assistant_routes
@@ -26,12 +29,14 @@ from server.auth import (
     load_auth_instance,
 )
 from server.config import ServerConfig, load_config
+from server.crons import reconcile_crons
 from server.crons import routes as cron_routes
 from server.crons import start_scheduler
 from server.graphs import attach_graphs, load_raw_graphs
 from server.manifest import UNIMPLEMENTED_PATHS, UNIMPLEMENTED_PREFIXES
 from server.routes.system import routes as system_routes
 from server.run_engine import RunEngine
+from server.run_engine import reconcile_interrupted_runs
 from server.runs import routes as run_routes
 from server.storage import create_storage
 from server.store_routes import routes as store_item_routes
@@ -67,14 +72,12 @@ class NativeCORSMiddleware:
             app,
             allow_origins=allow_origins,
             allow_credentials=True,
-            allow_methods=["GET", "POST", "DELETE", "OPTIONS"],
+            allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "HEAD", "OPTIONS"],
             allow_headers=["Authorization", "Content-Type"],
         )
 
     async def __call__(self, scope: Scope, receive: Receive, send: Send) -> None:
-        path = str(scope.get("path", ""))
-        target = self.app if path.startswith("/coach/") else self.native
-        await target(scope, receive, send)
+        await self.native(scope, receive, send)
 
 
 class PublicInfoPrincipalMiddleware:
@@ -119,7 +122,9 @@ async def _setup_component(component: Any) -> None:
         if inspect.isawaitable(result):
             await result
     elif callable(sync_setup):
-        sync_setup()
+        result = sync_setup()
+        if inspect.isawaitable(result):
+            await result
 
 
 def create_app(config: ServerConfig | None = None) -> Starlette:
@@ -139,42 +144,48 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
         custom_app = loaded_custom_app
 
     readiness = ReadinessState()
-    for subsystem in ("config", "graphs", "auth", "scheduler", "custom_app"):
+    for subsystem in ("config", "graphs", "auth", "scheduler", "custom_app", "storage"):
         readiness.register(subsystem)
 
     @asynccontextmanager
     async def lifespan(app: Starlette):
-        storage = create_storage(cfg)
+        storage = await create_storage(cfg)
         app.state.storage = storage
-        await _setup_component(storage.saver)
-        await _setup_component(storage.store)
-        _ = install_langgraph_api_compat(storage.store, force=True)
-        raw_graphs = load_raw_graphs(cfg)
-        attached_graphs = attach_graphs(raw_graphs, storage)
-        app.state.graphs = attached_graphs
-        app.state.raw_graphs = raw_graphs
-        readiness.set_ready("config")
-        readiness.set_ready("graphs")
-        readiness.set_ready("auth")
+        try:
+            await _setup_component(storage.saver)
+            await _setup_component(storage.store)
+            readiness.set_ready("storage")
+            await reconcile_interrupted_runs(storage)
+            await reconcile_crons(storage)
+            _ = install_langgraph_api_compat(storage.store, force=True)
+            raw_graphs = load_raw_graphs(cfg)
+            attached_graphs = attach_graphs(raw_graphs, storage)
+            app.state.graphs = attached_graphs
+            app.state.raw_graphs = raw_graphs
+            readiness.set_ready("config")
+            readiness.set_ready("graphs")
+            readiness.set_ready("auth")
 
-        async with custom_app.router.lifespan_context(custom_app):
-            readiness.set_ready("custom_app")
-            async with anyio.create_task_group() as tasks:
-                run_engine = RunEngine(storage, attached_graphs, tasks)
-                app.state.run_engine = run_engine
-                scheduler = start_scheduler(run_engine, storage)
-                app.state.scheduler_task = scheduler
-                readiness.set_ready("scheduler")
-                try:
-                    yield
-                finally:
-                    readiness.set_not_ready("scheduler")
-                    scheduler.cancel()
-                    with suppress(anyio.get_cancelled_exc_class()):
-                        await scheduler
-                    run_engine.shutdown()
-                    tasks.cancel_scope.cancel()
-            readiness.set_not_ready("custom_app")
+            async with custom_app.router.lifespan_context(custom_app):
+                readiness.set_ready("custom_app")
+                async with anyio.create_task_group() as tasks:
+                    run_engine = RunEngine(storage, attached_graphs, tasks)
+                    app.state.run_engine = run_engine
+                    scheduler = start_scheduler(run_engine, storage)
+                    app.state.scheduler_task = scheduler
+                    readiness.set_ready("scheduler")
+                    try:
+                        yield
+                    finally:
+                        readiness.set_not_ready("scheduler")
+                        scheduler.cancel()
+                        with suppress(anyio.get_cancelled_exc_class()):
+                            await scheduler
+                        await run_engine.shutdown()
+                        tasks.cancel_scope.cancel()
+                readiness.set_not_ready("custom_app")
+        finally:
+            await storage.aclose()
 
     native_routes: list[Route] = []
     native_routes.extend(system_routes)
@@ -202,11 +213,25 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
         for origin in os.getenv("CORS_ALLOW_ORIGINS", "").split(",")
         if origin.strip()
     ]
-    middleware = [AuthMiddleware.as_starlette(auth_instance, cfg.local_dev)]
+    if cfg.http_app is not None:
+        coach_origins = [
+            origin.strip()
+            for origin in os.getenv("COACH_ALLOWED_ORIGINS", "").split(",")
+            if origin.strip()
+        ]
+        misaligned = [o for o in coach_origins if o not in origins]
+        if misaligned:
+            logger.warning(
+                "COACH_ALLOWED_ORIGINS contains origins not in CORS_ALLOW_ORIGINS: %s",
+                ", ".join(misaligned),
+            )
+    middleware: list[Middleware] = [
+        Middleware(NativeCORSMiddleware, allow_origins=origins),
+        AuthMiddleware.as_starlette(auth_instance, cfg.local_dev),
+    ]
     if cfg.http_app is not None:
         middleware.extend(
             [
-                Middleware(NativeCORSMiddleware, allow_origins=origins),
                 Middleware(PublicInfoPrincipalMiddleware),
                 Middleware(MemberPerimeterMiddleware),
             ]
