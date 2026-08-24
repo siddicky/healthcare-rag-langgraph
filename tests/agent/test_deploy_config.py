@@ -376,3 +376,47 @@ def test_smoke_profiles_split_fast_checks_from_llm_checks() -> None:
     gate_setup = source.split('if profile == "gate":')[1].split("checks = {")[0]
     assert "create_thread" in gate_setup
     assert "run_turn" not in gate_setup
+
+
+def test_smoke_main_passes_profile_through_to_run(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pins the CLI wiring: async_main must forward the parsed --profile into
+    DeployedSmoke.run (a NameError here only surfaces on a real deploy)."""
+    import scripts.deployed_smoke as smoke
+
+    seen: dict[str, object] = {}
+
+    class FakeSmoke:
+        def __init__(self, settings: object, client: object) -> None:
+            pass
+
+        async def run(self, profile: str = "full") -> None:
+            seen["profile"] = profile
+
+    class FakeClient:
+        async def __aenter__(self) -> "FakeClient":
+            return self
+
+        async def __aexit__(self, *_args: object) -> None:
+            return None
+
+    monkeypatch.setattr(smoke, "DeployedSmoke", FakeSmoke)
+    monkeypatch.setattr(
+        smoke.httpx,
+        "AsyncClient",
+        lambda **_kwargs: FakeClient(),
+    )
+    monkeypatch.setenv("LANGSMITH_API_KEY", "platform-key")
+    monkeypatch.setenv("COACH_INTERNAL_TOKEN", "internal-token")
+    monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", "00000000-0000-4000-8000-000000000fed")
+    monkeypatch.setenv("LANGGRAPH_U1_TOKEN", "u1")
+    monkeypatch.setenv("LANGGRAPH_U2_TOKEN", "u2")
+    rc = smoke.main(
+        [
+            "--url",
+            "https://coach.example.test",
+            "--profile",
+            "gate",
+        ]
+    )
+    assert rc == 0
+    assert seen["profile"] == "gate"
