@@ -429,6 +429,8 @@ jobs:
           LANGGRAPH_DEPLOYMENT_URL: https://hc-rag-server-prod.fly.dev
           LANGGRAPH_U1_TOKEN: ${{ secrets.LANGGRAPH_U1_TOKEN }}
           LANGGRAPH_U2_TOKEN: ${{ secrets.LANGGRAPH_U2_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
           LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
@@ -436,7 +438,7 @@ jobs:
         run: |
           set -euo pipefail
           # Mask tokens before they can appear in logs (defense in depth; redaction script also strips them).
-          for var in LANGGRAPH_U1_TOKEN LANGGRAPH_U2_TOKEN LANGSMITH_API_KEY COACH_INTERNAL_TOKEN; do
+          for var in LANGGRAPH_U1_TOKEN LANGGRAPH_U2_TOKEN SUPABASE_SERVICE_KEY LANGSMITH_API_KEY COACH_INTERNAL_TOKEN; do
             val="${!var:-}"
             if [ -n "$val" ]; then
               echo "::add-mask::$val"
@@ -690,6 +692,8 @@ jobs:
           LANGGRAPH_DEPLOYMENT_URL: https://hc-rag-server-prod.fly.dev
           LANGGRAPH_U1_TOKEN: ${{ secrets.LANGGRAPH_U1_TOKEN }}
           LANGGRAPH_U2_TOKEN: ${{ secrets.LANGGRAPH_U2_TOKEN }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
           LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
@@ -697,7 +701,7 @@ jobs:
           VERSION: ${{ inputs.version }}
         run: |
           set -euo pipefail
-          for var in LANGGRAPH_U1_TOKEN LANGGRAPH_U2_TOKEN LANGSMITH_API_KEY COACH_INTERNAL_TOKEN; do
+          for var in LANGGRAPH_U1_TOKEN LANGGRAPH_U2_TOKEN SUPABASE_SERVICE_KEY LANGSMITH_API_KEY COACH_INTERNAL_TOKEN; do
             val="${!var:-}"
             if [ -n "$val" ]; then
               echo "::add-mask::$val"

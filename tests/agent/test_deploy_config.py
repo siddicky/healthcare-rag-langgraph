@@ -189,7 +189,7 @@ def test_smoke_settings_reject_local_dev_and_missing_environment() -> None:
         SmokeSettings.from_environment(
             _smoke_environment() | {"LANGGRAPH_DEPLOYMENT_URL": "http://127.0.0.1:2024"}
         )
-    with pytest.raises(SmokeConfigurationError, match="LANGGRAPH_U2_TOKEN"):
+    with pytest.raises(SmokeConfigurationError, match="member credentials"):
         SmokeSettings.from_environment(
             {
                 key: value
@@ -197,6 +197,62 @@ def test_smoke_settings_reject_local_dev_and_missing_environment() -> None:
                 if key != "LANGGRAPH_U2_TOKEN"
             }
         )
+
+
+def test_smoke_settings_use_static_tokens_when_provided() -> None:
+    from scripts.deployed_smoke import SmokeSettings
+
+    settings = SmokeSettings.from_environment(_smoke_environment())
+    assert settings.u1_token == "u1-token"
+    assert settings.u2_token == "u2-token"
+
+
+def test_smoke_settings_mint_tokens_when_static_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.deployed_smoke import SmokeSettings
+
+    import scripts.deployed_smoke as smoke
+
+    minted: list[str] = []
+
+    def fake_mint(supabase_url: str, service_key: str, email: str) -> str:
+        minted.append(email)
+        return f"minted-for-{email}"
+
+    monkeypatch.setattr(smoke, "_mint_member_token", fake_mint)
+    environment = {
+        key: value
+        for key, value in _smoke_environment().items()
+        if not key.startswith("LANGGRAPH_U")
+    } | {"SUPABASE_URL": "https://supabase.example.test", "SUPABASE_SERVICE_KEY": "sk"}
+    settings = SmokeSettings.from_environment(environment)
+    assert settings.u1_token == "minted-for-hcrag.smoke.u1@example.com"
+    assert settings.u2_token == "minted-for-hcrag.smoke.u2@example.com"
+    assert minted == [
+        "hcrag.smoke.u1@example.com",
+        "hcrag.smoke.u2@example.com",
+    ]
+
+
+def test_smoke_settings_fail_closed_when_minting_fails_without_static(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from scripts.deployed_smoke import SmokeConfigurationError, SmokeSettings
+
+    import scripts.deployed_smoke as smoke
+
+    def failing_mint(supabase_url: str, service_key: str, email: str) -> str:
+        raise RuntimeError("supabase down")
+
+    monkeypatch.setattr(smoke, "_mint_member_token", failing_mint)
+    environment = {
+        key: value
+        for key, value in _smoke_environment().items()
+        if not key.startswith("LANGGRAPH_U")
+    } | {"SUPABASE_URL": "https://supabase.example.test", "SUPABASE_SERVICE_KEY": "sk"}
+    with pytest.raises(SmokeConfigurationError, match="minting failed"):
+        SmokeSettings.from_environment(environment)
 
 
 @pytest.mark.anyio

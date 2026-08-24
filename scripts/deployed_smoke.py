@@ -73,6 +73,89 @@ class SmokeFailure(AssertionError):
         return self.reason
 
 
+SMOKE_MEMBER_EMAILS: Final = {
+    "u1": "hcrag.smoke.u1@example.com",
+    "u2": "hcrag.smoke.u2@example.com",
+}
+
+
+def _mint_member_token(
+    supabase_url: str, service_key: str, email: str
+) -> str:
+    """Fresh member JWT via the Supabase admin API.
+
+    Synthetic accounts are ordinary Supabase users whose JWTs expire (60 min
+    by default), so a static token in CI secrets is always stale by deploy
+    time — the 401-at-check-1 failure mode. The service key (already a CI
+    secret) lets the smoke rotate the password and sign in at run time."""
+    import secrets as _secrets
+
+    with httpx.Client(timeout=20.0) as client:
+        admin = {"apikey": service_key, "Authorization": f"Bearer {service_key}"}
+        page = 1
+        user_id = ""
+        while page <= 10:
+            listed = client.get(
+                f"{supabase_url}/auth/v1/admin/users",
+                params={"page": page, "per_page": 50},
+                headers=admin,
+            )
+            listed.raise_for_status()
+            for user in listed.json().get("users", []):
+                if user.get("email") == email:
+                    user_id = str(user.get("id", ""))
+                    break
+            if user_id:
+                break
+            if len(listed.json().get("users", [])) < 50:
+                break
+            page += 1
+        if not user_id:
+            raise RuntimeError(f"synthetic smoke account not found: {email}")
+        new_password = f"HcRag!smoke-{_secrets.token_hex(12)}"
+        updated = client.put(
+            f"{supabase_url}/auth/v1/admin/users/{user_id}",
+            headers=admin | {"Content-Type": "application/json"},
+            json={"password": new_password},
+        )
+        updated.raise_for_status()
+        granted = client.post(
+            f"{supabase_url}/auth/v1/token?grant_type=password",
+            headers={"apikey": service_key, "Content-Type": "application/json"},
+            json={"email": email, "password": new_password},
+        )
+        granted.raise_for_status()
+        token = str(granted.json().get("access_token", ""))
+        if not token:
+            raise RuntimeError(f"token grant returned no access_token for {email}")
+        return token
+
+
+def _resolve_member_tokens(environment: Mapping[str, str]) -> tuple[str, str, str | None]:
+    """Static tokens when provided; otherwise mint fresh ones (and then keep
+    them alive for the duration of the run) when the Supabase admin pair is
+    available. Returns (u1, u2, mint_note)."""
+    u1 = environment.get("LANGGRAPH_U1_TOKEN", "")
+    u2 = environment.get("LANGGRAPH_U2_TOKEN", "")
+    supabase_url = environment.get("SUPABASE_URL", "").rstrip("/")
+    service_key = environment.get("SUPABASE_SERVICE_KEY", "")
+    if u1 and u2:
+        return u1, u2, None
+    if not (supabase_url and service_key):
+        return u1, u2, None
+    try:
+        u1 = _mint_member_token(supabase_url, service_key, SMOKE_MEMBER_EMAILS["u1"])
+        u2 = _mint_member_token(supabase_url, service_key, SMOKE_MEMBER_EMAILS["u2"])
+        return u1, u2, "minted fresh member tokens via Supabase admin API"
+    except (httpx.HTTPError, RuntimeError, ValueError, KeyError) as exc:
+        if u1 and u2:
+            print(f"WARNING: token minting failed ({exc}); using static tokens")
+            return u1, u2, None
+        raise SmokeConfigurationError(
+            f"no usable member credentials: static tokens absent and minting failed ({exc})"
+        ) from None
+
+
 @dataclass(frozen=True, slots=True)
 class SmokeSettings:
     url: str
@@ -101,10 +184,22 @@ class SmokeSettings:
                 "LANGSMITH_FEEDBACK_PROJECT_ID", ""
             ),
         }
-        missing = [name for name, value in values.items() if not value]
+        missing = [
+            name
+            for name, value in values.items()
+            if not value and name not in {"LANGGRAPH_U1_TOKEN", "LANGGRAPH_U2_TOKEN"}
+        ]
         if missing:
             raise SmokeConfigurationError(
                 f"missing required environment variable: {missing[0]}"
+            )
+        u1_token, u2_token, mint_note = _resolve_member_tokens(environment)
+        if mint_note:
+            print(mint_note)
+        if not (u1_token and u2_token):
+            raise SmokeConfigurationError(
+                "no member credentials: set LANGGRAPH_U1_TOKEN/LANGGRAPH_U2_TOKEN "
+                "or provide SUPABASE_URL + SUPABASE_SERVICE_KEY to mint them"
             )
         parsed = urlparse(values["LANGGRAPH_DEPLOYMENT_URL"])
         is_local = parsed.hostname in {"127.0.0.1", "localhost", "::1"}
@@ -121,8 +216,8 @@ class SmokeSettings:
             ) from None
         return cls(
             url=values["LANGGRAPH_DEPLOYMENT_URL"].rstrip("/"),
-            u1_token=values["LANGGRAPH_U1_TOKEN"],
-            u2_token=values["LANGGRAPH_U2_TOKEN"],
+            u1_token=u1_token,
+            u2_token=u2_token,
             platform_key=values["LANGSMITH_API_KEY"],
             internal_token=values["COACH_INTERNAL_TOKEN"],
             feedback_project_id=feedback_id,
