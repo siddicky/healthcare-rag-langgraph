@@ -223,3 +223,440 @@ async def test_postgres_aclose_idempotent() -> None:
     await storage.aclose()
     await storage.aclose()
     assert storage._pool is None
+
+
+# ---------------------------------------------------------------------------
+# Todo 9 — lifespan: pool lifecycle + storage readiness + bug fix
+# ---------------------------------------------------------------------------
+
+@pytest.mark.anyio
+async def test_setup_component_awaits_async_only_setup() -> None:
+    """Regression: AsyncPostgresSaver/Store have async def setup() with no asetup.
+
+    Old code did `sync_setup()` without awaiting, silently dropping the coroutine
+    and never creating checkpoint tables. New code must await the result if it is
+    awaitable. A fake whose .setup() is async must have its body actually executed.
+    This test would FAIL on the old elif branch.
+    """
+    from server.app import _setup_component
+
+    flag = {"done": False}
+
+    class FakeAsyncOnlySetup:
+        async def setup(self):  # noqa: ANN201
+            flag["done"] = True
+
+    await _setup_component(FakeAsyncOnlySetup())
+    assert flag["done"] is True, "_setup_component did not await async-only .setup()"
+
+
+@pytest.mark.anyio
+async def test_setup_component_sync_setup_still_works() -> None:
+    from server.app import _setup_component
+
+    flag = {"done": False}
+
+    class FakeSync:
+        def setup(self):  # noqa: ANN201
+            flag["done"] = True
+
+    await _setup_component(FakeSync())
+    assert flag["done"] is True
+
+
+@pytest.mark.anyio
+async def test_setup_component_prefers_asetup() -> None:
+    from server.app import _setup_component
+
+    flags = {"async": False, "sync": False}
+
+    class FakeBoth:
+        async def asetup(self):  # noqa: ANN201
+            flags["async"] = True
+
+        def setup(self):  # noqa: ANN201
+            flags["sync"] = True
+
+    await _setup_component(FakeBoth())
+    assert flags["async"] is True
+    assert flags["sync"] is False
+
+
+@pytest.mark.anyio
+async def test_setup_component_no_setup_is_noop() -> None:
+    from server.app import _setup_component
+
+    class Empty:
+        pass
+
+    # InMemorySaver/Store have no setup — must not raise
+    await _setup_component(Empty())
+
+
+def test_run_engine_shutdown_is_sync() -> None:
+    """RunEngine.shutdown must remain synchronous (todo 10 converts it)."""
+    import inspect as _inspect
+
+    from server.run_engine import RunEngine
+
+    assert not _inspect.iscoroutinefunction(RunEngine.shutdown), "RunEngine.shutdown must be sync for todo 9"
+
+
+@pytest.mark.anyio
+async def test_storage_readiness_gates_ok(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Readiness includes `storage` and /ok is 503 until storage setup completes, 200 after."""
+    import httpx
+
+    import server.app as app_module
+    from langgraph_sdk import Auth
+
+    def _auth() -> Auth:
+        auth = Auth()
+
+        @auth.authenticate
+        async def authenticate(method: str, path: str, headers: dict[bytes, bytes], authorization: str | None):  # type: ignore[no-untyped-def]
+            del path
+            if method == "OPTIONS":
+                return {"identity": "cors-preflight", "role": "preflight"}
+            raise Auth.exceptions.HTTPException(status_code=401)
+
+        @auth.on
+        async def allow(ctx, value):  # type: ignore[no-untyped-def]
+            del ctx, value
+
+        return auth
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
+    import healthcare_rag.agent.http_app as custom
+
+    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
+
+    cfg = ServerConfig(
+        graphs={},
+        auth_path="fixture:auth",
+        http_app="./healthcare_rag/agent/http_app.py:app",
+        http_flags={},
+        store_index={},
+        api_version="test-readiness",
+    )
+    app = app_module.create_app(cfg)
+
+    # Before lifespan, storage not ready
+    assert "storage" in app.state.readiness.checks
+    assert app.state.readiness.checks["storage"] is False
+    assert app.state.readiness.is_ready() is False
+
+    transport = httpx.ASGITransport(app=app)  # type: ignore[arg-type]
+    async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
+        # Without entering lifespan, /ok must be 503
+        r_pre = await client.get("/ok")
+        assert r_pre.status_code == 503
+        assert r_pre.json() == {"ok": False, "ready": False}
+
+        async with app.router.lifespan_context(app):
+            assert app.state.readiness.checks["storage"] is True
+            assert app.state.readiness.is_ready() is True
+            r_ok = await client.get("/ok")
+            assert r_ok.status_code == 200
+            assert r_ok.json() == {"ok": True}
+
+    # After lifespan exit, app is no longer ready (still checks exist)
+    assert "storage" in app.state.readiness.checks
+
+
+@pytest.mark.anyio
+async def test_storage_setup_failure_propagates_and_closes_pool(monkeypatch: pytest.MonkeyPatch) -> None:
+    """If _setup_component raises, lifespan must propagate and never become ready, but still aclose."""
+    import server.app as app_module
+
+    from langgraph_sdk import Auth
+
+    def _auth() -> Auth:
+        auth = Auth()
+
+        @auth.authenticate
+        async def authenticate(method: str, path: str, headers: dict[bytes, bytes], authorization: str | None):  # type: ignore[no-untyped-def]
+            del path
+            if method == "OPTIONS":
+                return {"identity": "cors-preflight", "role": "preflight"}
+            raise Auth.exceptions.HTTPException(status_code=401)
+
+        @auth.on
+        async def allow(ctx, value):  # type: ignore[no-untyped-def]
+            del ctx, value
+
+        return auth
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
+    import healthcare_rag.agent.http_app as custom
+
+    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
+
+    # Fake storage whose saver setup will raise
+    events: list[str] = []
+
+    class _FakeSaver:
+        async def setup(self):  # noqa: ANN201
+            raise RuntimeError("saver setup boom")
+
+    class _FakeStore:
+        pass
+
+    class _FakeStorage:
+        def __init__(self) -> None:
+            self.saver = _FakeSaver()
+            self.store = _FakeStore()
+            self.threads: dict[str, object] = {}
+            self.runs: dict[str, object] = {}
+            self.crons: dict[str, object] = {}
+
+        async def aclose(self) -> None:
+            events.append("aclose")
+
+    async def _fake_create_storage(_cfg):  # type: ignore[no-untyped-def]
+        return _FakeStorage()
+
+    monkeypatch.setattr(app_module, "create_storage", _fake_create_storage)
+
+    cfg = ServerConfig(
+        graphs={},
+        auth_path="fixture:auth",
+        http_app="./healthcare_rag/agent/http_app.py:app",
+        http_flags={},
+        store_index={},
+        api_version="test-fail",
+    )
+    app = app_module.create_app(cfg)
+    assert "storage" in app.state.readiness.checks
+    assert app.state.readiness.checks["storage"] is False
+
+    import pytest as _pytest
+
+    with _pytest.raises(RuntimeError, match="saver setup boom"):
+        async with app.router.lifespan_context(app):
+            _pytest.fail("should not enter")
+
+    # Even though setup failed, pool was closed via finally, and readiness never flipped
+    assert events == ["aclose"]
+    assert app.state.readiness.checks["storage"] is False
+    assert app.state.readiness.is_ready() is False
+
+
+@pytest.mark.anyio
+async def test_storage_aclose_called_on_custom_app_startup_failure(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Pool must close via try/finally even if custom-app lifespan raises during startup."""
+    import httpx
+
+    import server.app as app_module
+    from server.config import ServerConfig as _Cfg
+
+    from langgraph_sdk import Auth
+
+    def _auth() -> Auth:
+        auth = Auth()
+
+        @auth.authenticate
+        async def authenticate(method: str, path: str, headers: dict[bytes, bytes], authorization: str | None):  # type: ignore[no-untyped-def]
+            del path
+            if method == "OPTIONS":
+                return {"identity": "cors-preflight", "role": "preflight"}
+            raise Auth.exceptions.HTTPException(status_code=401)
+
+        @auth.on
+        async def allow(ctx, value):  # type: ignore[no-untyped-def]
+            del ctx, value
+
+        return auth
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
+
+    events: list[str] = []
+
+    class _Empty:
+        pass
+
+    class _FakeStorage:
+        def __init__(self) -> None:
+            self.saver = _Empty()
+            self.store = _Empty()
+            self.threads: dict[str, object] = {}
+            self.runs: dict[str, object] = {}
+            self.crons: dict[str, object] = {}
+
+        async def aclose(self) -> None:
+            events.append("storage_aclose")
+
+    async def _fake_create_storage(_cfg):  # type: ignore[no-untyped-def]
+        return _FakeStorage()
+
+    monkeypatch.setattr(app_module, "create_storage", _fake_create_storage)
+    # Keep other helpers no-ops
+    monkeypatch.setattr(app_module, "install_langgraph_api_compat", lambda _s, force=True: None)
+    monkeypatch.setattr(app_module, "load_raw_graphs", lambda _c: {})
+    monkeypatch.setattr(app_module, "attach_graphs", lambda _r, _s: {})
+
+    import healthcare_rag.agent.http_app as custom
+
+    # Make validate_feedback_project raise — mirrors test_topology fixture
+    monkeypatch.setattr(custom, "validate_feedback_project", lambda: (_ for _ in ()).throw(RuntimeError("invalid feedback project")))
+
+    cfg = _Cfg(
+        graphs={},
+        auth_path="fixture:auth",
+        http_app="./healthcare_rag/agent/http_app.py:app",
+        http_flags={},
+        store_index={},
+        api_version="test-custom-fail",
+    )
+    app = app_module.create_app(cfg)
+
+    import pytest as _pytest
+
+    with _pytest.raises(RuntimeError, match="invalid feedback project"):
+        async with app.router.lifespan_context(app):
+            _pytest.fail("should not enter")
+
+    assert "storage_aclose" in events, f"storage.aclose not called on startup failure, events={events}"
+    assert events[-1] == "storage_aclose"
+
+
+@pytest.mark.anyio
+async def test_lifespan_shutdown_order_is_five_steps(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Prove exact five-step shutdown order via instrumented fakes."""
+    from contextlib import asynccontextmanager
+
+    import server.app as app_module
+    import healthcare_rag.agent.http_app as custom_mod
+    from langgraph_sdk import Auth
+
+    def _auth() -> Auth:
+        auth = Auth()
+
+        @auth.authenticate
+        async def authenticate(method: str, path: str, headers: dict[bytes, bytes], authorization: str | None):  # type: ignore[no-untyped-def]
+            del path
+            if method == "OPTIONS":
+                return {"identity": "cors-preflight", "role": "preflight"}
+            raise Auth.exceptions.HTTPException(status_code=401)
+
+        @auth.on
+        async def allow(ctx, value):  # type: ignore[no-untyped-def]
+            del ctx, value
+
+        return auth
+
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+    monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
+    import healthcare_rag.agent.http_app as custom
+
+    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
+
+    events: list[str] = []
+
+    # --- Fake storage ---
+    class _Empty:
+        pass
+
+    class _FakeStorage:
+        def __init__(self) -> None:
+            self.saver = _Empty()
+            self.store = _Empty()
+            self.threads: dict[str, object] = {}
+            self.runs: dict[str, object] = {}
+            self.crons: dict[str, object] = {}
+
+        async def aclose(self) -> None:
+            events.append("storage_aclose")
+
+    async def _fake_create_storage(_cfg):  # type: ignore[no-untyped-def]
+        return _FakeStorage()
+
+    monkeypatch.setattr(app_module, "create_storage", _fake_create_storage)
+    monkeypatch.setattr(app_module, "install_langgraph_api_compat", lambda _s, force=True: None)
+    monkeypatch.setattr(app_module, "load_raw_graphs", lambda _c: {})
+    monkeypatch.setattr(app_module, "attach_graphs", lambda _r, _s: {})
+
+    # --- Fake scheduler ---
+    class _FakeScheduler:
+        def cancel(self) -> None:
+            events.append("scheduler_cancel")
+
+        def __await__(self):  # type: ignore[no-untyped-def]
+            async def _coro() -> None:
+                return None
+
+            return _coro().__await__()
+
+    def _fake_start_scheduler(_engine, _storage, _clock=None):  # type: ignore[no-untyped-def]
+        return _FakeScheduler()
+
+    monkeypatch.setattr(app_module, "start_scheduler", _fake_start_scheduler)
+
+    # --- Fake RunEngine (must stay sync) ---
+    class _FakeRunEngine:
+        def __init__(self, _storage, _graphs, _tasks):  # type: ignore[no-untyped-def]
+            pass
+
+        def shutdown(self) -> None:
+            events.append("run_engine_shutdown")
+
+    monkeypatch.setattr(app_module, "RunEngine", _FakeRunEngine)
+
+    # --- Fake task group ---
+    def _fake_create_task_group():  # type: ignore[no-untyped-def]
+        class _FakeScope:
+            def cancel(self) -> None:
+                events.append("task_group_cancel")
+
+        class _FakeTG:
+            cancel_scope = _FakeScope()
+
+            async def __aenter__(self):  # type: ignore[no-untyped-def]
+                return self
+
+            async def __aexit__(self, *_a):  # type: ignore[no-untyped-def]
+                return False
+
+            def start_soon(self, *_a, **_kw):  # type: ignore[no-untyped-def]
+                pass
+
+        return _FakeTG()
+
+    monkeypatch.setattr(app_module.anyio, "create_task_group", _fake_create_task_group)
+
+    # --- Custom app lifespan wrapper to record exit ---
+    orig = custom_mod.app.router.lifespan_context
+
+    @asynccontextmanager
+    async def _recording_lifespan(app_inner):  # type: ignore[no-untyped-def]
+        async with orig(app_inner):
+            yield
+        events.append("custom_app_exit")
+
+    monkeypatch.setattr(custom_mod.app.router, "lifespan_context", _recording_lifespan)
+
+    from server.config import ServerConfig as _SC
+
+    test_cfg = _SC(
+        graphs={},
+        auth_path="fixture:auth",
+        http_app="./healthcare_rag/agent/http_app.py:app",
+        http_flags={},
+        store_index={},
+        api_version="test-order",
+    )
+    app = app_module.create_app(test_cfg)
+
+    async with app.router.lifespan_context(app):
+        assert app.state.readiness.is_ready() is True
+
+    assert events == [
+        "scheduler_cancel",
+        "run_engine_shutdown",
+        "task_group_cancel",
+        "custom_app_exit",
+        "storage_aclose",
+    ], f"Shutdown order wrong: {events}"

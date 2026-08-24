@@ -120,7 +120,9 @@ async def _setup_component(component: Any) -> None:
         if inspect.isawaitable(result):
             await result
     elif callable(sync_setup):
-        sync_setup()
+        result = sync_setup()
+        if inspect.isawaitable(result):
+            await result
 
 
 def create_app(config: ServerConfig | None = None) -> Starlette:
@@ -140,42 +142,46 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
         custom_app = loaded_custom_app
 
     readiness = ReadinessState()
-    for subsystem in ("config", "graphs", "auth", "scheduler", "custom_app"):
+    for subsystem in ("config", "graphs", "auth", "scheduler", "custom_app", "storage"):
         readiness.register(subsystem)
 
     @asynccontextmanager
     async def lifespan(app: Starlette):
         storage = await create_storage(cfg)
         app.state.storage = storage
-        await _setup_component(storage.saver)
-        await _setup_component(storage.store)
-        _ = install_langgraph_api_compat(storage.store, force=True)
-        raw_graphs = load_raw_graphs(cfg)
-        attached_graphs = attach_graphs(raw_graphs, storage)
-        app.state.graphs = attached_graphs
-        app.state.raw_graphs = raw_graphs
-        readiness.set_ready("config")
-        readiness.set_ready("graphs")
-        readiness.set_ready("auth")
+        try:
+            await _setup_component(storage.saver)
+            await _setup_component(storage.store)
+            readiness.set_ready("storage")
+            _ = install_langgraph_api_compat(storage.store, force=True)
+            raw_graphs = load_raw_graphs(cfg)
+            attached_graphs = attach_graphs(raw_graphs, storage)
+            app.state.graphs = attached_graphs
+            app.state.raw_graphs = raw_graphs
+            readiness.set_ready("config")
+            readiness.set_ready("graphs")
+            readiness.set_ready("auth")
 
-        async with custom_app.router.lifespan_context(custom_app):
-            readiness.set_ready("custom_app")
-            async with anyio.create_task_group() as tasks:
-                run_engine = RunEngine(storage, attached_graphs, tasks)
-                app.state.run_engine = run_engine
-                scheduler = start_scheduler(run_engine, storage)
-                app.state.scheduler_task = scheduler
-                readiness.set_ready("scheduler")
-                try:
-                    yield
-                finally:
-                    readiness.set_not_ready("scheduler")
-                    scheduler.cancel()
-                    with suppress(anyio.get_cancelled_exc_class()):
-                        await scheduler
-                    run_engine.shutdown()
-                    tasks.cancel_scope.cancel()
-            readiness.set_not_ready("custom_app")
+            async with custom_app.router.lifespan_context(custom_app):
+                readiness.set_ready("custom_app")
+                async with anyio.create_task_group() as tasks:
+                    run_engine = RunEngine(storage, attached_graphs, tasks)
+                    app.state.run_engine = run_engine
+                    scheduler = start_scheduler(run_engine, storage)
+                    app.state.scheduler_task = scheduler
+                    readiness.set_ready("scheduler")
+                    try:
+                        yield
+                    finally:
+                        readiness.set_not_ready("scheduler")
+                        scheduler.cancel()
+                        with suppress(anyio.get_cancelled_exc_class()):
+                            await scheduler
+                        run_engine.shutdown()
+                        tasks.cancel_scope.cancel()
+                readiness.set_not_ready("custom_app")
+        finally:
+            await storage.aclose()
 
     native_routes: list[Route] = []
     native_routes.extend(system_routes)
