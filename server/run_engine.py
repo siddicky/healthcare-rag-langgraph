@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import json as _json
 import logging
 from collections import deque
 from collections.abc import AsyncIterator, Mapping
@@ -16,16 +15,35 @@ from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
 logger = logging.getLogger("MedicalRAG")
 
+from server.registries import PostgresRunRegistry
 from server.storage import Storage
 
 JSONValue: TypeAlias = JsonValue
 
 QUEUE_LIMIT: Final = 100
+PERSISTED_PAYLOAD_REDACTION: Final = "[redacted]"
+NONTERMINAL_RUN_STATUSES: Final[frozenset[str]] = frozenset({"pending", "running"})
 
 # The authenticated principal is server-controlled state. It has exactly one
 # writer (`RunEngine._graph_config`, from the request's authenticated user) and
 # a client-supplied value is never trusted anywhere.
 AUTH_USER_KEY: Final = "langgraph_auth_user"
+
+
+async def reconcile_interrupted_runs(storage: Storage) -> int:
+    """Interrupt Postgres runs that cannot survive a process restart."""
+    if not isinstance(storage.runs, PostgresRunRegistry):
+        return 0
+    reconciled = 0
+    for record in await storage.runs.all():
+        run_id = record.get("run_id")
+        if (
+            isinstance(run_id, str)
+            and record.get("status") in NONTERMINAL_RUN_STATUSES
+        ):
+            await storage.runs.set_status(run_id, "interrupted")
+            reconciled += 1
+    return reconciled
 
 
 def _sanitized_config(config: dict[str, JSONValue]) -> dict[str, JSONValue]:
@@ -37,28 +55,26 @@ def _sanitized_config(config: dict[str, JSONValue]) -> dict[str, JSONValue]:
     return {**config, "configurable": scrubbed}
 
 
-def _to_jsonable(obj: object) -> object:
+def _to_jsonable(obj: object) -> JSONValue:
     if obj is None or isinstance(obj, (bool, int, float, str)):
         return obj
     if isinstance(obj, dict):
         return {str(k): _to_jsonable(v) for k, v in obj.items()}  # type: ignore[arg-type]
     if isinstance(obj, (list, tuple, set)):
         return [_to_jsonable(v) for v in obj]  # type: ignore[arg-type]
-    if hasattr(obj, "model_dump"):
+    model_dump = getattr(obj, "model_dump", None)
+    if callable(model_dump):
         try:
-            return _to_jsonable(obj.model_dump(mode="json"))  # type: ignore[attr-defined]
+            return _to_jsonable(model_dump(mode="json"))
         except Exception:
             pass
-    if hasattr(obj, "dict"):
+    to_dict = getattr(obj, "dict", None)
+    if callable(to_dict):
         try:
-            return _to_jsonable(obj.dict())  # type: ignore[attr-defined]
+            return _to_jsonable(to_dict())
         except Exception:
             pass
-    try:
-        _json.dumps(obj)
-        return obj
-    except Exception:
-        return str(obj)
+    return str(obj)
 
 
 class ResumeCommand(BaseModel):
@@ -168,11 +184,11 @@ class RunEngine:
         self.command_replays: dict[str, str] = {}
         self.stopping: bool = False
 
-    def shutdown(self) -> None:
+    async def shutdown(self) -> None:
         self.stopping = True
         for queue in self.queues.values():
             for run_id in queue:
-                self.storage.runs[run_id]["status"] = "interrupted"
+                await self.storage.runs.set_status(run_id, "interrupted")
                 self.runtime[run_id].done.set()
                 self.runtime[run_id].changed.set()
             queue.clear()
@@ -190,7 +206,10 @@ class RunEngine:
     ) -> dict[str, object]:
         replay_key = self._replay_key(thread_id, request)
         if replay_key is not None and replay_key in self.command_replays:
-            return self.storage.runs[self.command_replays[replay_key]]
+            replay = await self.storage.runs.get(self.command_replays[replay_key])
+            if replay is None:
+                raise RunMissing
+            return replay
         active_id = self.active.get(thread_id)
         if active_id is not None and request.multitask_strategy == "reject":
             raise RunConflict
@@ -219,7 +238,12 @@ class RunEngine:
         }
         if request.command is not None:
             record["command"] = request.command.model_dump(mode="json")
-        self.storage.runs[run_id] = record
+        persisted_record = record
+        if isinstance(self.storage.runs, PostgresRunRegistry):
+            persisted_record = {**record, "input": PERSISTED_PAYLOAD_REDACTION}
+            if "command" in persisted_record:
+                persisted_record["command"] = PERSISTED_PAYLOAD_REDACTION
+        await self.storage.runs.save(run_id, persisted_record)
         self.runtime[run_id] = RunRuntime(
             request=request, thread_id=thread_id, auth_user=auth_user
         )
@@ -242,13 +266,12 @@ class RunEngine:
 
     async def _execute(self, run_id: str) -> None:
         runtime = self.runtime[run_id]
-        record = self.storage.runs[run_id]
         graph = self.graphs[runtime.request.assistant_id]
         assert isinstance(graph, GraphRunner)
         graph_config = self._graph_config(runtime)
         snapshot = await graph.aget_state(graph_config)
         runtime.pre_values = dict(snapshot.values)
-        record["status"] = "running"
+        await self.storage.runs.set_status(run_id, "running")
         cancelled = False
         try:
             with anyio.CancelScope() as scope:
@@ -269,15 +292,19 @@ class RunEngine:
                     runtime.changed = anyio.Event()
             cancelled = scope.cancel_called
             final = await graph.aget_state(graph_config)
-            runtime.output = _to_jsonable(dict(final.values))  # type: ignore[arg-type]
-            record["status"] = "interrupted" if final.next else "success"
+            output = _to_jsonable(dict(final.values))  # type: ignore[arg-type]
+            assert isinstance(output, dict)
+            runtime.output = output
+            await self.storage.runs.set_status(
+                run_id, "interrupted" if final.next else "success"
+            )
         except anyio.get_cancelled_exc_class():
             cancelled = True
         except Exception:  # noqa: BLE001 - executor boundary records arbitrary graph failures.
             logger.error("run %s failed on graph execution", run_id, exc_info=True)
-            record["status"] = "error"
+            await self.storage.runs.set_status(run_id, "error")
         if cancelled:
-            record["status"] = "interrupted"
+            await self.storage.runs.set_status(run_id, "interrupted")
         if runtime.rollback:
             await self._restore(graph, graph_config, runtime.pre_values)
         runtime.done.set()
@@ -318,10 +345,12 @@ class RunEngine:
         runtime = self.runtime[run_id]
         if runtime.thread_id != thread_id:
             raise RunMissing
-        record = self.storage.runs[run_id]
+        record = await self.storage.runs.get(run_id)
+        if record is None:
+            raise RunMissing
         if record["status"] == "pending":
             self.queues.get(thread_id, deque()).remove(run_id)
-            record["status"] = "interrupted"
+            await self.storage.runs.set_status(run_id, "interrupted")
             runtime.done.set()
             runtime.changed.set()
             return

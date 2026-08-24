@@ -21,6 +21,83 @@ The `.github/workflows/deploy.yml` pipeline is gated on the `production` environ
 
 ---
 
+## 0b. Postgres Activation Checklist — staged flip to release N+1 (human-gated, NOT part of this PR)
+
+> **This PR is release N — `SERVER_STORAGE=memory` stays live.** The code for Postgres persistence is **delivered but not active**: `server/storage.py: create_storage(...)` now has a `postgres` path, `server/config.py` accepts `SERVER_STORAGE=postgres`, and `DATABASE_URI` wiring + `hc_*` DDL + pgvector are in the image. None of that is active in production until a human deliberately completes this checklist and ships release **N+1**. Do not flip `deploy/fly.prod.toml` until every box below is checked and recorded.
+
+Follow this checklist **in order**. Each step is a gate — do not proceed if it fails.
+
+**1 — Provision Fly Postgres (todo 18's exact commands):**
+
+```bash
+# Create an unmanaged single-node Postgres in the same org/region as the prod apps
+fly postgres create \
+  --name hc-rag-pg-prod \
+  --org "$FLY_ORG" \
+  --region iad \
+  --vm-size shared-cpu-1x \
+  --volume-size 10 \
+  --initial-cluster-size 1
+
+# Attach it to the server app — this creates DATABASE_URL (and DATABASE_URI alias)
+# inside hc-rag-server-prod automatically; do NOT set DATABASE_URI manually via fly secrets set
+fly postgres attach hc-rag-pg-prod --app hc-rag-server-prod
+# Fly prints: Postgres cluster hc-rag-pg-prod is now attached to hc-rag-server-prod
+# with the following secrets set: DATABASE_URL
+
+# Verify attach succeeded (names only — value is never echoed)
+fly secrets list --app hc-rag-server-prod | grep -E 'DATABASE_(URL|URI)'
+```
+
+**2 — Verify isolation + pgvector extension:**
+
+```bash
+# No public IP must be allocated to the Postgres app
+fly ips list --app hc-rag-pg-prod
+# Expected: no public v4/v6 — only private .internal DNS
+
+# Confirm pgvector works (connect via Fly's private network)
+fly postgres connect --app hc-rag-pg-prod -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector; SELECT extname, extversion FROM pg_extension WHERE extname='vector';"
+# Expected: one row showing vector extension installed
+```
+
+If either check fails, stop — do not continue. Re-create or debug the Postgres app before proceeding.
+
+**3 — Record durability/PHI sign-off in `.omo/evidence/` per §0 convention:**
+
+Add a dated entry to **`.omo/evidence/task-12-oss-agent-server-tag-deploys.md`** (canonical) and mirror to **`.omo/notepads/oss-agent-server-tag-deploys/decisions.md`**, stating the reviewer, date, and that you explicitly accept:
+
+- **Scrubbed conversation state now persists.** Thread messages, resumable state, and store items that today vanish on every deploy will survive restarts once `SERVER_STORAGE=postgres` is live. Only scrubbed forms persist (PHI is scrubbed before storage), but durability itself is the change being accepted — data at rest now exists.
+- **Cron records embed the `cron_wake` token at rest.** Each reminder cron stores its rotating `cron_wake` token in the `hc_crons` row. With Postgres, these tokens survive restarts (they are ephemeral today). Accept that cron continuity now means token-bearing rows at rest.
+- **Retention is live-rows-only with no automated backups.** There is no nightly backup, no point-in-time recovery, and no automated purge job in this build. Retention is: live rows in `hc_*` tables until explicitly deleted (thread eviction, cron removal, store delete). Accept that operational backups and retention policy are operator-owned beyond this PR. Name these three items verbatim in the sign-off.
+
+**4 — Confirm regression gate evidence is still current:**
+
+```bash
+cat .omo/evidence/regression-gate.txt
+# Must exist and match the HEAD that ships N+1 (todo 17's gate).
+# If any commit since the last regression gate changed retriever/reranker/safety/validation code,
+# re-run the gate: make eval-compatible checks + re-record regression-gate.txt before flipping.
+```
+
+Do not flip if `regression-gate.txt` is stale or missing — re-run the gate.
+
+**5 — Flip and ship release N+1 (only after 1-4 are done and recorded):**
+
+```bash
+# In deploy/fly.prod.toml, change exactly one value:
+#   SERVER_STORAGE = "memory"  →  SERVER_STORAGE = "postgres"
+# Commit: docs(deploy): activate Postgres persistence (N+1)
+# Then:
+make release TAG=vX.Y.Z   # hermetic validation — prints git tag/push, does not push
+git tag vX.Y.Z && git push origin vX.Y.Z   # triggers deploy.yml → production approval → prod
+# Post-deploy, verify persistence is live (see §8) and re-run smoke (see §5).
+```
+
+> **Flip requires all four gates.** Provisioning + isolation check + sign-off + regression gate — missing any one blocks the flip. The value change itself is a one-line TOML edit, but the sign-off is the authorization that makes it legitimate.
+
+---
+
 ## 1. Bootstrap — one-time setup (apps ×2, volume, secret seeding BEFORE the first pipeline deploy)
 
 > Do this once per Fly organization. After this, every deploy comes from the tag pipeline (§3). The first pipeline deploy must never boot secret-less, so **seed secrets in §1.3 before you push the first tag**.
@@ -126,6 +203,35 @@ The same variable must be set for any local OSS-server run on a non-2024 port
 
 No public Weaviate URL is exposed. Scaling or re-creating the volume is a separate migration (not covered here).
 
+### 1.2b Postgres provisioning — DOCUMENTED STEPS for later activation (NOT executed in this PR)
+
+> **Staged rollout.** Production stays `SERVER_STORAGE=memory` in this release (N). The steps below set up Fly Postgres for the **future** flip to `SERVER_STORAGE=postgres` (release N+1). They are instructions for the human operator to run **later** when executing the checklist in **§0b** — do not run them now, and do not change `deploy/fly.prod.toml` in this PR.
+
+When the activation checklist (§0b) says to provision, run exactly:
+
+```bash
+# 1. Create the Postgres cluster (unmanaged single-node, same org/region as prod)
+fly postgres create \
+  --name hc-rag-pg-prod \
+  --org "$FLY_ORG" \
+  --region iad \
+  --vm-size shared-cpu-1x \
+  --volume-size 10 \
+  --initial-cluster-size 1
+
+# 2. Attach to the server app — Fly sets DATABASE_URL (and DATABASE_URI alias) automatically
+fly postgres attach hc-rag-pg-prod --app hc-rag-server-prod
+# Fly output: Postgres cluster hc-rag-pg-prod is now attached ... secrets set: DATABASE_URL
+
+# 3. Verify attach + isolation (same checks as §0b step 2)
+fly secrets list --app hc-rag-server-prod | grep -E 'DATABASE_(URL|URI)'
+fly ips list --app hc-rag-pg-prod
+# Expected: no public v4/v6 — only private .internal DNS
+fly postgres connect --app hc-rag-pg-prod -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector; SELECT extname FROM pg_extension WHERE extname='vector';"
+```
+
+> **Do not set `DATABASE_URI` / `DATABASE_URL` manually via `fly secrets set`.** The `fly postgres attach` command creates them. If you rotate the database, re-attach — do not hand-edit the secret. See §1.3 for the secrets table entry and §0b for the full flip sequence including the compliance sign-off.
+
 **Create the pipeline deploy token now that the apps exist:**
 
 ```bash
@@ -152,8 +258,8 @@ Secrets source of truth is the GitHub Environment `production` (§2). For bootst
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | `<supabase-url>` | same as SUPABASE_URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | `<supabase-anon-key>` | |
 | `COACH_INTERNAL_TOKEN` | yes | `<high-entropy-internal-token>` | internal cron/owner ops |
-| `COACH_ALLOWED_ORIGINS` | yes | `<allowed-origins>` | e.g. `https://<frontend>` |
-| `CORS_ALLOW_ORIGINS` | yes | `<cors-origins>` | keep aligned with COACH_ALLOWED_ORIGINS |
+| `COACH_ALLOWED_ORIGINS` | yes | `<allowed-origins>` | must contain the deployed frontend origin, e.g. `https://<frontend>` |
+| `CORS_ALLOW_ORIGINS` | yes | `<cors-origins>` | must contain the deployed frontend origin **and** `https://smith.langchain.com` (Studio Connect panel); keep the frontend origin aligned with `COACH_ALLOWED_ORIGINS` |
 | `LANGSMITH_FEEDBACK_PROJECT_ID` | yes | `<uuid>` | `00000000-...` shape — required by smoke (`COACH_INTERNAL_TOKEN`/`LANGSMITH_FEEDBACK_PROJECT_ID` both required); if feedback project not yet configured, create one and use its UUID |
 | `LANGGRAPH_DEPLOYMENT_URL` | yes | `<https://hc-rag-server-prod.fly.dev>` | public prod URL |
 | `LANGSMITH_API_KEY` | yes (for smoke) | `<lsv2_...>` | required by `scripts/deployed_smoke.py` even when `LANGSMITH_TRACING=false` |
@@ -161,6 +267,11 @@ Secrets source of truth is the GitHub Environment `production` (§2). For bootst
 | `LANGGRAPH_U1_TOKEN` | yes (smoke) | `<synthetic-u1-bearer>` | synthetic Supabase user JWT — see §5 for provisioning |
 | `LANGGRAPH_U2_TOKEN` | yes (smoke) | `<synthetic-u2-bearer>` | synthetic Supabase user JWT — see §5 |
 | `SUPABASE_JWT_SECRET` | if used | `<jwt-secret>` | only if auth needs it |
+| `DATABASE_URI` / `DATABASE_URL` | attach-provided (N+1 only) | *(not set manually — see below)* | Set automatically by `fly postgres attach hc-rag-pg-prod --app hc-rag-server-prod` (see §1.2b / §0b). **Do NOT** add via `gh secret set` or `fly secrets set`. As of this release (N) production still runs `SERVER_STORAGE=memory` and this row is **not present**; it appears only after the human operator provisions Postgres and completes the activation checklist for release N+1. |
+
+> **About `DATABASE_URI` / `DATABASE_URL`:** Fly's `postgres attach` creates `DATABASE_URL`; the server also reads `DATABASE_URI` as an alias (either name works — see `server/config.py`). Fly injects the value directly into the server app's secrets — there is no GitHub Environment `production` entry for it and the deploy workflow does not sync it. Do not create a GitHub secret for it and do not paste a connection string into any doc or env file — use the placeholder `<postgres-uri>` only if you must refer to it.
+
+> **Origin alignment contract:** `COACH_ALLOWED_ORIGINS` and `CORS_ALLOW_ORIGINS` must both contain the deployed frontend origin (`https://<frontend>`). `CORS_ALLOW_ORIGINS` must additionally contain `https://smith.langchain.com` for the LangSmith Studio Connect panel. CORS wraps auth (outermost) so preflight `OPTIONS` succeed unauthenticated and every response, including `401`, carries CORS headers — the browser can read an expired-token `401` and refresh the session. `NEXT_PUBLIC_LANGGRAPH_URL` must equal the server origin the browser calls (same value as `LANGGRAPH_DEPLOYMENT_URL` in prod). Use placeholder syntax only (e.g. `https://<frontend>`, `https://smith.langchain.com`) — never a real secret value.
 
 > **Why `LANGSMITH_FEEDBACK_PROJECT_ID` and `LANGSMITH_API_KEY` are `yes`:** `scripts/deployed_smoke.py` requires `LANGSMITH_API_KEY`, `COACH_INTERNAL_TOKEN`, and `LANGSMITH_FEEDBACK_PROJECT_ID` even in manual runs (see §5). The table above matches the workflow's `EXPECTED_NAMES` fail-closed check — do not treat them as optional.
 
@@ -497,6 +608,30 @@ uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
 If either smoke in the exercise fails, fix the rollback path before considering the hosting work done — the exercise is a gate, not a formality.
 
+### 6.3 Rollback trap — `SERVER_STORAGE=postgres` vs pre-Postgres images
+
+> **Staged-rollout trap.** After the flip to release N+1 (`SERVER_STORAGE=postgres` in `deploy/fly.prod.toml` + `DATABASE_URL` from `fly postgres attach`), rolling back to an image **predating this PR** while `SERVER_STORAGE` is still `postgres` will **fail to boot**. The old image's `server/config.py` does not accept `"postgres"` as a valid `SERVER_STORAGE` value — the container exits during config validation, `/ok` never becomes 200, and the rollback looks like an outage.
+
+**Safe rollback pairs:**
+
+| Desired state | What to deploy | Env to keep |
+|---|---|---|
+| Roll back to a pre-Postgres image (before this PR) | `fly deploy --image ghcr.io/<repo>@sha256:<pre-pg-digest>` | Must also set `SERVER_STORAGE=memory`: `fly secrets set --app hc-rag-server-prod SERVER_STORAGE=memory` is **not** correct — `SERVER_STORAGE` is an `[env]` in `deploy/fly.prod.toml`, not a Fly secret. Instead, re-deploy with a TOML that has `SERVER_STORAGE = "memory"` (e.g. `git checkout <pre-pg-tag> -- deploy/fly.prod.toml && fly deploy --config deploy/fly.prod.toml --image ...@sha256:<pre-pg-digest>`), or cherry-pick the `fly.prod.toml` from before the flip. |
+| Roll back within Postgres-capable history (this PR onward) | Any digest at or after this PR | Keep `SERVER_STORAGE=postgres` as shipped in that digest's TOML — no extra step |
+
+> **Simplest safe rollback after Postgres is live:** stay within Postgres-capable digests. If you must go pre-Postgres, first restore `deploy/fly.prod.toml` to `SERVER_STORAGE = "memory"` (the value as of this PR, release N) and deploy that TOML with the old digest — do not leave the env claiming `postgres` while the image only knows `memory`.
+
+**How to tell which digests are Postgres-capable:**
+
+```bash
+# A Postgres-capable image has 'postgres' in its server config
+# Check without deploying — inspect the built image locally:
+docker run --rm --entrypoint python ghcr.io/<owner>/<repo>@sha256:<digest> -c "from server.config import Settings; print(Settings.model_fields['server_storage'].annotation)"
+# Postgres-capable → shows Literal including 'postgres'; pre-Postgres → only 'memory'
+```
+
+Record which rollback path was chosen in the same evidence file as §6.1.
+
 ---
 
 ## 7. Rapid-tag Note — env lock serializes, GitHub is not FIFO
@@ -529,30 +664,55 @@ fly image show --app hc-rag-server-prod
 
 ---
 
-## 8. In-memory Wipe Caveat — every deploy/restart wipes threads, store, crons
+## 8. Durability Caveat — AS OF THIS RELEASE (N) every deploy/restart still wipes; durable reality only after the flip to N+1
 
-All Agent Server state — threads (id/metadata/created/updated/expires_at), runs, store items, crons, queues — is **in-memory only** this stage (`SERVER_STORAGE=memory`). The Weaviate collection data on its 1 GB volume is the only persistent state.
+> **Read this carefully — three states matter.** Code capability (what this PR delivers) vs production state (what is live today) vs activated durability (what happens after the human-gated flip). Confusing them is the main risk this section exists to prevent.
 
-Every `fly deploy`, every machine restart, every OOM or host migration **wipes** threads/store/crons:
+**As of this release (N) — what production actually does TODAY:**
+
+Production still runs `SERVER_STORAGE=memory` (see `deploy/fly.prod.toml` — flipped only in release N+1 per §0b). So **every `fly deploy`, every machine restart, every OOM or host migration still wipes** all Agent Server state — exactly as before this PR:
 
 - Thread IDs from before the restart 404.
 - Runs queued or in-flight are lost.
 - Store items (including uploaded-proposal reservations) are gone.
-- Cron schedules are gone — they must be re-created through coach turns (the reminder flow re-creates the underlying cron after restart; no automatic cron resurrection this stage).
+- Cron schedules are gone — they must be re-created through coach turns (the reminder flow re-creates the underlying cron after restart; no automatic cron resurrection).
 
-**Operator implication:** do not promise cross-restart continuity to users. Schedule deploys during low-traffic windows and re-run ingest only if Weaviate itself was reset (its volume preserves data across server restarts, but not across `fly volumes destroy`).
+**Operator implication for release N:** do not promise cross-restart continuity to users. Schedule deploys during low-traffic windows and re-run ingest only if Weaviate itself was reset (its volume preserves data across server restarts, but not across `fly volumes destroy`).
+
+**After the flip to release N+1 (`SERVER_STORAGE=postgres`) — the delivered durable reality:**
+
+Once the human operator completes §0b and ships N+1, the same `server/storage.py` factory that today returns `InMemorySaver`/`InMemoryStore` + in-memory dicts instead returns `AsyncPostgresSaver`/`AsyncPostgresStore` + `hc_*` tables (see §9). Then:
+
+- Threads (id/metadata/created/updated/expires_at), store items, and cron registrations **survive** machine restarts and deploys — they are rows in Postgres, not process memory. Weaviate's 1 GB volume remains durable alongside them.
+- Queued/in-flight **run** state is still not durable the way threads are — a deploy still drains the old machine.
+
+**Residual ephemera that remain even after the eventual flip:**
+
+Even with Postgres, these never become durable — they are process-local by nature:
+
+- **In-flight runs** — a run actively executing during a deploy dies with the old machine; the client must retry. The DB retains the thread/store/cron rows, but the compute for that turn is lost.
+- **Queues** — the pending-run FIFO lives in process memory. A deploy drops the queue; callers get `503 + Retry-After` or must re-submit.
+- **SSE streams** — `GET /threads/{id}/runs/stream` and `.../join/stream` are live HTTP connections pinned to one machine. A deploy breaks every open stream; the browser must reconnect and re-join.
+- **Deploy-overlap transient** — Fly may briefly run two machines (old + new) during a rolling deploy. A `running` record written on the old machine can **404** when read through the new process for a few seconds until the old machine drains. This is inherent to single-machine + rolling deploys and survives the Postgres migration — do not treat a brief `running`-404 as data loss.
+
+> **Summary:** this PR delivers durable code (release N) but production is still ephemeral (`SERVER_STORAGE=memory`). Durability only takes effect after the separate, human-gated flip to N+1 per §0b. Until then, every deploy still wipes Agent Server state.
 
 ---
 
-## 9. Future Persistence — seam limits, registries need their own migration
+## 9. Delivered Persistence Design — code capability NOW EXISTS; activation is N+1
 
-The storage seam (`server/storage.py:create_storage(...)` returning `saver + store + {threads,runs,crons}`) limits — but does not eliminate — future persistence work:
+> **What NOW EXISTS IN CODE (this PR, release N) vs what is ACTIVE in production (still memory).** Everything below is **shipped in the image** and ready to activate — but it does nothing in production until the §0b flip sets `SERVER_STORAGE=postgres`. Today production still reads `SERVER_STORAGE=memory` and takes the in-memory path.
 
-- The seam wraps **all** server state behind one factory. Swapping `InMemorySaver`/`InMemoryStore` for a Postgres-backed `AsyncPostgresSaver`/`AsyncPostgresStore` is a single-site change in that factory plus wiring `DATABASE_URI`.
-- **Registries are not magically persisted.** Threads, runs, and crons are in-memory dicts behind the same seam today. A future persistent build must migrate those registries to durable tables (or to Postgres-backed equivalents) with their own DDL, retention, and sweep logic — the seam makes the cut point explicit but the migration is still a code + schema change.
-- Weaviate's volume is the only durable piece today. A future move to Weaviate Cloud or a second volume is a separate migration with its own data copy.
+**Delivered design (in the image as of this PR):**
 
-Do not assume "switch `SERVER_STORAGE` to `postgres`" persists threads/crons without also migrating the registries.
+- **Single factory, two paths.** `server/storage.py:create_storage(...)` now has both arms: `memory` returns `InMemorySaver`/`InMemoryStore` + in-memory dicts `{threads,runs,crons}`; `postgres` returns `AsyncPostgresSaver`/`AsyncPostgresStore` against `DATABASE_URI` (or `DATABASE_URL` alias) plus **durable `hc_*` tables** that replace those dicts. `server/config.py` validates `SERVER_STORAGE` as `Literal["memory","postgres"]` — the `postgres` value is accepted as of this PR (pre-Postgres images reject it; see §6.3).
+- **Registries are migration-complete — not future work.** The `hc_*` DDL (threads, runs, crons, store) ships in this PR and is applied on the `postgres` path. The seam made the cut point explicit; the migration is **delivered**, not pending. Switching `SERVER_STORAGE` to `postgres` therefore **does** persist threads/store/crons — the caveat in earlier docs ("registries need their own migration") is resolved as of this PR. What remains ephemeral even after activation is only the process-local pieces named in §8.
+- **Run-input redaction divergence between modes (deliberate).** `memory` keeps the existing posture — run inputs live in process memory and vanish on restart. `postgres` persists a **redacted** form of run inputs (identifiers scrubbed before write, aligned with `docs/safety.md`'s scrubbing guarantees). The two modes diverge on purpose: memory has no at-rest copy to redact, postgres has a scrubbed one. Do not assume the wire-visible input equals the at-rest row — logging and storage both go through the scrubber.
+- **Weaviate's 1 GB volume** remains durable alongside Postgres once activated; it is unchanged by the storage-mode switch. A future move to Weaviate Cloud is a separate migration with its own data copy (not covered here).
+
+**What is NOT yet active in production (as of release N):**
+
+- No Postgres cluster exists until the operator runs §0b/§1.2b. No `DATABASE_URL`/`DATABASE_URI` is set. All three states above sit dormant — the image carries them, but `deploy/fly.prod.toml` still ships `SERVER_STORAGE = "memory"` and that is what Fly runs.
 
 ---
 
@@ -575,18 +735,20 @@ The server is **single-machine** (`min_machines_running = 1`, `auto_stop_machine
 
 ---
 
-## 11. Cost BOM — ~$18–25/mo + per-release smoke AI usage
+## 11. Cost BOM — ~$18–25/mo today (N); ~$23–35/mo once Postgres is activated (N+1)
 
 | Item | Size / spec | ~Monthly cost (USD) | Notes |
 |---|---|---|---|
 | Fly Machine — `hc-rag-server-prod` | `shared-cpu-1x`, 512 MB–1 GB RAM, always-on (`auto_stop_machines=false`, `min_machines_running=1`) | **$5–10** | single machine, no autoscaling |
 | Fly Machine — `hc-rag-weaviate-prod` | `shared-cpu-1x`, 512 MB–1 GB RAM, always-on, plus `cr.weaviate.io/semitechnologies/weaviate:1.30.2` | **$5–10** | private networking only |
-| Fly Volume — `weaviate_data` | 1 GB | **$0.15** | `1 GB × $0.15/GB/mo`; the only persistent volume |
+| Fly Volume — `weaviate_data` | 1 GB | **$0.15** | `1 GB × $0.15/GB/mo`; the only persistent volume today |
+| Fly Postgres — `hc-rag-pg-prod` *(N+1 only, cost once activated)* | `shared-cpu-1x`, 10 GB volume, unmanaged single-node (`fly postgres create --vm-size shared-cpu-1x --volume-size 10 --initial-cluster-size 1`) | **~$5–10** | **Not spent yet — as of this release (N) production still runs `SERVER_STORAGE=memory` and this cluster does not exist.** Provisioned by the human operator in §0b/§1.2b for release N+1; includes `vector` (pgvector) extension. Fly Postgres is single-node, no automatic backups; see §0b sign-off item 3 |
 | Outbound / bandwidth | modest (API + chunks) | **$0–2** | Fly includes a small free allowance |
-| **Subtotal (hosting)** | | **~$10–22** | rounded to **~$18–25/mo** with headroom in the plan |
+| **Subtotal — as of this PR (N, still memory)** | | **~$10–22** | rounded to **~$18–25/mo** with headroom in the plan |
+| **Subtotal — once Postgres activated (N+1)** | | **~$15–32** | rounded to **~$23–35/mo** with headroom — the +$5–10 is the Postgres line above |
 | Per-release smoke AI usage | `scripts/deployed_smoke.py` may touch LLM retrieval via the server | **$0.01–0.10 per run** | synthetic accounts, tracing off; not a monthly fixed cost |
 
-> The `$18–25/mo` band in the plan uses slightly larger machine sizing and leaves headroom for a memory bump. Actual Fly invoices vary with exact `vm` size and region. The per-release smoke AI usage is additional and scales with releases, not with traffic.
+> The `$18–25/mo` band (release N) uses slightly larger machine sizing and leaves headroom for a memory bump. The `$23–35/mo` band (release N+1) is the same plus the unmanaged single-node Postgres add-on. Actual Fly invoices vary with exact `vm` size and region. Until the §0b checklist is completed, the Postgres cost is **$0 — it is not spent**. Per-release smoke AI usage is additional and scales with releases, not with traffic.
 
 ---
 

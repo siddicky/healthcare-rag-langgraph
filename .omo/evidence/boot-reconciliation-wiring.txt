@@ -1,0 +1,73 @@
+Boot reconciliation wiring — real Postgres verification
+======================================================
+Date: 
+Mon 24 Aug 2026 03:32:36 UTC
+
+=== server/app.py diff ===
+diff --git a/server/app.py b/server/app.py
+index 74b8fcc..1ce0931 100644
+--- a/server/app.py
++++ b/server/app.py
+@@ -29,12 +29,14 @@ from server.auth import (
+     load_auth_instance,
+ )
+ from server.config import ServerConfig, load_config
++from server.crons import reconcile_crons
+ from server.crons import routes as cron_routes
+ from server.crons import start_scheduler
+ from server.graphs import attach_graphs, load_raw_graphs
+ from server.manifest import UNIMPLEMENTED_PATHS, UNIMPLEMENTED_PREFIXES
+ from server.routes.system import routes as system_routes
+ from server.run_engine import RunEngine
++from server.run_engine import reconcile_interrupted_runs
+ from server.runs import routes as run_routes
+ from server.storage import create_storage
+ from server.store_routes import routes as store_item_routes
+@@ -153,6 +155,8 @@ def create_app(config: ServerConfig | None = None) -> Starlette:
+             await _setup_component(storage.saver)
+             await _setup_component(storage.store)
+             readiness.set_ready("storage")
++            await reconcile_interrupted_runs(storage)
++            await reconcile_crons(storage)
+             _ = install_langgraph_api_compat(storage.store, force=True)
+             raw_graphs = load_raw_graphs(cfg)
+             attached_graphs = attach_graphs(raw_graphs, storage)
+
+=== Memory-mode (no env) — tests/server -q ===
+............s.......................................ssss......ssssss.... [ 50%]
+...............ss..................sss........s..............ss......... [100%]
+125 passed, 19 skipped in 2.36s
+
+=== Contract — tests/server/contract -q (OPENAI_API_KEY=dummy ORACLE=1) ===
+.............                                                            [100%]
+13 passed in 3.35s
+
+=== Real Postgres boot reconciliation — test_boot_reconciliation_via_lifespan -v ===
+DSN: postgresql://postgres:postgres@localhost:55432/postgres
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.6.0 -- /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, langsmith-0.11.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/server/test_storage_postgres.py::test_boot_reconciliation_via_lifespan[asyncio] PASSED [100%]
+
+============================== 1 passed in 1.14s ===============================
+
+=== Manual verification (seed pending run + overdue cron, boot lifespan, verify) ===
+Test seeded: run status=running -> expected interrupted; cron next_run_date=2000-01-01T00:00:00+00:00 -> expected recomputed to future
+============================= test session starts ==============================
+platform darwin -- Python 3.12.12, pytest-9.1.1, pluggy-1.6.0 -- /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/bin/python3
+cachedir: .pytest_cache
+rootdir: /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg
+configfile: pyproject.toml
+plugins: asyncio-1.4.0, langsmith-0.11.1, anyio-4.14.2
+asyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function
+collecting ... collected 1 item
+
+tests/server/test_storage_postgres.py::test_boot_reconciliation_via_lifespan[asyncio] PASSED [100%]
+
+============================== 1 passed in 1.14s ===============================

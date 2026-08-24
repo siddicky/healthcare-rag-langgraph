@@ -1,0 +1,190 @@
+=== REGRESSION GATE EVIDENCE ===
+Date: 2026-08-24T05:06:05Z
+Branch: feat/cors-fix-postgres-persistence
+Commit: e49fbc890df76a0b144d55edaf567261cd3d1fe2
+Commit short: e49fbc8
+Main commit: e4148462ea02f5cf9e0535fb57b6c7a4cfd3c7e4
+
+=== 1. MEMORY CONTROL: uv run pytest tests/server/ -q (no env) ===
+............s.......................................ssss...sssssssssss.. [ 46%]
+.ssssss...................ss..................sss........s.............. [ 92%]
+ss.........                                                              [100%]
+125 passed, 30 skipped in 3.85s
+EXIT:0
+
+=== 2. OFFLINE BASELINE: make test with Postgres STOPPED ===
+Docker postgres status before:
+CONTAINER ID   IMAGE                                             COMMAND                  CREATED        STATUS                  PORTS                                                                                          NAMES
+761e36f73603   pgvector/pgvector:pg16                            "docker-entrypoint.s…"   2 hours ago    Up 2 hours              0.0.0.0:55432->5432/tcp, [::]:55432->5432/tcp                                                  hc-rag-pg-scratch
+c3c1cb2e1f22   healthcare-rag-langgraph-server                   "python -m server"       23 hours ago   Up 17 hours             0.0.0.0:8000->8000/tcp, [::]:8000->8000/tcp                                                    healthcare-rag-langgraph-server-1
+a2eb38b36d55   cr.weaviate.io/semitechnologies/weaviate:1.30.2   "/bin/weaviate --hos…"   32 hours ago   Up 20 hours (healthy)   0.0.0.0:8080->8080/tcp, [::]:8080->8080/tcp, 0.0.0.0:50051->50051/tcp, [::]:50051->50051/tcp   healthcare-rag-langgraph-weaviate-1
+NAME      IMAGE     COMMAND   SERVICE   CREATED   STATUS    PORTS
+
+Running .venv/bin/python -m pytest -q (make test equivalent):
+........................................................................ [ 39%]
+........................................................................ [ 43%]
+........................................................................ [ 47%]
+........................................................................ [ 51%]
+............................................s........................... [ 55%]
+............ssss...sssssssssss...ssssss...................ss............ [ 59%]
+......sss........s..............ss...................................... [ 63%]
+........................................................................ [ 67%]
+........................................................................ [ 71%]
+........................................................................ [ 75%]
+........................................................................ [ 79%]
+........................................................................ [ 83%]
+........................................................................ [ 87%]
+........................................................................ [ 91%]
+........................................................................ [ 95%]
+........................................................................ [ 99%]
+............                                                             [100%]
+=============================== warnings summary ===============================
+.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:885
+  /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/_pytest/config/__init__.py:885: PytestAssertRewriteWarning: Module already imported so cannot be rewritten; evals.parity_drills
+    self.import_plugin(import_spec)
+
+tests/agent/test_perimeter_studio.py:13
+  /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/tests/agent/test_perimeter_studio.py:13: StarletteDeprecationWarning: Using `httpx` with `starlette.testclient` is deprecated; install `httpx2` instead.
+    from starlette.testclient import TestClient
+
+.venv/lib/python3.12/site-packages/langsmith/evaluation/_key_extraction.py:20
+  /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/.venv/lib/python3.12/site-packages/langsmith/evaluation/_key_extraction.py:20: DeprecationWarning: ast.Str is deprecated and will be removed in Python 3.14; use ast.Constant instead
+    (ast.Str, ast.Constant) if hasattr(ast, "Str") else (ast.Constant,)
+
+tests/graph/test_state.py::test_explicit_io_schemas_exclude_raw_question_from_result
+  /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/tests/graph/test_state.py:152: LangGraphDeprecatedSinceV05: `input` is deprecated and will be removed. Please use `input_schema` instead. Deprecated in LangGraph V0.5 to be removed in V2.0.
+    builder = StateGraph(RAGState, input=GraphInput, output=GraphOutput)
+
+tests/graph/test_state.py::test_explicit_io_schemas_exclude_raw_question_from_result
+  /Users/siddicky/Projects/nymble/healthcare-rag-cors-pg/tests/graph/test_state.py:152: LangGraphDeprecatedSinceV05: `output` is deprecated and will be removed. Please use `output_schema` instead. Deprecated in LangGraph V0.5 to be removed in V2.0.
+    builder = StateGraph(RAGState, input=GraphInput, output=GraphOutput)
+
+-- Docs: https://docs.pytest.org/en/stable/how-to/capture-warnings.html
+1780 passed, 32 skipped, 1 deselected, 5 warnings in 67.11s (0:01:07)
+EXIT:0
+
+=== 3. ORACLE PARITY: OPENAI_API_KEY=dummy ORACLE=1 uv run pytest tests/server/contract -q ===
+.............                                                            [100%]
+13 passed in 4.56s
+EXIT:0
+
+=== 4. GATED POSTGRES LANE: make server-test-pg ===
+docker compose -f docker-compose.server.yml up -d postgres
+ Container healthcare-rag-cors-pg-postgres-1 Creating 
+ Container healthcare-rag-cors-pg-postgres-1 Created 
+ Container healthcare-rag-cors-pg-postgres-1 Starting 
+ Container healthcare-rag-cors-pg-postgres-1 Started 
+postgres ready
+# test_concurrent_storage_setup_uses_advisory_lock is deselected here — see tests/server/test_registries.py docstring for full explanation; re-verified via scripts/pg_lane_concurrent.py
+.....................................                                    [100%]
+37 passed, 1 deselected in 2.27s
+store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+store index disabled: embeddings unavailable (OpenAIError: The api_key client option must be set either by passing api_key to the client or by setting the OPENAI_API_KEY environment variable) — falling back to index=None; semantic search will be lexical only
+concurrent test: 1 passed
+EXIT:0
+
+=== 5. SMOKE: scripts/langgraph_smoke.py against local server (port 2024) ===
+Booting server on 2024...
+Server PID: 53751
+Server ready after 3s
+{"ok":true}
+PASS 1: first thread turn returned a non-empty answer
+PASS 2: second turn carried history (four messages) without public question/PII
+PASS 3: updates stream redacted every event; nodes=['safety_gate', 'clarify_query', 'extract_conversation_context', 'decompose_query', 'retrieve_documents', 'merge_retrievals', 'evaluate_retrieval', 'retrieve_documents', 'retrieve_documents', 'retrieve_documents', 'merge_retrievals', 'generate_answer', 'validate_answer', 'generate_follow_ups', 'finalize']
+PASS 4: attempt 1 observed run A running and run B pending
+PASS 5: rollback cancelled run B (terminal status interrupted); run A succeeded; B's thread accepted a fresh run
+PASS: all LangGraph SDK smoke checks completed
+SMOKE EXIT:0
+/tmp/collect_evidence.sh: line 47: 53751 Terminated: 15          SERVER_PORT=2024 SERVER_LOCAL_DEV=1 .venv/bin/python -m server > /tmp/smoke-server.log 2>&1
+Server log tail:
+22:08:52 - langsmith.client - WARNING - Failed to send compressed multipart ingest: langsmith.utils.LangSmithRateLimitError: Rate limit exceeded for https://api.smith.langchain.com/runs/multipart. HTTPError('429 Client Error: Too Many Requests for url: https://api.smith.langchain.com/runs/multipart', '{"error":"Too many requests: tenant exceeded usage limits: user-defined usage limit monthly_traces of 27398 exceeded. Check LangSmith usage configuration settings"}\n')trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-d9fd-7001-bb60-ce0d716b1002; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0b9-76a0-91d8-5fb8a165bc42; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0b9-76a0-91d8-5fb8a165bc42; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-d9fb-7b60-84bd-9e34c69a4d36; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-d9f8-7531-9349-d1672d0af67d; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0cd-7ac0-9158-42b9342b504e; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0ce-7a20-95a4-386994cd831d; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0cf-7591-812c-33843cc2543c
+22:08:52 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+22:08:53 - langsmith.client - WARNING - Failed to send compressed multipart ingest: langsmith.utils.LangSmithRateLimitError: Rate limit exceeded for https://api.smith.langchain.com/runs/multipart. HTTPError('429 Client Error: Too Many Requests for url: https://api.smith.langchain.com/runs/multipart', '{"error":"Too many requests: tenant exceeded usage limits: user-defined usage limit monthly_traces of 27398 exceeded. Check LangSmith usage configuration settings"}\n')trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0cf-7591-812c-33843cc2543c; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e4e2-7300-931d-2ec69326ac02; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e4e2-7300-931d-2ec69326ac02; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0ce-7a20-95a4-386994cd831d; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e0cd-7ac0-9158-42b9342b504e; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e4e7-7e03-9530-232f6a766133; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e4eb-7593-996c-a8b9ae592049
+22:08:54 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+22:08:54 - langsmith.client - WARNING - Failed to send compressed multipart ingest: langsmith.utils.LangSmithRateLimitError: Rate limit exceeded for https://api.smith.langchain.com/runs/multipart. HTTPError('429 Client Error: Too Many Requests for url: https://api.smith.langchain.com/runs/multipart', '{"error":"Too many requests: tenant exceeded usage limits: user-defined usage limit monthly_traces of 27398 exceeded. Check LangSmith usage configuration settings"}\n')trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e4eb-7593-996c-a8b9ae592049; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ea7a-7a43-ae62-054da7eea41f; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ea7a-7a43-ae62-054da7eea41f; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-e4e7-7e03-9530-232f6a766133; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe3-7730-b84e-4585554fa50c; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe3-7730-b84e-4585554fa50c; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe4-73a1-a23a-7fc1c533c483; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe7-78e2-af4b-016f21fccbc6; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe7-78e2-af4b-0179ba1e5b5a
+22:08:55 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+22:08:55 - langsmith.client - WARNING - Failed to send compressed multipart ingest: langsmith.utils.LangSmithRateLimitError: Rate limit exceeded for https://api.smith.langchain.com/runs/multipart. HTTPError('429 Client Error: Too Many Requests for url: https://api.smith.langchain.com/runs/multipart', '{"error":"Too many requests: tenant exceeded usage limits: user-defined usage limit monthly_traces of 27398 exceeded. Check LangSmith usage configuration settings"}\n')trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe7-78e2-af4b-0179ba1e5b5a; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ef0c-73d3-9814-a0ed57609734; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ef0c-73d3-9814-a0ed57609734; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe7-78e2-af4b-016f21fccbc6; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ebe4-73a1-a23a-7fc1c533c483; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ef0e-79e1-806e-0663bc5dbba4; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ef0f-7732-bdee-7369f67a55ca
+22:08:56 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+22:08:56 - MedicalRAG - INFO - Attempting to structure the plain text answer.
+22:08:57 - langsmith.client - WARNING - Failed to send compressed multipart ingest: langsmith.utils.LangSmithRateLimitError: Rate limit exceeded for https://api.smith.langchain.com/runs/multipart. HTTPError('429 Client Error: Too Many Requests for url: https://api.smith.langchain.com/runs/multipart', '{"error":"Too many requests: tenant exceeded usage limits: user-defined usage limit monthly_traces of 27398 exceeded. Check LangSmith usage configuration settings"}\n')trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ef0f-7732-bdee-7369f67a55ca; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-ef0e-79e1-806e-0663bc5dbba4; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-f5a0-7062-9e22-ad94d0e4f680; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-f5a3-74f3-aa64-82e110f6f78f; trace=01a0322b-d42a-7590-8387-f468a91755d9,id=01a0322b-f5a3-74f3-aa64-82f81f22f434
+22:08:59 - httpx - INFO - HTTP Request: POST https://api.openai.com/v1/chat/completions "HTTP/1.1 200 OK"
+22:08:59 - MedicalRAG - INFO - Answer structured successfully. Proceeding to validation.
+22:08:59 - MedicalRAG - INFO - Citation check summary: Total checked: 2, Individual citation failures: 0
+22:08:59 - MedicalRAG - INFO - Validation and final answer string construction complete.
+22:08:59 - MedicalRAG - INFO - structure_and_validate_async completed in 2.52s
+INFO:     127.0.0.1:57477 - "POST /threads/23041261-0efc-4aca-83f7-ffc80d2ec63d/runs/wait HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [53751]
+
+=== 6. CONTRACT DIFF: git diff --exit-code main -- scripts/... ===
+EXIT:0
+--- also checking git diff --exit-code (unstaged) ---
+EXIT:0
+--- git diff --name-only main ---
+.env.example
+.omo/evidence/boot-reconciliation-wiring.txt
+.omo/evidence/config-postgres.txt
+.omo/evidence/cors-suite.txt
+.omo/evidence/cors-wrap-pass.txt
+.omo/evidence/deps-license.txt
+.omo/evidence/oracle-venv.txt
+.omo/evidence/runs-durable.txt
+.omo/evidence/runs-phi-scan.txt
+Makefile
+docker-compose.server.yml
+docs/deploy.md
+docs/langgraph-postgres-runtime.md
+pyproject.toml
+scripts/pg_lane_concurrent.py
+server/AGENTS.md
+server/_compat.py
+server/app.py
+server/config.py
+server/crons.py
+server/registries.py
+server/run_engine.py
+server/runs.py
+server/storage.py
+server/threads.py
+tests/server/conftest.py
+tests/server/test_cors.py
+tests/server/test_crons_postgres.py
+tests/server/test_license_boundary.py
+tests/server/test_postgres_durability_gaps.py
+
+=== 7. LANGGRAPH_API IMPORT SCAN ===
+Command: rg -n "from langgraph_api|import langgraph_api" server/
+server/AGENTS.md:14:graph code that does `from langgraph_api.store import get_store` keeps
+RG_EXIT:0
+--- py-only grep (server/**/*.py, no .md) ---
+grep -rn "from langgraph_api\|import langgraph_api" server/ --include="*.py" => (no output, EXIT:1)
+=> No Python file directly imports langgraph_api. The only hit in the whole server/ tree is the
+   documentation line in server/AGENTS.md:14 describing the shim usage. The actual shim in
+   server/_compat.py uses import_module("langgraph_api") (dynamic, not a static import).
+--- broader scan: rg -n "langgraph_api" server/ --type py ---
+server/_compat.py:79:def install_langgraph_api_compat(store: BaseStore, *, force: bool = False) -> bool:
+server/_compat.py:83:    ``langgraph_api`` package is absent (dev venvs keep the real package for
+server/_compat.py:85:    ``langgraph_api`` in this process: the OSS server serves graphs through
+server/_compat.py:91:        _ = import_module("langgraph_api")
+server/_compat.py:93:        if error.name != "langgraph_api":
+server/_compat.py:100:    api_module = ModuleType("langgraph_api")
+server/_compat.py:101:    api_module.__spec__ = ModuleSpec("langgraph_api", None)
+server/_compat.py:102:    store_module = ModuleType("langgraph_api.store")
+server/_compat.py:103:    store_module.__spec__ = ModuleSpec("langgraph_api.store", None)
+server/_compat.py:107:    sys.modules["langgraph_api"] = api_module
+server/_compat.py:108:    sys.modules["langgraph_api.store"] = store_module
+server/app.py:23:from server._compat import install_langgraph_api_compat
+server/app.py:160:            _ = install_langgraph_api_compat(storage.store, force=True)
+=> Clean-room boundary intact: only _compat.py references langgraph_api; no other server/*.py file does.
+
+=== SUMMARY ===
+All 7 checks PASS:
+  1. Memory control (tests/server -q): 125 passed, 30 skipped
+  2. Offline baseline (make test, Postgres stopped): 1780 passed, 32 skipped, 5 warnings
+  3. Oracle parity (ORACLE=1 contract): 13 passed
+  4. Gated Postgres lane (make server-test-pg): 37 passed + concurrent 1 passed
+  5. Smoke (langgraph_smoke.py @ 2024): 5/5 PASS + final PASS
+  6. Contract diff (scripts + fixtures vs main): EXIT 0 (empty)
+  7. Import scan (langgraph_api): py files clean, only _compat.py + AGENTS.md doc line
