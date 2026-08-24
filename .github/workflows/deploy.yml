@@ -446,7 +446,7 @@ jobs:
           done
           # Confirm prod URL is HTTPS and no --allow-insecure-staging flag is required (per scripts/deployed_smoke.py:74-120).
           PROD_URL="https://hc-rag-server-prod.fly.dev"
-          echo "Running: uv run python scripts/deployed_smoke.py --url $PROD_URL"
+          echo "Running: uv run python scripts/deployed_smoke.py --url $PROD_URL --profile gate"
           echo "Env: LANGSMITH_TRACING=$LANGSMITH_TRACING (tracing off for prod synthetic check)"
           set +e
           uv run python scripts/deployed_smoke.py --url "$PROD_URL" --profile gate 2>&1 | tee /tmp/smoke-raw.log

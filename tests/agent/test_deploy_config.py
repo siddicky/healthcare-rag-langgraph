@@ -329,7 +329,7 @@ async def test_smoke_orchestrates_all_ten_checks_after_version_gate() -> None:
     assert events == ["version", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10"]
 
 
-def test_smoke_profiles_split_fast_checks_from_llm_checks() -> None:
+def test_smoke_profiles_keep_graph_turns_out_of_the_gate() -> None:
     import inspect
 
     import scripts.deployed_smoke as smoke
@@ -343,28 +343,30 @@ def test_smoke_profiles_split_fast_checks_from_llm_checks() -> None:
     for fast in (
         "check_isolation",
         "check_perimeter",
-        "check_erasure",
         "check_disabled_protocols",
     ):
         assert fast in fast_tuple
-    # no LLM-driven check may enter the fast tuple
+    # No graph-turn check may enter the operational gate. In particular,
+    # erasure seeds PAGE_SIZE + 1 model-backed turns for pagination coverage.
     for slow in (
         "check_memory",
         "check_interrupts",
         "check_projection",
         "check_route_a",
+        "check_erasure",
         "check_reminders",
         "check_documents_and_feedback",
     ):
         assert slow not in fast_tuple
-    # full must include every check exactly once: six by name plus the fast
-    # tuple sliced three ways ([ :1], [1:2], [2:]) = all four, original order
+    # Full must include every check exactly once: seven by name plus the fast
+    # tuple sliced three ways ([ :1], [1:2], [2:]) = all three, original order.
     full_section = checks_block.split('"full":')[1].split("}[profile]")[0]
     for check in (
         "check_memory",
         "check_interrupts",
         "check_projection",
         "check_route_a",
+        "check_erasure",
         "check_reminders",
         "check_documents_and_feedback",
     ):

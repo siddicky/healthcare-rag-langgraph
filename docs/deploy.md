@@ -463,7 +463,7 @@ Ingest is idempotent (`--delete-all` drops and recreates the collections). Run i
 
 ## 5. Smoke — post-deploy live check (synthetic accounts, tracing off, redacted logs)
 
-After every deploy, the pipeline runs the fast `--profile gate` suite (LLM-free: isolation, perimeter, erasure, protocol checks — seconds) against the prod URL with synthetic accounts and no tracing. The full ten-check suite (graph turns, minutes) runs on demand: `make deployed-smoke`. The pipeline's `Run deployed smoke` step sets all six required env vars from GitHub Environment `production` secrets — your manual command must do the same:
+After every deploy, the pipeline runs the fast `--profile gate` suite (LLM-free: isolation, perimeter, and disabled-protocol checks - seconds) against the prod URL with synthetic accounts and no tracing. The full ten-check suite, including paginated erasure coverage and other graph turns, runs on demand: `make deployed-smoke`. The pipeline's `Run deployed smoke` step sets all six required env vars from GitHub Environment `production` secrets - your manual command must do the same:
 
 ```bash
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
@@ -735,9 +735,9 @@ The server is **single-machine** (`min_machines_running = 1`, `auto_stop_machine
 | Outbound / bandwidth | modest (API + chunks) | **$0–2** | Fly includes a small free allowance |
 | **Subtotal — as of this PR (N, still memory)** | | **~$10–22** | rounded to **~$18–25/mo** with headroom in the plan |
 | **Subtotal — once Postgres activated (N+1)** | | **~$15–32** | rounded to **~$23–35/mo** with headroom — the +$5–10 is the Postgres line above |
-| Per-release smoke AI usage | `scripts/deployed_smoke.py` may touch LLM retrieval via the server | **$0.01–0.10 per run** | synthetic accounts, tracing off; not a monthly fixed cost |
+| On-demand full-smoke AI usage | `scripts/deployed_smoke.py --profile full` exercises model-backed graph turns | **$0.01–0.10 per run** | synthetic accounts, tracing off; the per-release gate is LLM-free |
 
-> The `$23–35/mo` band is the live run-rate since v1.0.7: app sizing plus the unmanaged single-node Postgres add-on (~$4/mo actual for shared-cpu-1x/10GB). Actual Fly invoices vary with exact `vm` size and region. Per-release smoke AI usage is additional and scales with releases, not with traffic.
+> The `$23–35/mo` band is the live run-rate since v1.0.7: app sizing plus the unmanaged single-node Postgres add-on (~$4/mo actual for shared-cpu-1x/10GB). Actual Fly invoices vary with exact `vm` size and region. The LLM-free release gate adds no model cost; on-demand full-smoke usage scales with acceptance runs, not traffic.
 
 ---
 
