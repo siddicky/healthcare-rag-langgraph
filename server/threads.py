@@ -89,6 +89,13 @@ async def _purge_expired(storage: Storage) -> None:
     ]
     for tid in expired:
         await storage.threads.delete(tid)
+        try:
+            await storage.saver.adelete_thread(tid)
+        except Exception as exc:  # noqa: BLE001 - saver implementations differ; expiry cleanup remains best-effort and observable
+            logger.warning(
+                "expired thread checkpoint cascade failed",
+                extra={"thread_id": tid, "error": str(exc), "exc_type": type(exc).__name__},
+            )
 
 
 async def _purge_if_expired(storage: Storage, thread_id: str) -> bool:
@@ -299,7 +306,15 @@ async def create_thread(request: Request) -> Response:
     if "updated_at" not in record:
         record["updated_at"] = now_iso
 
-    await storage.threads.save(thread_id, record)
+    requires_absent = if_exists == "raise" or (
+        if_exists is None and supplied_id is not None
+    )
+    if existing is None and requires_absent:
+        created = await storage.threads.create_if_absent(thread_id, record)
+        if not created:
+            return JSONResponse({"detail": "Thread already exists"}, status_code=409)
+    else:
+        await storage.threads.save(thread_id, record)
     # Return 200 for reuse/do_nothing existing, otherwise 200 with record (200 is fine for create)
     return JSONResponse(record)
 
