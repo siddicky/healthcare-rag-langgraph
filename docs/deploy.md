@@ -152,8 +152,8 @@ Secrets source of truth is the GitHub Environment `production` (§2). For bootst
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | `<supabase-url>` | same as SUPABASE_URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | `<supabase-anon-key>` | |
 | `COACH_INTERNAL_TOKEN` | yes | `<high-entropy-internal-token>` | internal cron/owner ops |
-| `COACH_ALLOWED_ORIGINS` | yes | `<allowed-origins>` | e.g. `https://<frontend>` |
-| `CORS_ALLOW_ORIGINS` | yes | `<cors-origins>` | keep aligned with COACH_ALLOWED_ORIGINS |
+| `COACH_ALLOWED_ORIGINS` | yes | `<allowed-origins>` | must contain the deployed frontend origin, e.g. `https://<frontend>` |
+| `CORS_ALLOW_ORIGINS` | yes | `<cors-origins>` | must contain the deployed frontend origin **and** `https://smith.langchain.com` (Studio Connect panel); keep the frontend origin aligned with `COACH_ALLOWED_ORIGINS` |
 | `LANGSMITH_FEEDBACK_PROJECT_ID` | yes | `<uuid>` | `00000000-...` shape — required by smoke (`COACH_INTERNAL_TOKEN`/`LANGSMITH_FEEDBACK_PROJECT_ID` both required); if feedback project not yet configured, create one and use its UUID |
 | `LANGGRAPH_DEPLOYMENT_URL` | yes | `<https://hc-rag-server-prod.fly.dev>` | public prod URL |
 | `LANGSMITH_API_KEY` | yes (for smoke) | `<lsv2_...>` | required by `scripts/deployed_smoke.py` even when `LANGSMITH_TRACING=false` |
@@ -161,6 +161,8 @@ Secrets source of truth is the GitHub Environment `production` (§2). For bootst
 | `LANGGRAPH_U1_TOKEN` | yes (smoke) | `<synthetic-u1-bearer>` | synthetic Supabase user JWT — see §5 for provisioning |
 | `LANGGRAPH_U2_TOKEN` | yes (smoke) | `<synthetic-u2-bearer>` | synthetic Supabase user JWT — see §5 |
 | `SUPABASE_JWT_SECRET` | if used | `<jwt-secret>` | only if auth needs it |
+
+> **Origin alignment contract:** `COACH_ALLOWED_ORIGINS` and `CORS_ALLOW_ORIGINS` must both contain the deployed frontend origin (`https://<frontend>`). `CORS_ALLOW_ORIGINS` must additionally contain `https://smith.langchain.com` for the LangSmith Studio Connect panel. CORS wraps auth (outermost) so preflight `OPTIONS` succeed unauthenticated and every response, including `401`, carries CORS headers — the browser can read an expired-token `401` and refresh the session. `NEXT_PUBLIC_LANGGRAPH_URL` must equal the server origin the browser calls (same value as `LANGGRAPH_DEPLOYMENT_URL` in prod). Use placeholder syntax only (e.g. `https://<frontend>`, `https://smith.langchain.com`) — never a real secret value.
 
 > **Why `LANGSMITH_FEEDBACK_PROJECT_ID` and `LANGSMITH_API_KEY` are `yes`:** `scripts/deployed_smoke.py` requires `LANGSMITH_API_KEY`, `COACH_INTERNAL_TOKEN`, and `LANGSMITH_FEEDBACK_PROJECT_ID` even in manual runs (see §5). The table above matches the workflow's `EXPECTED_NAMES` fail-closed check — do not treat them as optional.
 

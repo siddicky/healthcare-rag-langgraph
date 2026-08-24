@@ -19,7 +19,7 @@ Weaviate vector data (`deploy/fly.weaviate-prod.toml`).
 ## Key Files
 | File | Description |
 |------|-------------|
-| `app.py` | `create_app(config)` builds the Starlette `ASGIApp`: mounts all route modules, `AuthMiddleware`, `MemberPerimeterMiddleware`, CORS, lifespan (loads graphs, starts cron scheduler, flips `ReadinessState`), and the `UNIMPLEMENTED_PATHS`/`UNIMPLEMENTED_PREFIXES` → 501 fallback. |
+| `app.py` | `create_app(config)` builds the Starlette `ASGIApp`: mounts all route modules with **CORS outermost** wrapping `AuthMiddleware` + `MemberPerimeterMiddleware` (auth inner), so preflight `OPTIONS` are exempted from auth by construction and every response including `401` carries CORS headers; plus lifespan (loads graphs, starts cron scheduler, flips `ReadinessState`) and the `UNIMPLEMENTED_PATHS`/`UNIMPLEMENTED_PREFIXES` → 501 fallback. |
 | `__main__.py` | CLI entry (`python -m server`): loads `langgraph.json` via `load_config`, then `uvicorn.run`. |
 | `config.py` | `ServerConfig` dataclass + `load_config(path="langgraph.json")` — parses `graphs`, `auth.path`, `http`, `store.index`, `api_version`, `storage`, `port`. |
 | `_compat.py` | Installs the `langgraph_api`/`langgraph_api.store` shim (`get_store()`) backed by this server's `InMemoryStore`, but only if the real `langgraph_api` package is absent — never overrides a real install. |
