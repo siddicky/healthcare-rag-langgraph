@@ -37,6 +37,7 @@ jobs:
   tag:
     runs-on: ubuntu-latest
     permissions:
+      actions: read
       contents: read
       checks: read
       statuses: read
@@ -115,40 +116,13 @@ jobs:
           COMMIT: ${{ steps.version.outputs.commit }}
           # Runs on every push to main, so it is the one check that must exist.
           REQUIRED_CHECK: "Offline test suite"
+          RELEASE_WORKFLOW_PATH: ".github/workflows/release.yml"
         run: |
           set -euo pipefail
-          RUNS="$(gh api "repos/${{ github.repository }}/commits/${COMMIT}/check-runs?per_page=100")"
-          CHECKS_JSON="$RUNS" python3 - <<'PY'
-          import json
-          import os
-          import sys
-
-          data = json.loads(os.environ["CHECKS_JSON"])
-          runs = data.get("check_runs", [])
-          required = os.environ["REQUIRED_CHECK"]
-
-          for run in runs:
-              print(f"  {run['name']}: {run['status']}/{run['conclusion']}")
-
-          red = [
-              run["name"]
-              for run in runs
-              if run["status"] == "completed"
-              and run["conclusion"] in ("failure", "timed_out", "cancelled", "action_required")
-          ]
-          pending = [run["name"] for run in runs if run["status"] != "completed"]
-          green_required = any(
-              run["name"] == required and run["conclusion"] == "success" for run in runs
-          )
-
-          if red:
-              sys.exit(f"::error::red checks on this commit: {', '.join(red)}")
-          if pending:
-              sys.exit(f"::error::checks still running: {', '.join(pending)} — wait for them")
-          if not green_required:
-              sys.exit(f"::error::required check '{required}' did not succeed on this commit")
-          print(f"required check '{required}' green, no red checks")
-          PY
+          CHECKS_JSON="$(gh api "repos/${{ github.repository }}/commits/${COMMIT}/check-runs?per_page=100")"
+          WORKFLOW_RUNS_JSON="$(gh api "repos/${{ github.repository }}/actions/runs?head_sha=${COMMIT}&per_page=100")"
+          export CHECKS_JSON WORKFLOW_RUNS_JSON
+          python3 scripts/release_green_check.py
 
       - name: Build the release notes
         id: notes
