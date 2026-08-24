@@ -10,7 +10,12 @@ WEAVIATE_HOST = "hc-rag-weaviate-prod.internal"
 WEAVIATE_PORT = "8080"
 # WEAVIATE_GRPC_PORT is not required for the HTTP-only server path;
 # add "50051" here only if a future server build needs gRPC.
-SERVER_STORAGE = "memory"  # STAGED ROLLOUT — do NOT flip to "postgres" in this PR. Flip is release N+1, gated on Fly Postgres provisioning (todo 18: fly postgres create + fly postgres attach) + recorded compliance sign-off per docs/deploy.md §0b. See docs/deploy.md §6 for the rollback trap.
+# Durable storage (v1.0.7): AsyncPostgresSaver/AsyncPostgresStore + hc_* tables.
+# Connection comes from DATABASE_URL, set by `fly postgres attach`
+# (hc-rag-server-prod-db, dedicated user/db hc_rag_server_prod). Rollback:
+# revert this value to "memory" and redeploy the previous image digest —
+# see docs/deploy.md §0b and .omo/evidence/postgres-flip-signoff.md.
+SERVER_STORAGE = "postgres"  # STAGED ROLLOUT — do NOT flip to "postgres" in this PR. Flip is release N+1, gated on Fly Postgres provisioning (todo 18: fly postgres create + fly postgres attach) + recorded compliance sign-off per docs/deploy.md §0b. See docs/deploy.md §6 for the rollback trap.
 SERVER_PORT = "8000"
 # The coach reminder tools call the Agent Server cron API from inside the
 # graph run (reminders.py:531 defaults to localhost:2024 — the langgraph dev

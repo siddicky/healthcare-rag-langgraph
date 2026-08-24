@@ -7,23 +7,11 @@
 
 ---
 
-## 0. Compliance Gate — first prod deploy requires recorded sign-off
+## 0b. Postgres Activation Checklist — EXECUTED 2026-08-24 (v1.0.7)
 
-**No production deploy of real member data runs until the user records an explicit compliance sign-off on the healthcare data posture.**
+> **Status: DONE — production runs `SERVER_STORAGE=postgres` as of v1.0.7.** The checklist below is kept for the record; actual provisioning deviated from the original sketch in two ways, both recorded in `.omo/evidence/postgres-flip-signoff.md`: the cluster is named **hc-rag-server-prod-db** (not `hc-rag-pg-prod`) and runs a **pgvector-enabled flex image** (`registry.fly.io/hc-rag-pgvector:17`, built `FROM flyio/postgres-flex:17` + `postgresql-17-pgvector`; extension verified 0.8.6 on PG 17.9). Sign-off (gate 3) was given by the repository owner via explicit interactive scope choice on 2026-08-24.
 
-What must be recorded before the first `deploy-prod` approval:
-
-1. The operator (`you`) has reviewed `docs/safety.md` — the PHI posture, the safety gate, the identifier-scrubbing guarantees and the known limits of the deployed surface.
-2. Release checks run under **synthetic test accounts only** (`LANGGRAPH_U1_TOKEN` / `LANGGRAPH_U2_TOKEN`) with `LANGSMITH_TRACING=false` and redacted smoke logs (see §5 Smoke). Real member credentials are never used in the smoke.
-3. The sign-off is a dated entry in **`.omo/evidence/task-12-oss-agent-server-tag-deploys.md`** (canonical evidence for this build; also mirrored to `.omo/notepads/oss-agent-server-tag-deploys/decisions.md` for the deployment log) stating the date, the reviewer, and the version tag approved for first prod, plus the GitHub Environment `production` protection rule being in place.
-
-The `.github/workflows/deploy.yml` pipeline is gated on the `production` environment's **required reviewer** (you). Self-approval is acknowledged for a solo repo but the click is still required. Do not bypass it. The compliance gate is a **pre-condition of the first approval**, not a post-deploy checklist.
-
----
-
-## 0b. Postgres Activation Checklist — staged flip to release N+1 (human-gated, NOT part of this PR)
-
-> **This PR is release N — `SERVER_STORAGE=memory` stays live.** The code for Postgres persistence is **delivered but not active**: `server/storage.py: create_storage(...)` now has a `postgres` path, `server/config.py` accepts `SERVER_STORAGE=postgres`, and `DATABASE_URI` wiring + `hc_*` DDL + pgvector are in the image. None of that is active in production until a human deliberately completes this checklist and ships release **N+1**. Do not flip `deploy/fly.prod.toml` until every box below is checked and recorded.
+> **Original staged-rollout text (historical).** The code for Postgres persistence shipped dormant in release N: `server/storage.py: create_storage(...)` has a `postgres` path, `server/config.py` accepts `SERVER_STORAGE=postgres`, and `DATABASE_URI` wiring + `hc_*` DDL + pgvector are in the image. The gates below were then executed in order and recorded.
 
 Follow this checklist **in order**. Each step is a gate — do not proceed if it fails.
 
@@ -63,7 +51,7 @@ fly postgres connect --app hc-rag-pg-prod -d postgres -c "CREATE EXTENSION IF NO
 
 If either check fails, stop — do not continue. Re-create or debug the Postgres app before proceeding.
 
-**3 — Record durability/PHI sign-off in `.omo/evidence/` per §0 convention:**
+**3 — Record durability/PHI sign-off in `.omo/evidence/`:**
 
 Add a dated entry to **`.omo/evidence/task-12-oss-agent-server-tag-deploys.md`** (canonical) and mirror to **`.omo/notepads/oss-agent-server-tag-deploys/decisions.md`**, stating the reviewer, date, and that you explicitly accept:
 
@@ -95,6 +83,8 @@ git tag vX.Y.Z && git push origin vX.Y.Z   # triggers deploy.yml → production 
 ```
 
 > **Flip requires all four gates.** Provisioning + isolation check + sign-off + regression gate — missing any one blocks the flip. The value change itself is a one-line TOML edit, but the sign-off is the authorization that makes it legitimate.
+>
+> **All four gates were satisfied and recorded on 2026-08-24** (see `.omo/evidence/postgres-flip-signoff.md`): provisioning actuals in §1.2b, isolation verified (private-only IP), owner sign-off recorded verbatim, regression gate current at e49fbc8. The flip shipped in v1.0.7.
 
 ---
 
@@ -203,34 +193,46 @@ The same variable must be set for any local OSS-server run on a non-2024 port
 
 No public Weaviate URL is exposed. Scaling or re-creating the volume is a separate migration (not covered here).
 
-### 1.2b Postgres provisioning — DOCUMENTED STEPS for later activation (NOT executed in this PR)
+### 1.2b Postgres provisioning — EXECUTED 2026-08-24 (record of actuals)
 
-> **Staged rollout.** Production stays `SERVER_STORAGE=memory` in this release (N). The steps below set up Fly Postgres for the **future** flip to `SERVER_STORAGE=postgres` (release N+1). They are instructions for the human operator to run **later** when executing the checklist in **§0b** — do not run them now, and do not change `deploy/fly.prod.toml` in this PR.
-
-When the activation checklist (§0b) says to provision, run exactly:
+> **Executed.** Production runs `SERVER_STORAGE=postgres` since v1.0.7. The steps below are the record of what was actually run (cluster name and image differ from the earlier sketch; see §0b status note). Re-run only when recreating the cluster.
 
 ```bash
+# 0. pgvector image — stock postgres-flex has NO pgvector; build once, push to Fly's registry
+#    (app shell must exist before the registry accepts a push)
+fly apps create hc-rag-pgvector --org "$FLY_ORG"
+fly auth docker
+docker buildx build --platform linux/amd64 \
+  -t registry.fly.io/hc-rag-pgvector:17 --push /path/to/pgvector-dir
+# Dockerfile: FROM flyio/postgres-flex:17
+#             RUN apt-get update && apt-get install -y --no-install-recommends postgresql-17-pgvector
+
 # 1. Create the Postgres cluster (unmanaged single-node, same org/region as prod)
 fly postgres create \
-  --name hc-rag-pg-prod \
+  --name hc-rag-server-prod-db \
   --org "$FLY_ORG" \
   --region iad \
   --vm-size shared-cpu-1x \
   --volume-size 10 \
-  --initial-cluster-size 1
+  --initial-cluster-size 1 \
+  --password "<generated-24-char>" \
+  --image-ref registry.fly.io/hc-rag-pgvector:17
 
-# 2. Attach to the server app — Fly sets DATABASE_URL (and DATABASE_URI alias) automatically
-fly postgres attach hc-rag-pg-prod --app hc-rag-server-prod
-# Fly output: Postgres cluster hc-rag-pg-prod is now attached ... secrets set: DATABASE_URL
+# 2. Attach to the server app — Fly sets DATABASE_URL automatically with a
+#    dedicated user/database (hc_rag_server_prod), not the cluster superuser
+fly postgres attach hc-rag-server-prod-db --app hc-rag-server-prod --yes
 
-# 3. Verify attach + isolation (same checks as §0b step 2)
-fly secrets list --app hc-rag-server-prod | grep -E 'DATABASE_(URL|URI)'
-fly ips list --app hc-rag-pg-prod
-# Expected: no public v4/v6 — only private .internal DNS
-fly postgres connect --app hc-rag-pg-prod -d postgres -c "CREATE EXTENSION IF NOT EXISTS vector; SELECT extname FROM pg_extension WHERE extname='vector';"
+# 3. Verify attach + isolation + pgvector
+fly secrets list --app hc-rag-server-prod | grep -oE "\bDATABASE_(URL|URI)\b"
+#   Expected: exactly one line: DATABASE_URL
+fly ips list --app hc-rag-server-prod-db
+#   Expected: private v6 ingress only — no public IP
+fly ssh console --app hc-rag-server-prod-db --command \
+  "sh -c \"PGPASSWORD=<pw> psql -U postgres -h localhost -p 5433 -d postgres -c 'CREATE EXTENSION IF NOT EXISTS vector; SELECT extversion FROM pg_extension WHERE extname=\\'vector\\';'\""
+#   Expected: vector extension version row (0.8.6 at creation)
 ```
 
-> **Do not set `DATABASE_URI` / `DATABASE_URL` manually via `fly secrets set`.** The `fly postgres attach` command creates them. If you rotate the database, re-attach — do not hand-edit the secret. See §1.3 for the secrets table entry and §0b for the full flip sequence including the compliance sign-off.
+> **Do not set `DATABASE_URI` / `DATABASE_URL` manually via `fly secrets set`.** The `fly postgres attach` command creates them. If you rotate the database, re-attach — do not hand-edit the secret. See §1.3 for the secrets table entry and §0b for the full flip sequence including its sign-off record.
 
 **Create the pipeline deploy token now that the apps exist:**
 
@@ -267,7 +269,7 @@ Secrets source of truth is the GitHub Environment `production` (§2). For bootst
 | `LANGGRAPH_U1_TOKEN` | yes (smoke) | `<synthetic-u1-bearer>` | synthetic Supabase user JWT — see §5 for provisioning |
 | `LANGGRAPH_U2_TOKEN` | yes (smoke) | `<synthetic-u2-bearer>` | synthetic Supabase user JWT — see §5 |
 | `SUPABASE_JWT_SECRET` | if used | `<jwt-secret>` | only if auth needs it |
-| `DATABASE_URI` / `DATABASE_URL` | attach-provided (N+1 only) | *(not set manually — see below)* | Set automatically by `fly postgres attach hc-rag-pg-prod --app hc-rag-server-prod` (see §1.2b / §0b). **Do NOT** add via `gh secret set` or `fly secrets set`. As of this release (N) production still runs `SERVER_STORAGE=memory` and this row is **not present**; it appears only after the human operator provisions Postgres and completes the activation checklist for release N+1. |
+| `DATABASE_URI` / `DATABASE_URL` | attach-provided (live) | *(not set manually — see below)* | Set automatically by `fly postgres attach hc-rag-server-prod-db --app hc-rag-server-prod` (see §1.2b / §0b). **Do NOT** add via `gh secret set` or `fly secrets set`. Live in production since v1.0.7: exactly one secret, `DATABASE_URL`, pointing at the dedicated database `hc_rag_server_prod` on the attached cluster. |
 
 > **About `DATABASE_URI` / `DATABASE_URL`:** Fly's `postgres attach` creates `DATABASE_URL`; the server also reads `DATABASE_URI` as an alias (either name works — see `server/config.py`). Fly injects the value directly into the server app's secrets — there is no GitHub Environment `production` entry for it and the deploy workflow does not sync it. Do not create a GitHub secret for it and do not paste a connection string into any doc or env file — use the placeholder `<postgres-uri>` only if you must refer to it.
 
@@ -338,16 +340,6 @@ You are now ready to push the first tag (§3). The first deploy will boot with s
 
 **Source of truth:** GitHub Environment `production`. The deploy workflow syncs runtime secrets GitHub → Fly on every `deploy-prod` run and then verifies by name (`fly secrets list` — names only, values never echoed or logged).
 
-**Repository secret (not an environment secret): `RELEASE_TAG_TOKEN`.** The Release
-workflow (§3.1) pushes the tag with it; a tag pushed with `GITHUB_TOKEN` triggers no
-workflow, so the deploy would never start. Fine-grained PAT, this repo only,
-`contents: write`, nothing else — it can create a tag, not deploy one.
-
-```bash
-gh secret set RELEASE_TAG_TOKEN            # repo scope, NOT --env production
-gh secret list | grep RELEASE_TAG_TOKEN
-```
-
 **Never two manual stores.** After bootstrap (§1.3), do not manually diverge `fly secrets set` from the GitHub Environment. If a secret must change, change it in **GitHub Environment `production` first**, then let the next pipeline deploy sync it (or run a manual sync deploy of the current digest). Direct `fly secrets set` outside the pipeline is only for the initial bootstrap and for emergency rotation when the pipeline cannot run — and must be mirrored back to the GitHub Environment immediately.
 
 What the workflow does on each deploy:
@@ -366,53 +358,23 @@ fly secrets list --app hc-rag-server-prod   # names only — workflow asserts ev
 
 ## 3. Deploy — by immutable digest (tag → GHCR → prod approval → Fly)
 
-### 3.1 Cut the release (the tag is created for you)
-
-```bash
-make next-version                 # preview: current tag, bump, next tag, commits driving it
-make next-version BUMP=minor      # preview an explicit bump
-
-# If pyproject.toml is behind the version being cut, prep it first — this lands
-# as an ordinary PR, and it is where you get to disagree with the number:
-make release-prep BUMP=minor      # bumps pyproject + uv.lock, prints the commit/PR commands
-
-# Then cut it (dispatch from main):
-gh workflow run release.yml -f bump=minor
-gh workflow run release.yml -f bump=auto -f dry_run=true   # plan only, tags nothing
-```
-
-`bump=auto` derives the version from the Conventional Commit subjects since the
-last tag: `feat!`/`BREAKING CHANGE:` → major (minor while the major is still 0),
-`feat` → minor, everything else → patch. `make next-version` and the workflow run
-the same `scripts/next_version.py`, so the preview is the number CI will pick.
-
-The Release job refuses to tag unless: the dispatch is on `main`; the tag does not
-already exist on origin (release tags are immutable); `pyproject.toml` already
-carries the version being tagged; and the commit is green — no red or pending
-checks, with the offline suite green on that exact commit. It then creates an
-**annotated** tag whose message is the release notes, pushes it, and publishes a
-GitHub Release.
-
-> **Requires the `RELEASE_TAG_TOKEN` secret** — a fine-grained PAT with
-> `contents: write` on this repo. GitHub raises no workflow-triggering events for
-> refs pushed with `GITHUB_TOKEN`, so a tag created with the default token would
-> never deploy. The job fails closed with that explanation rather than creating a
-> tag that ships nothing. Without the secret, tag locally (§3.2).
->
-> The token can create tags; it cannot deploy. The `production` environment's
-> required reviewers still gate what any tag ships.
-
-### 3.2 Tagging by hand (fallback)
-
-`make release TAG=vX.Y.Z` validates the format and prints the commands without
-pushing. Use this only when the Release workflow cannot run:
+### 3.1 Release validation (hermetic, local)
 
 ```bash
 make release TAG=v1.2.3
-git tag -a v1.2.3 -m "release v1.2.3"
+# Expected: prints the exact git push command and exits 0 WITHOUT pushing.
+# Without TAG: exits non-zero and prints usage.
+# No tag is pushed by the target — the human pushes (next step).
+```
+
+> **Tag contract note:** `make release` locally accepts `vX.Y.Z` and also `vX.Y.Z-<prerelease>` (e.g. `v0.0.1-rc`) to allow hermetic `-rc` verification probes without error. The **production workflow** enforces strict `^v\d+\.\d+\.\d+$` (no suffix) on both `push` and `workflow_dispatch` and will fail a `-rc` tag. Use strict `vX.Y.Z` for any real prod deploy. The Makefile prints `git tag -s $(TAG)` (annotated) while §3.2 shows `git tag v1.2.3` (lightweight) — both create the tag; the pipeline only cares that the tag exists on origin.
+
+### 3.2 Push the tag (human)
+
+```bash
+git tag v1.2.3
 git push origin v1.2.3
-# The workflow triggers on push: tags: ['v*.*.*']. workflow_dispatch on the
-# Deploy workflow is rollback only (§6.1).
+# The workflow triggers on push: tags: ['v*.*.*'] and on workflow_dispatch with a required tag input.
 ```
 
 ### 3.3 Pipeline (what happens after the push)
@@ -431,45 +393,11 @@ git push origin v1.2.3
 
 3. **Approval gate:** the `production` environment has a required reviewer (you) and a tag policy `v*.*.*`. The run pauses at `deploy-prod` until you click **Approve** in the GitHub Actions UI. The workflow also runs a verification step that fails closed if the protection rules are missing or misconfigured.
 
-### 3.4 Tag taxonomy — what is mutable, and what may be deployed
+### 3.4 Tags and dispatch notes
 
-Full rationale: `docs/decisions/release-tags-and-rollback.md`. The rules are asserted
-against the workflow by `tests/agent/test_release_pipeline.py`.
-
-| ref | example | mutability | may a deploy consume it? |
-|---|---|---|---|
-| git tag | `v1.2.3` | **immutable** — never re-pointed | yes: it selects the release |
-| image `{{version}}` | `ghcr.io/<repo>:1.2.3` | **immutable** — one tag, one build, one digest | only to *resolve* a digest |
-| image `{{major}}.{{minor}}` | `ghcr.io/<repo>:1.2` | rolling | no — humans reading the registry only |
-| image `sha-<short>` | `ghcr.io/<repo>:sha-e414846` | immutable | traceability only |
-| image digest | `ghcr.io/<repo>@sha256:…` | immutable by construction | **yes — the only thing ever deployed** |
-| `latest` | — | — | does not exist, deliberately |
-
-- **Machines deploy digests, humans read tags.** `fly deploy` never receives a tag; both
-  the tag deploy and the rollback validate `^sha256:[0-9a-f]{64}$` before deploying.
-- **A release is a triple:** `(git tag, image digest, deploy/fly.prod.toml at that tag)`.
-  Config travels with the image — that is what makes §6.3's `SERVER_STORAGE` trap
-  unreachable from the rollback workflow.
-- **Never delete a release tag from GHCR.** The immutable `{{version}}` tag *is* the
-  ledger that maps a release to its digest; an untagged digest is eligible for registry
-  GC, and GC-ing one deletes a rollback target.
-- `workflow_dispatch` on this workflow is **rollback only** (§6.1). It never builds: the
-  `build` job is gated to `github.event_name == 'push'`.
-- **A `-rc` suffix deploys to production like any other tag.** `tags: ["v*.*.*"]` and
-  the environment's tag policy both match `v1.2.3-rc1`. Deliberate: there is one
-  deployed environment, so the suffix is a human label about confidence, not a routing
-  rule. Note that `make next-version` only ever computes final versions — a prerelease
-  is a deliberate hand-tagged act (§3.2). If a staging app is ever added, tighten the
-  policy to final versions only.
-
-Resolve any release to its digest locally:
-
-```bash
-make release-digest TAG=v1.2.2
-# ghcr.io/<owner>/<repo>:1.2.2
-# digest: sha256:<64 hex>
-```
-
+- Tag format is strict: `^v\d+\.\d+\.\d+$` (e.g. `v1.2.3`). The workflow validates it on both `push` and `workflow_dispatch`.
+- `workflow_dispatch` requires an explicit `tag` input that must exist on `origin`, and the job checks out that tag commit — not `main`.
+- Mutable tags are never deployed — only the digest from the `build` job.
 
 ---
 
@@ -592,83 +520,35 @@ curl -s -o /dev/null -w "%{http_code}\n" https://hc-rag-server-prod.fly.dev/thre
 
 Artifact: the workflow uploads a **redacted** smoke log as `deploy-prod-<version>` (7-day retention) — auth headers stripped, response bodies reduced to `status + length`, synthetic accounts only.
 
-Smoke failure does **not** auto-rollback. A red pipeline leaves the bad version running until a human dispatches the rollback (§6.1) — the failing step prints the exact `gh workflow run` command.
+Smoke failure does **not** auto-rollback. A red pipeline leaves the bad version running until the rollback runbook (§6) is executed by a human.
 
 ---
 
-## 6. Rollback — one dispatch, human-decided (and the mandatory one-time exercise)
+## 6. Rollback — manual, deterministic (and the mandatory one-time exercise)
 
-### 6.1 Rollback (on smoke failure or a bad deploy)
+### 6.1 Rollback runbook (human, on smoke failure or bad deploy)
 
-> **Policy:** NO auto-rollback. A red smoke leaves the bad version live and a human
-> decides — a flaky smoke that redeploys prod on its own is a worse failure than a bad
-> version sitting still for the minutes it takes to click. What follows is only the
-> cheapest way to make that decision act.
+> **Policy:** NO auto-rollback on smoke failure. A red pipeline leaves the bad version running. A human runs this.
 
 ```bash
-# 0. Pick the release to go back to (the previous green tag).
-make rollback TAG=v1.2.2 REASON="smoke red on v1.2.3"
-# Prints the exact dispatch command; pushes nothing.
+# 0. Identify the previous good digest (from the last green deploy-prod log or GHCR)
+#    The workflow logs the digest as ghcr.io/<owner>/<repo>@sha256:<digest> — copy the previous one.
+export PREV_DIGEST="sha256:<previous-good-digest>"
+export REPO="ghcr.io/<owner>/<repo>"   # e.g. ghcr.io/your-org/healthcare-rag-langgraph
 
-# 1. Dispatch it.
-gh workflow run deploy.yml -f version=v1.2.2 -f reason="smoke red on v1.2.3"
-
-# 2. Approve the `production` environment gate in the Actions UI (same reviewer
-#    as a forward deploy — a rollback is a prod change).
-```
-
-The `rollback` job then, without rebuilding anything:
-
-1. validates the version, verifies the tag exists on origin and is reachable from `main`;
-2. **checks the repo out at that tag**, so the image and `deploy/fly.prod.toml` come from
-   the same release (this is what makes §6.3's trap unreachable here);
-3. resolves `ghcr.io/<owner>/<repo>:<X.Y.Z>` → digest, validating the sha256 shape;
-4. mirrors it into the Fly registry and `fly deploy`s it **by digest**;
-5. waits for `/ok`, re-runs the deployed smoke (§5), uploads the redacted log as
-   `rollback-prod-<version>`;
-6. writes the evidence record — target, commit, source digest, Fly digest, smoke result,
-   operator, reason — to the job summary.
-
-It deliberately does **not** re-sync secrets from the GitHub Environment: a rollback must
-be able to recover from a bad secret sync, and re-applying the current environment during
-one would re-apply the fault. If the rollback is *for* a secret, fix the environment first,
-then dispatch.
-
-Break-glass, when the release's GHCR tag no longer resolves (someone deleted it — see
-§3.4): pass the digest explicitly.
-
-```bash
-gh workflow run deploy.yml -f version=v1.2.2 -f reason="..." -f image_digest=sha256:<64hex>
-# The config still comes from v1.2.2; only digest resolution is bypassed.
-```
-
-If the smoke fails on the rolled-back version too, the job goes red and stops. Prod is now
-running the older release and is still unhealthy — escalate; do not dispatch a third
-version blindly.
-
-### 6.1b Manual fallback (only when Actions itself is unavailable)
-
-The workflow is the supported path. Use this only if GitHub Actions is down — and mind
-§6.3, because here nothing pairs the config to the image for you.
-
-```bash
-export PREV_DIGEST="sha256:<previous-good-digest>"   # make release-digest TAG=v1.2.2
-export REPO="ghcr.io/<owner>/<repo>"
-
-# Check out the target release first — the TOML must match the image (§6.3).
-git checkout v1.2.2 -- deploy/fly.prod.toml
-
+# 1. Roll back by digest (immutable — not a mutable tag)
 fly deploy \
   --app hc-rag-server-prod \
   --config deploy/fly.prod.toml \
   --image "${REPO}@${PREV_DIGEST}"
 
+# 2. Wait for readiness
 until curl -sf https://hc-rag-server-prod.fly.dev/ok | jq -e '.ok == true' >/dev/null; do
   echo "waiting for /ok ..."; sleep 5
 done
 echo "rollback: /ok is 200"
 
-# Smoke the rolled-back version (all six vars — see §5)
+# 3. Smoke the rolled-back version (all six vars — see §5)
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
 LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
 LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
@@ -678,45 +558,61 @@ LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
 LANGSMITH_TRACING=false \
 uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
-# Record it by hand — the dispatch path writes this record for you:
-#   date, tag rolled back from, digest rolled back to, smoke result, operator.
+# 4. Record the rollback (evidence)
+#    Append to .omo/evidence/task-12-oss-agent-server-tag-deploys.md (canonical) and
+#    mirror to .omo/notepads/oss-agent-server-tag-deploys/decisions.md:
+#    date, tag rolled back from, digest rolled back to, smoke result, operator.
 ```
 
 ### 6.2 One-time rollback exercise — mandatory after the first prod deploy
 
-> **When:** immediately after the first production deploy goes green and its smoke passes.
-> **Why:** to prove the rollback path works before it is needed under pressure — and the
-> path that must be proven is the dispatch (§6.1), because that is the one an operator
-> will reach for at 3am.
-> **Evidence:** the two runs record themselves (job summary + `rollback-prod-<version>`
-> artifact). Link both run URLs in **`.omo/evidence/task-12-oss-agent-server-tag-deploys.md`**
-> (canonical; mirror the completion note to `decisions.md`). The exercise is not complete
-> until both links are recorded.
+> **When:** immediately after the first production deploy goes green and its smoke passes.  
+> **Why:** to prove the rollback path works before it is needed under pressure.  
+> **Evidence:** paste the full output of every step below into **`.omo/evidence/task-12-oss-agent-server-tag-deploys.md`** (canonical; mirror the completion note to `decisions.md`). The exercise is not complete until the output is recorded.
 
 ```bash
-# Step 1 — roll back to the previous release and prove it serves.
-gh workflow run deploy.yml -f version=v1.2.2 -f reason="one-time rollback exercise (step 1/2)"
-# Approve the production gate. Expect: /ok 200, smoke 10/10, green job.
+# Capture digests: current (just deployed) and previous (the one before it).
+# If there is no previous prod digest (first-ever deploy), use the current digest
+# as both "current" and "previous" for the purpose of the exercise — the point
+# is to prove `fly deploy --image ...@sha256:<digest>` + /ok + smoke roundtrips.
+export CURRENT_DIGEST="sha256:<current-digest>"
+export PREV_DIGEST="sha256:<previous-digest>"   # or same as CURRENT_DIGEST if none
+export REPO="ghcr.io/<owner>/<repo>"
 
-# Step 2 — roll forward to the release that is meant to be live.
-gh workflow run deploy.yml -f version=v1.2.3 -f reason="one-time rollback exercise (step 2/2)"
-# Approve. Expect: /ok 200, smoke 10/10, green job.
+# Step 1 — deploy the previous digest (downgrade)
+fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image "${REPO}@${PREV_DIGEST}"
+until curl -sf https://hc-rag-server-prod.fly.dev/ok | jq -e '.ok == true' >/dev/null; do sleep 5; done
+LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
+LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
+LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
+LANGSMITH_API_KEY="<lsv2_...>" \
+COACH_INTERNAL_TOKEN="<internal>" \
+LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
+LANGSMITH_TRACING=false \
+uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
+# Expect: 10/10 PASS, /ok 200 — paste the full output
 
-# Step 3 — link both run URLs in the evidence file and mark the exercise complete.
+# Step 2 — restore the current digest
+fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image "${REPO}@${CURRENT_DIGEST}"
+until curl -sf https://hc-rag-server-prod.fly.dev/ok | jq -e '.ok == true' >/dev/null; do sleep 5; done
+LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
+LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
+LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
+LANGSMITH_API_KEY="<lsv2_...>" \
+COACH_INTERNAL_TOKEN="<internal>" \
+LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
+LANGSMITH_TRACING=false \
+uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
+# Expect: 10/10 PASS, /ok 200 — paste the full output
+
+# Step 3 — record both smoke outputs in evidence and mark the exercise complete
 ```
 
-On a first-ever deploy there is no previous release: dispatch the *current* tag for both
-steps. The point is to prove the dispatch → approval → digest resolution → deploy → `/ok`
-→ smoke round trip, not that the version changed.
-
-If either run fails, fix the rollback path before considering the hosting work done — the
-exercise is a gate, not a formality.
+If either smoke in the exercise fails, fix the rollback path before considering the hosting work done — the exercise is a gate, not a formality.
 
 ### 6.3 Rollback trap — `SERVER_STORAGE=postgres` vs pre-Postgres images
 
 > **Staged-rollout trap.** After the flip to release N+1 (`SERVER_STORAGE=postgres` in `deploy/fly.prod.toml` + `DATABASE_URL` from `fly postgres attach`), rolling back to an image **predating this PR** while `SERVER_STORAGE` is still `postgres` will **fail to boot**. The old image's `server/config.py` does not accept `"postgres"` as a valid `SERVER_STORAGE` value — the container exits during config validation, `/ok` never becomes 200, and the rollback looks like an outage.
-
-> **The §6.1 dispatch already handles this**: it checks the repo out at the target tag, so the image and its `deploy/fly.prod.toml` always come from the same release. What follows matters for the §6.1b manual fallback, and for understanding why the pairing rule exists.
 
 **Safe rollback pairs:**
 
@@ -753,18 +649,13 @@ curl -sf https://hc-rag-server-prod.fly.dev/info | jq .
 # or: fly releases --app hc-rag-server-prod
 ```
 
-If the wrong tag won, **dispatch the intended one**. The §6.1 job deploys any released
-tag's image digest and its `deploy/fly.prod.toml`, so re-asserting a version is the same
-motion as rolling back to one:
+If the wrong tag won, **re-push the intended tag** to queue a fresh pipeline run:
 
 ```bash
-gh workflow run deploy.yml -f version=v1.2.4 -f reason="v1.2.3 won the race; re-asserting the intended release"
+git push origin v1.2.4 --force   # re-push the intended tag; pipeline re-runs deploy-prod with that tag's digest
+# Or trigger via workflow_dispatch with the intended tag:
+gh workflow run deploy.yml --ref main -f tag=v1.2.4
 ```
-
-> **Never force-push a git tag to re-run a deploy.** A re-pointed tag would name a
-> different commit than the image already published under that version, and the immutable
-> `ghcr.io/<repo>:1.2.4` → digest mapping the rollback path relies on would start lying
-> (§3.4). If a release is wrong, cut the next version.
 
 Do not rely on tag-push order alone. Always verify the running image:
 
@@ -775,24 +666,13 @@ fly image show --app hc-rag-server-prod
 
 ---
 
-## 8. Durability Caveat — AS OF THIS RELEASE (N) every deploy/restart still wipes; durable reality only after the flip to N+1
+## 8. Durability — LIVE since v1.0.7 (Postgres flip executed 2026-08-24)
 
-> **Read this carefully — three states matter.** Code capability (what this PR delivers) vs production state (what is live today) vs activated durability (what happens after the human-gated flip). Confusing them is the main risk this section exists to prevent.
+> **Current reality: durable.** Production runs `SERVER_STORAGE=postgres` (see `deploy/fly.prod.toml`). Threads, store items, and cron registrations are rows in Postgres (`hc-rag-server-prod-db`, dedicated db `hc_rag_server_prod`) and **survive deploys, restarts, OOMs, and host migrations**. The pre-flip caveat below is kept for the record.
 
-**As of this release (N) — what production actually does TODAY:**
+**Pre-flip state (historical, releases N):** with `SERVER_STORAGE=memory`, every `fly deploy`/restart/OOM wiped all Agent Server state — thread IDs 404'd after restart, queued/in-flight runs were lost, store items and cron schedules vanished.
 
-Production still runs `SERVER_STORAGE=memory` (see `deploy/fly.prod.toml` — flipped only in release N+1 per §0b). So **every `fly deploy`, every machine restart, every OOM or host migration still wipes** all Agent Server state — exactly as before this PR:
-
-- Thread IDs from before the restart 404.
-- Runs queued or in-flight are lost.
-- Store items (including uploaded-proposal reservations) are gone.
-- Cron schedules are gone — they must be re-created through coach turns (the reminder flow re-creates the underlying cron after restart; no automatic cron resurrection).
-
-**Operator implication for release N:** do not promise cross-restart continuity to users. Schedule deploys during low-traffic windows and re-run ingest only if Weaviate itself was reset (its volume preserves data across server restarts, but not across `fly volumes destroy`).
-
-**After the flip to release N+1 (`SERVER_STORAGE=postgres`) — the delivered durable reality:**
-
-Once the human operator completes §0b and ships N+1, the same `server/storage.py` factory that today returns `InMemorySaver`/`InMemoryStore` + in-memory dicts instead returns `AsyncPostgresSaver`/`AsyncPostgresStore` + `hc_*` tables (see §9). Then:
+**Durable behavior now live:** the `server/storage.py` factory returns `AsyncPostgresSaver`/`AsyncPostgresStore` + `hc_*` tables (see §9):
 
 - Threads (id/metadata/created/updated/expires_at), store items, and cron registrations **survive** machine restarts and deploys — they are rows in Postgres, not process memory. Weaviate's 1 GB volume remains durable alongside them.
 - Queued/in-flight **run** state is still not durable the way threads are — a deploy still drains the old machine.
@@ -806,24 +686,22 @@ Even with Postgres, these never become durable — they are process-local by nat
 - **SSE streams** — `GET /threads/{id}/runs/stream` and `.../join/stream` are live HTTP connections pinned to one machine. A deploy breaks every open stream; the browser must reconnect and re-join.
 - **Deploy-overlap transient** — Fly may briefly run two machines (old + new) during a rolling deploy. A `running` record written on the old machine can **404** when read through the new process for a few seconds until the old machine drains. This is inherent to single-machine + rolling deploys and survives the Postgres migration — do not treat a brief `running`-404 as data loss.
 
-> **Summary:** this PR delivers durable code (release N) but production is still ephemeral (`SERVER_STORAGE=memory`). Durability only takes effect after the separate, human-gated flip to N+1 per §0b. Until then, every deploy still wipes Agent Server state.
+> **Summary:** production is durable since v1.0.7 (`SERVER_STORAGE=postgres`, flip executed 2026-08-24 per §0b). Every deploy no longer wipes Agent Server state; the §0b sign-off items (data-at-rest, cron tokens at rest, operator-owned backups) are the accepted trade.
 
 ---
 
-## 9. Delivered Persistence Design — code capability NOW EXISTS; activation is N+1
+## 9. Persistence Design — LIVE since v1.0.7
 
-> **What NOW EXISTS IN CODE (this PR, release N) vs what is ACTIVE in production (still memory).** Everything below is **shipped in the image** and ready to activate — but it does nothing in production until the §0b flip sets `SERVER_STORAGE=postgres`. Today production still reads `SERVER_STORAGE=memory` and takes the in-memory path.
+> **Active in production.** `deploy/fly.prod.toml` ships `SERVER_STORAGE = "postgres"` and the attached cluster provides `DATABASE_URL`. Everything below runs live; only §6.3's rollback trap (pre-Postgres images reject the value) remains operationally relevant.
 
-**Delivered design (in the image as of this PR):**
+**Design (shipped in the image since release N):**
 
 - **Single factory, two paths.** `server/storage.py:create_storage(...)` now has both arms: `memory` returns `InMemorySaver`/`InMemoryStore` + in-memory dicts `{threads,runs,crons}`; `postgres` returns `AsyncPostgresSaver`/`AsyncPostgresStore` against `DATABASE_URI` (or `DATABASE_URL` alias) plus **durable `hc_*` tables** that replace those dicts. `server/config.py` validates `SERVER_STORAGE` as `Literal["memory","postgres"]` — the `postgres` value is accepted as of this PR (pre-Postgres images reject it; see §6.3).
 - **Registries are migration-complete — not future work.** The `hc_*` DDL (threads, runs, crons, store) ships in this PR and is applied on the `postgres` path. The seam made the cut point explicit; the migration is **delivered**, not pending. Switching `SERVER_STORAGE` to `postgres` therefore **does** persist threads/store/crons — the caveat in earlier docs ("registries need their own migration") is resolved as of this PR. What remains ephemeral even after activation is only the process-local pieces named in §8.
 - **Run-input redaction divergence between modes (deliberate).** `memory` keeps the existing posture — run inputs live in process memory and vanish on restart. `postgres` persists a **redacted** form of run inputs (identifiers scrubbed before write, aligned with `docs/safety.md`'s scrubbing guarantees). The two modes diverge on purpose: memory has no at-rest copy to redact, postgres has a scrubbed one. Do not assume the wire-visible input equals the at-rest row — logging and storage both go through the scrubber.
 - **Weaviate's 1 GB volume** remains durable alongside Postgres once activated; it is unchanged by the storage-mode switch. A future move to Weaviate Cloud is a separate migration with its own data copy (not covered here).
 
-**What is NOT yet active in production (as of release N):**
-
-- No Postgres cluster exists until the operator runs §0b/§1.2b. No `DATABASE_URL`/`DATABASE_URI` is set. All three states above sit dormant — the image carries them, but `deploy/fly.prod.toml` still ships `SERVER_STORAGE = "memory"` and that is what Fly runs.
+**Activation state: COMPLETE (v1.0.7).** The cluster exists (`hc-rag-server-prod-db`), `DATABASE_URL` is set by attach, and `deploy/fly.prod.toml` ships `SERVER_STORAGE = "postgres"`.
 
 ---
 
@@ -846,20 +724,20 @@ The server is **single-machine** (`min_machines_running = 1`, `auto_stop_machine
 
 ---
 
-## 11. Cost BOM — ~$18–25/mo today (N); ~$23–35/mo once Postgres is activated (N+1)
+## 11. Cost BOM — ~$23–35/mo (Postgres live since v1.0.7)
 
 | Item | Size / spec | ~Monthly cost (USD) | Notes |
 |---|---|---|---|
 | Fly Machine — `hc-rag-server-prod` | `shared-cpu-1x`, 512 MB–1 GB RAM, always-on (`auto_stop_machines=false`, `min_machines_running=1`) | **$5–10** | single machine, no autoscaling |
 | Fly Machine — `hc-rag-weaviate-prod` | `shared-cpu-1x`, 512 MB–1 GB RAM, always-on, plus `cr.weaviate.io/semitechnologies/weaviate:1.30.2` | **$5–10** | private networking only |
 | Fly Volume — `weaviate_data` | 1 GB | **$0.15** | `1 GB × $0.15/GB/mo`; the only persistent volume today |
-| Fly Postgres — `hc-rag-pg-prod` *(N+1 only, cost once activated)* | `shared-cpu-1x`, 10 GB volume, unmanaged single-node (`fly postgres create --vm-size shared-cpu-1x --volume-size 10 --initial-cluster-size 1`) | **~$5–10** | **Not spent yet — as of this release (N) production still runs `SERVER_STORAGE=memory` and this cluster does not exist.** Provisioned by the human operator in §0b/§1.2b for release N+1; includes `vector` (pgvector) extension. Fly Postgres is single-node, no automatic backups; see §0b sign-off item 3 |
+| Fly Postgres — `hc-rag-server-prod-db` *(live)* | `shared-cpu-1x`, 10 GB volume, unmanaged single-node (pgvector image `registry.fly.io/hc-rag-pgvector:17`) | **~$5–10** | **Spent since v1.0.7.** Attached to the server app with a dedicated `hc_rag_server_prod` user/database; includes `vector` (pgvector) 0.8.6. Fly Postgres is single-node, no automatic backups; see §0b sign-off item 3 |
 | Outbound / bandwidth | modest (API + chunks) | **$0–2** | Fly includes a small free allowance |
 | **Subtotal — as of this PR (N, still memory)** | | **~$10–22** | rounded to **~$18–25/mo** with headroom in the plan |
 | **Subtotal — once Postgres activated (N+1)** | | **~$15–32** | rounded to **~$23–35/mo** with headroom — the +$5–10 is the Postgres line above |
 | Per-release smoke AI usage | `scripts/deployed_smoke.py` may touch LLM retrieval via the server | **$0.01–0.10 per run** | synthetic accounts, tracing off; not a monthly fixed cost |
 
-> The `$18–25/mo` band (release N) uses slightly larger machine sizing and leaves headroom for a memory bump. The `$23–35/mo` band (release N+1) is the same plus the unmanaged single-node Postgres add-on. Actual Fly invoices vary with exact `vm` size and region. Until the §0b checklist is completed, the Postgres cost is **$0 — it is not spent**. Per-release smoke AI usage is additional and scales with releases, not with traffic.
+> The `$23–35/mo` band is the live run-rate since v1.0.7: app sizing plus the unmanaged single-node Postgres add-on (~$4/mo actual for shared-cpu-1x/10GB). Actual Fly invoices vary with exact `vm` size and region. Per-release smoke AI usage is additional and scales with releases, not with traffic.
 
 ---
 
@@ -885,13 +763,10 @@ fly tokens create deploy -x 8760h -a hc-rag-server-prod   # AFTER apps exist
 fly secrets set --app hc-rag-server-prod OPENAI_API_KEY="<...>" SUPABASE_URL="<...>" SUPABASE_SERVICE_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" CORS_ALLOW_ORIGINS="<...>" COACH_ALLOWED_ORIGINS="<...>" LANGSMITH_API_KEY="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGGRAPH_DEPLOYMENT_URL="<...>" LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>"
 fly secrets list --app hc-rag-server-prod
 
-# Release (§3.1 — the workflow creates the tag)
-make next-version                                    # preview the computed version
-make release-prep BUMP=minor                         # bump pyproject + uv.lock (PR it)
-gh workflow run release.yml -f bump=minor            # cut it
-gh workflow run release.yml -f bump=auto -f dry_run=true   # plan only
-# Fallback, no RELEASE_TAG_TOKEN / Actions down (§3.2):
-make release TAG=v1.2.3 && git tag -a v1.2.3 -m "release v1.2.3" && git push origin v1.2.3
+# Release (strict vX.Y.Z for prod; -rc allowed only for local hermetic probes)
+make release TAG=v1.2.3
+git tag v1.2.3 && git push origin v1.2.3
+gh workflow run deploy.yml --ref main -f tag=v1.2.3   # alternative dispatch
 
 # Deploy (pipeline runs this; manual equivalent)
 fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image ghcr.io/<owner>/<repo>@sha256:<digest>
@@ -904,12 +779,10 @@ fly machines run ghcr.io/<owner>/<repo>@sha256:<digest> --app hc-rag-server-prod
 curl -sf https://hc-rag-server-prod.fly.dev/ok | jq .
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
-# Rollback (§6.1 — dispatch, then approve the production gate)
-make rollback TAG=v1.2.2 REASON="smoke red on v1.2.3"     # prints the command, dispatches nothing
-gh workflow run deploy.yml -f version=v1.2.2 -f reason="smoke red on v1.2.3"
-make release-digest TAG=v1.2.2                            # resolve a release to its digest
-# Break-glass, GHCR tag gone: add -f image_digest=sha256:<64hex>
-# Actions itself down: §6.1b (check out the tag's fly.prod.toml first, then fly deploy by digest)
+# Rollback
+fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image ghcr.io/<owner>/<repo>@sha256:<previous>
+curl -sf https://hc-rag-server-prod.fly.dev/ok | jq .
+LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
 # Status
 fly status --app hc-rag-server-prod
