@@ -9,11 +9,12 @@ import {
   postFeedback,
   postUpload,
   searchThreads,
-  streamRun,
   type CoachFetch,
-  type CoachStreamClient,
 } from "./coachApi";
-import type { CoachChatDeps } from "./useCoachChat";
+import {
+  useLangChainCoachStream,
+  type CoachStreamDeps,
+} from "./useCoachStream";
 import { getSupabase } from "@/lib/supabase";
 import { createCoachClient, supabaseAccessToken } from "@/lib/langgraph";
 
@@ -23,13 +24,13 @@ import { createCoachClient, supabaseAccessToken } from "@/lib/langgraph";
  * they inject their own deps bundle.
  */
 
-let cachedDeps: CoachChatDeps | null = null;
+let cachedDeps: CoachStreamDeps | null = null;
 
-export function createBrowserDeps(): CoachChatDeps {
+export function createBrowserDeps(): CoachStreamDeps {
   if (cachedDeps !== null) return cachedDeps;
   const supabase = getSupabase();
   const fetcher: CoachFetch = createCoachFetch(() => supabaseAccessToken(supabase));
-  const client: CoachStreamClient = createCoachClient(() => supabaseAccessToken(supabase));
+  const client = createCoachClient(() => supabaseAccessToken(supabase));
   cachedDeps = {
     api: {
       createThread: () => createThread(fetcher),
@@ -42,9 +43,8 @@ export function createBrowserDeps(): CoachChatDeps {
       getUploadStatus: (uploadId) => getUploadStatus(fetcher, uploadId),
       postFeedback: (feedback) => postFeedback(fetcher, feedback),
     },
-    stream: {
-      streamRun: (threadId, payload) => streamRun(client, threadId, payload),
-    },
+    client,
+    useStream: useLangChainCoachStream,
     auth: { signOut: () => supabase.auth.signOut() },
     sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     newUploadId: () => crypto.randomUUID(),

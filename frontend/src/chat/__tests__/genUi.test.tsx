@@ -3,7 +3,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatShell } from "@/chat/components/ChatShell";
 import { MessageList } from "@/chat/components/MessageList";
-import type { CoachApiBundle, CoachChatDeps, CoachStreamBundle } from "@/chat/useCoachChat";
+import type { CoachApiBundle } from "@/chat/useCoachStream";
 import type { ThreadSummary } from "@/chat/coachApi";
 import {
   aiDisplayText,
@@ -193,17 +193,11 @@ describe("CalendarChangeCard interrupt surface", () => {
   });
 
   it("a failed resume (dead thread) shows the error and re-enables the card once", async () => {
-    const calls: StreamCall[] = [];
-    const stream: CoachStreamBundle & { calls: StreamCall[] } = {
-      calls,
-      streamRun: (threadId, payload) => {
-        calls.push({ threadId, payload });
-        return (async function* () {
+    const stream = fakeStream(() =>
+      (async function* () {
           throw new Error("Thread not found");
-          yield { event: "updates", data: {} };
-        })();
-      },
-    };
+        })(),
+    );
     const deps = fakeDeps(mountDeps(() => stateWith([], [{ value: CALENDAR_INTERRUPT }])), stream);
     render(<ChatShell deps={deps} email={EMAIL} onSignedOut={() => {}} />);
     const user = userEvent.setup();
@@ -211,8 +205,8 @@ describe("CalendarChangeCard interrupt surface", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent("Thread not found");
     expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Confirm change" }));
-    await waitFor(() => expect(calls).toHaveLength(2));
-    expect(calls[1]?.payload).toEqual({ command: { resume: { accept: true } } });
+    await waitFor(() => expect(stream.calls).toHaveLength(2));
+    expect(stream.calls[1]?.payload).toEqual({ command: { resume: { accept: true } } });
   });
 });
 

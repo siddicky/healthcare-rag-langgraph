@@ -4,7 +4,7 @@ import { useRef } from "react";
 import type { DispatchActionId, DispatchHandlers } from "@/catalog/dispatch";
 import { isAiMessage } from "@/chat/model";
 import { OPENERS, UPLOAD_OPENER } from "@/chat/coachProtocol";
-import { useCoachChat, type CoachChatDeps } from "@/chat/useCoachChat";
+import { useCoachStream, type CoachStreamDeps } from "@/chat/useCoachStream";
 import { ActionBar } from "./ActionBar";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
@@ -25,11 +25,11 @@ export function ChatShell({
   email,
   onSignedOut,
 }: {
-  deps: CoachChatDeps;
+  deps: CoachStreamDeps;
   email: string;
   onSignedOut: () => void;
 }) {
-  const chat = useCoachChat(deps);
+  const chat = useCoachStream(deps);
   const openerFileRef = useRef<HTMLInputElement | null>(null);
 
   const dispatchHandlers: DispatchHandlers = {

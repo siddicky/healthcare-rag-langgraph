@@ -18,6 +18,7 @@ const CHAT_SOURCES = [
   "src/chat/uploadFlow.ts",
   "src/chat/titles.ts",
   "src/chat/useCoachChat.ts",
+  "src/chat/useCoachStream.ts",
   "src/chat/components/ChatShell.tsx",
   "src/chat/components/Composer.tsx",
   "src/chat/components/MessageList.tsx",

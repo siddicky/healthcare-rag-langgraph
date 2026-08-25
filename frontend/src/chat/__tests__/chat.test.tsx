@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatShell } from "@/chat/components/ChatShell";
-import type { CoachApiBundle, CoachChatDeps, CoachStreamBundle } from "@/chat/useCoachChat";
+import type { CoachApiBundle, CoachStreamDeps } from "@/chat/useCoachStream";
 import { CoachApiError, type ThreadSummary } from "@/chat/coachApi";
 import { ERASE_MARKER_NAME, SENTINEL_QUESTION } from "@/chat/coachProtocol";
 import {
@@ -20,7 +20,7 @@ import {
 
 const EMAIL = "member@example.com";
 
-function shell(deps: CoachChatDeps) {
+function shell(deps: CoachStreamDeps) {
   return render(<ChatShell deps={deps} email={EMAIL} onSignedOut={() => {}} />);
 }
 
@@ -30,6 +30,10 @@ async function settled() {
 
 beforeEach(() => {
   window.localStorage.clear();
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("openers", () => {
@@ -45,7 +49,30 @@ describe("openers", () => {
     expect(stream.calls[0]?.payload).toEqual({
       input: { question: "Log today's weight" },
     });
+    expect(stream.calls[0]?.options).toMatchObject({
+      streamMode: ["updates"],
+      streamResumable: false,
+      multitaskStrategy: "reject",
+    });
     expect(await screen.findByText("Here you go.")).toBeInTheDocument();
+  });
+
+  it("submits the resumable messages envelope when the member perimeter is v2", async () => {
+    vi.stubEnv("NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER", "v2");
+    const stream = fakeStream(() => [
+      updatesPart("coach_agent", [aiMessage("Queued.", "a1")]),
+    ]);
+    shell(fakeDeps({}, stream));
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Log today's weight" }));
+
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(stream.calls[0]?.options).toMatchObject({
+      streamMode: ["updates", "messages"],
+      streamResumable: true,
+      multitaskStrategy: "enqueue",
+    });
   });
 
   it("routes the upload opener to the attach input instead of sending", async () => {
@@ -169,18 +196,14 @@ describe("server reset during an active conversation", () => {
       searchCount += 1;
       return searchCount === 1 ? [thread("t-missing")] : [];
     });
-    const stream: CoachStreamBundle & { calls: StreamCall[] } = {
-      calls: [],
-      streamRun(threadId, payload) {
-        stream.calls.push({ threadId, payload });
-        return (async function* () {
+    const stream = fakeStream(() =>
+      (async function* () {
           throw Object.assign(
             new Error('HTTP 404: {"detail":"Thread not found"}'),
             { status: 404 },
           );
-        })();
-      },
-    };
+        })(),
+    );
     const deps = fakeDeps(
       {
         searchThreads,
@@ -355,18 +378,14 @@ describe("sidebar thread management", () => {
 describe("one active run per thread", () => {
   it("locks the composer while a run streams", async () => {
     const gate: { release: (() => void) | null } = { release: null };
-    const stream: CoachStreamBundle & { calls: StreamCall[] } = {
-      calls: [],
-      streamRun(threadId, payload) {
-        stream.calls.push({ threadId, payload });
-        return (async function* () {
+    const stream = fakeStream(() =>
+      (async function* () {
           await new Promise<void>((resolve) => {
             gate.release = resolve;
           });
           yield updatesPart("coach_agent", [aiMessage("done", "a1")]);
-        })();
-      },
-    };
+        })(),
+    );
     const deps = fakeDeps({}, stream);
     shell(deps);
     const user = userEvent.setup();

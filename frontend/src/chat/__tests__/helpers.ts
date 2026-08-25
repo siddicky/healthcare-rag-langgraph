@@ -1,8 +1,19 @@
 import { vi } from "vitest";
-import type { CoachChatDeps, CoachApiBundle, CoachStreamBundle } from "@/chat/useCoachChat";
+import { useRef, useState } from "react";
+import { Client } from "@langchain/langgraph-sdk";
+import type {
+  CoachApiBundle,
+  CoachStreamDeps,
+  CoachStreamHandle,
+  CoachStreamOptions,
+  CoachSubmitOptions,
+  CoachUseStream,
+} from "@/chat/useCoachStream";
 import type { RunStreamPart } from "@/chat/coachApi";
 import type { ThreadSummary } from "@/chat/coachApi";
 import type { ResumePayload, RunInput } from "@/chat/coachProtocol";
+import { applyStreamPart } from "@/chat/stream";
+import type { WireMessage } from "@/chat/model";
 
 export function thread(id: string, overrides: Partial<ThreadSummary> = {}): ThreadSummary {
   return {
@@ -28,36 +39,90 @@ export function fakeApi(overrides: Partial<CoachApiBundle> = {}): CoachApiBundle
   };
 }
 
-export type StreamCall = { threadId: string; payload: { input: RunInput } | { command: { resume: ResumePayload } } };
+export type StreamCall = {
+  readonly threadId: string;
+  readonly payload: { input: RunInput } | { command: { resume: ResumePayload } };
+  readonly options?: CoachSubmitOptions;
+};
+
+export interface ScriptedCoachStream {
+  readonly calls: StreamCall[];
+  readonly client: Client;
+  readonly useStream: CoachUseStream;
+}
 
 export function fakeStream(
-  responses: (call: StreamCall, callIndex: number) => RunStreamPart[],
-): CoachStreamBundle & { calls: StreamCall[] } {
+  responses: (call: StreamCall, callIndex: number) => Iterable<RunStreamPart> | AsyncIterable<RunStreamPart>,
+): ScriptedCoachStream {
   const calls: StreamCall[] = [];
+  const client = new Client({ apiUrl: "http://coach.test" });
+  const useStream = (options: CoachStreamOptions): CoachStreamHandle => {
+    const [messages, setMessages] = useState<WireMessage[]>([]);
+    const [interrupts, setInterrupts] = useState<unknown[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState<unknown>(undefined);
+    const messagesRef = useRef<WireMessage[]>([]);
+
+    const run = async (call: StreamCall): Promise<void> => {
+      const callIndex = calls.length;
+      calls.push(call);
+      setIsLoading(true);
+      setError(undefined);
+      try {
+        for await (const part of responses(call, callIndex)) {
+          const next = applyStreamPart(messagesRef.current, part);
+          messagesRef.current = next.messages;
+          setMessages(next.messages);
+          if (next.interruptValue !== null) setInterrupts([{ value: next.interruptValue }]);
+        }
+      } catch (streamError) {
+        setError(streamError);
+        throw streamError;
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    return {
+      values: { messages },
+      messages,
+      interrupts,
+      interrupt: interrupts[0],
+      isLoading,
+      isThreadLoading: false,
+      error,
+      threadId: options.threadId,
+      submit: (input, submitOptions) =>
+        run({ threadId: submitOptions.threadId, payload: { input }, options: submitOptions }),
+      respond: (response) => {
+        const threadId = options.threadId;
+        if (threadId === null) return Promise.resolve();
+        setInterrupts([]);
+        return run({ threadId, payload: { command: { resume: response } } });
+      },
+      stop: async () => setIsLoading(false),
+      getThread: () => ({ threadId: options.threadId }),
+    };
+  };
   return {
     calls,
-    streamRun: (threadId, payload) => {
-      const callIndex = calls.length;
-      calls.push({ threadId, payload });
-      const parts = responses({ threadId, payload }, callIndex);
-      return (async function* (): AsyncGenerator<RunStreamPart> {
-        for (const part of parts) yield part;
-      })();
-    },
+    client,
+    useStream,
   };
 }
 
-export function emptyStream(): CoachStreamBundle & { calls: StreamCall[] } {
+export function emptyStream(): ScriptedCoachStream {
   return fakeStream(() => []);
 }
 
 export function fakeDeps(
   api: Partial<CoachApiBundle> = {},
-  stream: CoachStreamBundle & { calls: StreamCall[] } = emptyStream(),
-): CoachChatDeps & { api: CoachApiBundle; stream: CoachStreamBundle & { calls: StreamCall[] } } {
+  stream: ScriptedCoachStream = emptyStream(),
+): CoachStreamDeps & { readonly api: CoachApiBundle } {
   return {
     api: fakeApi(api),
-    stream,
+    client: stream.client,
+    useStream: stream.useStream,
     auth: { signOut: vi.fn(async () => undefined) },
     sleep: vi.fn(async () => undefined),
     newUploadId: () => "00000000-0000-4000-8000-000000000001",
