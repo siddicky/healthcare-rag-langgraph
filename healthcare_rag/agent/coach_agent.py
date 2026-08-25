@@ -111,11 +111,17 @@ async def _safe_model_response(
             result=projected, structured_response=response.structured_response
         )
     medical_calls = [call for call in output.tool_calls if call["name"] == "medical_lookup"]
-    if medical_calls and len(medical_calls) != len(output.tool_calls):
+    if medical_calls:
+        # Never let assistant prose alongside the tool call reach the member: the
+        # medical answer contract is tool-only, so any preamble the model wrote in
+        # this same step (e.g. "let me check that...") is dropped, not rendered.
+        blanked_content: str | list[str | dict[str, object]] = (
+            [] if isinstance(output.content, list) else ""
+        )
         output = AIMessage(
             id=output.id,
             name=output.name,
-            content=output.content,
+            content=blanked_content,
             tool_calls=medical_calls,
         )
         projected = [

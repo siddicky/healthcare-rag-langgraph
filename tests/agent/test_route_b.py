@@ -232,6 +232,55 @@ async def test_medical_lookup_round_trip_relays_answer_and_calls_model_once(
 
 
 @pytest.mark.asyncio
+async def test_medical_lookup_call_strips_any_accompanying_assistant_prose(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    async def fake_relay(question: str, config: RunnableConfig) -> tuple[str, list[str]]:
+        del question, config
+        return "Here's what the monograph says:\n\nanswer.", []
+
+    monkeypatch.setattr(
+        "healthcare_rag.agent.tools.medical_lookup.relay_question", fake_relay
+    )
+    model = ToolCapableFakeModel(
+        responses=[
+            AIMessage(
+                content="Let me check the monograph for you — metformin can cause nausea.",
+                tool_calls=[
+                    {
+                        "id": "lookup-1",
+                        "name": "medical_lookup",
+                        "args": {"query": "what are metformin side effects"},
+                    }
+                ],
+            )
+        ]
+    )
+
+    # When
+    result = await build_route_b_agent(model, InMemoryStore()).ainvoke(
+        {
+            "messages": [
+                HumanMessage(id="human-1", content="what are metformin side effects")
+            ]
+        },
+        _config(),
+        context=_context(),
+    )
+
+    # Then
+    ai_messages = [
+        message for message in result["messages"] if isinstance(message, AIMessage)
+    ]
+    assert len(ai_messages) == 2
+    call_message, relayed_message = ai_messages
+    assert call_message.content == ""
+    assert "nausea" not in call_message.content
+    assert relayed_message.content == "Here's what the monograph says:\n\nanswer."
+
+
+@pytest.mark.asyncio
 async def test_mixed_medical_lookup_call_drops_other_tool_calls(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
