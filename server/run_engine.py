@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import deque
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import ClassVar, Final, Literal, Protocol, TypeAlias, runtime_checkable
@@ -21,6 +21,7 @@ from server.storage import Storage
 JSONValue: TypeAlias = JsonValue
 
 QUEUE_LIMIT: Final = 100
+EVENT_BUFFER_LIMIT: Final = 100
 PERSISTED_PAYLOAD_REDACTION: Final = "[redacted]"
 NONTERMINAL_RUN_STATUSES: Final[frozenset[str]] = frozenset({"pending", "running"})
 
@@ -90,7 +91,7 @@ class RunRequest(BaseModel):
     config: dict[str, JSONValue] = Field(default_factory=dict)
     stream_mode: list[Literal["updates", "custom", "values", "messages", "messages-tuple"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
     stream_subgraphs: Literal[False] = False
-    stream_resumable: Literal[False] = False
+    stream_resumable: bool = False
     durability: Literal["exit"] = "exit"
     if_not_exists: Literal["reject"] = "reject"
     multitask_strategy: Literal["reject", "enqueue", "interrupt"] = "reject"
@@ -143,7 +144,7 @@ class GraphRunner(Protocol):
         input: dict[str, JSONValue] | Command[str],
         config: dict[str, JSONValue],
         *,
-        stream_mode: list[str],
+        stream_mode: Sequence[str],
         durability: Literal["exit"],
     ) -> AsyncIterator[tuple[str, JSONValue]]: ...
 
@@ -164,10 +165,18 @@ class RunRuntime:
     done: anyio.Event = field(default_factory=anyio.Event)
     changed: anyio.Event = field(default_factory=anyio.Event)
     events: list[tuple[str, JSONValue]] = field(default_factory=list)
+    event_count: int = 0
     output: dict[str, JSONValue] = field(default_factory=dict)
     pre_values: dict[str, JSONValue] = field(default_factory=dict)
     scope: anyio.CancelScope | None = None
     rollback: bool = False
+
+    def append_event(self, mode: str, data: JSONValue) -> None:
+        self.events.append((mode, data))
+        self.event_count += 1
+        overflow = len(self.events) - EVENT_BUFFER_LIMIT
+        if overflow > 0:
+            del self.events[:overflow]
 
 
 class RunConflict(Exception):
@@ -246,6 +255,7 @@ class RunEngine:
             # forged principal back on GET /runs/{id} and hand it to anything
             # that reads the record instead of the runtime.
             "config": _sanitized_config(request.config),
+            "stream_resumable": request.stream_resumable,
             "status": "pending",
             "created_at": datetime.now(UTC).isoformat(),
         }
@@ -300,7 +310,7 @@ class RunEngine:
                     stream_mode=runtime.request.stream_mode,
                     durability="exit",
                 ):
-                    runtime.events.append((mode, _to_jsonable(data)))  # type: ignore[arg-type]
+                    runtime.append_event(mode, _to_jsonable(data))  # type: ignore[arg-type]
                     runtime.changed.set()
                     runtime.changed = anyio.Event()
             cancelled = scope.cancel_called
