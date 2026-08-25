@@ -412,31 +412,11 @@ export function MessageList({
         ))}
         {allValuesTrees.length > 0 && (
           <div data-testid="values-catalog">
-            {allValuesTrees.map((tree, idx) => {
-              const scopeFromTree = (() => {
-                try {
-                  const obj = tree as Record<string, unknown>;
-                  const props = (obj.props ?? {}) as Record<string, unknown>;
-                  for (const v of Object.values(props)) {
-                    if (typeof v === "object" && v !== null && "__ref" in (v as Record<string, unknown>)) {
-                      const ref = (v as Record<string, unknown>).__ref as Record<string, unknown>;
-                      if (typeof ref.turn_scope_id === "string") return ref.turn_scope_id as string;
-                    }
-                    if (typeof v === "object" && v !== null && "action" in (v as Record<string, unknown>)) {
-                      continue;
-                    }
-                  }
-                } catch {
-                  // ignore
-                }
-                return lastScopeId;
-              })();
-              return (
-                <div className="widget-wrap" key={`values-${idx}`} data-testid="values-compose-tree">
-                  <CatalogTree tree={tree} envelopes={allValuesEnvelopes} turnScopeId={scopeFromTree} handlers={dispatchHandlers ?? {}} />
-                </div>
-              );
-            })}
+            {allValuesTrees.map((tree, idx) => (
+              <div className="widget-wrap" key={`values-${idx}`} data-testid="values-compose-tree">
+                <CatalogTree tree={tree} envelopes={allValuesEnvelopes} turnScopeId={lastScopeId} handlers={dispatchHandlers ?? {}} />
+              </div>
+            ))}
           </div>
         )}
         {upload.phase !== "idle" && upload.phase !== "failed" && (

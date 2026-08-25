@@ -323,6 +323,7 @@ async def test_history_checkpoint_forks_stream_run_with_selected_parent(
     assert any(
         item["parent_checkpoint_id"] == checkpoint_id for item in fork_history
     )
+    assert "tasks" not in fork_history[0]
 
 
 @pytest.mark.anyio

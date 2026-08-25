@@ -18,6 +18,7 @@ Notes:
 from __future__ import annotations
 
 from typing import Any
+from uuid import uuid4
 
 from langchain_core.tools import tool
 from langgraph.types import interrupt
@@ -30,6 +31,7 @@ def copy_to_clipboard(text: str) -> str:
         {
             "type": "tool",
             "tool_call": {
+                "id": str(uuid4()),
                 "name": "copy_to_clipboard",
                 "args": {"text": text},
             },

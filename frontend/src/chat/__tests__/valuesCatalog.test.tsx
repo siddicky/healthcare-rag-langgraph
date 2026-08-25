@@ -213,9 +213,10 @@ describe("values channel — structured output wiring", () => {
         valuesTrees={[tree]}
       />,
     );
-    // Only one instance should hydrate (the turn whose scope matches), but our
-    // values section renders as a separate catalog block using lastScope, so at
-    // least one succeeds. Verify at least one Weight renders and no crash.
-    expect(screen.getByText("Weight")).toBeInTheDocument();
+    // The values catalog block always hydrates against lastScopeId
+    // (OTHER_SCOPE here), so a tree whose refs point at an older turn's
+    // scope must fail closed through the hydrator's cross-turn check.
+    expect(screen.queryByText("Weight")).not.toBeInTheDocument();
+    expect(events.map((e) => e.kind)).toContain("cross_turn_ref");
   });
 });

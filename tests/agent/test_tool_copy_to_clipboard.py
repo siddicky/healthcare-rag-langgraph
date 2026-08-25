@@ -27,8 +27,18 @@ def test_copy_tool_interrupts_with_headless_payload_and_returns_copied() -> None
         payload = fake_interrupt.call_args[0][0]
         assert payload["type"] == "tool"
         tc = payload["tool_call"]
+        assert isinstance(tc["id"], str) and tc["id"]
         assert tc["name"] == "copy_to_clipboard"
         assert tc["args"] == {"text": "hello world"}
+
+
+def test_copy_tool_interrupt_payload_ids_differ_per_invocation() -> None:
+    with patch("healthcare_rag.agent.tools.copy_to_clipboard.interrupt", return_value="copied") as fake_interrupt:
+        copy_to_clipboard.invoke({"text": "first"})
+        copy_to_clipboard.invoke({"text": "second"})
+    first_id = fake_interrupt.call_args_list[0][0][0]["tool_call"]["id"]
+    second_id = fake_interrupt.call_args_list[1][0][0]["tool_call"]["id"]
+    assert first_id != second_id
 
 
 def test_copy_tool_handles_error_resume() -> None:

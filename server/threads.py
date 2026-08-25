@@ -656,7 +656,6 @@ async def get_thread_history(request: Request) -> Response:
                 "next": list(snapshot.next),
                 "metadata": snapshot.metadata,
                 "created_at": snapshot.created_at,
-                "tasks": snapshot.tasks,
                 "interrupts": interrupts,
             }
         )
