@@ -35,6 +35,35 @@ function Capture({ deps, onCapture }: { deps: CoachStreamDeps; onCapture: (c: Re
 }
 
 describe("join & rejoin streams", () => {
+  it("reconciles authoritative thread state when a resumed run finishes before trailing stream values", async () => {
+    const threadId = "cccccccc-cccc-4ccc-8ccc-cccccccccccc";
+    const finalMessage = aiMessage("Calendar updated.", "calendar-final");
+    const getThreadState = vi
+      .fn()
+      .mockResolvedValueOnce({ values: { messages: [] }, interrupts: [] })
+      .mockResolvedValue({ values: { messages: [finalMessage] }, interrupts: [] });
+    const stream = fakeStream(() => []);
+    const deps = fakeDeps(
+      {
+        searchThreads: vi.fn(async () => [thread(threadId)]),
+        getThread: vi.fn(async (id: string) => thread(id)),
+        getThreadState,
+      },
+      stream,
+    );
+    let chat: ReturnType<typeof useCoachStream> | null = null;
+    render(<Capture deps={deps} onCapture={(captured) => { chat = captured; }} />);
+
+    await waitFor(() => expect(chat?.activeThreadId).toBe(threadId));
+
+    await act(async () => {
+      await chat?.approveInterrupt({ accept: true });
+    });
+
+    await waitFor(() => expect(chat?.messages).toContainEqual(finalMessage));
+    expect(getThreadState).toHaveBeenCalledTimes(2);
+  });
+
   it("disconnect keeps server run alive (stop cancel:false) and rejoin replays", async () => {
     vi.stubEnv("NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER", "v2");
     let gateRelease: (() => void) | null = null;

@@ -43,23 +43,28 @@ export type StreamCall = {
   readonly threadId: string;
   readonly payload: { input: RunInput } | { command: { resume: ResumePayload } };
   readonly options?: CoachSubmitOptions;
+  readonly respondOptions?: { readonly interruptId?: string; readonly namespace?: readonly string[] };
 };
 
 export interface ScriptedCoachStream {
   readonly calls: StreamCall[];
   readonly client: Client;
   readonly useStream: CoachUseStream;
+  emitThreadId(threadId: string): void;
 }
 
 export function fakeStream(
   responses: (call: StreamCall, callIndex: number) => Iterable<RunStreamPart> | AsyncIterable<RunStreamPart>,
 ): ScriptedCoachStream {
+  const sdkThreadId = "33333333-3333-4333-8333-333333333333";
   const calls: StreamCall[] = [];
   const stopCalls: Array<{ cancel?: boolean }> = [];
   let disconnectCalls = 0;
   let serverRunAlive = false;
+  let onThreadId: CoachStreamOptions["onThreadId"] = () => undefined;
   const client = new Client({ apiUrl: "http://coach.test" });
   const useStream = (options: CoachStreamOptions): CoachStreamHandle => {
+    onThreadId = options.onThreadId;
     const [messages, setMessages] = useState<WireMessage[]>([]);
     const [interrupts, setInterrupts] = useState<unknown[]>([]);
     const [isLoading, setIsLoading] = useState(false);
@@ -80,7 +85,9 @@ export function fakeStream(
           const next = applyStreamPart(messagesRef.current, part);
           messagesRef.current = next.messages;
           setMessages(next.messages);
-          if (next.interruptValue !== null) setInterrupts([{ value: next.interruptValue }]);
+          if (next.interruptValue !== null) {
+            setInterrupts([{ id: "interrupt-1", value: next.interruptValue }]);
+          }
         }
       } catch (streamError) {
         setError(streamError);
@@ -117,13 +124,19 @@ export function fakeStream(
       isThreadLoading,
       error,
       threadId: options.threadId,
-      submit: (input: RunInput, submitOptions: CoachSubmitOptions) =>
-        run({ threadId: submitOptions.threadId, payload: { input }, options: submitOptions }),
-      respond: (response: ResumePayload) => {
+      submit: (input: RunInput, submitOptions: CoachSubmitOptions) => {
+        const threadId = options.threadId ?? submitOptions.threadId ?? sdkThreadId;
+        if (options.threadId === null) options.onThreadId(threadId);
+        return run({ threadId, payload: { input }, options: submitOptions });
+      },
+      respond: (
+        response: ResumePayload,
+        respondOptions?: { readonly interruptId?: string; readonly namespace?: readonly string[] },
+      ) => {
         const threadId = options.threadId;
         if (threadId === null) return Promise.resolve();
         setInterrupts([]);
-        return run({ threadId, payload: { command: { resume: response } } });
+        return run({ threadId, payload: { command: { resume: response } }, respondOptions });
       },
       respondAll: (responses: ResumePayload[] | Record<string, unknown>) => {
         const threadId = options.threadId;
@@ -151,6 +164,7 @@ export function fakeStream(
     calls,
     client,
     useStream,
+    emitThreadId: (threadId: string) => onThreadId(threadId),
   } as unknown as ScriptedCoachStream & { stopCalls: typeof stopCalls; disconnectCalls: () => number; serverAlive: () => boolean };
   (streamObj as unknown as Record<string, unknown>).stopCalls = stopCalls;
   (streamObj as unknown as Record<string, unknown>).disconnectCalls = () => disconnectCalls;

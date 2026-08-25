@@ -3,7 +3,7 @@ from __future__ import annotations
 import logging
 from collections import deque
 from collections.abc import AsyncIterator, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import asdict, dataclass, field, is_dataclass
 from datetime import UTC, datetime
 from typing import ClassVar, Final, Literal, Protocol, TypeAlias, runtime_checkable
 from uuid import uuid4
@@ -39,10 +39,7 @@ async def reconcile_interrupted_runs(storage: Storage) -> int:
     reconciled = 0
     for record in await storage.runs.all():
         run_id = record.get("run_id")
-        if (
-            isinstance(run_id, str)
-            and record.get("status") in NONTERMINAL_RUN_STATUSES
-        ):
+        if isinstance(run_id, str) and record.get("status") in NONTERMINAL_RUN_STATUSES:
             await storage.runs.set_status(run_id, "interrupted")
             reconciled += 1
     return reconciled
@@ -64,6 +61,8 @@ def _to_jsonable(obj: object) -> JSONValue:
         return {str(k): _to_jsonable(v) for k, v in obj.items()}  # type: ignore[arg-type]
     if isinstance(obj, (list, tuple, set)):
         return [_to_jsonable(v) for v in obj]  # type: ignore[arg-type]
+    if is_dataclass(obj) and not isinstance(obj, type):
+        return _to_jsonable(asdict(obj))
     model_dump = getattr(obj, "model_dump", None)
     if callable(model_dump):
         try:
@@ -90,7 +89,9 @@ class RunRequest(BaseModel):
     input: dict[str, JSONValue] | None = None
     command: ResumeCommand | None = None
     config: dict[str, JSONValue] = Field(default_factory=dict)
-    stream_mode: list[Literal["updates", "custom", "values", "messages", "messages-tuple"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
+    stream_mode: list[
+        Literal["updates", "custom", "values", "messages", "messages-tuple"]
+    ] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
     stream_subgraphs: Literal[False] = False
     stream_resumable: bool = False
     durability: Literal["exit"] = "exit"
@@ -111,7 +112,9 @@ class RunRequest(BaseModel):
                 raise ValueError("config.configurable must be an object")
             checkpoint_id = configurable.get("checkpoint_id")
             if checkpoint_id is not None and checkpoint_id != fork_from:
-                raise ValueError("forkFrom conflicts with config.configurable.checkpoint_id")
+                raise ValueError(
+                    "forkFrom conflicts with config.configurable.checkpoint_id"
+                )
             configurable = {**configurable, "checkpoint_id": fork_from}
             data["config"] = {**config, "configurable": configurable}
         if isinstance(data, dict) and "stream_mode" in data:
@@ -369,7 +372,10 @@ class RunEngine:
             self._start(queue.popleft())
 
     async def _restore(
-        self, graph: GraphRunner, config: dict[str, JSONValue], values: dict[str, JSONValue]
+        self,
+        graph: GraphRunner,
+        config: dict[str, JSONValue],
+        values: dict[str, JSONValue],
     ) -> None:
         configurable = config["configurable"]
         assert isinstance(configurable, dict)

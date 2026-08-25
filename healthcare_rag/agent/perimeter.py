@@ -5,6 +5,7 @@ import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Final, NoReturn, TypeAlias, override
+from urllib.parse import parse_qsl
 
 from pydantic import JsonValue
 
@@ -26,6 +27,8 @@ _STREAM: Final = re.compile(rf"^/threads/{_UUID}/runs/stream$")
 _JOIN: Final = re.compile(rf"^/threads/{_UUID}/runs/{_UUID}/join$")
 _JOIN_STREAM: Final = re.compile(rf"^/threads/{_UUID}/runs/{_UUID}/join/stream$")
 _CANCEL: Final = re.compile(rf"^/threads/{_UUID}/runs/{_UUID}/cancel$")
+_STREAM_EVENTS: Final = re.compile(rf"^/threads/{_UUID}/stream/events$")
+_COMMANDS: Final = re.compile(rf"^/threads/{_UUID}/commands$")
 _UPLOAD_STATUS: Final = re.compile(r"^/coach/uploads/[0-9a-fA-F-]+/status$")
 _SELECT_FIELDS: Final = frozenset(
     {"thread_id", "created_at", "updated_at", "metadata", "status"}
@@ -47,6 +50,19 @@ _RUN_V2_FIXED: Final = {
     "multitask_strategy": "enqueue",
 }
 _RUN_V2_STREAM_MODES: Final = frozenset({"updates", "messages", "values"})
+_THREADSTREAM_CHANNELS: Final = frozenset(
+    {
+        "values",
+        "updates",
+        "messages",
+        "tools",
+        "lifecycle",
+        "input",
+        "custom",
+        "tasks",
+        "checkpoints",
+    }
+)
 _PRIVATE_SENTINELS: Final = frozenset(
     {"question", "attachment_id", "cron_wake", "pending_document_op_id"}
 )
@@ -100,29 +116,78 @@ def _validate_search(body: JSONBody) -> None:
         _deny("Invalid thread search order")
 
 
-def _validate_fields(fields: JSONValue) -> None:
+def _validate_fields(fields: JSONValue, status_code: int = 403) -> None:
     if not isinstance(fields, list):
-        _deny("Resume fields must be a list")
+        _deny("Resume fields must be a list", status_code)
     for field in fields:
         if not isinstance(field, dict) or frozenset(field) != frozenset(
             {"key", "value"}
         ):
-            _deny("Invalid resume field")
+            _deny("Invalid resume field", status_code)
         if not isinstance(field["key"], str) or not isinstance(field["value"], str):
-            _deny("Invalid resume field")
+            _deny("Invalid resume field", status_code)
 
 
-def _validate_resume(command: JSONValue) -> None:
+def _validate_resume(command: JSONValue, status_code: int = 403) -> None:
     if not isinstance(command, dict) or frozenset(command) != frozenset({"resume"}):
-        _deny("Invalid resume command")
+        _deny("Invalid resume command", status_code)
     resume = command["resume"]
     if not isinstance(resume, dict) or set(resume) - {"accept", "fields"}:
-        _deny("Invalid resume payload")
+        _deny("Invalid resume payload", status_code)
     if "accept" not in resume or not isinstance(resume["accept"], bool):
-        _deny("Resume accept is required")
+        _deny("Resume accept is required", status_code)
     fields = resume.get("fields")
     if fields is not None:
-        _validate_fields(fields)
+        _validate_fields(fields, status_code)
+
+
+def _validate_checkpoint_config(config: JSONValue, path_thread_id: str) -> None:
+    if not isinstance(config, dict) or frozenset(config) - {"configurable"}:
+        _deny("Invalid checkpoint config", 400)
+    configurable = config.get("configurable")
+    if configurable is None:
+        return
+    if not isinstance(configurable, dict) or frozenset(configurable) - {
+        "thread_id",
+        "checkpoint_id",
+    }:
+        _deny("Invalid checkpoint config", 400)
+    bound_thread = configurable.get("thread_id")
+    if bound_thread is not None and (
+        not isinstance(bound_thread, str)
+        or bound_thread.casefold() != path_thread_id.casefold()
+    ):
+        _deny("Config thread_id must match the thread being run", 400)
+    if "checkpoint_id" in configurable and not isinstance(
+        configurable["checkpoint_id"], str
+    ):
+        _deny("Invalid checkpoint config", 400)
+
+
+def _validate_member_input(
+    run_input: JSONValue,
+    *,
+    allow_attachment: bool,
+    require_attachment_uuid: bool,
+    status_code: int = 403,
+) -> None:
+    allowed = {"question", "attachment_id"} if allow_attachment else {"question"}
+    if not isinstance(run_input, dict) or frozenset(run_input) - allowed:
+        _deny("Invalid run input", status_code)
+    question = run_input.get("question")
+    if not isinstance(question, str) or not question:
+        _deny("Question is required", status_code)
+    attachment = run_input.get("attachment_id")
+    if attachment is None:
+        return
+    if (
+        not isinstance(attachment, str)
+        or not attachment
+        or (require_attachment_uuid and re.fullmatch(_UUID, attachment) is None)
+    ):
+        _deny("Invalid attachment id", status_code)
+    if question != DOCUMENT_REVIEW_QUESTION:
+        _deny("Attachments require the document-review question", status_code)
 
 
 def _validate_run(body: JSONBody) -> None:
@@ -158,21 +223,180 @@ def _validate_run(body: JSONBody) -> None:
     if "command" in value:
         _validate_resume(value["command"])
         return
-    run_input = value["input"]
-    if not isinstance(run_input, dict) or frozenset(run_input) - {
-        "question",
-        "attachment_id",
-    }:
-        _deny("Invalid run input")
-    question = run_input.get("question")
-    if not isinstance(question, str) or not question:
-        _deny("Question is required")
-    attachment = run_input.get("attachment_id")
-    if attachment is not None:
-        if not isinstance(attachment, str) or not attachment:
-            _deny("Invalid attachment id")
-        if question != DOCUMENT_REVIEW_QUESTION:
-            _deny("Attachments require the document-review question")
+    _validate_member_input(
+        value["input"],
+        allow_attachment=True,
+        require_attachment_uuid=HC_RAG_MEMBER_STREAM_PERIMETER == "v2",
+    )
+
+
+def _validate_stream_events(body: JSONBody) -> None:
+    value = _require_body_mapping(body)
+    if frozenset(value) - {"channels", "namespaces", "depth", "since"}:
+        _deny("Invalid stream subscription", 400)
+    channels = value.get("channels")
+    if (
+        not isinstance(channels, list)
+        or not channels
+        or any(
+            not isinstance(channel, str)
+            or (
+                channel not in _THREADSTREAM_CHANNELS
+                and not (channel.startswith("custom:") and len(channel) > len("custom:"))
+            )
+            for channel in channels
+        )
+    ):
+        _deny("Invalid stream channels", 400)
+    namespaces = value.get("namespaces")
+    if namespaces is not None and (
+        not isinstance(namespaces, list)
+        or any(
+            not isinstance(namespace, list)
+            or any(not isinstance(part, str) for part in namespace)
+            for namespace in namespaces
+        )
+    ):
+        _deny("Invalid stream namespaces", 400)
+    for key in ("depth", "since"):
+        item = value.get(key)
+        if item is not None and (
+            not isinstance(item, int) or isinstance(item, bool) or item < 0
+        ):
+            _deny(f"Invalid stream {key}", 400)
+
+
+def _validate_run_start(
+    params: dict[str, JSONValue], path_thread_id: str
+) -> None:
+    if frozenset(params) - {"assistant_id", "input", "config", "multitaskStrategy"}:
+        _deny("Invalid run.start params", 400)
+    if "assistant_id" not in params or "input" not in params:
+        _deny("Invalid run.start params", 400)
+    if params["assistant_id"] != "coach":
+        _deny("Invalid run.start assistant", 400)
+    _validate_member_input(
+        params["input"],
+        allow_attachment=True,
+        require_attachment_uuid=True,
+        status_code=400,
+    )
+    config = params.get("config")
+    if config is not None:
+        _validate_checkpoint_config(config, path_thread_id)
+    strategy = params.get("multitaskStrategy")
+    if strategy is not None and strategy != "enqueue":
+        _deny("Invalid run.start multitask strategy", 400)
+
+
+def _validate_response_item(item: JSONValue) -> None:
+    if not isinstance(item, dict) or frozenset(item) - frozenset(
+        {"interrupt_id", "response", "namespace"}
+    ):
+        _deny("Invalid input.respond response", 400)
+    namespace = item.get("namespace")
+    if namespace is not None and namespace != []:
+        _deny("Members may only respond on the root namespace", 400)
+    if not isinstance(item["interrupt_id"], str):
+        _deny("Invalid input.respond interrupt", 400)
+    _validate_resume({"resume": item["response"]}, 400)
+
+
+def _validate_input_respond(
+    params: dict[str, JSONValue], path_thread_id: str
+) -> None:
+    if "responses" in params:
+        if frozenset(params) - {"responses", "config"}:
+            _deny("Invalid input.respond params", 400)
+        responses = params["responses"]
+        if not isinstance(responses, list) or not responses:
+            _deny("Invalid input.respond responses", 400)
+        for response in responses:
+            _validate_response_item(response)
+        config = params.get("config")
+        if config is not None:
+            _validate_checkpoint_config(config, path_thread_id)
+        return
+    _validate_response_item(params)
+
+
+def _validate_command_params(
+    method: str, params: dict[str, JSONValue], path_thread_id: str
+) -> None:
+    match method:
+        case "run.start":
+            _validate_run_start(params, path_thread_id)
+        case "input.respond":
+            _validate_input_respond(params, path_thread_id)
+        case "state.get":
+            if frozenset(params) - {"keys"}:
+                _deny("Invalid state.get params", 400)
+            keys = params.get("keys")
+            if keys is not None and (
+                not isinstance(keys, list)
+                or any(not isinstance(key, str) for key in keys)
+            ):
+                _deny("Invalid state.get keys", 400)
+        case "state.listCheckpoints":
+            if frozenset(params) - {"limit", "before"}:
+                _deny("Invalid state.listCheckpoints params", 400)
+            limit = params.get("limit")
+            before = params.get("before")
+            if limit is not None and (
+                not isinstance(limit, int) or isinstance(limit, bool)
+            ):
+                _deny("Invalid state.listCheckpoints limit", 400)
+            if before is not None and not isinstance(before, str):
+                _deny("Invalid state.listCheckpoints before", 400)
+        case "state.fork":
+            if frozenset(params) - {"checkpoint_id", "input"} or "checkpoint_id" not in params:
+                _deny("Invalid state.fork params", 400)
+            if not isinstance(params["checkpoint_id"], str):
+                _deny("Invalid state.fork checkpoint", 400)
+            fork_input = params.get("input")
+            if fork_input is not None:
+                _validate_member_input(
+                    fork_input,
+                    allow_attachment=False,
+                    require_attachment_uuid=False,
+                    status_code=400,
+                )
+        case _:
+            _deny("Command is not available", 400)
+
+
+def _validate_command(body: JSONBody, path_thread_id: str) -> None:
+    value = _require_body_mapping(body)
+    if frozenset(value) != frozenset({"id", "method", "params"}):
+        _deny("Invalid command envelope", 400)
+    command_id = value["id"]
+    method = value["method"]
+    params = value["params"]
+    if not isinstance(command_id, int) or isinstance(command_id, bool):
+        _deny("Invalid command id", 400)
+    if not isinstance(method, str) or not isinstance(params, dict):
+        _deny("Invalid command envelope", 400)
+    _validate_command_params(method, params, path_thread_id)
+
+
+def _validate_cancel_query(query: str) -> None:
+    if not query:
+        return
+    try:
+        entries = parse_qsl(query, keep_blank_values=True, strict_parsing=True)
+    except ValueError:
+        _deny("Invalid cancel query", 400)
+    if len(entries) != len({key for key, _value in entries}):
+        _deny("Invalid cancel query", 400)
+    values = dict(entries)
+    if frozenset(values) - {"wait", "action", "timeout"}:
+        _deny("Invalid cancel query", 400)
+    if "wait" in values and values["wait"] not in {"true", "false"}:
+        _deny("Invalid cancel wait", 400)
+    if "action" in values and values["action"] not in {"interrupt", "rollback"}:
+        _deny("Invalid cancel action", 400)
+    if "timeout" in values and re.fullmatch(r"[0-9]+", values["timeout"]) is None:
+        _deny("Invalid cancel timeout", 400)
 
 
 def validate_member_request(method: str, path: str, query: str, body: JSONBody) -> None:
@@ -208,9 +432,25 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
         HC_RAG_MEMBER_STREAM_PERIMETER == "v2"
         and method == "POST"
         and _CANCEL.fullmatch(path)
-        and not query
         and body is None
     ):
+        _validate_cancel_query(query)
+        return
+    if (
+        HC_RAG_MEMBER_STREAM_PERIMETER == "v2"
+        and method == "POST"
+        and _STREAM_EVENTS.fullmatch(path)
+        and not query
+    ):
+        _validate_stream_events(body)
+        return
+    if (
+        HC_RAG_MEMBER_STREAM_PERIMETER == "v2"
+        and method == "POST"
+        and (commands_match := re.fullmatch(rf"/threads/({_UUID})/commands", path))
+        and not query
+    ):
+        _validate_command(body, str(commands_match.group(1)))
         return
     if method == "POST" and _STREAM.fullmatch(path) and not query:
         _validate_run(body)

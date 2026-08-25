@@ -58,22 +58,25 @@ export function serverWithPerimeter(run: Runfile, perimeter: "v1" | "v2"): strin
 
 /**
  * True when the server the FRONTEND points at admits the v2-native
- * ThreadStream transport (POST /threads/{id}/stream) — the surface
- * `@langchain/react` useStream submits through. Both perimeter versions
- * deny it today (v2 widened the legacy runs/stream surface instead), so
- * every chat-driving UI spec probe-gates on this and skips with the
- * finding until a reviewed perimeter revision admits the transport.
+ * ThreadStream transport (POST /threads/{id}/stream/events SSE +
+ * POST /threads/{id}/commands — the surface `@langchain/react` useStream
+ * submits through). The probe posts an INVALID subscription body: an
+ * admitted route answers with an immediate protocol 400 (channels
+ * required), while a perimeter denial is 403 — a valid body would open a
+ * real SSE stream that (correctly) never closes and hang the probe.
  */
 export async function threadStreamAdmitted(api: APIRequestContext): Promise<boolean> {
   const create = await api.post("/threads", { data: {} });
   if (create.status() !== 200) throw new Error(`probe thread create failed: ${create.status()}`);
   const { thread_id: threadId } = (await create.json()) as { thread_id: string };
   try {
-    const probe = await api.post(`/threads/${threadId}/stream`, { data: {} });
+    const probe = await api.post(`/threads/${threadId}/stream/events`, {
+      data: {},
+    });
     try {
       await probe.dispose();
     } catch {
-      // SSE response — dropping the context is enough
+      // response already consumed
     }
     return probe.status() !== 403;
   } finally {
@@ -82,7 +85,7 @@ export async function threadStreamAdmitted(api: APIRequestContext): Promise<bool
 }
 
 export const THREAD_STREAM_SKIP_REASON =
-  "member frontend chats through the @langchain/react useStream ThreadStream transport (POST /threads/{id}/stream), which the member perimeter (v1 and v2) does not admit — see docs/safety.md 'Member stream perimeter v2 (useStream)'. UI specs auto-activate once a reviewed perimeter revision admits the transport.";
+  "member frontend chats through the @langchain/react useStream ThreadStream transport (POST /threads/{id}/stream/events SSE + POST /threads/{id}/commands), which the member perimeter (v1 and v2) does not admit — see docs/safety.md 'Member stream perimeter v2 (useStream)'. UI specs auto-activate once a reviewed perimeter revision admits the transport.";
 
 export function internalHeaders(run: Runfile, owner: string): Record<string, string> {
   return {

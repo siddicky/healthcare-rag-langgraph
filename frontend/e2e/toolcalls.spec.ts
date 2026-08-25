@@ -45,6 +45,7 @@ test("toolCalls card: medical_lookup renders AssembledToolCall lifecycle", async
   await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
+  await page.getByRole("button", { name: "New conversation" }).click();
 
   await send(page, "How should I take Metformin?");
   await waitForIdle(page);
@@ -66,6 +67,7 @@ test("toolCalls card ordering: tree before tool call before envelope within a tu
   await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
+  await page.getByRole("button", { name: "New conversation" }).click();
 
   await send(page, "log my weight");
   await waitForIdle(page);

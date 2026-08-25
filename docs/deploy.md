@@ -90,7 +90,7 @@ git tag vX.Y.Z && git push origin vX.Y.Z   # triggers deploy.yml → production 
 
 ## 0c. Member Stream Perimeter v2 Flip — PENDING (human gate, currently BLOCKED)
 
-> **Status: FLIPPED to v2 on 2026-08-25 by explicit owner directive** (`HC_RAG_MEMBER_STREAM_PERIMETER = "v2"` in `deploy/fly.prod.toml`; frontend builds with `NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER=v2`, e.g. `frontend/.env.local`). Gates 2–4 below were replaced by the owner's direct instruction; the ThreadStream admission (gate 1) remains an OPEN follow-up — member chat UI specs stay probe-gated until a perimeter revision admits `POST /threads/{id}/stream`. Rollback: revert both values (frontend needs a rebuild) and redeploy.
+> **Status: FLIPPED to v2 on 2026-08-25 by explicit owner directive** (`HC_RAG_MEMBER_STREAM_PERIMETER = "v2"` in `deploy/fly.prod.toml`; frontend builds with `NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER=v2`, e.g. `frontend/.env.local`). Gates 2–4 below were replaced by the owner's direct instruction. Gate 1 (ThreadStream admission) is **implemented and verified hermetically** in the follow-up release: perimeter v2 admits `POST /threads/{id}/stream/events` + `/commands` with member-safe shapes, the clean-room server implements the routes, the member cancel query set + `runs.cancel` owner-scoped auth handler shipped, and the full hermetic suite passes 12/12 in v2 mode. Rollback: revert both values (frontend needs a rebuild) and redeploy.
 
 **What the flip is.** Two values must move **together**:
 

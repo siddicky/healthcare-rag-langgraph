@@ -45,6 +45,7 @@ test("markdown rendering: heading, bold, list and link render via Markdown compo
   await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
+  await page.getByRole("button", { name: "New conversation" }).click();
 
   await send(page, "show markdown");
   await waitForIdle(page);
@@ -69,6 +70,7 @@ test("markdown table: GFM table renders with md-table classes", async ({ page })
   await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
+  await page.getByRole("button", { name: "New conversation" }).click();
 
   await send(page, "show markdown table");
   await waitForIdle(page);

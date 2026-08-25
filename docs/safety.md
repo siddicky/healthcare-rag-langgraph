@@ -458,23 +458,35 @@ that were already projected when first streamed. Enqueue changes scheduling,
 not persistence. The `copy_to_clipboard` headless tool's `onTool` telemetry
 scrubs text length only (`len=<n>`) and never logs raw content.
 
-**Known limit — ThreadStream transport divergence (measured 2026-08-25).**
-The frontend's `@langchain/react` `useStream` client does not use the legacy
-`runs/stream` surface at all. Its `StreamController` submits through the
-v2-native ThreadStream transport — `POST /threads/{id}/stream` plus
-`/threads/{id}/stream/events` (SSE/WebSocket) and a query-parameter cancel —
-regardless of which perimeter envelope the env selects (`NEXT_PUBLIC_...`
-only chooses the run envelope, not the transport). No perimeter version —
-v1 or v2 — admits those routes, so every member chat turn dies with `403
-"Route is not available"`. The hermetic Playwright run (`frontend/e2e/`)
-caught this: it boots the real stack with a main and a flipped-perimeter
-Agent Server, asserts both directions (v1 rejects history/join/join-stream/
-cancel and the v2 envelope; v2 accepts them), and probe-gates the
-chat-driving UI specs on `POST /threads/{id}/stream` admission so they
-activate the day a reviewed perimeter revision admits the transport. Until
-then the member chat UI cannot run against the perimeter, and prod keeps v1.
+**ThreadStream transport admission (resolved 2026-08-25).**
+The frontend's `@langchain/react` `useStream` client submits through the
+v2-native ThreadStream transport — `POST /threads/{id}/stream/events` (SSE)
+plus `POST /threads/{id}/commands` — regardless of which perimeter envelope
+the env selects (`NEXT_PUBLIC_...` only chooses the run envelope, not the
+transport). Perimeter **v2 now admits both routes** with member-safe shapes:
+the SSE subscription validates `channels`/`namespaces`/`depth`/`since`
+exactly (400 on anything else), and the command envelope is validated
+per-method — `run.start` (assistant pinned to `coach`, member input shape,
+config limited to a matching `thread_id` + optional `checkpoint_id`),
+`input.respond` (root-namespace resumes in the unified `{accept, fields?}`
+shape only), and read-only `state.get` / `state.listCheckpoints` /
+`state.fork`. `update`/`goto`/`metadata` are rejected; unknown methods fail
+closed with 400. v1 rejects both routes outright. The clean-room server
+implements the routes in `server/protocol_stream.py` + `protocol_events.py`
+(auth-thread-scoped, reusing the run engine, checkpoint saver, and queue);
+production parity is pinned by `tests/server/test_protocol_stream.py`. The
+hermetic Playwright run exercises the full protocol against the real
+`langgraph-api` 0.13.0 behind the perimeter: chat, markdown, tool-call
+cards, interrupts, history/time-travel, and recovery all run live in v2 mode
+(`COACH_E2E_PERIMETER=v2`), and probe-gate to skips in v1 mode. A bounded
+post-resume reconciliation (REST `GET /threads/{id}/state` merge after
+`stream.respond`) covers the SDK's replay-barrier race where a resumed
+run's committed messages can be swallowed as replay.
 
-**Where this is pinned.** `tests/agent/test_perimeter_v2.py` (pure shapes),
+**Where this is pinned.** `tests/agent/test_perimeter_v2.py` (pure shapes,
+including the SDK's `configurable.thread_id`-bound `run.start` and
+root-`namespace` `input.respond` wire shapes),
+`tests/server/test_protocol_stream.py` (clean-room route parity),
 `frontend/e2e/history.spec.ts` (hermetic, both perimeters, zero external
-network), `deploy/fly.prod.toml` (explicit `HC_RAG_MEMBER_STREAM_PERIMETER =
-"v1"` pin).
+network), `deploy/fly.prod.toml` (explicit `HC_RAG_MEMBER_STREAM_PERIMETER`
+pin).
