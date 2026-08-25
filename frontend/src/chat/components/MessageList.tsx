@@ -7,6 +7,7 @@ import type { DispatchHandlers } from "@/catalog/dispatch";
 import { CatalogTree } from "@/catalog/render";
 import { CalendarChangeCard } from "@/components/generative-ui/CalendarChangeCard";
 import { DocumentIngestCard } from "@/components/generative-ui/DocumentIngestCard";
+import { Markdown } from "@/components/generative-ui/Markdown";
 import { MemoryExtractionCard } from "@/components/generative-ui/MemoryExtractionCard";
 import { ReminderCard } from "@/components/generative-ui/ReminderCard";
 import { CalendarChangePayloadSchema } from "@/chat/model";
@@ -75,7 +76,9 @@ function AiBubble({ message }: { message: WireMessage }) {
   return (
     <div className="bubble-row assistant">
       <div className="avatar">N</div>
-      <div className="bubble assistant">{text}</div>
+      <div className="bubble assistant">
+        <Markdown content={text} />
+      </div>
     </div>
   );
 }
