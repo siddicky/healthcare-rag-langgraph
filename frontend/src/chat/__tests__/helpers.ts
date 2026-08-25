@@ -86,6 +86,7 @@ export function fakeStream(
     return {
       values: { messages },
       messages,
+      toolCalls: [] as never[],
       interrupts,
       interrupt: interrupts[0],
       isLoading,

@@ -77,9 +77,23 @@ export interface CoachStreamOptions {
   readonly onThreadId: (threadId: string) => void;
 }
 
+export interface ToolCallHandleView {
+  readonly id: string;
+  readonly callId?: string;
+  readonly name: string;
+  readonly args?: unknown;
+  readonly input?: unknown;
+  readonly output?: unknown;
+  readonly result?: unknown;
+  readonly status: string;
+  readonly error?: string | null;
+  readonly namespace?: readonly string[];
+}
+
 export interface CoachStreamHandle {
   readonly values: CoachStreamState;
   readonly messages: readonly unknown[];
+  readonly toolCalls?: readonly ToolCallHandleView[];
   readonly interrupts: readonly unknown[];
   readonly interrupt: unknown;
   readonly isLoading: boolean;
@@ -285,6 +299,13 @@ export function useCoachStream(deps: CoachStreamDeps) {
     const interrupt = firstInterruptValue(stream.interrupts);
     if (interrupt !== null) commitPendingInterrupt(interrupt);
   }, [commitMessages, commitPendingInterrupt, stream.interrupts, stream.messages, stream.values.messages]);
+
+  const synthesizedFromMessages = useMemo(() => synthesizeToolCallsFromMessages(messages), [messages]);
+  const toolCalls: readonly ToolCallHandleView[] = useMemo(() => {
+    const live = (stream.toolCalls ?? []) as readonly ToolCallHandleView[];
+    if (live.length > 0) return live;
+    return synthesizedFromMessages;
+  }, [stream.toolCalls, synthesizedFromMessages]);
 
   const turns: TurnModel[] = useMemo(() => buildTurns(messages), [messages]);
 
@@ -693,6 +714,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
     activeThreadId,
     messages,
     turns,
+    toolCalls,
     pendingInterrupt,
     busy: busy || stream.isLoading,
     isLoading: stream.isLoading,
@@ -716,4 +738,42 @@ export function useCoachStream(deps: CoachStreamDeps) {
     signOut,
     dismissError: () => setError(null),
   };
+}
+
+function synthesizeToolCallsFromMessages(messages: readonly WireMessage[]): ToolCallHandleView[] {
+  const toolMessages = new Map<string, WireMessage>();
+  for (const m of messages) {
+    if (m.type === "tool" && typeof m.tool_call_id === "string") toolMessages.set(m.tool_call_id, m);
+  }
+  const calls: ToolCallHandleView[] = [];
+  for (const m of messages) {
+    if (m.type !== "ai" || !Array.isArray(m.tool_calls)) continue;
+    for (const tc of m.tool_calls) {
+      const correlated = toolMessages.get(tc.id);
+      let status = "running";
+      let output: unknown = null;
+      let error: string | undefined = undefined;
+      if (correlated !== undefined) {
+        if (correlated.status === "error") {
+          status = "error";
+          error = typeof correlated.content === "string" ? correlated.content : JSON.stringify(correlated.content);
+        } else {
+          status = "finished";
+          output = correlated.content;
+        }
+      }
+      calls.push({
+        id: tc.id,
+        callId: tc.id,
+        name: tc.name,
+        args: tc.args,
+        input: tc.args,
+        output,
+        status,
+        error,
+        namespace: [],
+      });
+    }
+  }
+  return calls;
 }

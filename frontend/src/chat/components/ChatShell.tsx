@@ -137,6 +137,7 @@ export function ChatShell({
             latestAiMessageId={latestAiMessageId}
             onReminderAction={(text) => void chat.send(text)}
             dispatchHandlers={dispatchHandlers}
+            toolCalls={chat.toolCalls as unknown as import("./ToolCallCard").ToolCallView[]}
             actionBar={
               <ActionBar
                 showRegenerate={chat.regenerateGate.eligible}
