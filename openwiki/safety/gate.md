@@ -6,7 +6,7 @@ tags: [safety, gate, pii, prompt-injection]
 openwiki:
   roles: [architecture, domain, testing]
   change_kinds: [lifecycle, public-api]
-  source_paths: [healthcare_rag/processors/safety.py, healthcare_rag/processors/safety_patterns.py, healthcare_rag/processors/safety_signals.py, healthcare_rag/processors/safety_responses.py, healthcare_rag/processors/refusal_boundary.py, healthcare_rag/processors/privacy.py, prompts/safety_gate.yaml.j2, healthcare_rag/models/safety.py, healthcare_rag/graph/nodes/safety.py]
+  source_paths: [healthcare_rag/processors/safety.py, healthcare_rag/processors/safety_patterns.py, healthcare_rag/processors/safety_signals.py, healthcare_rag/processors/safety_responses.py, healthcare_rag/processors/refusal_boundary.py, healthcare_rag/processors/privacy.py, healthcare_rag/prompts/safety_gate.yaml.j2, healthcare_rag/models/safety.py, healthcare_rag/graph/nodes/safety.py]
   symbols: [SafetyGate, SafetyDecision, scrub_phi, contains_phi, identifier_recall_requested, red_flag_terms, injection_flags, strip_injection, PrivacySanitizer, SafetyAssessment, SafetyOutcome, assess_safety, RefusalBoundary, boundary_hit, upsert_boundary]
   test_paths: [tests/test_safety_gate.py, tests/test_refusal_boundary.py, tests/graph/test_graph_safety.py, tests/graph/test_boundary_durability.py]
   invariants: [Deterministic pre-checks can only escalate a decision, never relax it., A refusal template never contains a number with a clinical unit., The scrubbed query is what reaches retrieval, prompts, and history persistence.]
