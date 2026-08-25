@@ -29,6 +29,21 @@ function isEnvelopeLike(value: unknown): value is DataEnvelope {
   );
 }
 
+/**
+ * Dedupe-key fragment for an envelope's `data`. `JSON.stringify` throws on
+ * BigInt/circular values and returns `undefined` for `undefined` — neither may
+ * escape this module (fail-closed: unknown shapes are ignored, never thrown).
+ */
+function safeDataKey(data: unknown): string {
+  if (data === undefined) return "undefined";
+  try {
+    const s = JSON.stringify(data);
+    return typeof s === "string" ? s.slice(0, 80) : String(data);
+  } catch {
+    return "[unserializable]";
+  }
+}
+
 function asEnvelope(value: unknown): DataEnvelope | null {
   if (!isEnvelopeLike(value)) return null;
   const v = value as DataEnvelope;
@@ -58,7 +73,7 @@ export function envelopesFromValues(
   const seen = new Set<string>();
 
   const push = (env: DataEnvelope) => {
-    const key = `${env.turn_scope_id}::${env.block_id}::${JSON.stringify(env.data).slice(0, 80)}`;
+    const key = `${env.turn_scope_id}::${env.block_id}::${safeDataKey(env.data)}`;
     if (seen.has(key)) return;
     seen.add(key);
     out.push(env);

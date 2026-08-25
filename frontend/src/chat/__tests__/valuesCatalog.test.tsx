@@ -127,6 +127,22 @@ describe("values channel — structured output wiring", () => {
     expect(screen.getByRole("button", { name: "Yes" })).toBeInTheDocument();
   });
 
+  it("envelope with data: undefined is extracted without throwing", () => {
+    const values = {
+      env1: { turn_scope_id: "s", block_id: "b", data: undefined, text: "t" },
+    };
+    expect(() => envelopesFromValues(values as Record<string, unknown>)).not.toThrow();
+    expect(envelopesFromValues(values as Record<string, unknown>)).toHaveLength(1);
+  });
+
+  it("envelope with BigInt data is extracted without throwing", () => {
+    const values = {
+      env1: { turn_scope_id: "s", block_id: "b", data: { n: BigInt(1) }, text: "t" },
+    };
+    expect(() => envelopesFromValues(values as Record<string, unknown>)).not.toThrow();
+    expect(envelopesFromValues(values as Record<string, unknown>)).toHaveLength(1);
+  });
+
   it("unknown component via values fails closed with telemetry and renders nothing", () => {
     const tree = { component: "ProgressBar", props: { percent: 42 } };
     render(
