@@ -21,6 +21,7 @@ import {
   composeTreesForTurn,
   isAiMessage,
   isToolMessage,
+  messageReasoning,
   messageText,
   parseComponentCard,
   parseMemoryConfirmation,
@@ -29,6 +30,7 @@ import {
   type TurnModel,
   type WireMessage,
 } from "@/chat/model";
+import { ReasoningBlock } from "./ReasoningBlock";
 import { chatTelemetry } from "@/chat/stream";
 import type { ResumePayload } from "@/chat/coachProtocol";
 import type { UploadUi } from "@/chat/uploadFlow";
@@ -77,13 +79,17 @@ function ToolEnvelopeCards({ message }: { message: WireMessage }) {
 }
 
 function AiBubble({ message }: { message: WireMessage }) {
+  const reasoning = messageReasoning(message);
   const text = aiDisplayText(message.content);
-  if (text === "") return null;
+  const hasReasoning = reasoning !== null && reasoning.trim() !== "";
+  const hasText = text !== "";
+  if (!hasReasoning && !hasText) return null;
   return (
     <div className="bubble-row assistant">
       <div className="avatar">N</div>
       <div className="bubble assistant">
-        <Markdown content={text} />
+        {hasReasoning && <ReasoningBlock reasoning={reasoning!} />}
+        {hasText && <Markdown content={text} />}
       </div>
     </div>
   );
