@@ -5,6 +5,11 @@ import type { DataEnvelope } from "@/catalog/envelopes";
 import { parseDataEnvelope } from "@/catalog/envelopes";
 import type { DispatchHandlers } from "@/catalog/dispatch";
 import { CatalogTree } from "@/catalog/render";
+import {
+  envelopesFromValues,
+  syntheticTreesFromStructuredValues,
+  treesFromValues,
+} from "@/catalog/values";
 import { CalendarChangeCard } from "@/components/generative-ui/CalendarChangeCard";
 import { DocumentIngestCard } from "@/components/generative-ui/DocumentIngestCard";
 import { Markdown } from "@/components/generative-ui/Markdown";
@@ -181,16 +186,19 @@ function TurnView({
   onReminderAction,
   dispatchHandlers,
   toolCalls,
+  valuesEnvelopes,
 }: {
   turn: TurnModel;
   onReminderAction?: (text: string) => void;
   dispatchHandlers?: DispatchHandlers;
   toolCalls?: readonly ToolCallView[];
+  valuesEnvelopes?: readonly DataEnvelope[];
 }) {
   const humanText = turn.human !== null ? messageText(turn.human.content) : "";
   const trees = composeTreesForTurn(turn);
   const scopeId = turn.scopeId ?? "";
   const turnToolCalls = toolCallsForTurn(turn, toolCalls);
+  const combinedEnvelopes = valuesEnvelopes !== undefined && valuesEnvelopes.length > 0 ? [...turn.envelopes, ...valuesEnvelopes] : turn.envelopes;
   return (
     <div>
       {humanText !== "" && (
@@ -206,7 +214,7 @@ function TurnView({
       ))}
       {trees.map(({ callId, tree }) => (
         <div className="widget-wrap" key={callId} data-testid="compose-tree">
-          <CatalogTree tree={tree} envelopes={turn.envelopes} turnScopeId={scopeId} handlers={dispatchHandlers ?? {}} />
+          <CatalogTree tree={tree} envelopes={combinedEnvelopes} turnScopeId={scopeId} handlers={dispatchHandlers ?? {}} />
         </div>
       ))}
       {turnToolCalls.map((call) => (
@@ -240,6 +248,10 @@ export interface MessageListProps {
   /** Handlers for composed-tree dispatch ids (catalog Button actions). */
   dispatchHandlers?: DispatchHandlers;
   toolCalls?: readonly ToolCallView[];
+  /** Structured state via the values channel — forwarded from useCoachStream's stream.values. */
+  values?: Record<string, unknown> | null;
+  valuesEnvelopes?: readonly DataEnvelope[];
+  valuesTrees?: readonly unknown[];
 }
 
 export function MessageList({
@@ -255,6 +267,9 @@ export function MessageList({
   onReminderAction,
   dispatchHandlers,
   toolCalls,
+  values,
+  valuesEnvelopes,
+  valuesTrees,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const rendered = useMemo(() => turns.map((turn) => turn.key).join("|"), [turns]);
@@ -267,9 +282,43 @@ export function MessageList({
     ? (pendingInterrupts.length > 0 ? pendingInterrupts : pendingInterrupt !== null ? [pendingInterrupt] : [])
     : pendingInterrupt !== null ? [pendingInterrupt] : [];
 
-  const hasInterrupts = interrupts.length > 0;
+  const catalogData = useMemo(() => values ?? {}, [values]);
+  const derivedValuesEnvelopes = useMemo(() => {
+    if (valuesEnvelopes !== undefined) return valuesEnvelopes;
+    return envelopesFromValues(catalogData as Record<string, unknown>);
+  }, [valuesEnvelopes, catalogData]);
+  const lastScopeId = turns.length > 0 ? (turns[turns.length - 1]?.scopeId ?? "__values__") : "__values__";
+  const syntheticEnvelopes = useMemo(
+    () => envelopesFromValues(catalogData as Record<string, unknown>, lastScopeId),
+    [catalogData, lastScopeId],
+  );
+  const allValuesEnvelopes = useMemo(() => {
+    const merged = [...derivedValuesEnvelopes, ...syntheticEnvelopes];
+    const seen = new Set<string>();
+    return merged.filter((e) => {
+      const k = `${e.turn_scope_id}::${e.block_id}`;
+      if (seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  }, [derivedValuesEnvelopes, syntheticEnvelopes]);
+  const derivedValuesTrees = useMemo(() => {
+    if (valuesTrees !== undefined) return valuesTrees;
+    return treesFromValues(catalogData as Record<string, unknown>);
+  }, [valuesTrees, catalogData]);
+  const syntheticTrees = useMemo(
+    () => syntheticTreesFromStructuredValues(catalogData as Record<string, unknown>, lastScopeId),
+    [catalogData, lastScopeId],
+  );
+  const allValuesTrees = useMemo(
+    () => (derivedValuesTrees.length > 0 ? derivedValuesTrees : syntheticTrees),
+    [derivedValuesTrees, syntheticTrees],
+  );
 
-  if (turns.length === 0 && !hasInterrupts && upload.phase === "idle") {
+  const hasInterrupts = interrupts.length > 0;
+  const hasValuesContent = allValuesTrees.length > 0 || allValuesEnvelopes.length > 0;
+
+  if (turns.length === 0 && !hasInterrupts && upload.phase === "idle" && !hasValuesContent) {
     return null;
   }
   return (
@@ -277,10 +326,39 @@ export function MessageList({
       <div className="thread-inner">
         {turns.map((turn, index) => (
           <div key={turn.key}>
-            <TurnView turn={turn} onReminderAction={onReminderAction} dispatchHandlers={dispatchHandlers} toolCalls={toolCalls} />
+            <TurnView turn={turn} onReminderAction={onReminderAction} dispatchHandlers={dispatchHandlers} toolCalls={toolCalls} valuesEnvelopes={allValuesEnvelopes} />
             {index === turns.length - 1 && latestAiMessageId !== null && actionBar}
           </div>
         ))}
+        {allValuesTrees.length > 0 && (
+          <div data-testid="values-catalog">
+            {allValuesTrees.map((tree, idx) => {
+              const scopeFromTree = (() => {
+                try {
+                  const obj = tree as Record<string, unknown>;
+                  const props = (obj.props ?? {}) as Record<string, unknown>;
+                  for (const v of Object.values(props)) {
+                    if (typeof v === "object" && v !== null && "__ref" in (v as Record<string, unknown>)) {
+                      const ref = (v as Record<string, unknown>).__ref as Record<string, unknown>;
+                      if (typeof ref.turn_scope_id === "string") return ref.turn_scope_id as string;
+                    }
+                    if (typeof v === "object" && v !== null && "action" in (v as Record<string, unknown>)) {
+                      continue;
+                    }
+                  }
+                } catch {
+                  // ignore
+                }
+                return lastScopeId;
+              })();
+              return (
+                <div className="widget-wrap" key={`values-${idx}`} data-testid="values-compose-tree">
+                  <CatalogTree tree={tree} envelopes={allValuesEnvelopes} turnScopeId={scopeFromTree} handlers={dispatchHandlers ?? {}} />
+                </div>
+              );
+            })}
+          </div>
+        )}
         {upload.phase !== "idle" && upload.phase !== "failed" && (
           <div className="widget-wrap" data-testid="document-ingest">
             <DocumentIngestCard

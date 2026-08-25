@@ -60,8 +60,14 @@ export function ChatShell({
   const feedbackSent = feedbackKey !== null ? (chat.feedback.sent[feedbackKey] ?? null) : null;
   const feedbackFailed = feedbackKey !== null ? chat.feedback.failed[feedbackKey] === true : false;
 
+  const valuesHasStructured =
+    ((chat as unknown as { valuesEnvelopes?: readonly unknown[] }).valuesEnvelopes?.length ?? 0) > 0 ||
+    ((chat as unknown as { valuesTrees?: readonly unknown[] }).valuesTrees?.length ?? 0) > 0 ||
+    Object.keys((chat as unknown as { values?: Record<string, unknown> }).values ?? {}).some(
+      (k) => !["messages", "question", "attachment_id"].includes(k) && (chat as unknown as { values?: Record<string, unknown> }).values?.[k] !== undefined,
+    );
   const started =
-    chat.turns.length > 0 || chat.pendingInterrupt !== null || chat.upload.phase !== "idle";
+    chat.turns.length > 0 || chat.pendingInterrupt !== null || chat.upload.phase !== "idle" || valuesHasStructured;
 
   return (
     <div className="app">
@@ -140,6 +146,9 @@ export function ChatShell({
             onReminderAction={(text) => void chat.send(text)}
             dispatchHandlers={dispatchHandlers}
             toolCalls={chat.toolCalls as unknown as import("./ToolCallCard").ToolCallView[]}
+            values={(chat as unknown as { values?: Record<string, unknown> }).values ?? (chat as unknown as { catalogValues?: Record<string, unknown> }).catalogValues}
+            valuesEnvelopes={(chat as unknown as { valuesEnvelopes?: readonly import("@/catalog/envelopes").DataEnvelope[] }).valuesEnvelopes}
+            valuesTrees={(chat as unknown as { valuesTrees?: readonly unknown[] }).valuesTrees}
             actionBar={
               <ActionBar
                 showRegenerate={chat.regenerateGate.eligible}

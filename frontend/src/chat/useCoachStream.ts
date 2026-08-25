@@ -40,6 +40,8 @@ import {
   type UploadUi,
 } from "./uploadFlow";
 import { clearThreadTitles, deriveTitle, getThreadTitle, setThreadTitle } from "./titles";
+import { envelopesFromValues, treesFromValues } from "@/catalog/values";
+import type { DataEnvelope } from "@/catalog/envelopes";
 
 /**
  * The coach chat controller. Every network seam is injected through `deps`
@@ -62,6 +64,11 @@ export interface CoachStreamState {
   readonly messages?: unknown;
   readonly question?: string;
   readonly attachment_id?: string;
+  /** Structured output via the values channel — typed but open for extension. */
+  readonly todos?: unknown;
+  readonly citations?: unknown;
+  readonly metrics?: unknown;
+  readonly [key: string]: unknown;
 }
 
 export type CoachSubmitOptions = (RunStreamFixedParams | RunStreamFixedParamsV2) & {
@@ -402,6 +409,15 @@ export function useCoachStream(deps: CoachStreamDeps) {
     return synthesizedFromMessages;
   }, [stream.toolCalls, synthesizedFromMessages]);
 
+  const catalogValues = useMemo(() => (stream.values ?? {}) as CoachStreamState, [stream.values]);
+  const valuesEnvelopes: readonly DataEnvelope[] = useMemo(
+    () => envelopesFromValues(catalogValues as Record<string, unknown>),
+    [catalogValues],
+  );
+  const valuesTrees: readonly unknown[] = useMemo(
+    () => treesFromValues(catalogValues as Record<string, unknown>),
+    [catalogValues],
+  );
   const turns: TurnModel[] = useMemo(() => buildTurns(messages), [messages]);
 
   const threadTitle = useCallback(
@@ -898,6 +914,10 @@ export function useCoachStream(deps: CoachStreamDeps) {
     removeThread,
     signOut,
     dismissError: () => setError(null),
+    values: catalogValues,
+    catalogValues,
+    valuesEnvelopes,
+    valuesTrees,
   };
 }
 
