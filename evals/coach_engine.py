@@ -12,7 +12,6 @@ from langgraph.store.memory import InMemoryStore
 from langgraph.types import Command
 
 from healthcare_rag.agent import build as coach_build
-from healthcare_rag.agent import gate
 from healthcare_rag.agent.ns_sweep import (
     CheckpointRecord,
     checkpoint_records,
@@ -26,12 +25,7 @@ from healthcare_rag.graph.state import load_results
 
 from .agent_chunks import CheckedChunk, ChunkCatalog
 from .coach_fixtures import seed_document_fixture, seed_reminder_fixture
-from .offline_agent_fakes import (
-    OfflineGateway,
-    offline_coach_agent,
-    offline_search,
-    outer_classifier,
-)
+from .offline_agent_fakes import OfflineGateway, offline_coach_agent, offline_search
 
 DEFAULT_USER: Final = "offline-member"
 DocumentDecision: TypeAlias = dict[str, bool | list[dict[str, str]]]
@@ -182,14 +176,16 @@ class CoachEngine:
         records: tuple[CheckpointRecord, ...],
         thread_id: str,
     ) -> CheckpointRecord | None:
-        if route != "rag_relay":
+        if route != "coach_agent":
             return None
         leaves = tuple(
             record
             for group in lineage_leaves(records).values()
             for record in group
-            if record.checkpoint_ns.startswith("rag_relay")
+            if record.checkpoint_ns.startswith("coach_agent")
         )
+        if not leaves:
+            return None
         if len(leaves) != 1:
             raise RouteALineageError(thread_id=thread_id, leaf_count=len(leaves))
         return leaves[0]
@@ -244,7 +240,6 @@ def build_offline_coach_engine() -> CoachEngine:
     resources._gateway = OfflineGateway()  # pyright: ignore[reportPrivateUsage]
     resources.hybrid_search = offline_search
     override(resources)
-    gate.GATEWAY = outer_classifier
     return CoachEngine(
         saver=InMemorySaver(),
         store=InMemoryStore(),

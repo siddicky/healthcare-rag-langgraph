@@ -87,7 +87,7 @@ external resources (`resources.py`), history/message projection
 - `healthcare_rag/processors/*` — the actual LLM-calling/pure-logic work each node delegates to.
 - `healthcare_rag/models/*` — Pydantic response models rendered by `prompts.py`.
 - `healthcare_rag/services/models.py` — model selection/sampling, all env knobs `settings.py` snapshots.
-- `healthcare_rag/agent/rag_relay.py` depends on this package's `build_graph()` in the other direction (Route A).
+- `healthcare_rag/agent/rag_relay.py` depends on this package's `build_graph()` in the other direction — `relay_question()` is called by the coach agent's `medical_lookup` tool.
 
 ### External
 - `langgraph` (`StateGraph`, `Command`, `Send`, `InMemorySaver`), `langchain_core.messages`, `langchain_openai.ChatOpenAI`, `weaviate` (client types), `langsmith` (`traceable`).

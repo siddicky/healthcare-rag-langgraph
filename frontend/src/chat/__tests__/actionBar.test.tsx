@@ -41,7 +41,7 @@ describe("action bar — regenerate", () => {
     let releaseBusyPoll: (() => void) | null = null;
     const getThread = vi.fn((id: string): Promise<ThreadSummary> => {
       statusCalls.push(id);
-      if (statusCalls.length === 1) {
+      if (statusCalls.length === 2) {
         return new Promise((resolve) => {
           releaseBusyPoll = () => resolve(thread(id, { status: "busy" }));
         });
@@ -50,17 +50,18 @@ describe("action bar — regenerate", () => {
     });
     const stream = fakeStream((_call, index) =>
       index === 0
-        ? [updatesPart("rag_relay", [aiMessage("A protein-forward breakfast.", "a1")])]
-        : [updatesPart("rag_relay", [aiMessage("Regenerated answer.", "a2")])],
+        ? [updatesPart("coach_agent", [aiMessage("A protein-forward breakfast.", "a1")])]
+        : [updatesPart("coach_agent", [aiMessage("Regenerated answer.", "a2")])],
     );
     shellWith(stream, { getThread });
     const user = userEvent.setup();
     await user.type(await screen.findByLabelText("Message your coach"), "What is a healthy breakfast?");
     await user.click(screen.getByRole("button", { name: "Send" }));
     expect(await screen.findByText("A protein-forward breakfast.")).toBeInTheDocument();
+    expect(getThread).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole("button", { name: "Regenerate" }));
-    expect(getThread).toHaveBeenCalledTimes(1);
+    expect(getThread).toHaveBeenCalledTimes(2);
     expect(stream.calls).toHaveLength(1);
 
     (releaseBusyPoll ?? (() => {}))();
@@ -91,7 +92,7 @@ describe("action bar — regenerate", () => {
   it("is ABSENT in the older-safe-turn-then-mutation case (the safe turn cannot replay past the mutation)", async () => {
     const stream = fakeStream((_call, index) =>
       index === 0
-        ? [updatesPart("rag_relay", [aiMessage("older safe answer", "a0")])]
+        ? [updatesPart("coach_agent", [aiMessage("older safe answer", "a0")])]
         : [
             updatesPart("coach_agent", [
               aiMessage("", "a1", { tool_calls: [{ id: "c1", name: "log_metric", args: {} }] }),
@@ -139,7 +140,7 @@ describe("action bar — branch", () => {
     );
     const threads: ThreadSummary[] = [thread("t-1")];
     const searchThreads = vi.fn(async () => threads);
-    const stream = fakeStream(() => [updatesPart("rag_relay", [aiMessage("same answer", "a1")])]);
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("same answer", "a1")])]);
     render(
       <ChatShell deps={fakeDeps({ copyThread, getThreadState, searchThreads }, stream)} email={EMAIL} onSignedOut={() => {}} />,
     );
@@ -158,7 +159,7 @@ describe("action bar — branch", () => {
 describe("action bar — thumbs feedback", () => {
   it("posts the proxy shape {thread_id, message_id, score}", async () => {
     const postFeedback = vi.fn(async () => undefined);
-    const stream = fakeStream(() => [updatesPart("rag_relay", [aiMessage("Nice work.", "a1")])]);
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Nice work.", "a1")])]);
     render(<ChatShell deps={fakeDeps({ postFeedback }, stream)} email={EMAIL} onSignedOut={() => {}} />);
     const user = userEvent.setup();
     await sendAndSettle(user, stream);
@@ -175,7 +176,7 @@ describe("action bar — thumbs feedback", () => {
 
   it("down-votes with score -1", async () => {
     const postFeedback = vi.fn(async () => undefined);
-    const stream = fakeStream(() => [updatesPart("rag_relay", [aiMessage("Nice work.", "a1")])]);
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Nice work.", "a1")])]);
     render(<ChatShell deps={fakeDeps({ postFeedback }, stream)} email={EMAIL} onSignedOut={() => {}} />);
     const user = userEvent.setup();
     await sendAndSettle(user, stream);
@@ -188,7 +189,7 @@ describe("action bar — thumbs feedback", () => {
     const postFeedback = vi.fn(async () => {
       throw new Error("feedback down");
     });
-    const stream = fakeStream(() => [updatesPart("rag_relay", [aiMessage("Nice work.", "a1")])]);
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Nice work.", "a1")])]);
     render(<ChatShell deps={fakeDeps({ postFeedback }, stream)} email={EMAIL} onSignedOut={() => {}} />);
     const user = userEvent.setup();
     await sendAndSettle(user, stream);

@@ -245,6 +245,18 @@ export function useCoachChat(deps: CoachChatDeps) {
     [commitMessages, commitPendingInterrupt, deps.api, maybeStartErase],
   );
 
+  const waitForTerminal = useCallback(
+    async (threadId: string): Promise<boolean> => {
+      for (let attempt = 0; attempt < deps.poll.erase.maxPolls; attempt += 1) {
+        if (attempt > 0) await deps.sleep(deps.poll.erase.pollMs);
+        const thread = await deps.api.getThread(threadId);
+        if (thread.status !== "busy") return true;
+      }
+      return false;
+    },
+    [deps.api, deps.poll.erase, deps.sleep],
+  );
+
   const runStream = useCallback(
     async (
       threadId: string,
@@ -255,6 +267,12 @@ export function useCoachChat(deps: CoachChatDeps) {
       setBusy(true);
       setError(null);
       try {
+        if (!(await waitForTerminal(threadId))) {
+          if (mountedRef.current) {
+            setError("Your previous request is still finishing. Please try again.");
+          }
+          return false;
+        }
         const parts = deps.stream.streamRun(threadId, payload);
         await consumeRunStream(parts, messagesRef.current, (delta) => {
           commitMessages(delta.messages);
@@ -278,7 +296,7 @@ export function useCoachChat(deps: CoachChatDeps) {
         if (mountedRef.current) setBusy(false);
       }
     },
-    [commitMessages, commitPendingInterrupt, deps.stream, maybeStartErase, recoverMissingThread],
+    [commitMessages, commitPendingInterrupt, deps.stream, maybeStartErase, recoverMissingThread, waitForTerminal],
   );
 
   const ensureThread = useCallback(async (): Promise<string> => {
@@ -381,21 +399,6 @@ export function useCoachChat(deps: CoachChatDeps) {
     [commitPendingInterrupt, runStream],
   );
 
-  const waitTerminalThen = useCallback(
-    async (threadId: string, action: () => Promise<void>): Promise<boolean> => {
-      for (let attempt = 0; attempt < deps.poll.erase.maxPolls; attempt += 1) {
-        if (attempt > 0) await deps.sleep(deps.poll.erase.pollMs);
-        const thread = await deps.api.getThread(threadId);
-        if (thread.status !== "busy") {
-          await action();
-          return true;
-        }
-      }
-      return false;
-    },
-    [deps.api, deps.poll.erase, deps.sleep],
-  );
-
   const regenerate = useCallback(async (): Promise<void> => {
     const threadId = activeThreadRef.current;
     if (threadId === null || busyRef.current) return;
@@ -405,8 +408,8 @@ export function useCoachChat(deps: CoachChatDeps) {
     });
     if (!gate.eligible || gate.question === null) return;
     const question = gate.question;
-    await waitTerminalThen(threadId, () => send(question));
-  }, [pendingInterrupt, send, waitTerminalThen]);
+    if (await waitForTerminal(threadId)) await send(question);
+  }, [pendingInterrupt, send, waitForTerminal]);
 
   const branch = useCallback(async (): Promise<void> => {
     const threadId = activeThreadRef.current;

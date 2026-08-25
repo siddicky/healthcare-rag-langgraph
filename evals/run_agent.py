@@ -28,14 +28,14 @@ async def run() -> tuple[str, str]:
         AgentCaseResult(
             "route_a_informational",
             "route_a",
-            informational.route == "rag_relay"
+            informational.route == "coach_agent"
             and informational.route_a_leaf is not None
             and len(informational.contexts) == 1,
         ),
         AgentCaseResult(
             "route_a_inner_short_circuit",
             "route_a",
-            refusal.route == "rag_relay"
+            refusal.route == "coach_agent"
             and refusal.route_a_leaf is not None
             and not refusal.contexts,
         ),

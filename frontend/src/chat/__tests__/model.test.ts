@@ -50,7 +50,7 @@ describe("applyStreamPart (updates-only)", () => {
   it("dedupes finalize's whole-channel re-projection by message id", () => {
     const withAi = applyStreamPart([], {
       event: "updates",
-      data: { rag_relay: { messages: [{ type: "ai", id: "a1", content: "answer" }] } },
+      data: { coach_agent: { messages: [{ type: "ai", id: "a1", content: "answer" }] } },
     });
     const finalize = applyStreamPart(withAi.messages, {
       event: "updates",

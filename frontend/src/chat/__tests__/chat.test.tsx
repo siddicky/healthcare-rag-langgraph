@@ -35,7 +35,7 @@ beforeEach(() => {
 describe("openers", () => {
   it("sends a text opener as a new run", async () => {
     const stream = fakeStream(() => [
-      updatesPart("rag_relay", [aiMessage("Here you go.", "a1")]),
+      updatesPart("coach_agent", [aiMessage("Here you go.", "a1")]),
     ]);
     const deps = fakeDeps({}, stream);
     shell(deps);
@@ -59,11 +59,27 @@ describe("openers", () => {
     expect(clickSpy).toHaveBeenCalled();
     expect(stream.calls).toHaveLength(0);
   });
+
+  it("waits for a finishing server run before opening a new stream", async () => {
+    const statuses = [thread("11111111-1111-4111-8111-111111111111", { status: "busy" })];
+    const getThread = vi.fn(async () => statuses.shift() ?? thread("11111111-1111-4111-8111-111111111111"));
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
+    const deps = fakeDeps({ getThread }, stream);
+    shell(deps);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Log today's weight" }));
+
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(getThread).toHaveBeenCalledTimes(2);
+    expect(deps.sleep).toHaveBeenCalledWith(0);
+    expect(await screen.findByText("Logged.")).toBeInTheDocument();
+  });
 });
 
 describe("new conversation", () => {
   it("clears the transcript and starts fresh (thread created lazily on next send)", async () => {
-    const stream = fakeStream(() => [updatesPart("rag_relay", [aiMessage("Logged.", "a1")])]);
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
     const deps = fakeDeps({}, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -347,7 +363,7 @@ describe("one active run per thread", () => {
           await new Promise<void>((resolve) => {
             gate.release = resolve;
           });
-          yield updatesPart("rag_relay", [aiMessage("done", "a1")]);
+          yield updatesPart("coach_agent", [aiMessage("done", "a1")]);
         })();
       },
     };

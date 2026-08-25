@@ -531,6 +531,82 @@ describe("composed-tree rendering in the transcript", () => {
     expect(screen.queryByText("This week")).toBeNull();
   });
 
+  it("a composed confirm Button resolves the pending interrupt with {accept:true}", async () => {
+    const stream = fakeStream(() => []);
+    const messages = [
+      humanMessage("show my progress", "h1"),
+      aiMessage("", "a1", {
+        tool_calls: [
+          {
+            id: "c1",
+            name: "compose_ui",
+            args: { tree: [{ component: "Button", props: { label: "Approve", action: "confirm" } }] },
+          },
+        ],
+      }),
+      toolMessage(trendEnvelope, "t1", "c1", "success"),
+    ];
+    const deps = fakeDeps(
+      mountDeps(() => stateWith(messages, [{ value: CALENDAR_INTERRUPT }])),
+      stream,
+    );
+    render(<ChatShell deps={deps} email={EMAIL} onSignedOut={() => {}} />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Approve" }));
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    const call = stream.calls[0] as StreamCall;
+    expect(call.payload).toEqual({ command: { resume: { accept: true } } });
+  });
+
+  it("a composed decline Button resolves the pending interrupt with {accept:false}", async () => {
+    const stream = fakeStream(() => []);
+    const messages = [
+      humanMessage("show my progress", "h1"),
+      aiMessage("", "a1", {
+        tool_calls: [
+          {
+            id: "c1",
+            name: "compose_ui",
+            args: { tree: [{ component: "Button", props: { label: "Reject", action: "decline" } }] },
+          },
+        ],
+      }),
+      toolMessage(trendEnvelope, "t1", "c1", "success"),
+    ];
+    const deps = fakeDeps(
+      mountDeps(() => stateWith(messages, [{ value: CALENDAR_INTERRUPT }])),
+      stream,
+    );
+    render(<ChatShell deps={deps} email={EMAIL} onSignedOut={() => {}} />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Reject" }));
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    const call = stream.calls[0] as StreamCall;
+    expect(call.payload).toEqual({ command: { resume: { accept: false } } });
+  });
+
+  it("a composed confirm Button no-ops without a pending interrupt", async () => {
+    const stream = fakeStream(() => []);
+    const messages = [
+      humanMessage("show my progress", "h1"),
+      aiMessage("", "a1", {
+        tool_calls: [
+          {
+            id: "c1",
+            name: "compose_ui",
+            args: { tree: [{ component: "Button", props: { label: "Approve", action: "confirm" } }] },
+          },
+        ],
+      }),
+      toolMessage(trendEnvelope, "t1", "c1", "success"),
+    ];
+    const deps = fakeDeps(mountDeps(() => stateWith(messages)), stream);
+    render(<ChatShell deps={deps} email={EMAIL} onSignedOut={() => {}} />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Approve" }));
+    expect(stream.calls).toHaveLength(0);
+  });
+
   it("renders the shell but never an unresolved fact", async () => {
     const stale = JSON.stringify({
       turn_scope_id: "scope-1",

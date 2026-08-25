@@ -42,6 +42,12 @@ export function ChatShell({
       ]),
     ),
     upload_document: () => openerFileRef.current?.click(),
+    confirm: () => {
+      if (chat.pendingInterrupt !== null) void chat.approveInterrupt({ accept: true });
+    },
+    decline: () => {
+      if (chat.pendingInterrupt !== null) void chat.approveInterrupt({ accept: false });
+    },
   };
 
   const aiMessages = chat.turns.flatMap((turn) => turn.messages.filter(isAiMessage));
