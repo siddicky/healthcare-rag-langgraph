@@ -8,6 +8,7 @@ import { useCoachStream, type CoachStreamDeps } from "@/chat/useCoachStream";
 import { ActionBar } from "./ActionBar";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
+import { QueueBar } from "./QueueBar";
 import { ThreadSidebar } from "./ThreadSidebar";
 
 /** Composed-tree Button dispatches become NEW natural-language turns. */
@@ -179,6 +180,14 @@ export function ChatShell({
             if (file !== undefined) void chat.attach(file);
           }}
         />
+        {(chat as unknown as { queue?: readonly import("@/chat/useCoachStream").QueuedEntry[] }).queue !== undefined &&
+          (chat as unknown as { queue: readonly import("@/chat/useCoachStream").QueuedEntry[] }).queue.length > 0 && (
+            <QueueBar
+              queue={(chat as unknown as { queue: readonly import("@/chat/useCoachStream").QueuedEntry[] }).queue}
+              onCancel={(id) => (chat as unknown as { cancelQueued?: (id: string) => void }).cancelQueued?.(id)}
+              onClear={() => (chat as unknown as { clearQueue?: () => void }).clearQueue?.()}
+            />
+          )}
         <Composer
           disabled={chat.busy}
           attachmentReady={chat.upload.phase === "staged" && chat.upload.stage === "done"}

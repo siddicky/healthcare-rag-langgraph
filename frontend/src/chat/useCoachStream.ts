@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useStream as useLangChainStream } from "@langchain/react";
+import { useStream as useLangChainStream, useSubmissionQueue as useSdkSubmissionQueue } from "@langchain/react";
 import type { Client } from "@langchain/langgraph-sdk";
 import { chatTelemetry } from "./stream";
 import {
@@ -81,6 +81,19 @@ export type CoachSubmitOptions = (RunStreamFixedParams | RunStreamFixedParamsV2)
 
 function isForkV2Enabled(): boolean {
   return process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
+}
+
+export interface QueuedEntry {
+  readonly id: string;
+  readonly input: RunInput;
+  readonly createdAt: Date;
+}
+
+function newQueueId(): string {
+  if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+    return crypto.randomUUID();
+  }
+  return `q-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`;
 }
 
 export interface CoachStreamOptions {
@@ -323,6 +336,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const [pendingInterrupt, setPendingInterrupt] = useState<unknown | null>(null);
   const [pendingInterrupts, setPendingInterrupts] = useState<unknown[]>([]);
   const [busy, setBusy] = useState(false);
+  const [queue, setQueue] = useState<QueuedEntry[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [upload, setUpload] = useState<UploadUi>({ phase: "idle" });
   const [erase, setErase] = useState<EraseUi>({ status: "idle" });
@@ -336,6 +350,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const uploadRef = useRef<UploadUi>({ phase: "idle" });
   const pendingInterruptRef = useRef<unknown | null>(null);
   const pendingInterruptsRef = useRef<unknown[]>([]);
+  const queueRef = useRef<QueuedEntry[]>([]);
   const mountedRef = useRef(true);
 
   const stream = deps.useStream({
@@ -355,6 +370,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   uploadRef.current = upload;
   pendingInterruptRef.current = pendingInterrupt;
   pendingInterruptsRef.current = pendingInterrupts;
+  queueRef.current = queue;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -646,15 +662,8 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const send = useCallback(
     async (text: string): Promise<void> => {
       const question = text.trim();
-      if (question === "" || busyRef.current) return;
-      const threadId = await ensureThread();
-      const echo: WireMessage = {
-        type: "human",
-        id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        content: question,
-      };
-      commitMessages(mergeMessages(messagesRef.current, [echo]));
-      if (getThreadTitle(threadId) === null) setThreadTitle(threadId, deriveTitle(question));
+      if (question === "") return;
+      // Attachments ride the SENTINEL shape; resolve input once.
       const attachmentId =
         uploadRef.current.phase === "staged" && uploadRef.current.stage === "done"
           ? uploadRef.current.info.uploadId
@@ -663,11 +672,63 @@ export function useCoachStream(deps: CoachStreamDeps) {
         attachmentId === undefined
           ? { question }
           : { question: SENTINEL_QUESTION, attachment_id: attachmentId };
-      if (attachmentId !== undefined) setUpload(applyUploadEvent(uploadRef.current, { kind: "consumed" }));
+      const willConsumeAttachment = attachmentId !== undefined;
+      // If a run is already in flight, buffer FIFO instead of 409.
+      // v2 server also supports multitaskStrategy:"enqueue" (see getRunStreamParams),
+      // but local buffering keeps v1 fallback queue-consistent and drains in order.
+      if (busyRef.current || stream.isLoading) {
+        const echo: WireMessage = {
+          type: "human",
+          id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+          content: question,
+        };
+        commitMessages(mergeMessages(messagesRef.current, [echo]));
+        const tid = activeThreadRef.current;
+        if (tid !== null && getThreadTitle(tid) === null) setThreadTitle(tid, deriveTitle(question));
+        if (willConsumeAttachment) setUpload(applyUploadEvent(uploadRef.current, { kind: "consumed" }));
+        const entry: QueuedEntry = { id: newQueueId(), input, createdAt: new Date() };
+        setQueue((q) => [...q, entry]);
+        void useSdkSubmissionQueue;
+        return;
+      }
+      const threadId = await ensureThread();
+      const echo: WireMessage = {
+        type: "human",
+        id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        content: question,
+      };
+      commitMessages(mergeMessages(messagesRef.current, [echo]));
+      if (getThreadTitle(threadId) === null) setThreadTitle(threadId, deriveTitle(question));
+      if (willConsumeAttachment) setUpload(applyUploadEvent(uploadRef.current, { kind: "consumed" }));
       await runStream(threadId, { input });
     },
-    [ensureThread, runStream],
+    [ensureThread, runStream, stream.isLoading],
   );
+
+  useEffect(() => {
+    if (busy || stream.isLoading) return;
+    if (queue.length === 0) return;
+    const head = queue[0];
+    if (head === undefined) return;
+    setQueue((q) => q.slice(1));
+    const threadId = activeThreadRef.current;
+    if (threadId === null) {
+      void (async () => {
+        const tid = await ensureThread();
+        await runStream(tid, { input: head.input });
+      })();
+    } else {
+      void runStream(threadId, { input: head.input });
+    }
+  }, [busy, stream.isLoading, queue, ensureThread, runStream]);
+
+  const cancelQueued = useCallback((id: string): void => {
+    setQueue((q) => q.filter((e) => e.id !== id));
+  }, []);
+
+  const clearQueue = useCallback((): void => {
+    setQueue([]);
+  }, []);
 
   const attach = useCallback(
     async (file: File): Promise<void> => {
@@ -956,6 +1017,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
     commitMessages([]);
     commitPendingInterrupts([]);
     setUpload({ phase: "idle" });
+    setQueue([]);
     setError(null);
   }, [commitMessages, commitPendingInterrupts]);
 
@@ -1027,6 +1089,10 @@ export function useCoachStream(deps: CoachStreamDeps) {
     pendingInterrupts,
     busy: busy || stream.isLoading,
     isLoading: stream.isLoading,
+    queue,
+    queueSize: queue.length,
+    cancelQueued,
+    clearQueue,
     error,
     upload,
     uploadStage: documentStage(upload),
