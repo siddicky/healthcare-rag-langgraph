@@ -6,7 +6,7 @@ tags: [privacy, pii, presidio, safety]
 openwiki:
   roles: [architecture, domain, operations]
   change_kinds: [lifecycle, safety]
-  source_paths: [healthcare_rag/processors/privacy.py, healthcare_rag/processors/privacy_patterns.py, healthcare_rag/graph/resources.py, healthcare_rag/graph/engine.py, healthcare_rag/processors/safety.py, healthcare_rag/processors/direct_output_policy.py]
+  source_paths: [healthcare_rag/processors/privacy.py, healthcare_rag/processors/privacy_patterns.py, healthcare_rag/graph/resources.py, healthcare_rag/graph/engine.py, healthcare_rag/processors/safety_signals.py, healthcare_rag/processors/direct_output_policy.py]
   symbols: [PrivacySanitizer, PrivacyScan, PrivacyScanError, Readiness, scrub_phi, union_spans, RedactSpan, deterministic_hits, clinical_code_intervals]
   test_paths: [tests/test_privacy_sanitizer.py, tests/test_safety_gate.py, tests/graph/test_direct_output_policy.py, tests/graph/test_query_or_respond_privacy.py]
   invariants: [Scanning is fail-closed: any initialization or scan failure raises PrivacyScanError and the turn produces no answer., Redaction merges overlapping spans and keeps the longest match; overlapping different kinds become one REDACTED_IDENTIFIER token., Clinical code intervals (privacy_patterns) are never redacted.]
@@ -17,7 +17,7 @@ openwiki:
 
 `PrivacySanitizer` (`healthcare_rag/processors/privacy.py`) is the single
 process-wide recognizer of personal identifiers. It replaced the older regex-only
-PHI list: `scrub_phi` in `healthcare_rag/processors/safety.py#L58-L76` now simply
+PHI list: `scrub_phi` in `healthcare_rag/processors/safety_signals.py` now simply
 delegates to `get().privacy.scan(text)`, so the [safety gate](../safety/gate.md),
 history scrubbing, and the CLI monitor all redact through the same analyzer.
 The `Resources` singleton owns one instance (`graph/resources.py#Resources.privacy`),
