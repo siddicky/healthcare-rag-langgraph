@@ -131,7 +131,8 @@ export interface CoachStreamHandle {
   submit(input: RunInput, options: CoachSubmitOptions): Promise<void>;
   respond(response: ResumePayload): Promise<void>;
   respondAll?(responses: ResumePayload[] | Record<string, ResumePayload>): Promise<void>;
-  stop(): Promise<void>;
+  stop(options?: { cancel?: boolean }): Promise<void>;
+  disconnect?(): Promise<void>;
   getThread(): unknown;
 }
 
@@ -342,6 +343,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const [erase, setErase] = useState<EraseUi>({ status: "idle" });
   const [feedback, setFeedback] = useState<FeedbackUi>({ sent: {}, failed: {} });
   const [initializing, setInitializing] = useState(true);
+  const [wasDisconnected, setWasDisconnected] = useState(false);
 
   const messagesRef = useRef<WireMessage[]>([]);
   const busyRef = useRef(false);
@@ -352,6 +354,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const pendingInterruptsRef = useRef<unknown[]>([]);
   const queueRef = useRef<QueuedEntry[]>([]);
   const mountedRef = useRef(true);
+  const wasDisconnectedRef = useRef(false);
 
   const stream = deps.useStream({
     client: deps.client,
@@ -371,12 +374,51 @@ export function useCoachStream(deps: CoachStreamDeps) {
   pendingInterruptRef.current = pendingInterrupt;
   pendingInterruptsRef.current = pendingInterrupts;
   queueRef.current = queue;
+  wasDisconnectedRef.current = wasDisconnected;
 
   useEffect(() => {
     mountedRef.current = true;
     return () => {
       mountedRef.current = false;
     };
+  }, []);
+
+  const disconnect = useCallback(() => {
+    setWasDisconnected(true);
+    wasDisconnectedRef.current = true;
+    const s = stream as unknown as { disconnect?: () => Promise<void>; stop?: (o?: { cancel?: boolean }) => Promise<void> };
+    if (typeof s.disconnect === "function") return s.disconnect();
+    return s.stop?.({ cancel: false }) ?? Promise.resolve();
+  }, [stream]);
+
+  const stop = useCallback(() => {
+    setWasDisconnected(false);
+    wasDisconnectedRef.current = false;
+    const s = stream as unknown as { stop?: (o?: { cancel?: boolean }) => Promise<void> };
+    return s.stop?.() ?? Promise.resolve();
+  }, [stream]);
+
+  const rejoin = useCallback((threadId: string) => {
+    const trimmed = threadId.trim();
+    if (trimmed === "") return;
+    setWasDisconnected(false);
+    wasDisconnectedRef.current = false;
+    activeThreadRef.current = trimmed;
+    setActiveThreadId(trimmed);
+  }, []);
+
+  useEffect(() => {
+    if (activeThreadId === null) return;
+    if (stream.isLoading || stream.isThreadLoading) {
+      void stream.getThread?.();
+    }
+  }, [activeThreadId, stream]);
+
+  const clearDisconnectFlag = useCallback(() => {
+    if (wasDisconnectedRef.current) {
+      setWasDisconnected(false);
+      wasDisconnectedRef.current = false;
+    }
   }, []);
 
   const commitMessages = useCallback((next: WireMessage[]) => {
@@ -610,6 +652,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
       busyRef.current = true;
       setBusy(true);
       setError(null);
+      clearDisconnectFlag();
       try {
         if (!(await waitForTerminal(threadId))) {
           if (mountedRef.current) {
@@ -646,7 +689,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
         if (mountedRef.current) setBusy(false);
       }
     },
-    [maybeStartErase, recoverMissingThread, stream, waitForTerminal],
+    [clearDisconnectFlag, maybeStartErase, recoverMissingThread, stream, waitForTerminal],
   );
 
   const ensureThread = useCallback(async (): Promise<string> => {
@@ -1089,6 +1132,10 @@ export function useCoachStream(deps: CoachStreamDeps) {
     pendingInterrupts,
     busy: busy || stream.isLoading,
     isLoading: stream.isLoading,
+    isThreadLoading: stream.isThreadLoading,
+    wasDisconnected,
+    threadId: stream.threadId,
+    streamError: stream.error,
     queue,
     queueSize: queue.length,
     cancelQueued,
@@ -1115,6 +1162,9 @@ export function useCoachStream(deps: CoachStreamDeps) {
     selectThread,
     removeThread,
     signOut,
+    disconnect,
+    rejoin,
+    stop,
     dismissError: () => setError(null),
     values: catalogValues,
     catalogValues,

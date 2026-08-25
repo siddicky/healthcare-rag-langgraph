@@ -105,9 +105,69 @@ export function ChatShell({
         )}
         {chat.error !== null && (
           <div className="banner banner-error" role="alert">
-            {chat.error}
+            <span>{chat.error}</span>
+            {(chat as unknown as { wasDisconnected?: boolean }).wasDisconnected === true && (
+              <button
+                data-testid="reconnect-button"
+                className="btn btn-secondary btn-sm"
+                onClick={() => {
+                  const tid = (chat as unknown as { activeThreadId: string | null }).activeThreadId;
+                  const rejoin = (chat as unknown as { rejoin?: (t: string) => void }).rejoin;
+                  if (tid !== null && rejoin) rejoin(tid);
+                }}
+                style={{
+                  marginLeft: "var(--space-sm)",
+                  padding: "6px 12px",
+                  fontSize: 13,
+                  borderRadius: "var(--border-radius-pill)",
+                  border: "1px solid var(--carrot)",
+                  background: "var(--white)",
+                  color: "var(--carrot-accessible)",
+                }}
+              >
+                Reconnect
+              </button>
+            )}
           </div>
         )}
+        {(() => {
+          const isThreadLoading = (chat as unknown as { isThreadLoading?: boolean }).isThreadLoading === true;
+          const wasDisconnected = (chat as unknown as { wasDisconnected?: boolean }).wasDisconnected === true;
+          const isLoading = (chat as unknown as { isLoading?: boolean }).isLoading === true;
+          const streamError = (chat as unknown as { streamError?: unknown }).streamError;
+          const showReconnecting = wasDisconnected && (isThreadLoading || (isLoading && streamError == null && chat.error == null));
+          if (!showReconnecting) return null;
+          return (
+            <div
+              data-testid="reconnecting-banner"
+              role="status"
+              aria-live="polite"
+              className="banner"
+              style={{
+                background: "var(--gold-20)",
+                border: "1px solid var(--border-gold)",
+                color: "var(--rust)",
+                display: "flex",
+                alignItems: "center",
+                gap: "var(--space-sm)",
+              }}
+            >
+              <span
+                aria-hidden
+                style={{
+                  width: 14,
+                  height: 14,
+                  borderRadius: "50%",
+                  border: "2px solid var(--camel)",
+                  borderTopColor: "transparent",
+                  display: "inline-block",
+                  animation: "ds-spin 0.8s linear infinite",
+                }}
+              />
+              Reconnecting...
+            </div>
+          );
+        })()}
 
         {!started ? (
           <div className="empty-state">
