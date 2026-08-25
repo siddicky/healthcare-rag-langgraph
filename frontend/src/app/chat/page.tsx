@@ -2,10 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { CopilotKit as CopilotKitProvider } from "@copilotkit/react-core/v2";
 import "./chat.css";
 import { ChatShell } from "@/chat/components/ChatShell";
 import { createBrowserDeps } from "@/chat/coachClient";
 import { getSupabase } from "@/lib/supabase";
+import {
+  copilotKitHeaders,
+  refreshCopilotKitAuthorization,
+} from "@/lib/copilotkit-auth";
 
 interface SessionInfo {
   email: string;
@@ -18,8 +23,9 @@ export default function ChatPage() {
 
   useEffect(() => {
     let active = true;
-    getSupabase()
-      .auth.getSession()
+    const supabase = getSupabase();
+    supabase.auth
+      .getSession()
       .then(({ data }) => {
         if (!active) return;
         const email = data.session?.user.email;
@@ -27,8 +33,11 @@ export default function ChatPage() {
           router.replace("/login");
           return;
         }
-        setSession({ email });
-        setChecked(true);
+        return refreshCopilotKitAuthorization(supabase).then(() => {
+          if (!active) return;
+          setSession({ email });
+          setChecked(true);
+        });
       })
       .catch(() => {
         if (active) router.replace("/login");
@@ -45,10 +54,17 @@ export default function ChatPage() {
   }
 
   return (
-    <ChatShell
-      deps={createBrowserDeps()}
-      email={session.email}
-      onSignedOut={() => router.replace("/login")}
-    />
+    <CopilotKitProvider
+      runtimeUrl="/api/copilotkit"
+      agent="coach"
+      useSingleEndpoint={false}
+      headers={copilotKitHeaders}
+    >
+      <ChatShell
+        deps={createBrowserDeps()}
+        email={session.email}
+        onSignedOut={() => router.replace("/login")}
+      />
+    </CopilotKitProvider>
   );
 }

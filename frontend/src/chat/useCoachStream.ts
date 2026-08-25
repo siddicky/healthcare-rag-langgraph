@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStream as useLangChainStream, useSubmissionQueue as useSdkSubmissionQueue } from "@langchain/react";
+import { useAgent, UseAgentUpdate } from "@copilotkit/react-core/v2/headless";
+import type { AgentSubscriber, Message } from "@ag-ui/client";
 import type { Client } from "@langchain/langgraph-sdk";
 import { chatTelemetry } from "./stream";
 import {
@@ -43,6 +45,8 @@ import { clearThreadTitles, deriveTitle, getThreadTitle, setThreadTitle } from "
 import { isHistoryBranchUiEnabled } from "./featureGates";
 import { envelopesFromValues, treesFromValues } from "@/catalog/values";
 import type { DataEnvelope } from "@/catalog/envelopes";
+import { refreshCopilotKitAuthorization } from "@/lib/copilotkit-auth";
+import { isRenderedNode } from "./coachProtocol";
 
 /**
  * The coach chat controller. Every network seam is injected through `deps`
@@ -306,6 +310,243 @@ export function useLangChainCoachStream(options: CoachStreamOptions): CoachStrea
   }) as unknown as CoachStreamHandle;
 }
 
+function agentMessageId(event: unknown): string | null {
+  if (typeof event !== "object" || event === null) return null;
+  const record = event as Record<string, unknown>;
+  if (typeof record.messageId === "string") return record.messageId;
+  if (typeof record.parentMessageId === "string") return record.parentMessageId;
+  if (typeof record.toolCallId === "string") return record.toolCallId;
+  return null;
+}
+
+function agentEventNode(event: unknown): string | null {
+  if (typeof event !== "object" || event === null) return null;
+  const raw = (event as Record<string, unknown>).rawEvent;
+  if (typeof raw !== "object" || raw === null) return null;
+  const metadata = (raw as Record<string, unknown>).metadata;
+  if (typeof metadata !== "object" || metadata === null) return null;
+  const node = (metadata as Record<string, unknown>).langgraph_node;
+  return typeof node === "string" ? node : null;
+}
+
+function projectAgentMessage(message: Message): WireMessage | null {
+  switch (message.role) {
+    case "user":
+      return { type: "human", id: message.id, content: message.content };
+    case "assistant":
+      return {
+        type: "ai",
+        id: message.id,
+        content: message.content ?? "",
+        ...(message.toolCalls === undefined
+          ? {}
+          : {
+              tool_calls: message.toolCalls.map((call) => ({
+                id: call.id,
+                name: call.function.name,
+                args: call.function.arguments,
+              })),
+            }),
+      };
+    case "tool":
+      return {
+        type: "tool",
+        id: message.id,
+        content: message.content,
+        tool_call_id: message.toolCallId,
+        status: message.error === undefined ? "success" : "error",
+      };
+    case "reasoning":
+    case "activity":
+    case "developer":
+    case "system":
+      return null;
+  }
+}
+
+export function projectAgentMessages(
+  messages: readonly Message[],
+  hiddenMessageIds: ReadonlySet<string> = new Set(),
+): WireMessage[] {
+  const projected: WireMessage[] = [];
+  for (const message of messages) {
+    if (hiddenMessageIds.has(message.id)) continue;
+    const wire = projectAgentMessage(message);
+    if (wire !== null) projected.push(wire);
+  }
+  return projected;
+}
+
+function interruptEntries(value: unknown): unknown[] {
+  if (Array.isArray(value)) return value;
+  if (typeof value === "object" && value !== null) {
+    const record = value as Record<string, unknown>;
+    if (Array.isArray(record.interrupts)) return record.interrupts;
+  }
+  return value === null || value === undefined ? [] : [value];
+}
+
+function interruptValue(entry: unknown): unknown {
+  if (typeof entry !== "object" || entry === null) return entry;
+  const record = entry as Record<string, unknown>;
+  if (record.value !== undefined) return record.value;
+  const metadata = record.metadata;
+  if (typeof metadata === "object" && metadata !== null) {
+    const meta = metadata as Record<string, unknown>;
+    if (meta.value !== undefined) return meta.value;
+  }
+  return entry;
+}
+
+function coachInterruptEntries(value: unknown): unknown[] {
+  return interruptEntries(value).map((entry, index) => {
+    const id = interruptIdFromEntry(entry) ?? `agui-interrupt-${index}`;
+    return { id, value: interruptValue(entry) };
+  });
+}
+
+export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStreamHandle {
+  const { agent, isReady } = useAgent({
+    agentId: "coach",
+    updates: [UseAgentUpdate.OnMessagesChanged, UseAgentUpdate.OnRunStatusChanged],
+  });
+  const [interrupts, setInterrupts] = useState<unknown[]>([]);
+  const [error, setError] = useState<unknown>(undefined);
+  const [isThreadLoading, setIsThreadLoading] = useState(false);
+  const [projectionVersion, setProjectionVersion] = useState(0);
+  const hiddenMessageIdsRef = useRef<Set<string>>(new Set());
+
+  useEffect(() => {
+    if (options.threadId !== null) agent.threadId = options.threadId;
+  }, [agent, options.threadId]);
+
+  useEffect(() => {
+    if (!isReady) return;
+    const subscriber: AgentSubscriber = {
+      onEvent: ({ event }) => {
+        const node = agentEventNode(event);
+        const id = agentMessageId(event);
+        if (node !== null && !isRenderedNode(node)) {
+          if (id !== null) hiddenMessageIdsRef.current.add(id);
+          chatTelemetry({ kind: "unknown_node", node });
+        }
+      },
+      onMessagesChanged: () => setProjectionVersion((version) => version + 1),
+      onRunInitialized: () => {
+        setError(undefined);
+        setProjectionVersion((version) => version + 1);
+      },
+      onRunFailed: ({ error: runError }) => {
+        setError(runError);
+      },
+      onCustomEvent: ({ event }) => {
+        if (event.name !== "on_interrupt") return;
+        setInterrupts(coachInterruptEntries(event.value));
+      },
+      onRunFinishedEvent: (params) => {
+        if (params.outcome === "interrupt") {
+          setInterrupts(coachInterruptEntries(params.interrupts));
+        } else {
+          setInterrupts([]);
+        }
+      },
+      onRunFinalized: () => setProjectionVersion((version) => version + 1),
+    };
+    const { unsubscribe } = agent.subscribe(subscriber);
+    return unsubscribe;
+  }, [agent, isReady]);
+
+  const projectedMessages = useMemo(
+    () => projectAgentMessages(agent.messages, hiddenMessageIdsRef.current),
+    [agent.messages, projectionVersion],
+  );
+
+  const run = useCallback(
+    async (input: RunInput, submitOptions: CoachSubmitOptions): Promise<void> => {
+      if (!isReady) throw new Error("Coach connection is not ready.");
+      await refreshCopilotKitAuthorization();
+      agent.threadId = submitOptions.threadId;
+      const nextState = { ...agent.state, question: input.question } as Record<string, unknown>;
+      delete nextState.attachment_id;
+      if (input.attachment_id !== undefined) nextState.attachment_id = input.attachment_id;
+      agent.setState(nextState);
+      agent.addMessage({
+        id: crypto.randomUUID(),
+        role: "user",
+        content: input.question,
+      });
+      const { threadId: _threadId, onError: _onError, ...forwardedProps } = submitOptions;
+      void _threadId;
+      void _onError;
+      await agent.runAgent({ forwardedProps });
+    },
+    [agent, isReady],
+  );
+
+  const respond = useCallback(
+    async (
+      response: ResumePayload,
+      respondOptions?: { readonly interruptId?: string; readonly namespace?: readonly string[] },
+    ): Promise<void> => {
+      if (!isReady) throw new Error("Coach connection is not ready.");
+      await refreshCopilotKitAuthorization();
+      const first = interrupts[0];
+      const fallbackId = interruptIdFromEntry(first);
+      const interruptId = respondOptions?.interruptId ?? fallbackId;
+      if (interruptId === null || interruptId === undefined) {
+        throw new Error("The pending coach action no longer has a resume id.");
+      }
+      setInterrupts([]);
+      await agent.runAgent({
+        resume: [{ interruptId, status: "resolved", payload: response }],
+      });
+    },
+    [agent, interrupts, isReady],
+  );
+
+  const respondAll = useCallback(
+    async (responses: ResumePayload[] | Record<string, ResumePayload>): Promise<void> => {
+      const list = Array.isArray(responses) ? responses : Object.values(responses);
+      for (let index = 0; index < list.length; index += 1) {
+        const response = list[index];
+        const entry = interrupts[index];
+        if (response === undefined) continue;
+        await respond(response, {
+          interruptId: interruptIdFromEntry(entry) ?? undefined,
+          namespace: [],
+        });
+      }
+    },
+    [interrupts, respond],
+  );
+
+  return {
+    values: (typeof agent.state === "object" && agent.state !== null ? agent.state : {}) as CoachStreamState,
+    messages: projectedMessages,
+    toolCalls: synthesizeToolCallsFromMessages(projectedMessages),
+    interrupts,
+    interrupt: interrupts[0],
+    isLoading: agent.isRunning,
+    isThreadLoading: isThreadLoading || !isReady,
+    error,
+    threadId: options.threadId ?? agent.threadId,
+    submit: run,
+    respond,
+    respondAll,
+    stop: async () => agent.abortRun(),
+    disconnect: async () => agent.detachActiveRun(),
+    getThread: () => {
+      if (!isReady || options.threadId === null) return null;
+      setIsThreadLoading(true);
+      void refreshCopilotKitAuthorization()
+        .then(() => agent.connectAgent())
+        .catch(setError)
+        .finally(() => setIsThreadLoading(false));
+      return { threadId: options.threadId };
+    },
+  };
+}
+
 // Re-export for tests / external wiring
 export { COPY_TOOL, copyToClipboardExecute, HEADLESS_TOOLS };
 
@@ -452,7 +693,8 @@ export function useCoachStream(deps: CoachStreamDeps) {
     wasDisconnectedRef.current = false;
     activeThreadRef.current = trimmed;
     setActiveThreadId(trimmed);
-  }, []);
+    void stream.getThread?.();
+  }, [stream]);
 
   useEffect(() => {
     if (activeThreadId === null) return;

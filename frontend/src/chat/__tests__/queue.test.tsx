@@ -3,7 +3,7 @@ import { render, screen, waitFor, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatShell } from "@/chat/components/ChatShell";
 import { QueueBar } from "@/chat/components/QueueBar";
-import { fakeDeps, fakeStream, thread } from "./helpers";
+import { fakeAgent, fakeDeps, thread } from "./helpers";
 import { aiMessage, updatesPart } from "./helpers";
 import type { QueuedEntry } from "@/chat/useCoachStream";
 import { useCoachStream, type CoachStreamDeps } from "@/chat/useCoachStream";
@@ -69,7 +69,7 @@ describe("client submission queue (useCoachStream)", () => {
       await creationGate;
       return thread(threadId);
     });
-    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("done", "a1")])]);
+    const stream = fakeAgent(() => [updatesPart("coach_agent", [aiMessage("done", "a1")])]);
     const deps = fakeDeps({ createThread }, stream);
     let chat: ReturnType<typeof useCoachStream> | null = null;
     render(<CaptureHarness deps={deps} onCapture={(captured) => { chat = captured; }} />);
@@ -90,7 +90,7 @@ describe("client submission queue (useCoachStream)", () => {
   it("queues second send while first run pending and drains FIFO without 409", async () => {
     const gate: { release: (() => void) | null } = { release: null };
     let callCount = 0;
-    const stream = fakeStream(() =>
+    const stream = fakeAgent(() =>
       (async function* () {
         callCount += 1;
         if (callCount === 1) {
@@ -141,7 +141,7 @@ describe("client submission queue (useCoachStream)", () => {
 
   it("server enqueue path: v2 uses multitaskStrategy enqueue", async () => {
     vi.stubEnv("NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER", "v2");
-    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Queued.", "a1")])]);
+    const stream = fakeAgent(() => [updatesPart("coach_agent", [aiMessage("Queued.", "a1")])]);
     const deps = fakeDeps({}, stream);
     render(<ChatShell deps={deps} email="member@example.com" onSignedOut={() => {}} />);
     const user = userEvent.setup();
@@ -159,7 +159,7 @@ describe("client submission queue (useCoachStream)", () => {
   it("queue drains in order for three rapid sends", async () => {
     const gates: Array<() => void> = [];
     let callCount = 0;
-    const stream = fakeStream(() =>
+    const stream = fakeAgent(() =>
       (async function* () {
         callCount += 1;
         const idx = callCount;
