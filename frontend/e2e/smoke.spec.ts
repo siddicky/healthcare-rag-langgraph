@@ -141,6 +141,7 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
   const createdThreads = trackThreadCreations(page);
 
   await login(page, run, run.u1);
+  await page.getByRole("button", { name: "New conversation" }).click();
 
   await test.step("medical_lookup answer renders exactly once", async () => {
     await send(page, "How should I take Metformin?");

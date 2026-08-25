@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatShell } from "@/chat/components/ChatShell";
 import type { CoachApiBundle, CoachStreamDeps } from "@/chat/useCoachStream";
@@ -105,6 +105,32 @@ describe("openers", () => {
 });
 
 describe("new conversation", () => {
+  it("binds a plain v2 first send to the one REST-created thread", async () => {
+    vi.stubEnv("NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER", "v2");
+    const restThreadId = "44444444-4444-4444-8444-444444444444";
+    let searchCount = 0;
+    const createThread = vi.fn(async () => thread(restThreadId));
+    const searchThreads = vi.fn(async () => {
+      searchCount += 1;
+      return searchCount === 1 ? [] : [thread(restThreadId)];
+    });
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
+    const deps = fakeDeps({ createThread, searchThreads }, stream);
+    shell(deps);
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Message your coach"), "log my weight");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(createThread).toHaveBeenCalledTimes(1);
+    expect(stream.calls[0]?.threadId).toBe(restThreadId);
+    expect(stream.calls[0]?.options?.threadId).toBe(restThreadId);
+    await waitFor(() => expect(searchThreads.mock.calls.length).toBeGreaterThanOrEqual(2));
+    expect(screen.getByRole("button", { name: "log my weight" })).toBeInTheDocument();
+    vi.unstubAllEnvs();
+  });
+
   it("clears the transcript and starts fresh (thread created lazily on next send)", async () => {
     const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
     const deps = fakeDeps({}, stream);
@@ -121,6 +147,35 @@ describe("new conversation", () => {
 });
 
 describe("thread switch via latest-state read", () => {
+  it("ignores a stale SDK thread callback after an explicit thread selection", async () => {
+    const firstThreadId = "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa";
+    const selectedThreadId = "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb";
+    window.localStorage.setItem(
+      "nymble:thread-titles",
+      JSON.stringify({ [firstThreadId]: "First chat", [selectedThreadId]: "Selected chat" }),
+    );
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("reply", "a-reply")])]);
+    const deps = fakeDeps(
+      {
+        searchThreads: vi.fn(async () => [thread(firstThreadId), thread(selectedThreadId)]),
+        getThreadState: vi.fn(async () => ({ values: { messages: [] }, interrupts: [] })),
+      },
+      stream,
+    );
+    shell(deps);
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Selected chat" }));
+    await waitFor(() => expect(deps.api.getThreadState).toHaveBeenCalledWith(selectedThreadId));
+    act(() => stream.emitThreadId(firstThreadId));
+    await user.type(screen.getByLabelText("Message your coach"), "stay selected");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(stream.calls[0]?.threadId).toBe(selectedThreadId);
+    expect(stream.calls[0]?.options?.threadId).toBe(selectedThreadId);
+  });
+
   it("loads the selected thread's state and renders its messages from values.messages", async () => {
     window.localStorage.setItem(
       "nymble:thread-titles",

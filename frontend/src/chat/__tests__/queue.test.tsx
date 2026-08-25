@@ -59,6 +59,34 @@ function CaptureHarness({ deps, onCapture }: { deps: CoachStreamDeps; onCapture:
 }
 
 describe("client submission queue (useCoachStream)", () => {
+  it("shares one pending thread creation across immediate sends", async () => {
+    const threadId = "55555555-5555-4555-8555-555555555555";
+    let releaseCreation: (() => void) | null = null;
+    const creationGate = new Promise<void>((resolve) => {
+      releaseCreation = resolve;
+    });
+    const createThread = vi.fn(async () => {
+      await creationGate;
+      return thread(threadId);
+    });
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("done", "a1")])]);
+    const deps = fakeDeps({ createThread }, stream);
+    let chat: ReturnType<typeof useCoachStream> | null = null;
+    render(<CaptureHarness deps={deps} onCapture={(captured) => { chat = captured; }} />);
+    await act(async () => { await new Promise((resolve) => setTimeout(resolve, 0)); });
+
+    await act(async () => {
+      void chat!.send("first");
+      void chat!.send("second");
+    });
+    await waitFor(() => expect(createThread).toHaveBeenCalledTimes(1));
+    expect(stream.calls).toHaveLength(0);
+
+    await act(async () => releaseCreation?.());
+    await waitFor(() => expect(stream.calls).toHaveLength(2));
+    expect(stream.calls.map((call) => call.options?.threadId)).toEqual([threadId, threadId]);
+  });
+
   it("queues second send while first run pending and drains FIFO without 409", async () => {
     const gate: { release: (() => void) | null } = { release: null };
     let callCount = 0;

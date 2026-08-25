@@ -136,7 +136,10 @@ export interface CoachStreamHandle {
   readonly error: unknown;
   readonly threadId: string | null;
   submit(input: RunInput, options: CoachSubmitOptions): Promise<void>;
-  respond(response: ResumePayload): Promise<void>;
+  respond(
+    response: ResumePayload,
+    options?: { readonly interruptId?: string; readonly namespace?: readonly string[] },
+  ): Promise<void>;
   respondAll?(responses: ResumePayload[] | Record<string, ResumePayload>): Promise<void>;
   stop(options?: { cancel?: boolean }): Promise<void>;
   disconnect?(): Promise<void>;
@@ -236,6 +239,13 @@ function allRawInterrupts(stream: CoachStreamHandle): readonly unknown[] {
   if (arr.length > 0) return arr;
   if (singular !== null && singular !== undefined) return [singular];
   return [];
+}
+
+function interruptIdFromEntry(entry: unknown): string | null {
+  if (typeof entry !== "object" || entry === null) return null;
+  const candidate = entry as Record<string, unknown>;
+  if (typeof candidate.id === "string") return candidate.id;
+  return typeof candidate.interrupt_id === "string" ? candidate.interrupt_id : null;
 }
 
 function visibleInterruptEntries(stream: CoachStreamHandle): readonly unknown[] {
@@ -365,6 +375,21 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const queueRef = useRef<QueuedEntry[]>([]);
   const mountedRef = useRef(true);
   const wasDisconnectedRef = useRef(false);
+  const submittedThreadRef = useRef<string | null>(null);
+  const threadCreationRef = useRef<Promise<string> | null>(null);
+
+  const refreshThreads = useCallback(async (): Promise<ThreadSummary[]> => {
+    const collected: ThreadSummary[] = [];
+    let offset = 0;
+    for (;;) {
+      const page = await deps.api.searchThreads({ limit: SIDEBAR_PAGE_SIZE, offset });
+      collected.push(...page);
+      if (page.length < SIDEBAR_PAGE_SIZE) break;
+      offset += page.length;
+    }
+    if (mountedRef.current) setThreads(collected);
+    return collected;
+  }, [deps.api]);
 
   const stream = deps.useStream({
     client: deps.client,
@@ -373,8 +398,19 @@ export function useCoachStream(deps: CoachStreamDeps) {
     messagesKey: "messages",
     optimistic: false,
     onThreadId: (threadId) => {
+      const currentThreadId = activeThreadRef.current;
+      const submittedThreadId = submittedThreadRef.current;
+      if (
+        currentThreadId !== null &&
+        (submittedThreadId === null ||
+          currentThreadId !== submittedThreadId ||
+          threadId !== submittedThreadId)
+      ) {
+        return;
+      }
       activeThreadRef.current = threadId;
       setActiveThreadId(threadId);
+      void refreshThreads();
     },
   });
 
@@ -508,19 +544,6 @@ export function useCoachStream(deps: CoachStreamDeps) {
     [],
   );
 
-  const refreshThreads = useCallback(async (): Promise<ThreadSummary[]> => {
-    const collected: ThreadSummary[] = [];
-    let offset = 0;
-    for (;;) {
-      const page = await deps.api.searchThreads({ limit: SIDEBAR_PAGE_SIZE, offset });
-      collected.push(...page);
-      if (page.length < SIDEBAR_PAGE_SIZE) break;
-      offset += page.length;
-    }
-    if (mountedRef.current) setThreads(collected);
-    return collected;
-  }, [deps.api]);
-
   const recoverMissingThread = useCallback(
     async (threadId: string): Promise<void> => {
       clearThreadTitles([threadId]);
@@ -635,10 +658,25 @@ export function useCoachStream(deps: CoachStreamDeps) {
       if (values.length !== known.length && values.length > 0) chatTelemetry({ kind: "unknown_interrupt" });
       if (known.length > 0) commitPendingInterrupts(known);
       else commitPendingInterrupts([]);
+      activeThreadRef.current = threadId;
       setActiveThreadId(threadId);
       maybeStartErase(wire, threadId);
     },
     [commitMessages, commitPendingInterrupts, deps.api, maybeStartErase],
+  );
+
+  const reconcileThreadMessages = useCallback(
+    async (threadId: string): Promise<void> => {
+      const projected = await deps.api.getThreadState(threadId);
+      if (activeThreadRef.current !== threadId) return;
+      const reconciled = mergeMessages(
+        messagesRef.current,
+        toWireMessages(projected.values.messages),
+      );
+      commitMessages(reconciled);
+      maybeStartErase(reconciled, threadId);
+    },
+    [commitMessages, deps.api, maybeStartErase],
   );
 
   const fetchHistory = useCallback(async (): Promise<ThreadHistory[] | null> => {
@@ -728,6 +766,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
           return false;
         }
         if ("input" in payload) {
+          submittedThreadRef.current = threadId;
           await stream.submit(payload.input, {
             ...getRunStreamParams(),
             threadId,
@@ -736,9 +775,15 @@ export function useCoachStream(deps: CoachStreamDeps) {
             },
           });
         } else {
-          await stream.respond(payload.command.resume);
+          const interruptId = interruptIdFromEntry(allRawInterrupts(stream)[0]);
+          await stream.respond(
+            payload.command.resume,
+            interruptId === null ? undefined : { interruptId, namespace: [] },
+          );
+          await reconcileThreadMessages(threadId);
         }
         maybeStartErase(messagesRef.current, threadId);
+        if (isForkV2Enabled()) void fetchHistory();
         return true;
       } catch (streamError) {
         if (isMissingThreadError(streamError)) {
@@ -752,22 +797,55 @@ export function useCoachStream(deps: CoachStreamDeps) {
         }
         return false;
       } finally {
+        if (submittedThreadRef.current === threadId) submittedThreadRef.current = null;
         busyRef.current = false;
         if (mountedRef.current) setBusy(false);
       }
     },
-    [clearDisconnectFlag, maybeStartErase, recoverMissingThread, stream, waitForTerminal],
+    [clearDisconnectFlag, fetchHistory, maybeStartErase, reconcileThreadMessages, recoverMissingThread, stream, waitForTerminal],
   );
 
   const ensureThread = useCallback(async (): Promise<string> => {
     const existing = activeThreadRef.current;
     if (existing !== null) return existing;
-    const created = await deps.api.createThread();
-    activeThreadRef.current = created.thread_id;
-    setActiveThreadId(created.thread_id);
-    await refreshThreads();
-    return created.thread_id;
+    const pending = threadCreationRef.current;
+    if (pending !== null) return pending;
+    const creation = (async (): Promise<string> => {
+      const created = await deps.api.createThread();
+      activeThreadRef.current = created.thread_id;
+      setActiveThreadId(created.thread_id);
+      await refreshThreads();
+      return created.thread_id;
+    })();
+    threadCreationRef.current = creation;
+    try {
+      return await creation;
+    } finally {
+      if (threadCreationRef.current === creation) threadCreationRef.current = null;
+    }
   }, [deps.api, refreshThreads]);
+
+  const enqueueSend = useCallback(
+    (question: string, input: RunInput, willConsumeAttachment: boolean): void => {
+      const echo: WireMessage = {
+        type: "human",
+        id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+        content: question,
+      };
+      commitMessages(mergeMessages(messagesRef.current, [echo]));
+      const threadId = activeThreadRef.current;
+      if (threadId !== null && getThreadTitle(threadId) === null) {
+        setThreadTitle(threadId, deriveTitle(question));
+      }
+      if (willConsumeAttachment) {
+        setUpload(applyUploadEvent(uploadRef.current, { kind: "consumed" }));
+      }
+      const entry: QueuedEntry = { id: newQueueId(), input, createdAt: new Date() };
+      setQueue((current) => [...current, entry]);
+      void useSdkSubmissionQueue;
+    },
+    [commitMessages],
+  );
 
   const send = useCallback(
     async (text: string): Promise<void> => {
@@ -787,21 +865,14 @@ export function useCoachStream(deps: CoachStreamDeps) {
       // v2 server also supports multitaskStrategy:"enqueue" (see getRunStreamParams),
       // but local buffering keeps v1 fallback queue-consistent and drains in order.
       if (busyRef.current || stream.isLoading) {
-        const echo: WireMessage = {
-          type: "human",
-          id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-          content: question,
-        };
-        commitMessages(mergeMessages(messagesRef.current, [echo]));
-        const tid = activeThreadRef.current;
-        if (tid !== null && getThreadTitle(tid) === null) setThreadTitle(tid, deriveTitle(question));
-        if (willConsumeAttachment) setUpload(applyUploadEvent(uploadRef.current, { kind: "consumed" }));
-        const entry: QueuedEntry = { id: newQueueId(), input, createdAt: new Date() };
-        setQueue((q) => [...q, entry]);
-        void useSdkSubmissionQueue;
+        enqueueSend(question, input, willConsumeAttachment);
         return;
       }
       const threadId = await ensureThread();
+      if (busyRef.current || stream.isLoading) {
+        enqueueSend(question, input, willConsumeAttachment);
+        return;
+      }
       const echo: WireMessage = {
         type: "human",
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
@@ -812,7 +883,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
       if (willConsumeAttachment) setUpload(applyUploadEvent(uploadRef.current, { kind: "consumed" }));
       await runStream(threadId, { input });
     },
-    [ensureThread, runStream, stream.isLoading],
+    [enqueueSend, ensureThread, runStream, stream.isLoading],
   );
 
   useEffect(() => {
@@ -995,6 +1066,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
         const attachmentId = (input as RunInput).attachment_id;
         const submitInput: RunInput =
           attachmentId !== undefined ? { question: input.question, attachment_id: attachmentId } : { question: input.question };
+        submittedThreadRef.current = threadId;
         await stream.submit(submitInput, {
           ...getRunStreamParams(),
           threadId,
@@ -1004,6 +1076,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
           },
         } as CoachSubmitOptions & { forkFrom: string });
         maybeStartErase(messagesRef.current, threadId);
+        void fetchHistory();
         return true;
       } catch (streamError) {
         if (isMissingThreadError(streamError) || (streamError instanceof CoachApiError && (streamError as CoachApiError).status === 404)) {
@@ -1013,11 +1086,12 @@ export function useCoachStream(deps: CoachStreamDeps) {
         }
         return false;
       } finally {
+        if (submittedThreadRef.current === threadId) submittedThreadRef.current = null;
         busyRef.current = false;
         if (mountedRef.current) setBusy(false);
       }
     },
-    [commitMessages, maybeStartErase, stream, waitForTerminal],
+    [commitMessages, fetchHistory, maybeStartErase, stream, waitForTerminal],
   );
 
   const resumeFromCheckpoint = useCallback(
@@ -1137,6 +1211,8 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const newConversation = useCallback((): void => {
     setActiveThreadId(null);
     activeThreadRef.current = null;
+    submittedThreadRef.current = null;
+    threadCreationRef.current = null;
     commitMessages([]);
     commitPendingInterrupts([]);
     setUpload({ phase: "idle" });

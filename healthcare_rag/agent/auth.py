@@ -16,6 +16,7 @@ class Principal(Auth.types.MinimalUserDict, total=False):
     role: Literal["member", "internal", "preflight"]
     sub_role: Literal["reservation", "cron_ops"]
     internal_owner: str
+    member_display_name: str
 
 
 SUPABASE_TRANSPORT: httpx.AsyncBaseTransport | None = None
@@ -26,6 +27,8 @@ _RESERVATION_ITEM: Final = re.compile(rf"^/threads/{_UUID}$")
 _CRON_CREATE: Final = re.compile(rf"^/threads/{_UUID}/runs/crons$")
 _CRON_ITEM: Final = re.compile(rf"^/runs/crons/{_UUID}$")
 _RESERVATION_KEYS: Final = frozenset({"resource_kind", "owner", "intended_thread"})
+_MAX_DISPLAY_NAME: Final = 64
+_DISPLAY_NAME_CHARSET: Final = re.compile(r"^[^\x00-\x1f\x7f]+$")
 
 auth = Auth()
 
@@ -53,6 +56,29 @@ def _internal_sub_role(
     if method in {"PATCH", "DELETE"} and _CRON_ITEM.fullmatch(path):
         return "cron_ops"
     return None
+
+
+def _bag(payload: Mapping[str, object], name: str) -> Mapping[str, object]:
+    """Return a metadata bag, or an empty mapping for any non-object value."""
+    bag = payload.get(name)
+    return bag if isinstance(bag, Mapping) else {}
+
+
+def _display_name(payload: Mapping[str, object]) -> str | None:
+    """Read the service-role-written given name; drop it rather than fail.
+
+    ``app_metadata`` is writable only with the service key, so it is the sole
+    trusted channel; ``user_metadata`` is browser-writable and is deliberately
+    not read at all. Any malformed value is dropped -- this function must never
+    raise, because ``supabase_bearer`` turns exceptions into 401s.
+    """
+    value = _bag(payload, "app_metadata").get("display_name")
+    if not isinstance(value, str):
+        return None
+    name = value.strip()
+    if not name or len(name) > _MAX_DISPLAY_NAME:
+        return None
+    return name if _DISPLAY_NAME_CHARSET.fullmatch(name) else None
 
 
 def _unauthorized() -> Auth.exceptions.HTTPException:
@@ -120,11 +146,15 @@ async def supabase_bearer(
     identity = payload.get("id") if isinstance(payload, Mapping) else None
     if not isinstance(identity, str) or not identity:
         raise _unauthorized()
-    return {
+    principal_out: Principal = {
         "identity": identity,
         "is_authenticated": True,
         "role": "member",
     }
+    display_name = _display_name(payload)
+    if display_name is not None:
+        principal_out["member_display_name"] = display_name
+    return principal_out
 
 
 @auth.on
@@ -234,6 +264,16 @@ async def create_run(
         return False
     user_id = wake.get("user_id")
     return {"user_id": user_id} if isinstance(user_id, str) and user_id else False
+
+
+@auth.on(resources="runs", actions="cancel")
+async def cancel_run(
+    ctx: Auth.types.AuthContext, value: Auth.types.on.value
+) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
+    del value
+    return {"user_id": ctx.user.identity} if _role(ctx) == "member" else False
 
 
 @auth.on.assistants.read

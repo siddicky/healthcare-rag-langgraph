@@ -61,6 +61,7 @@ test("history + time-travel UI smoke (v2 gated)", async ({ page }) => {
   }
 
   await login(page, run, run.u1);
+  await page.getByRole("button", { name: "New conversation" }).click();
 
   await send(page, "hello there");
   await waitForIdle(page);

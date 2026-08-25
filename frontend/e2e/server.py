@@ -136,6 +136,65 @@ class FixtureHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(encoded)
 
+    def _stream_completion(self, completion: dict[str, object]) -> None:
+        choice = completion["choices"][0]
+        assert isinstance(choice, dict)
+        message = choice.get("message", {})
+        assert isinstance(message, dict)
+
+        def chunk(delta: dict[str, object], finish: str | None = None) -> str:
+            return json.dumps(
+                {
+                    "id": completion["id"],
+                    "object": "chat.completion.chunk",
+                    "created": 0,
+                    "model": completion["model"],
+                    "choices": [
+                        {"index": 0, "delta": delta, "finish_reason": finish}
+                    ],
+                }
+            )
+
+        parts = [chunk({"role": "assistant"})]
+        for position, call in enumerate(message.get("tool_calls") or []):
+            assert isinstance(call, dict)
+            function = call.get("function", {})
+            assert isinstance(function, dict)
+            parts.append(
+                chunk(
+                    {
+                        "tool_calls": [
+                            {
+                                "index": position,
+                                "id": call.get("id"),
+                                "type": "function",
+                                "function": {
+                                    "name": function.get("name"),
+                                    "arguments": function.get("arguments"),
+                                },
+                            }
+                        ]
+                    }
+                )
+            )
+        content = str(message.get("content") or "")
+        if content:
+            split = max(1, len(content) // 2)
+            pieces = [content[:split], content[split:]] if len(content) > 1 else [content]
+            for piece in pieces:
+                if piece:
+                    parts.append(chunk({"content": piece}))
+        parts.append(chunk({}, "stop"))
+        body = "".join(f"data: {part}\n\n" for part in parts) + "data: [DONE]\n\n"
+        encoded = body.encode()
+        self.send_response(200)
+        self._cors()
+        self.send_header("content-type", "text/event-stream")
+        self.send_header("cache-control", "no-cache")
+        self.send_header("content-length", str(len(encoded)))
+        self.end_headers()
+        self.wfile.write(encoded)
+
     def _read_body(self) -> bytes:
         length = int(self.headers.get("content-length", "0"))
         return self.rfile.read(length) if length else b""
@@ -199,7 +258,12 @@ class FixtureHandler(BaseHTTPRequestHandler):
             self.end_headers()
             return
         if parsed.path.endswith("/chat/completions"):
-            self._json(200, self._completion(json.loads(raw or b"{}")))
+            body = json.loads(raw or b"{}")
+            completion = self._completion(body)
+            if body.get("stream"):
+                self._stream_completion(completion)
+                return
+            self._json(200, completion)
             return
         if parsed.path == "/feedback":
             type(self).feedback_posts.append(json.loads(raw or b"{}"))
