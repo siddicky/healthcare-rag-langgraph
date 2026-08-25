@@ -40,14 +40,11 @@ jobs:
           # For extra workspaces, add OPENWIKI_LANGSMITH_API_KEY_2, _3, ... as repo
           # secrets and env entries here.
           OPENWIKI_LANGSMITH_API_KEY: ${{ secrets.OPENWIKI_LANGSMITH_API_KEY }}
-          # Optional: also trace this workflow's own OpenWiki run to LangSmith.
-          LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-          LANGCHAIN_PROJECT: openwiki
-          LANGCHAIN_TRACING_V2: "true"
 
       - name: Create OpenWiki update pull request
         uses: peter-evans/create-pull-request@22a9089034f40e5a961c8808d113e2c98fb63676 # v7
         with:
+          token: ${{ secrets.CREATE_PULL_REQUEST || github.token }}
           add-paths: |
             openwiki
             AGENTS.md

@@ -270,15 +270,15 @@ jobs:
           FLY_API_TOKEN: ${{ secrets.FLY_API_TOKEN }}
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
-          LANGSMITH_PROJECT: ${{ secrets.LANGSMITH_PROJECT }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          LANGSMITH_PROJECT: ${{ vars.LANGSMITH_PROJECT }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ vars.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
           COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
-          COACH_ALLOWED_ORIGINS: ${{ secrets.COACH_ALLOWED_ORIGINS }}
-          CORS_ALLOW_ORIGINS: ${{ secrets.CORS_ALLOW_ORIGINS }}
-          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
+          COACH_ALLOWED_ORIGINS: ${{ vars.COACH_ALLOWED_ORIGINS }}
+          CORS_ALLOW_ORIGINS: ${{ vars.CORS_ALLOW_ORIGINS }}
+          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ vars.LANGSMITH_FEEDBACK_PROJECT_ID }}
         run: |
           set -euo pipefail
           # SECURITY: This step never echoes secret values. Values are masked and only names are verified.
@@ -429,11 +429,11 @@ jobs:
           LANGGRAPH_DEPLOYMENT_URL: https://hc-rag-server-prod.fly.dev
           LANGGRAPH_U1_TOKEN: ${{ secrets.LANGGRAPH_U1_TOKEN }}
           LANGGRAPH_U2_TOKEN: ${{ secrets.LANGGRAPH_U2_TOKEN }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
-          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
+          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ vars.LANGSMITH_FEEDBACK_PROJECT_ID }}
           LANGSMITH_TRACING: "false"
         run: |
           set -euo pipefail
@@ -692,11 +692,11 @@ jobs:
           LANGGRAPH_DEPLOYMENT_URL: https://hc-rag-server-prod.fly.dev
           LANGGRAPH_U1_TOKEN: ${{ secrets.LANGGRAPH_U1_TOKEN }}
           LANGGRAPH_U2_TOKEN: ${{ secrets.LANGGRAPH_U2_TOKEN }}
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_URL: ${{ vars.SUPABASE_URL }}
           SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
           LANGSMITH_API_KEY: ${{ secrets.LANGSMITH_API_KEY }}
           COACH_INTERNAL_TOKEN: ${{ secrets.COACH_INTERNAL_TOKEN }}
-          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ secrets.LANGSMITH_FEEDBACK_PROJECT_ID }}
+          LANGSMITH_FEEDBACK_PROJECT_ID: ${{ vars.LANGSMITH_FEEDBACK_PROJECT_ID }}
           LANGSMITH_TRACING: "false"
           VERSION: ${{ inputs.version }}
         run: |
