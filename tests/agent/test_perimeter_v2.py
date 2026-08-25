@@ -335,6 +335,49 @@ def test_v2_rejects_cross_thread_config_thread_id(monkeypatch: MonkeyPatch) -> N
     assert denied.value.status_code == 400
 
 
+@pytest.mark.parametrize("strategy", ["reject", "enqueue", "interrupt", None])
+def test_v2_run_start_admits_sdk_multitask_strategies(
+    monkeypatch: MonkeyPatch, strategy: str | None
+) -> None:
+    monkeypatch.setattr(perimeter, "HC_RAG_MEMBER_STREAM_PERIMETER", "v2")
+
+    params: dict[str, JSONValue] = {
+        "assistant_id": "coach",
+        "input": {"question": "Hello"},
+    }
+    if strategy is not None:
+        params["multitaskStrategy"] = strategy
+
+    perimeter.validate_member_request(
+        "POST",
+        f"/threads/{THREAD_ID}/commands",
+        "",
+        {"id": 1, "method": "run.start", "params": params},
+    )
+
+
+def test_v2_rejects_unknown_multitask_strategy(monkeypatch: MonkeyPatch) -> None:
+    monkeypatch.setattr(perimeter, "HC_RAG_MEMBER_STREAM_PERIMETER", "v2")
+
+    with pytest.raises(perimeter.PerimeterDenied) as denied:
+        perimeter.validate_member_request(
+            "POST",
+            f"/threads/{THREAD_ID}/commands",
+            "",
+            {
+                "id": 1,
+                "method": "run.start",
+                "params": {
+                    "assistant_id": "coach",
+                    "input": {"question": "Hello"},
+                    "multitaskStrategy": "rollback",
+                },
+            },
+        )
+
+    assert denied.value.status_code == 400
+
+
 @pytest.mark.parametrize(
     "path",
     [
