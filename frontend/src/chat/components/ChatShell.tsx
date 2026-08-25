@@ -149,6 +149,9 @@ export function ChatShell({
             values={(chat as unknown as { values?: Record<string, unknown> }).values ?? (chat as unknown as { catalogValues?: Record<string, unknown> }).catalogValues}
             valuesEnvelopes={(chat as unknown as { valuesEnvelopes?: readonly import("@/catalog/envelopes").DataEnvelope[] }).valuesEnvelopes}
             valuesTrees={(chat as unknown as { valuesTrees?: readonly unknown[] }).valuesTrees}
+            onEditTurn={(turnKey, newText, checkpointId) =>
+              void (chat as unknown as { editAndResubmit?: (k: string, t: string, c: string) => Promise<void> }).editAndResubmit?.(turnKey, newText, checkpointId)
+            }
             actionBar={
               <ActionBar
                 showRegenerate={chat.regenerateGate.eligible}

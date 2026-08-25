@@ -55,6 +55,7 @@ export interface CoachApiBundle {
   deleteThread(threadId: string): Promise<void>;
   copyThread(threadId: string): Promise<ThreadSummary>;
   getThreadState(threadId: string): Promise<ThreadStateProjection>;
+  getThreadHistory?(threadId: string): Promise<ThreadStateProjection[] | unknown[]>;
   postUpload(upload: { uploadId: string; threadId: string; file: File }): Promise<{ stage?: string }>;
   getUploadStatus(uploadId: string): Promise<{ stage?: string }>;
   postFeedback(feedback: { threadId: string; messageId: string; score: 1 | -1 }): Promise<void>;
@@ -74,7 +75,13 @@ export interface CoachStreamState {
 export type CoachSubmitOptions = (RunStreamFixedParams | RunStreamFixedParamsV2) & {
   readonly threadId: string;
   readonly onError?: (error: unknown) => void;
+  readonly forkFrom?: string;
+  readonly config?: { configurable?: { checkpoint_id?: string } };
 };
+
+function isForkV2Enabled(): boolean {
+  return process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
+}
 
 export interface CoachStreamOptions {
   readonly client: Client;
@@ -297,8 +304,16 @@ const SIDEBAR_PAGE_SIZE = 50;
 const MISSING_THREAD_MESSAGE = "That conversation is no longer available. Start a new one.";
 
 function isMissingThreadError(error: unknown): boolean {
-  if (error instanceof CoachApiError) return error.status === 404;
-  return error instanceof Error && "status" in error && error.status === 404;
+  if (error instanceof CoachApiError) {
+    if (error.status !== 404) return false;
+    if (error.message.includes("Checkpoint not found")) return false;
+    return true;
+  }
+  if (error instanceof Error && "status" in error && (error as { status: number }).status === 404) {
+    if (error.message.includes("Checkpoint not found")) return false;
+    return true;
+  }
+  return false;
 }
 
 export function useCoachStream(deps: CoachStreamDeps) {
@@ -775,17 +790,136 @@ export function useCoachStream(deps: CoachStreamDeps) {
     [commitPendingInterrupts, runStream, stream, waitForTerminal],
   );
 
-  const regenerate = useCallback(async (): Promise<void> => {
-    const threadId = activeThreadRef.current;
-    if (threadId === null || busyRef.current) return;
-    const gate = regenerateEligibility(buildTurns(messagesRef.current), {
-      hasPendingInterrupt: pendingInterrupt !== null,
-      attachmentPending: uploadRef.current.phase === "staged" && uploadRef.current.stage === "done",
-    });
-    if (!gate.eligible || gate.question === null) return;
-    const question = gate.question;
-    if (await waitForTerminal(threadId)) await send(question);
-  }, [pendingInterrupt, send, waitForTerminal]);
+  const forkFromCheckpoint = useCallback(
+    async (checkpointId: string, input: RunInput): Promise<boolean> => {
+      const threadId = activeThreadRef.current;
+      if (threadId === null || busyRef.current) return false;
+      if (!isForkV2Enabled()) {
+        if (mountedRef.current) setError("Branching requires v2 stream mode.");
+        return false;
+      }
+      const trimmed = checkpointId.trim();
+      if (trimmed === "") {
+        if (mountedRef.current) setError("That message couldn't be retried. Please try again.");
+        return false;
+      }
+      busyRef.current = true;
+      setBusy(true);
+      setError(null);
+      try {
+        if (!(await waitForTerminal(threadId))) {
+          if (mountedRef.current) setError("Your previous request is still finishing. Please try again.");
+          return false;
+        }
+        const question = input.question;
+        if (question !== SENTINEL_QUESTION && question.trim() !== "") {
+          const echo: WireMessage = {
+            type: "human",
+            id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+            content: question,
+          };
+          commitMessages(mergeMessages(messagesRef.current, [echo]));
+          if (getThreadTitle(threadId) === null) setThreadTitle(threadId, deriveTitle(question));
+        }
+        const attachmentId = (input as RunInput).attachment_id;
+        const submitInput: RunInput =
+          attachmentId !== undefined ? { question: input.question, attachment_id: attachmentId } : { question: input.question };
+        await stream.submit(submitInput, {
+          ...getRunStreamParams(),
+          threadId,
+          forkFrom: trimmed,
+          onError: (error) => {
+            if (error instanceof Error) setError(error.message);
+          },
+        } as CoachSubmitOptions & { forkFrom: string });
+        maybeStartErase(messagesRef.current, threadId);
+        return true;
+      } catch (streamError) {
+        if (isMissingThreadError(streamError) || (streamError instanceof CoachApiError && (streamError as CoachApiError).status === 404)) {
+          if (mountedRef.current) setError(streamError instanceof Error ? streamError.message : "That message couldn't be retried. Please try again.");
+        } else if (mountedRef.current) {
+          setError(streamError instanceof Error ? streamError.message : "That message didn't go through. Please try again.");
+        }
+        return false;
+      } finally {
+        busyRef.current = false;
+        if (mountedRef.current) setBusy(false);
+      }
+    },
+    [commitMessages, maybeStartErase, stream, waitForTerminal],
+  );
+
+  const regenerate = useCallback(
+    async (checkpointIdOverride?: string): Promise<void> => {
+      const threadId = activeThreadRef.current;
+      if (threadId === null || busyRef.current) return;
+      const gate = regenerateEligibility(buildTurns(messagesRef.current), {
+        hasPendingInterrupt: pendingInterrupt !== null,
+        attachmentPending: uploadRef.current.phase === "staged" && uploadRef.current.stage === "done",
+      });
+      if (!gate.eligible || gate.question === null) return;
+      const question = gate.question;
+      if (isForkV2Enabled() && deps.api.getThreadHistory !== undefined) {
+        let checkpointId = checkpointIdOverride ?? null;
+        if (checkpointId === null) {
+          try {
+            const history = (await deps.api.getThreadHistory(threadId)) as unknown[] as Record<string, unknown>[];
+            if (Array.isArray(history) && history.length > 0) {
+              const latest = history[0] as Record<string, unknown>;
+              const parent = (latest.parent_checkpoint_id as string) ?? null;
+              const current = (latest.checkpoint_id as string) ?? null;
+              checkpointId = parent ?? current;
+            }
+          } catch (historyError) {
+            if (historyError instanceof CoachApiError && historyError.status === 404) {
+              if (mountedRef.current) setError(historyError.message);
+              return;
+            }
+            checkpointId = null;
+          }
+        }
+        if (checkpointId !== null && checkpointId.trim() !== "") {
+          const ok = await forkFromCheckpoint(checkpointId, { question });
+          if (ok) return;
+          return;
+        }
+      }
+      if (await waitForTerminal(threadId)) await send(question);
+    },
+    [deps.api, forkFromCheckpoint, pendingInterrupt, send, waitForTerminal],
+  );
+
+  const editAndResubmit = useCallback(
+    async (turnKey: string, newText: string, checkpointId: string): Promise<void> => {
+      void turnKey;
+      const text = newText.trim();
+      if (text === "" || busyRef.current) return;
+      const threadId = activeThreadRef.current;
+      if (threadId === null) return;
+      if (!isForkV2Enabled()) {
+        if (mountedRef.current) setError("Editing requires v2 stream mode.");
+        return;
+      }
+      let targetCheckpoint = checkpointId.trim();
+      if (targetCheckpoint === "" && deps.api.getThreadHistory !== undefined) {
+        try {
+          const history = (await deps.api.getThreadHistory(threadId)) as unknown[] as Record<string, unknown>[];
+          if (Array.isArray(history) && history.length > 0) {
+            const latest = history[0] as Record<string, unknown>;
+            targetCheckpoint = ((latest.parent_checkpoint_id as string) ?? (latest.checkpoint_id as string) ?? "").trim();
+          }
+        } catch {
+          targetCheckpoint = "";
+        }
+      }
+      if (targetCheckpoint === "") {
+        if (mountedRef.current) setError("That message couldn't be retried. Please try again.");
+        return;
+      }
+      await forkFromCheckpoint(targetCheckpoint, { question: text });
+    },
+    [deps.api, forkFromCheckpoint],
+  );
 
   const branch = useCallback(async (): Promise<void> => {
     const threadId = activeThreadRef.current;
@@ -908,6 +1042,8 @@ export function useCoachStream(deps: CoachStreamDeps) {
     respondAll: approveInterrupts,
     regenerate,
     branch,
+    forkFromCheckpoint,
+    editAndResubmit,
     sendFeedback,
     newConversation,
     selectThread,

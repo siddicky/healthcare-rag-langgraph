@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState } from "react";
 import type { DataEnvelope } from "@/catalog/envelopes";
 import { parseDataEnvelope } from "@/catalog/envelopes";
 import type { DispatchHandlers } from "@/catalog/dispatch";
@@ -193,23 +193,95 @@ function TurnView({
   dispatchHandlers,
   toolCalls,
   valuesEnvelopes,
+  onEditTurn,
+  busy,
 }: {
   turn: TurnModel;
   onReminderAction?: (text: string) => void;
   dispatchHandlers?: DispatchHandlers;
   toolCalls?: readonly ToolCallView[];
   valuesEnvelopes?: readonly DataEnvelope[];
+  onEditTurn?: (turnKey: string, newText: string, checkpointId: string) => void;
+  busy?: boolean;
 }) {
   const humanText = turn.human !== null ? messageText(turn.human.content) : "";
   const trees = composeTreesForTurn(turn);
   const scopeId = turn.scopeId ?? "";
   const turnToolCalls = toolCallsForTurn(turn, toolCalls);
   const combinedEnvelopes = valuesEnvelopes !== undefined && valuesEnvelopes.length > 0 ? [...turn.envelopes, ...valuesEnvelopes] : turn.envelopes;
+  const canEdit = onEditTurn !== undefined && turn.human !== null && process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(humanText);
+  useEffect(() => {
+    setDraft(humanText);
+  }, [humanText]);
   return (
     <div>
       {humanText !== "" && (
-        <div className="bubble-row human">
-          <div className="bubble human">{humanText}</div>
+        <div className="bubble-row human" style={{ alignItems: "center", gap: "var(--space-xs, 8px)" }}>
+          <div className="bubble human">{editing ? draft : humanText}</div>
+          {canEdit && !editing && (
+            <button
+              className="msg-action-btn"
+              title="Edit and resubmit"
+              aria-label="Edit and resubmit"
+              disabled={busy}
+              data-testid="turn-edit-btn"
+              onClick={() => {
+                setDraft(humanText);
+                setEditing(true);
+              }}
+            >
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7" />
+                <path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
+              </svg>
+            </button>
+          )}
+        </div>
+      )}
+      {canEdit && editing && (
+        <div className="widget-wrap" data-testid="turn-edit-panel" style={{ display: "flex", flexDirection: "column", gap: "var(--space-xs, 8px)" }}>
+          <textarea
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            aria-label="Edit message"
+            data-testid="turn-edit-input"
+            rows={2}
+            style={{
+              width: "100%",
+              borderRadius: "var(--border-radius-sm, 6px)",
+              border: "1px solid var(--birch, #d1c5b4)",
+              padding: "var(--space-xs, 8px)",
+              fontFamily: "var(--font-body)",
+              resize: "vertical",
+            }}
+          />
+          <div style={{ display: "flex", gap: "var(--space-xs, 8px)" }}>
+            <button
+              className="btn btn-primary"
+              disabled={busy || draft.trim() === ""}
+              data-testid="turn-edit-submit"
+              onClick={() => {
+                const next = draft.trim();
+                if (next === "") return;
+                onEditTurn?.(turn.key, next, "");
+                setEditing(false);
+              }}
+            >
+              Resubmit
+            </button>
+            <button
+              className="btn btn-secondary"
+              data-testid="turn-edit-cancel"
+              onClick={() => {
+                setEditing(false);
+                setDraft(humanText);
+              }}
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
       {turn.messages.filter(isAiMessage).map((message) => (
@@ -258,6 +330,7 @@ export interface MessageListProps {
   values?: Record<string, unknown> | null;
   valuesEnvelopes?: readonly DataEnvelope[];
   valuesTrees?: readonly unknown[];
+  onEditTurn?: (turnKey: string, newText: string, checkpointId: string) => void;
 }
 
 export function MessageList({
@@ -276,6 +349,7 @@ export function MessageList({
   values,
   valuesEnvelopes,
   valuesTrees,
+  onEditTurn,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const rendered = useMemo(() => turns.map((turn) => turn.key).join("|"), [turns]);
@@ -332,7 +406,7 @@ export function MessageList({
       <div className="thread-inner">
         {turns.map((turn, index) => (
           <div key={turn.key}>
-            <TurnView turn={turn} onReminderAction={onReminderAction} dispatchHandlers={dispatchHandlers} toolCalls={toolCalls} valuesEnvelopes={allValuesEnvelopes} />
+            <TurnView turn={turn} onReminderAction={onReminderAction} dispatchHandlers={dispatchHandlers} toolCalls={toolCalls} valuesEnvelopes={allValuesEnvelopes} onEditTurn={onEditTurn} busy={busy} />
             {index === turns.length - 1 && latestAiMessageId !== null && actionBar}
           </div>
         ))}
