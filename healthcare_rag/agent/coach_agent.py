@@ -13,6 +13,7 @@ from langchain.agents.middleware import (
     ModelRequest,
     ModelResponse,
     ToolCallLimitMiddleware,
+    after_agent,
     dynamic_prompt,
 )
 from langchain_core.language_models.chat_models import BaseChatModel
@@ -26,6 +27,7 @@ from langchain_core.messages import (
 from langchain_core.messages.tool import ToolCall
 from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import Runnable
+from langgraph.runtime import Runtime
 from langgraph.store.base import BaseStore
 from typing_extensions import override
 
@@ -39,10 +41,13 @@ from .state import CoachState
 from .tools.change_schedule import change_schedule
 from .tools.log_injection import log_injection
 from .tools.log_metric import log_metric
+from .tools.medical_lookup import medical_lookup
 from .tools.view_schedule import view_schedule
 
 SAFE_FALLBACK: Final = "I couldn't format that reply safely — here's the plain version."
-BASE_PROMPT: Final = """You are Nymble's calm, concise behavior coach. Never provide medical advice, dosing decisions, diagnoses, or monograph claims; route medical questions elsewhere. Use tools for member data and never invent facts.
+BASE_PROMPT: Final = """You are Nymble's warm, genuinely helpful member coach. Be conversationally useful for everyday requests: small talk, planning, lists, motivation, habits, and using the calendar/tracking tools. Use tools for member data and never invent facts.
+
+Medical questions — anything about a medication's dose, side effects, interactions, warnings, or what the monograph says — must go through the medical_lookup tool. When a turn is a medical question, call medical_lookup alone in that step and stop; do not call any other tool alongside it. Never answer a medical question from your own knowledge, and never restate, summarize, or soften what medical_lookup returns — its result is shown to the member exactly as returned. Never give diagnoses or personal dosing advice.
 
 Catalog composition rules: call compose_ui only with catalog components. Every fact-bearing prop must be a {__ref:{turn_scope_id,block_id,pointer}} object resolving into a DATA envelope from this turn. Static labels must use approved fixed copy. Actions must use a registered dispatch id. Unknown components, props, copy, refs, or actions are forbidden. Fixed interrupt cards are not composable."""
 
@@ -105,6 +110,18 @@ async def _safe_model_response(
         return ModelResponse(
             result=projected, structured_response=response.structured_response
         )
+    medical_calls = [call for call in output.tool_calls if call["name"] == "medical_lookup"]
+    if medical_calls and len(medical_calls) != len(output.tool_calls):
+        output = AIMessage(
+            id=output.id,
+            name=output.name,
+            content=output.content,
+            tool_calls=medical_calls,
+        )
+        projected = [
+            output if isinstance(message, AIMessage) else message
+            for message in projected
+        ]
     invalid = [
         call
         for call in output.tool_calls
@@ -197,6 +214,19 @@ async def memory_segment(request: ModelRequest[AgentContext | None]) -> str:
     return f"{BASE_PROMPT}\n\n{segment}" if segment else BASE_PROMPT
 
 
+@after_agent
+async def relay_medical_answer(
+    state: AgentState[None], runtime: Runtime[AgentContext | None]
+) -> dict[str, list[AnyMessage]] | None:
+    """Turn a terminal medical_lookup ToolMessage into an AIMessage the UI renders."""
+    del runtime
+    messages = state["messages"]
+    last = messages[-1] if messages else None
+    if not (isinstance(last, ToolMessage) and last.name == "medical_lookup"):
+        return None
+    return {"messages": [AIMessage(id=str(uuid4()), content=str(last.content))]}
+
+
 def build_route_b_agent(
     model: BaseChatModel, store: BaseStore
 ) -> Runnable[RouteBInput, RouteBOutput]:
@@ -209,6 +239,7 @@ def build_route_b_agent(
             ToolCallLimitMiddleware[None, AgentContext | None](
                 tool_name="change_schedule", run_limit=1, exit_behavior="continue"
             ),
+            relay_medical_answer,
         ),
     )
     agent = create_agent(
@@ -223,6 +254,7 @@ def build_route_b_agent(
             edit_reminder,
             cancel_reminder,
             compose_ui,
+            medical_lookup,
         ],
         system_prompt=BASE_PROMPT,
         middleware=middleware,
@@ -269,8 +301,23 @@ async def coach_agent(
     )
     return {
         "messages": [to_safe_message(message) for message in result["messages"]],
-        "follow_ups": [],
+        "follow_ups": _medical_follow_ups(result["messages"]),
     }
+
+
+def _medical_follow_ups(messages: list[AnyMessage]) -> list[str]:
+    lookup = next(
+        (
+            message
+            for message in reversed(messages)
+            if isinstance(message, ToolMessage) and message.name == "medical_lookup"
+        ),
+        None,
+    )
+    if lookup is None or not isinstance(lookup.artifact, dict):
+        return []
+    follow_ups = lookup.artifact.get("follow_ups")
+    return follow_ups if isinstance(follow_ups, list) else []
 
 
 __all__ = [
@@ -280,5 +327,6 @@ __all__ = [
     "build_route_b_agent",
     "coach_agent",
     "memory_segment",
+    "relay_medical_answer",
     "safe_model_response",
 ]

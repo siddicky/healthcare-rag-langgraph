@@ -13,7 +13,6 @@ from .documents import claim_document, review_document
 from .erase import erase_my_data
 from .finalize import finalize_coach
 from .gate import RouteTarget, coach_gate
-from .rag_relay import rag_relay
 from .reminders import reminder_delivery
 from .short_circuit import short_circuit
 from .state import CoachInput, CoachOutput, CoachState
@@ -34,7 +33,6 @@ def build_coach_graph() -> CoachBuilder:
         output_schema=CoachOutput,
     )
     _ = builder.add_node("coach_gate", _coach_gate_with_store, input_schema=CoachState)
-    _ = builder.add_node("rag_relay", rag_relay, input_schema=CoachState)
     _ = builder.add_node("claim_document", claim_document, input_schema=CoachState)
     _ = builder.add_node("review_document", review_document, input_schema=CoachState)
     _ = builder.add_node(
@@ -45,7 +43,6 @@ def build_coach_graph() -> CoachBuilder:
     _ = builder.add_node("erase_my_data", erase_my_data, input_schema=CoachState)
     _ = builder.add_node("finalize", finalize_coach, input_schema=CoachState)
     for node_name in (
-        "rag_relay",
         "review_document",
         "reminder_delivery",
         "short_circuit",

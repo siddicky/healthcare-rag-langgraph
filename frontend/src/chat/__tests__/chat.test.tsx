@@ -35,7 +35,7 @@ beforeEach(() => {
 describe("openers", () => {
   it("sends a text opener as a new run", async () => {
     const stream = fakeStream(() => [
-      updatesPart("rag_relay", [aiMessage("Here you go.", "a1")]),
+      updatesPart("coach_agent", [aiMessage("Here you go.", "a1")]),
     ]);
     const deps = fakeDeps({}, stream);
     shell(deps);
@@ -63,7 +63,7 @@ describe("openers", () => {
 
 describe("new conversation", () => {
   it("clears the transcript and starts fresh (thread created lazily on next send)", async () => {
-    const stream = fakeStream(() => [updatesPart("rag_relay", [aiMessage("Logged.", "a1")])]);
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
     const deps = fakeDeps({}, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -347,7 +347,7 @@ describe("one active run per thread", () => {
           await new Promise<void>((resolve) => {
             gate.release = resolve;
           });
-          yield updatesPart("rag_relay", [aiMessage("done", "a1")]);
+          yield updatesPart("coach_agent", [aiMessage("done", "a1")]);
         })();
       },
     };

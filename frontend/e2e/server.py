@@ -6,13 +6,14 @@ Boots the FULL local stack with ZERO external network:
   1. a scripted dependency server (fake OpenAI gateway + Supabase stub +
      LangSmith feedback mirror) on an ephemeral port;
   2. a real ``langgraph dev`` Agent Server on a second ephemeral port running
-     the REAL coach graph, with two offline seams applied at import time in a
+     the REAL coach graph, with one offline seam applied at import time in a
      generated graph module (the todo-10 / coach_smoke.py pattern):
-       - ``gate.GATEWAY``  -> deterministic offline safety classifier;
-       - ``rag_relay.child`` -> offline Route-A monograph answer graph;
-     Route-B turns and document extraction run through the scripted gateway
-     via ``OPENAI_BASE_URL``; reminder cron registration loops back to this
-     same server via ``LANGGRAPH_API_URL``;
+       - ``rag_relay.child`` -> offline RAG-child monograph answer graph, used
+         by the coach agent's ``medical_lookup`` tool;
+     Every coach-agent turn (including the model's decision to call
+     ``medical_lookup``) and document extraction run through the scripted
+     gateway via ``OPENAI_BASE_URL``; reminder cron registration loops back to
+     this same server via ``LANGGRAPH_API_URL``;
   3. a production ``next start`` frontend built against the server URL.
 
 Everything is torn down on SIGTERM/SIGINT/exit: process groups are killed and
@@ -265,13 +266,15 @@ class FixtureHandler(BaseHTTPRequestHandler):
     def _agent_turn(cls, messages: list[dict[str, object]]) -> dict[str, object]:
         user_index = -1
         question = ""
+        raw_question = ""
         for index in range(len(messages) - 1, -1, -1):
             message = messages[index]
             if message.get("role") == "user" and isinstance(
                 message.get("content"), str
             ):
                 user_index = index
-                question = str(message["content"]).strip().casefold()
+                raw_question = str(message["content"]).strip()
+                question = raw_question.casefold()
                 break
         results_after = [
             message
@@ -402,6 +405,11 @@ class FixtureHandler(BaseHTTPRequestHandler):
                 })])
             return cls._content_completion("Here is your month.")
 
+        if not results_after and any(drug in question for drug in ("metformin", "lipitor")):
+            return cls._tool_calls_completion(
+                [cls._call("medical_lookup", {"query": raw_question})]
+            )
+
         return cls._content_completion("Hello from your coach.")
 
     @staticmethod
@@ -477,21 +485,19 @@ class FixtureHandler(BaseHTTPRequestHandler):
 
 
 E2E_GRAPHS: Final = '''\
-"""E2E graph module: the REAL coach graph with two offline seams applied.
+"""E2E graph module: the REAL coach graph with one offline seam applied.
 
-Mirrors scripts/coach_smoke.py: the safety classifier is a deterministic
-in-process gateway and Route A relays to an offline answer graph, while every
-Route-B agent turn and the document extraction still run through the scripted
-OpenAI gateway via OPENAI_BASE_URL.
+Mirrors scripts/coach_smoke.py: Route A (the medical_lookup tool's RAG child)
+relays to an offline answer graph, while every coach-agent turn (including the
+model's decision to call medical_lookup) and the document extraction still run
+through the scripted OpenAI gateway via OPENAI_BASE_URL.
 """
 
 from __future__ import annotations
 
-from healthcare_rag.agent import gate as gate_module
 from healthcare_rag.agent import rag_relay as relay_module
 from healthcare_rag.agent.build import build_coach_graph
 from healthcare_rag.graph.state import GraphInput, GraphOutput, RAGState
-from healthcare_rag.models.safety import SafetyAssessment
 from langgraph.graph import END, START, StateGraph
 
 
@@ -504,16 +510,6 @@ async def _offline_answer(state: RAGState) -> RAGState:
     }
 
 
-async def _classify(**_kwargs: str) -> SafetyAssessment:
-    return SafetyAssessment(
-        category="in_scope_informational",
-        contains_phi=False,
-        phi_spans=[],
-        drug_mentioned="lipitor",
-        rationale="offline e2e classifier",
-    )
-
-
 _child_builder = StateGraph(
     RAGState, input_schema=GraphInput, output_schema=GraphOutput
 )
@@ -521,7 +517,6 @@ _child_builder.add_node("offline_answer", _offline_answer)
 _child_builder.add_edge(START, "offline_answer")
 _child_builder.add_edge("offline_answer", END)
 relay_module.child = _child_builder.compile(checkpointer=True, name="offline_rag")
-gate_module.GATEWAY = _classify
 
 import os as _os
 if _os.getenv("E2E_DEBUG_LOG"):

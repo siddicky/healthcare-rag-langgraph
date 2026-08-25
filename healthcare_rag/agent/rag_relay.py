@@ -1,10 +1,11 @@
-"""Route-A bridge into the existing healthcare graph.
+"""Bridge from the coach agent's ``medical_lookup`` tool into the healthcare graph.
 
 The default child inherits the parent checkpointer through ``checkpointer=True``,
-so healthcare history and refusal boundaries persist inside each coach thread.
-``HC_RAG_RELAY_MODE=pipeline`` is a degraded fallback: it compiles the complete
-healthcare graph with a fresh in-memory saver and UUID thread for every turn, so
-all safety and validation stages remain active but inner multi-turn memory is lost.
+so healthcare history and refusal boundaries persist inside each coach thread
+(under the calling tool's checkpoint namespace). ``HC_RAG_RELAY_MODE=pipeline``
+is a degraded fallback: it compiles the complete healthcare graph with a fresh
+in-memory saver and UUID thread for every call, so all safety and validation
+stages remain active but inner multi-turn memory is lost.
 """
 
 from __future__ import annotations
@@ -14,15 +15,12 @@ import os
 from typing import Final
 from uuid import uuid4
 
-from langchain_core.messages import AIMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 
 from healthcare_rag.graph.build import build_graph
 from healthcare_rag.graph.state import GraphOutput
 from healthcare_rag.processors.safety_responses import PHI_NOTICE
-
-from .state import CoachState
 
 logger = logging.getLogger("MedicalRAG")
 
@@ -63,10 +61,8 @@ def _assemble(result: GraphOutput) -> tuple[str, list[str]]:
     return message, follow_ups
 
 
-async def rag_relay(state: CoachState, config: RunnableConfig) -> CoachState:
-    """Run the scrubbed coach question through Route A without another model call."""
-    messages = state.get("messages", [])
-    scrubbed_question = str(messages[-1].content) if messages else ""
+async def relay_question(question: str, config: RunnableConfig) -> tuple[str, list[str]]:
+    """Run a scrubbed question through the healthcare graph without another model call."""
     try:
         if os.getenv(RELAY_MODE_ENV, "").strip().lower() == PIPELINE_MODE:
             active_child = build_graph().compile(
@@ -80,7 +76,7 @@ async def rag_relay(state: CoachState, config: RunnableConfig) -> CoachState:
             active_child = child
             child_config = config
         raw_result = await active_child.ainvoke(
-            {"question": scrubbed_question},
+            {"question": question},
             child_config,
         )
         result = GraphOutput(
@@ -93,5 +89,13 @@ async def rag_relay(state: CoachState, config: RunnableConfig) -> CoachState:
         logger.warning("RAG_RELAY_CHILD_FAILED", exc_info=True)
         result = GraphOutput(error="RAG_RELAY_CHILD_FAILED")
 
-    message, follow_ups = _assemble(result)
-    return {"messages": [AIMessage(content=message)], "follow_ups": follow_ups}
+    return _assemble(result)
+
+
+__all__ = [
+    "MONOGRAPH_INTRO",
+    "RELAY_ERROR_MESSAGE",
+    "RELAY_MODE_ENV",
+    "child",
+    "relay_question",
+]

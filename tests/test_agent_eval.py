@@ -114,9 +114,9 @@ async def test_coach_engine_correlates_route_a_informational_leaf() -> None:
     result = await engine.run_turn("What is Lipitor?", thread_id="info")
 
     # Then
-    assert result.route == "rag_relay"
+    assert result.route == "coach_agent"
     assert result.route_a_leaf is not None
-    assert result.route_a_leaf.checkpoint_ns == "rag_relay"
+    assert result.route_a_leaf.checkpoint_ns.startswith("coach_agent")
     assert [(item.source_name, item.chunk_id) for item in result.contexts] == [
         ("Lipitor", 1)
     ]
@@ -134,7 +134,7 @@ async def test_coach_engine_correlates_inner_short_circuit_leaf() -> None:
     )
 
     # Then
-    assert result.route == "rag_relay"
+    assert result.route == "coach_agent"
     assert result.route_a_leaf is not None
     assert result.contexts == ()
     assert result.answer == personal_advice_response()

@@ -69,7 +69,7 @@ async def run_boundary_conversation() -> BoundaryRun:
             AgentCaseResult(
                 f"mt-017-turn-{index}",
                 "multiturn_boundary",
-                result.route == "rag_relay"
+                result.route == "coach_agent"
                 and result.route_a_leaf is not None
                 and result.boundary_hit == expected_boundary,
             )

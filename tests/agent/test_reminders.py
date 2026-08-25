@@ -12,7 +12,6 @@ from langgraph.store.memory import InMemoryStore
 from langgraph.types import StreamWriter
 from pydantic import JsonValue
 
-from healthcare_rag.agent import gate as gate_module
 from healthcare_rag.agent import store_data
 from healthcare_rag.agent.build import build_coach_graph
 from healthcare_rag.agent.cron_client import CronClient, CronCreate
@@ -430,7 +429,7 @@ async def test_edit_failure_leaves_rotated_record_inactive() -> None:
 
 
 @pytest.mark.asyncio
-async def test_graph_delivery_consumes_gate_handoff_without_gateway_call() -> None:
+async def test_graph_delivery_consumes_gate_handoff() -> None:
     # Given
     store = InMemoryStore()
     record = store_data.ReminderRecord(
@@ -446,13 +445,6 @@ async def test_graph_delivery_consumes_gate_handoff_without_gateway_call() -> No
         created_ts=datetime.now(UTC),
     )
     _ = await store_data.create_reminder(store, "user-1", record)
-    calls = 0
-
-    async def gateway(**_kwargs: str) -> None:
-        nonlocal calls
-        calls += 1
-
-    gate_module.GATEWAY = gateway
     wake: CronWakePayload = {
         "reminder_id": "reminder-1",
         "user_id": "user-1",
@@ -473,7 +465,6 @@ async def test_graph_delivery_consumes_gate_handoff_without_gateway_call() -> No
     )
 
     # Then
-    assert calls == 0
     messages = cast("list[AIMessage]", result["messages"])
     assert len(messages) == 1
     assert "reminder:reminder-1" in cast("str", messages[0].content)

@@ -368,6 +368,20 @@ The member-facing coach adds identity-linked behavioral data, reminders, documen
 review, feedback, and generative UI. The controls below extend the existing gate;
 they do not replace its limits and do not assert any certified compliance status.
 
+* **The coach's own pre-agent classifier is gone.** `agent/gate.py` no longer
+  makes an LLM call: it only runs deterministic regex checks (red-flag terms,
+  prompt-injection flags, identifier-recall requests) plus cron-wake/attachment
+  routing, then falls through to the single top-level `create_agent` coach for
+  everything else. That model decides, from its system prompt, whether a turn
+  is medical and must call `medical_lookup` (`return_direct=True`) rather than
+  answer from its own knowledge — `agent/coach_agent.py`'s
+  `relay_medical_answer` hook turns the tool's result into the reply verbatim,
+  and a mixed-call guard drops any other tool call issued alongside
+  `medical_lookup` so the handoff exits deterministically. This moves the
+  medical-routing failure mode from "the classifier fails closed" to "the model
+  answers a drug question itself instead of calling the tool" — watch that in
+  `make eval-agent` and multiturn `safety_drift`, since there is no deterministic
+  backstop against it besides the prompt and the evals.
 * **Document-processing residual.** Uploaded bytes remain in a request-lifetime
   memory buffer and are cleared after processing, but the extraction model must see
   the document content to produce a proposal. Tracing is disabled on this path.

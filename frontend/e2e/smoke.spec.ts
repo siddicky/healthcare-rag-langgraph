@@ -120,7 +120,7 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
 
   await login(page, run, run.u1);
 
-  await test.step("route-A answer renders exactly once", async () => {
+  await test.step("medical_lookup answer renders exactly once", async () => {
     await send(page, "How should I take Metformin?");
     await expectAssistantCount(page, "Offline monograph answer for: How should I take Metformin?", 1);
   });
@@ -291,13 +291,14 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
     await expect(page.getByTestId("action-bar")).toBeVisible();
   });
 
-  await test.step("fresh route-A turn restores regenerate and it produces a new answer", async () => {
+  await test.step("a fresh medical_lookup turn answers, but tool activity keeps regenerate off", async () => {
     const answer = "Offline monograph answer for: What are the side effects of Lipitor?";
     await send(page, "What are the side effects of Lipitor?");
     await expectAssistantCount(page, answer, 1);
-    await expect(page.locator(REGENERATE)).toHaveCount(1);
-    await page.locator(REGENERATE).click();
-    await expectAssistantCount(page, answer, 2);
+    // medical_lookup is a real tool call now (ToolMessage + return_direct AIMessage),
+    // so the turn-local "no tool activity" regenerate gate applies to it exactly like
+    // any other tool — see regenerateEligibility() in src/chat/model.ts.
+    await expect(page.locator(REGENERATE)).toHaveCount(0);
   });
 
   await test.step("thumbs-up reaches the feedback mirror", async () => {
@@ -396,7 +397,7 @@ test("u2 isolation: own threads only, cross-identity upload rejected", async ({ 
   await expect(page.locator(".thread-item")).toHaveCount(0);
 
   await send(page, "hello there");
-  await expectAssistantCount(page, "Offline monograph answer for: hello there", 1);
+  await expectAssistantCount(page, "Hello from your coach.", 1);
   shared.u2ThreadId = createdThreads[0] ?? "";
   expect(shared.u2ThreadId).not.toBe("");
   expect(shared.u2ThreadId).not.toBe(shared.u1ThreadId);
@@ -504,7 +505,7 @@ test("open chat recovers when its active thread disappears", async ({ page }) =>
   await login(page, run, run.u1);
   await page.getByRole("button", { name: "New conversation" }).click();
   await send(page, "start reset scenario");
-  await expectAssistantCount(page, "Offline monograph answer for: start reset scenario", 1);
+  await expectAssistantCount(page, "Hello from your coach.", 1);
   const missingThreadId = createdThreads[0] ?? "";
   expect(missingThreadId).not.toBe("");
 

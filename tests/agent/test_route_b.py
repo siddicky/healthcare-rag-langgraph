@@ -3,15 +3,18 @@ from __future__ import annotations
 import json
 from collections.abc import Sequence
 from contextlib import asynccontextmanager
-from typing import Any, Self
+from typing import Any, Self, TypedDict
 
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
 from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
+from langgraph.graph import START, StateGraph
 from langgraph.store.memory import InMemoryStore
 
+from healthcare_rag.agent import rag_relay as relay_module
+from healthcare_rag.agent.build import build_coach_graph
 from healthcare_rag.agent.coach_agent import (
     SAFE_FALLBACK,
     AgentContext,
@@ -172,6 +175,192 @@ async def test_change_schedule_parallel_batch_allows_only_first_interrupt() -> N
 
     assert len(result["__interrupt__"]) == 1
     assert result["__interrupt__"][0].value["status"] == "pending"
+
+
+@pytest.mark.asyncio
+async def test_medical_lookup_round_trip_relays_answer_and_calls_model_once(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    call_count = 0
+
+    async def fake_relay(question: str, config: RunnableConfig) -> tuple[str, list[str]]:
+        nonlocal call_count
+        call_count += 1
+        del config
+        return f"Here's what the monograph says:\n\n{question} answer.", ["Follow-up?"]
+
+    monkeypatch.setattr(
+        "healthcare_rag.agent.tools.medical_lookup.relay_question", fake_relay
+    )
+    model = ToolCapableFakeModel(
+        responses=[
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "id": "lookup-1",
+                        "name": "medical_lookup",
+                        "args": {"query": "metformin side effects"},
+                    }
+                ],
+            )
+        ]
+    )
+
+    # When
+    result = await build_route_b_agent(model, InMemoryStore()).ainvoke(
+        {
+            "messages": [
+                HumanMessage(id="human-1", content="what are metformin side effects")
+            ]
+        },
+        _config(),
+        context=_context(),
+    )
+
+    # Then
+    assert call_count == 1
+    tool_message = next(
+        message for message in result["messages"] if isinstance(message, ToolMessage)
+    )
+    assert tool_message.name == "medical_lookup"
+    assert isinstance(result["messages"][-1], AIMessage)
+    assert result["messages"][-1].content == (
+        "Here's what the monograph says:\n\nmetformin side effects answer."
+    )
+
+
+@pytest.mark.asyncio
+async def test_mixed_medical_lookup_call_drops_other_tool_calls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    async def fake_relay(question: str, config: RunnableConfig) -> tuple[str, list[str]]:
+        del question, config
+        return "Here's what the monograph says:\n\nanswer.", []
+
+    monkeypatch.setattr(
+        "healthcare_rag.agent.tools.medical_lookup.relay_question", fake_relay
+    )
+    model = ToolCapableFakeModel(
+        responses=[
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"id": "compose-1", "name": "compose_ui", "args": {"tree": []}},
+                    {
+                        "id": "lookup-1",
+                        "name": "medical_lookup",
+                        "args": {"query": "what are metformin side effects"},
+                    },
+                ],
+            )
+        ]
+    )
+
+    # When
+    result = await build_route_b_agent(model, InMemoryStore()).ainvoke(
+        {
+            "messages": [
+                HumanMessage(id="human-1", content="what are metformin side effects")
+            ]
+        },
+        _config(),
+        context=_context(),
+    )
+
+    # Then
+    tool_messages = [
+        message for message in result["messages"] if isinstance(message, ToolMessage)
+    ]
+    assert [message.name for message in tool_messages] == ["medical_lookup"]
+    assert result["messages"][-1].content == "Here's what the monograph says:\n\nanswer."
+
+
+class _MemoryChildState(TypedDict, total=False):
+    question: str
+    seen: list[str]
+    answer: str | None
+    follow_ups: list[str]
+    safety: dict[str, bool] | None
+    error: str | None
+
+
+def _memory_child():
+    async def remember(state: _MemoryChildState) -> _MemoryChildState:
+        previous = state.get("seen", [])
+        question = state.get("question", "")
+        return {
+            "seen": [*previous, question],
+            "answer": f"history={','.join(previous) or '<empty>'}; current={question}",
+            "follow_ups": [],
+            "safety": {"contains_phi": False},
+            "error": None,
+        }
+
+    builder = StateGraph(
+        _MemoryChildState, input_schema=_MemoryChildState, output_schema=_MemoryChildState
+    )
+    _ = builder.add_node("remember", remember)
+    _ = builder.add_edge(START, "remember")
+    return builder.compile(checkpointer=True, name="test_healthcare_child")
+
+
+@pytest.mark.asyncio
+async def test_nested_medical_lookup_child_carries_history_per_parent_thread(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    monkeypatch.setattr(relay_module, "child", _memory_child())
+    turns = iter(["first", "second", "other"])
+
+    class _StubGateway:
+        def chat_model(self, *_args: object, **_kwargs: object) -> ToolCapableFakeModel:
+            question = next(turns)
+            return ToolCapableFakeModel(
+                responses=[
+                    AIMessage(
+                        content="",
+                        tool_calls=[
+                            {
+                                "id": f"lookup-{question}",
+                                "name": "medical_lookup",
+                                "args": {"query": question},
+                            }
+                        ],
+                    )
+                ]
+            )
+
+    class _StubResources:
+        gateway = _StubGateway()
+
+    monkeypatch.setattr(
+        "healthcare_rag.agent.coach_agent.get_resources", lambda: _StubResources()
+    )
+    graph = build_coach_graph().compile(checkpointer=InMemorySaver())
+    config_a: RunnableConfig = {
+        "configurable": {
+            "thread_id": "thread-a",
+            "langgraph_auth_user": {"identity": "user-1"},
+        }
+    }
+    config_b: RunnableConfig = {
+        "configurable": {
+            "thread_id": "thread-b",
+            "langgraph_auth_user": {"identity": "user-1"},
+        }
+    }
+
+    # When
+    _ = await graph.ainvoke({"question": "first"}, config_a)
+    second_a = await graph.ainvoke({"question": "second"}, config_a)
+    first_b = await graph.ainvoke({"question": "other"}, config_b)
+
+    # Then
+    assert second_a["messages"][-1].text.endswith("history=first; current=second")
+    assert first_b["messages"][-1].text.endswith("history=<empty>; current=other")
 
 
 @pytest.mark.asyncio

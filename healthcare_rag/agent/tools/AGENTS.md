@@ -4,9 +4,9 @@
 # agent/tools
 
 ## Purpose
-Route B domain tools: the LangChain `@tool`-decorated functions the coach's
-tool-calling sub-agent (`agent/coach_agent.py`) can invoke. One sibling module
-per tool, each independently authenticating the user and scoping its
+The coach agent's domain tools: the LangChain `@tool`-decorated functions the
+coach's tool-calling agent (`agent/coach_agent.py`) can invoke. One sibling
+module per tool, each independently authenticating the user and scoping its
 store/envelope writes to the current turn.
 
 ## Key Files
@@ -18,6 +18,7 @@ store/envelope writes to the current turn.
 | `log_injection.py` | `log_injection` tool — records today's injection dose event only; derives any `upcoming` day / `nextDoseLabel` strictly from approved schedule entries (via `list_schedule`/`next_dose`), never inferred cadence; emits a sparse week-strip DATA envelope for the `InjectionTracker` UI component. |
 | `log_metric.py` | `log_metric` tool — persists one metric reading (`MetricName` enum) and emits a trend DATA envelope; model supplies only `metric`/`value`/`unit` — date and owner come from the server/authenticated principal, never the model. |
 | `view_schedule.py` | `view_schedule` tool (read-only) — computes a `MiniCalendar` DATA envelope server-side via Python's `calendar` module (no model date math) plus a text listing of `entry_id | date | time | kind | note` so the model has real ids to pass into `change_schedule`. |
+| `medical_lookup.py` | `medical_lookup` tool (`return_direct=True`, `response_format="content_and_artifact"`) — the coach's only path to a medical answer. Calls `agent.rag_relay.relay_question(question, runtime.config)`, which runs the full RAG graph (safety gate, retrieval, generation, citation validation) under the calling thread's inherited checkpointer; returns the assembled answer as content and `{"follow_ups": [...]}` as the artifact. The model must never paraphrase or answer a medical question itself — `coach_agent.py`'s `relay_medical_answer` `after_agent` hook turns the terminal `ToolMessage` into the reply verbatim. |
 
 ## For AI Agents
 
@@ -41,7 +42,11 @@ store/envelope writes to the current turn.
 ### Testing Requirements
 - `tests/agent/test_tool_change_schedule.py`, `test_tool_log_injection.py`,
   `test_tool_log_metric.py`, `test_tool_view_schedule.py` — one per tool
-  module, mirroring the file layout here.
+  module, mirroring the file layout here. `medical_lookup` is covered by
+  `tests/agent/test_route_b.py` (round trip through the full agent, since its
+  behavior is inseparable from the `return_direct`/`after_agent` relay in
+  `coach_agent.py`) and `tests/agent/test_rag_relay.py` (`relay_question`
+  itself).
 
 ### Common Patterns
 - Each tool defines its own small `_AuthPrincipal` Pydantic model and

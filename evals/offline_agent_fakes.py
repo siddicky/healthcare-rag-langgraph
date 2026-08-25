@@ -8,6 +8,7 @@ from langchain_core.runnables import RunnableConfig
 from langgraph.store.base import BaseStore
 from pydantic import BaseModel
 
+from healthcare_rag.agent.rag_relay import relay_question
 from healthcare_rag.agent.state import CoachState
 from healthcare_rag.graph.llm import LangChainLLMGateway
 from healthcare_rag.models.answers import (
@@ -147,25 +148,35 @@ async def offline_search(
     )
 
 
-async def outer_classifier(**_variables: str) -> SafetyAssessment:
-    return SafetyAssessment(
-        category="in_scope_informational",
-        contains_phi=False,
-        phi_spans=[],
-        drug_mentioned="lipitor",
-        rationale="offline outer route fixture",
-    )
-
-
 async def offline_coach_agent(
     state: CoachState,
     config: RunnableConfig,
     *,
     store: BaseStore,
 ) -> CoachState:
-    from langchain_core.messages import AIMessage
+    """Stand in for the real model's tool-calling decision.
 
-    del state, config, store
+    A real model calls ``medical_lookup`` for the current turn *or* an elliptical
+    follow-up to an earlier drug question, using the full conversation as context.
+    This fixture approximates that by scanning every human turn in thread history
+    (not just the latest) for a drug mention, so multi-turn boundary replay tests
+    still route follow-ups like "What if I took that much?" into the RAG child.
+    """
+    from langchain_core.messages import AIMessage, HumanMessage
+
+    del store
+    human_texts = [
+        str(message.content)
+        for message in state.get("messages", [])
+        if isinstance(message, HumanMessage)
+    ]
+    question = human_texts[-1] if human_texts else ""
+    mentions_drug = any(
+        drug in text.lower() for text in human_texts for drug in ("lipitor", "metformin")
+    )
+    if mentions_drug:
+        message, follow_ups = await relay_question(question, config)
+        return {"messages": [AIMessage(content=message)], "follow_ups": follow_ups}
     return {"messages": [AIMessage(content="Offline coach reply.")], "follow_ups": []}
 
 
@@ -173,5 +184,4 @@ __all__ = [
     "OfflineGateway",
     "offline_coach_agent",
     "offline_search",
-    "outer_classifier",
 ]

@@ -24,7 +24,6 @@ export type ThreadStatus = "idle" | "busy" | "interrupted" | "error";
  */
 export const RENDERED_NODE_NAMES = [
   "coach_gate",
-  "rag_relay",
   "coach_agent",
   "erase_my_data",
   "reminder_delivery",
