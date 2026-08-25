@@ -29,8 +29,15 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=
 NEXT_PUBLIC_LANGGRAPH_URL=http://localhost:2024
 ```
 
-No server secrets, no LangSmith keys — the member Supabase bearer is the only
-credential, injected per request by the SDK client factory.
+Server-side (never exposed to the client bundle, read in `src/lib/env.server.ts`):
+
+```
+LANGGRAPH_DEPLOYMENT_URL=   # LangGraph deployment the /api/copilotkit runtime route proxies to
+```
+
+No server secrets beyond the deployment URL, no LangSmith keys — the member
+Supabase bearer is the only credential, injected per request by the SDK client
+factory and forwarded to the LangGraph server by the `/api/copilotkit` route.
 
 ## Catalog contract (short version)
 
