@@ -10,6 +10,7 @@ import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
 import { QueueBar } from "./QueueBar";
 import { ThreadSidebar } from "./ThreadSidebar";
+import { TimeTravel } from "./TimeTravel";
 
 /** Composed-tree Button dispatches become NEW natural-language turns. */
 const DISPATCH_ACTION_TURNS: Partial<Record<DispatchActionId, string>> = {
@@ -69,6 +70,12 @@ export function ChatShell({
     );
   const started =
     chat.turns.length > 0 || chat.pendingInterrupt !== null || chat.upload.phase !== "idle" || valuesHasStructured;
+
+  const isV2 = process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
+  const history = (chat as unknown as { history?: import("@/chat/useCoachStream").ThreadHistory[] | null }).history ?? null;
+  const historyLoading = (chat as unknown as { historyLoading?: boolean }).historyLoading === true;
+  const selectedCheckpointId = (chat as unknown as { selectedCheckpointId?: string | null }).selectedCheckpointId ?? null;
+  const showHistory = isV2 && history !== null && history.length > 0;
 
   return (
     <div className="app">
@@ -248,6 +255,21 @@ export function ChatShell({
               onClear={() => (chat as unknown as { clearQueue?: () => void }).clearQueue?.()}
             />
           )}
+        {showHistory && (
+          <TimeTravel
+            history={history}
+            historyLoading={historyLoading}
+            selectedCheckpointId={selectedCheckpointId}
+            busy={chat.busy}
+            onTimeTravel={(checkpointId) => void (chat as unknown as { timeTravel?: (id: string) => Promise<void> }).timeTravel?.(checkpointId)}
+            onFork={(checkpointId) =>
+              void (chat as unknown as { resumeFromCheckpoint?: (id: string, input: import("@/chat/coachProtocol").RunInput) => Promise<boolean> }).resumeFromCheckpoint?.(checkpointId, {
+                question: "Continue from this checkpoint",
+              })
+            }
+            onFetchHistory={() => void (chat as unknown as { fetchHistory?: () => Promise<unknown> }).fetchHistory?.()}
+          />
+        )}
         <Composer
           disabled={chat.busy}
           attachmentReady={chat.upload.phase === "staged" && chat.upload.stage === "done"}

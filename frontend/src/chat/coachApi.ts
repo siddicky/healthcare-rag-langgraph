@@ -136,8 +136,13 @@ export async function copyThread(fetcher: CoachFetch, threadId: string): Promise
 export async function getThreadState(
   fetcher: CoachFetch,
   threadId: string,
+  checkpointId?: string,
 ): Promise<ThreadStateProjection> {
-  const response = await fetcher(`/threads/${threadId}/state`);
+  const path =
+    checkpointId !== undefined && checkpointId !== ""
+      ? `/threads/${threadId}/state?checkpoint_id=${encodeURIComponent(checkpointId)}`
+      : `/threads/${threadId}/state`;
+  const response = await fetcher(path);
   if (!response.ok) await fail(response);
   return (await response.json()) as ThreadStateProjection;
 }

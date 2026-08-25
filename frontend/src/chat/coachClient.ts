@@ -39,7 +39,7 @@ export function createBrowserDeps(): CoachStreamDeps {
       getThread: (threadId) => getThread(fetcher, threadId),
       deleteThread: (threadId) => deleteThread(fetcher, threadId),
       copyThread: (threadId) => copyThread(fetcher, threadId),
-      getThreadState: (threadId) => getThreadState(fetcher, threadId),
+      getThreadState: (threadId, checkpointId) => getThreadState(fetcher, threadId, checkpointId),
       getThreadHistory: (threadId) => getThreadHistory(fetcher, threadId),
       postUpload: (upload) => postUpload(fetcher, upload),
       getUploadStatus: (uploadId) => getUploadStatus(fetcher, uploadId),

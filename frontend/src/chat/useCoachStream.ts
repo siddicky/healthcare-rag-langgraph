@@ -48,14 +48,21 @@ import type { DataEnvelope } from "@/catalog/envelopes";
  * so component tests drive the full UI from scripted fakes.
  */
 
+export type ThreadHistory = ThreadStateProjection & {
+  checkpoint_id: string;
+  parent_checkpoint_id?: string | null;
+  checkpoint_ns?: string;
+  created_at?: string;
+};
+
 export interface CoachApiBundle {
   createThread(): Promise<ThreadSummary>;
   searchThreads(options: { limit: number; offset: number; sortByIdAsc?: boolean }): Promise<ThreadSummary[]>;
   getThread(threadId: string): Promise<ThreadSummary>;
   deleteThread(threadId: string): Promise<void>;
   copyThread(threadId: string): Promise<ThreadSummary>;
-  getThreadState(threadId: string): Promise<ThreadStateProjection>;
-  getThreadHistory?(threadId: string): Promise<ThreadStateProjection[] | unknown[]>;
+  getThreadState(threadId: string, checkpointId?: string): Promise<ThreadStateProjection>;
+  getThreadHistory?(threadId: string): Promise<ThreadHistory[] | ThreadStateProjection[] | unknown[]>;
   postUpload(upload: { uploadId: string; threadId: string; file: File }): Promise<{ stage?: string }>;
   getUploadStatus(uploadId: string): Promise<{ stage?: string }>;
   postFeedback(feedback: { threadId: string; messageId: string; score: 1 | -1 }): Promise<void>;
@@ -344,6 +351,9 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const [feedback, setFeedback] = useState<FeedbackUi>({ sent: {}, failed: {} });
   const [initializing, setInitializing] = useState(true);
   const [wasDisconnected, setWasDisconnected] = useState(false);
+  const [history, setHistory] = useState<ThreadHistory[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+  const [selectedCheckpointId, setSelectedCheckpointId] = useState<string | null>(null);
 
   const messagesRef = useRef<WireMessage[]>([]);
   const busyRef = useRef(false);
@@ -627,6 +637,63 @@ export function useCoachStream(deps: CoachStreamDeps) {
       else commitPendingInterrupts([]);
       setActiveThreadId(threadId);
       maybeStartErase(wire, threadId);
+    },
+    [commitMessages, commitPendingInterrupts, deps.api, maybeStartErase],
+  );
+
+  const fetchHistory = useCallback(async (): Promise<ThreadHistory[] | null> => {
+    if (!isForkV2Enabled() || deps.api.getThreadHistory === undefined) {
+      if (mountedRef.current) setHistory(null);
+      return null;
+    }
+    const tid = activeThreadRef.current;
+    if (tid === null) {
+      if (mountedRef.current) setHistory(null);
+      return null;
+    }
+    setHistoryLoading(true);
+    try {
+      const result = (await deps.api.getThreadHistory(tid)) as ThreadHistory[];
+      const normalized: ThreadHistory[] = Array.isArray(result) ? (result as ThreadHistory[]) : [];
+      if (mountedRef.current) setHistory(normalized);
+      return normalized;
+    } catch {
+      if (mountedRef.current) setHistory(null);
+      return null;
+    } finally {
+      if (mountedRef.current) setHistoryLoading(false);
+    }
+  }, [deps.api]);
+
+  const timeTravel = useCallback(
+    async (checkpointId: string): Promise<void> => {
+      const tid = activeThreadRef.current;
+      if (tid === null) return;
+      if (!isForkV2Enabled()) return;
+      const trimmed = checkpointId.trim();
+      if (trimmed === "") return;
+      setSelectedCheckpointId(trimmed);
+      setError(null);
+      try {
+        const projected = await deps.api.getThreadState(tid, trimmed);
+        const wire = toWireMessages((projected as ThreadStateProjection).values?.messages);
+        commitMessages(wire);
+        const raw = Array.isArray((projected as ThreadStateProjection).interrupts)
+          ? ((projected as ThreadStateProjection).interrupts as readonly unknown[])
+          : [];
+        const filteredEntries = filterOutHeadlessToolInterrupts(raw);
+        const values = (filteredEntries as unknown[])
+          .map((e) => firstInterruptValue([e] as unknown) ?? e)
+          .filter((v) => v !== null) as unknown[];
+        const known = values.filter((v) => classifyInterruptPayload(v).kind !== "unknown");
+        if (values.length !== known.length && values.length > 0) chatTelemetry({ kind: "unknown_interrupt" });
+        if (known.length > 0) commitPendingInterrupts(known);
+        else commitPendingInterrupts([]);
+        maybeStartErase(wire, tid);
+      } catch (e) {
+        if (mountedRef.current)
+          setError(e instanceof Error ? e.message : "Couldn't load that checkpoint.");
+      }
     },
     [commitMessages, commitPendingInterrupts, deps.api, maybeStartErase],
   );
@@ -953,6 +1020,19 @@ export function useCoachStream(deps: CoachStreamDeps) {
     [commitMessages, maybeStartErase, stream, waitForTerminal],
   );
 
+  const resumeFromCheckpoint = useCallback(
+    async (checkpointId: string, input: RunInput): Promise<boolean> => {
+      const trimmed = checkpointId.trim();
+      if (trimmed === "") {
+        if (mountedRef.current) setError("That checkpoint couldn't be used. Please try again.");
+        return false;
+      }
+      setSelectedCheckpointId(trimmed);
+      return forkFromCheckpoint(trimmed, input);
+    },
+    [forkFromCheckpoint],
+  );
+
   const regenerate = useCallback(
     async (checkpointIdOverride?: string): Promise<void> => {
       const threadId = activeThreadRef.current;
@@ -1062,6 +1142,8 @@ export function useCoachStream(deps: CoachStreamDeps) {
     setUpload({ phase: "idle" });
     setQueue([]);
     setError(null);
+    setHistory(null);
+    setSelectedCheckpointId(null);
   }, [commitMessages, commitPendingInterrupts]);
 
   const selectThread = useCallback(
@@ -1069,6 +1151,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
       if (busyRef.current) return;
       try {
         await loadThreadState(threadId);
+        setSelectedCheckpointId(null);
       } catch (stateError) {
         if (isMissingThreadError(stateError)) {
           await recoverMissingThread(threadId);
@@ -1117,6 +1200,17 @@ export function useCoachStream(deps: CoachStreamDeps) {
     };
   }, []);
 
+  // Auto-fetch history when thread changes in v2 (best-effort, gated)
+  useEffect(() => {
+    if (!isForkV2Enabled() || deps.api.getThreadHistory === undefined) return;
+    if (activeThreadId === null) {
+      setHistory(null);
+      setSelectedCheckpointId(null);
+      return;
+    }
+    void fetchHistory();
+  }, [activeThreadId, fetchHistory]);
+
   const gate = regenerateEligibility(turns, {
     hasPendingInterrupt: pendingInterrupt !== null,
     attachmentPending: upload.phase === "staged" && upload.stage === "done",
@@ -1140,6 +1234,12 @@ export function useCoachStream(deps: CoachStreamDeps) {
     queueSize: queue.length,
     cancelQueued,
     clearQueue,
+    history,
+    historyLoading,
+    selectedCheckpointId,
+    fetchHistory,
+    timeTravel,
+    resumeFromCheckpoint,
     error,
     upload,
     uploadStage: documentStage(upload),
