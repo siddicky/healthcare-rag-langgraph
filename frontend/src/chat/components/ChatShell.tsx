@@ -131,9 +131,11 @@ export function ChatShell({
           <MessageList
             turns={chat.turns}
             pendingInterrupt={chat.pendingInterrupt}
+            pendingInterrupts={(chat as unknown as { pendingInterrupts?: unknown[] }).pendingInterrupts ?? (chat.pendingInterrupt !== null ? [chat.pendingInterrupt] : [])}
             upload={chat.upload}
             busy={chat.busy}
             onApprove={(resume) => void chat.approveInterrupt(resume)}
+            onApproveAll={(resumes) => void (chat as unknown as { approveInterrupts?: (rs: typeof resumes) => Promise<void> }).approveInterrupts?.(resumes)}
             latestAiMessageId={latestAiMessageId}
             onReminderAction={(text) => void chat.send(text)}
             dispatchHandlers={dispatchHandlers}

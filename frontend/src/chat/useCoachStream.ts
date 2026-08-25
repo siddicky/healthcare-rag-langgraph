@@ -9,6 +9,7 @@ import {
   type ThreadStateProjection,
   type ThreadSummary,
 } from "./coachApi";
+import { classifyInterruptPayload } from "./model";
 import {
   getRunStreamParams,
   SENTINEL_QUESTION,
@@ -102,6 +103,7 @@ export interface CoachStreamHandle {
   readonly threadId: string | null;
   submit(input: RunInput, options: CoachSubmitOptions): Promise<void>;
   respond(response: ResumePayload): Promise<void>;
+  respondAll?(responses: ResumePayload[] | Record<string, ResumePayload>): Promise<void>;
   stop(): Promise<void>;
   getThread(): unknown;
 }
@@ -165,6 +167,66 @@ const HEADLESS_TOOLS = [
   },
 ] as const;
 
+// ---------------------------------------------------------------------------
+// HITL helpers — singular + array fallback + headless filtering + fail-closed
+// ---------------------------------------------------------------------------
+
+function isHeadlessInterruptValue(value: unknown): boolean {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  // SDK headless shape: {type:"tool", tool_call:{name:"copy_to_clipboard",...}}  or {type:"tool", toolCall:...}
+  if (v.type === "tool") {
+    const tc = (v as Record<string, unknown>).tool_call ?? (v as Record<string, unknown>).toolCall;
+    if (typeof tc === "object" && tc !== null && (tc as Record<string, unknown>).name === "copy_to_clipboard") {
+      return true;
+    }
+  }
+  return false;
+}
+
+function filterOutHeadlessToolInterrupts(local: readonly unknown[]): readonly unknown[] {
+  return local.filter((entry) => {
+    const value = (() => {
+      if (typeof entry !== "object" || entry === null) return null;
+      if ("value" in (entry as Record<string, unknown>)) return (entry as Record<string, unknown>).value;
+      return entry;
+    })();
+    return !isHeadlessInterruptValue(value);
+  });
+}
+
+function allRawInterrupts(stream: CoachStreamHandle): readonly unknown[] {
+  const singular = (stream as unknown as { interrupt?: unknown }).interrupt;
+  const arr = Array.isArray(stream.interrupts) ? (stream.interrupts as readonly unknown[]) : [];
+  if (arr.length > 0) return arr;
+  if (singular !== null && singular !== undefined) return [singular];
+  return [];
+}
+
+function visibleInterruptEntries(stream: CoachStreamHandle): readonly unknown[] {
+  return filterOutHeadlessToolInterrupts(allRawInterrupts(stream));
+}
+
+function visibleInterruptValues(stream: CoachStreamHandle): unknown[] {
+  const entries = visibleInterruptEntries(stream);
+  return entries.map((entry) => firstInterruptValue([entry] as unknown) ?? entry).filter((v) => v !== null) as unknown[];
+}
+
+function isValidResumePayload(value: unknown): value is ResumePayload {
+  if (typeof value !== "object" || value === null) return false;
+  const v = value as Record<string, unknown>;
+  if (typeof v.accept !== "boolean") return false;
+  if (v.fields !== undefined) {
+    if (!Array.isArray(v.fields)) return false;
+    for (const f of v.fields as unknown[]) {
+      if (typeof f !== "object" || f === null) return false;
+      const ff = f as Record<string, unknown>;
+      if (typeof ff.key !== "string" || typeof ff.value !== "string") return false;
+    }
+  }
+  return true;
+}
+
 export function useLangChainCoachStream(options: CoachStreamOptions): CoachStreamHandle {
   // Cast through unknown: HeadlessTool tuple typing is stricter than the
   // runtime accepts for CoachStreamState; the wire shape is checked below.
@@ -191,13 +253,11 @@ export function useLangChainCoachStream(options: CoachStreamOptions): CoachStrea
         chatTelemetry({ kind: "unknown_interrupt", detail });
         return;
       }
-      // Success/start telemetry kept minimal; no PII.
       if (process.env.NODE_ENV !== "test") {
-        // Avoid noisy logs in tests; still emit via sink for assertions if needed.
         chatTelemetry({ kind: "unknown_interrupt", detail: `[headless] ${detail}` });
       }
     },
-  });
+  }) as unknown as CoachStreamHandle;
 }
 
 // Re-export for tests / external wiring
@@ -239,6 +299,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const [activeThreadId, setActiveThreadId] = useState<string | null>(null);
   const [messages, setMessages] = useState<WireMessage[]>([]);
   const [pendingInterrupt, setPendingInterrupt] = useState<unknown | null>(null);
+  const [pendingInterrupts, setPendingInterrupts] = useState<unknown[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [upload, setUpload] = useState<UploadUi>({ phase: "idle" });
@@ -252,6 +313,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const eraseStartedRef = useRef(false);
   const uploadRef = useRef<UploadUi>({ phase: "idle" });
   const pendingInterruptRef = useRef<unknown | null>(null);
+  const pendingInterruptsRef = useRef<unknown[]>([]);
   const mountedRef = useRef(true);
 
   const stream = deps.useStream({
@@ -270,6 +332,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
   activeThreadRef.current = activeThreadId;
   uploadRef.current = upload;
   pendingInterruptRef.current = pendingInterrupt;
+  pendingInterruptsRef.current = pendingInterrupts;
 
   useEffect(() => {
     mountedRef.current = true;
@@ -288,6 +351,14 @@ export function useCoachStream(deps: CoachStreamDeps) {
     if (mountedRef.current) setPendingInterrupt(value);
   }, []);
 
+  const commitPendingInterrupts = useCallback((values: unknown[]): void => {
+    pendingInterruptsRef.current = values;
+    if (mountedRef.current) setPendingInterrupts(values);
+    const first = values.length > 0 ? values[0] ?? null : null;
+    pendingInterruptRef.current = first;
+    if (mountedRef.current) setPendingInterrupt(first);
+  }, []);
+
   useEffect(() => {
     const projected = mergeMessages(
       toWireMessages(stream.values.messages),
@@ -296,9 +367,33 @@ export function useCoachStream(deps: CoachStreamDeps) {
     if (projected.length > 0) {
       commitMessages(mergeMessages(messagesRef.current, projected));
     }
-    const interrupt = firstInterruptValue(stream.interrupts);
-    if (interrupt !== null) commitPendingInterrupt(interrupt);
-  }, [commitMessages, commitPendingInterrupt, stream.interrupts, stream.messages, stream.values.messages]);
+    const interrupt = (stream as unknown as { interrupt?: unknown }).interrupt ?? stream.interrupts?.[0] ?? null;
+    const values = visibleInterruptValues(stream);
+    if (values.length > 0) {
+      const known = values.filter((v) => classifyInterruptPayload(v).kind !== "unknown");
+      if (known.length > 0) {
+        commitPendingInterrupts(known);
+      } else {
+        chatTelemetry({ kind: "unknown_interrupt" });
+        commitPendingInterrupts([]);
+      }
+      return;
+    }
+    if (interrupt !== null) {
+      const rawValue = firstInterruptValue([interrupt] as unknown) ?? interrupt;
+      const unwrapped = typeof rawValue === "object" && rawValue !== null && "value" in (rawValue as Record<string, unknown>)
+        ? (rawValue as Record<string, unknown>).value
+        : rawValue;
+      if (isHeadlessInterruptValue(unwrapped)) return;
+      const kind = classifyInterruptPayload(unwrapped);
+      if (kind.kind === "unknown") {
+        chatTelemetry({ kind: "unknown_interrupt" });
+        return;
+      }
+      commitPendingInterrupt(unwrapped);
+      commitPendingInterrupts([unwrapped]);
+    }
+  }, [commitMessages, commitPendingInterrupt, commitPendingInterrupts, stream.interrupt, stream.interrupts, stream.messages, stream.values.messages]);
 
   const synthesizedFromMessages = useMemo(() => synthesizeToolCallsFromMessages(messages), [messages]);
   const toolCalls: readonly ToolCallHandleView[] = useMemo(() => {
@@ -334,13 +429,13 @@ export function useCoachStream(deps: CoachStreamDeps) {
         activeThreadRef.current = null;
         setActiveThreadId(null);
         commitMessages([]);
-        commitPendingInterrupt(null);
+        commitPendingInterrupts([]);
         setUpload({ phase: "idle" });
       }
       await refreshThreads();
       if (mountedRef.current) setError(MISSING_THREAD_MESSAGE);
     },
-    [commitMessages, commitPendingInterrupt, refreshThreads],
+    [commitMessages, commitPendingInterrupts, refreshThreads],
   );
 
   useEffect(() => {
@@ -395,7 +490,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
         if (mountedRef.current) {
           setActiveThreadId(null);
           commitMessages([]);
-          commitPendingInterrupt(null);
+          commitPendingInterrupts([]);
           setUpload({ phase: "idle" });
           setErase({ status: "done" });
           setError(null);
@@ -413,7 +508,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
         );
       }
     },
-    [commitMessages, commitPendingInterrupt, deps.api, deps.poll.erase, deps.sleep, refreshThreads],
+    [commitMessages, commitPendingInterrupts, deps.api, deps.poll.erase, deps.sleep, refreshThreads],
   );
 
   const maybeStartErase = useCallback(
@@ -434,11 +529,17 @@ export function useCoachStream(deps: CoachStreamDeps) {
       const projected = await deps.api.getThreadState(threadId);
       const wire = toWireMessages(projected.values.messages);
       commitMessages(wire);
-      commitPendingInterrupt(firstInterruptValue(projected.interrupts));
+      const raw = Array.isArray(projected.interrupts) ? projected.interrupts : [];
+      const filteredEntries = filterOutHeadlessToolInterrupts(raw as readonly unknown[]);
+      const values = (filteredEntries as unknown[]).map((e) => firstInterruptValue([e] as unknown) ?? e).filter((v) => v !== null) as unknown[];
+      const known = values.filter((v) => classifyInterruptPayload(v).kind !== "unknown");
+      if (values.length !== known.length && values.length > 0) chatTelemetry({ kind: "unknown_interrupt" });
+      if (known.length > 0) commitPendingInterrupts(known);
+      else commitPendingInterrupts([]);
       setActiveThreadId(threadId);
       maybeStartErase(wire, threadId);
     },
-    [commitMessages, commitPendingInterrupt, deps.api, maybeStartErase],
+    [commitMessages, commitPendingInterrupts, deps.api, maybeStartErase],
   );
 
   const waitForTerminal = useCallback(
@@ -593,12 +694,69 @@ export function useCoachStream(deps: CoachStreamDeps) {
     async (resume: ResumePayload): Promise<void> => {
       const threadId = activeThreadRef.current;
       if (threadId === null || busyRef.current) return;
+      if (!isValidResumePayload(resume)) {
+        chatTelemetry({ kind: "unknown_interrupt", detail: "malformed resume" });
+        return;
+      }
       const current = pendingInterruptRef.current;
-      commitPendingInterrupt(null);
+      const currentAll = pendingInterruptsRef.current;
+      commitPendingInterrupts([]);
       const clean = await runStream(threadId, { command: { resume } });
-      if (!clean && current !== null) commitPendingInterrupt(current);
+      if (!clean && current !== null) {
+        commitPendingInterrupts(currentAll.length > 0 ? currentAll : [current]);
+      }
     },
-    [commitPendingInterrupt, runStream],
+    [commitPendingInterrupts, runStream],
+  );
+
+  const approveInterrupts = useCallback(
+    async (resumes: ResumePayload[]): Promise<void> => {
+      const threadId = activeThreadRef.current;
+      if (threadId === null || busyRef.current) return;
+      const valid = resumes.filter(isValidResumePayload);
+      if (valid.length !== resumes.length) {
+        chatTelemetry({ kind: "unknown_interrupt", detail: "malformed resume in batch" });
+        if (valid.length === 0) return;
+      }
+      const currentAll = pendingInterruptsRef.current;
+      commitPendingInterrupts([]);
+      let clean = false;
+      const streamAny = stream as unknown as { respondAll?: (rs: ResumePayload[]) => Promise<void>; respond: (r: ResumePayload) => Promise<void> };
+      if (typeof streamAny.respondAll === "function" && valid.length > 1) {
+        try {
+          if (busyRef.current) return;
+          busyRef.current = true;
+          if (mountedRef.current) setBusy(true);
+          setError(null);
+          if (!(await waitForTerminal(threadId))) {
+            if (mountedRef.current) setError("Your previous request is still finishing. Please try again.");
+            clean = false;
+          } else {
+            await streamAny.respondAll(valid);
+            clean = true;
+          }
+        } catch (e) {
+          if (mountedRef.current) setError(e instanceof Error ? e.message : "That message didn't go through. Please try again.");
+          clean = false;
+        } finally {
+          busyRef.current = false;
+          if (mountedRef.current) setBusy(false);
+        }
+      } else {
+        // sequential fallback — first resume via runStream (which handles waitForTerminal), rest via direct respond
+        let first = true;
+        clean = true;
+        for (const r of valid) {
+          const ok = first ? await runStream(threadId, { command: { resume: r } }) : await (async () => {
+            try { await stream.respond(r); return true; } catch { return false; }
+          })();
+          if (!ok) clean = false;
+          first = false;
+        }
+      }
+      if (!clean && currentAll.length > 0) commitPendingInterrupts(currentAll);
+    },
+    [commitPendingInterrupts, runStream, stream, waitForTerminal],
   );
 
   const regenerate = useCallback(async (): Promise<void> => {
@@ -646,10 +804,10 @@ export function useCoachStream(deps: CoachStreamDeps) {
     setActiveThreadId(null);
     activeThreadRef.current = null;
     commitMessages([]);
-    commitPendingInterrupt(null);
+    commitPendingInterrupts([]);
     setUpload({ phase: "idle" });
     setError(null);
-  }, [commitMessages, commitPendingInterrupt]);
+  }, [commitMessages, commitPendingInterrupts]);
 
   const selectThread = useCallback(
     async (threadId: string): Promise<void> => {
@@ -716,6 +874,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
     turns,
     toolCalls,
     pendingInterrupt,
+    pendingInterrupts,
     busy: busy || stream.isLoading,
     isLoading: stream.isLoading,
     error,
@@ -729,6 +888,8 @@ export function useCoachStream(deps: CoachStreamDeps) {
     send,
     attach,
     approveInterrupt,
+    approveInterrupts,
+    respondAll: approveInterrupts,
     regenerate,
     branch,
     sendFeedback,

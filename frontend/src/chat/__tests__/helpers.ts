@@ -93,17 +93,28 @@ export function fakeStream(
       isThreadLoading: false,
       error,
       threadId: options.threadId,
-      submit: (input, submitOptions) =>
+      submit: (input: RunInput, submitOptions: CoachSubmitOptions) =>
         run({ threadId: submitOptions.threadId, payload: { input }, options: submitOptions }),
-      respond: (response) => {
+      respond: (response: ResumePayload) => {
         const threadId = options.threadId;
         if (threadId === null) return Promise.resolve();
         setInterrupts([]);
         return run({ threadId, payload: { command: { resume: response } } });
       },
+      respondAll: (responses: ResumePayload[] | Record<string, unknown>) => {
+        const threadId = options.threadId;
+        if (threadId === null) return Promise.resolve();
+        setInterrupts([]);
+        const list: ResumePayload[] = Array.isArray(responses) ? (responses as ResumePayload[]) : Object.values(responses as Record<string, ResumePayload>);
+        return (async () => {
+          for (const r of list) {
+            await run({ threadId, payload: { command: { resume: r } } });
+          }
+        })();
+      },
       stop: async () => setIsLoading(false),
       getThread: () => ({ threadId: options.threadId }),
-    };
+    } as unknown as CoachStreamHandle;
   };
   return {
     calls,

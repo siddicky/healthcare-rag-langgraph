@@ -228,9 +228,11 @@ function messageKey(message: WireMessage): string {
 export interface MessageListProps {
   turns: TurnModel[];
   pendingInterrupt: unknown | null;
+  pendingInterrupts?: readonly unknown[] | null;
   upload: UploadUi;
   busy: boolean;
   onApprove: (resume: ResumePayload) => void;
+  onApproveAll?: (resumes: ResumePayload[]) => void;
   latestAiMessageId: string | null;
   actionBar?: React.ReactNode;
   /** Full-mode ReminderCard actions dispatch new chat turns in the member's phrasing. */
@@ -243,9 +245,11 @@ export interface MessageListProps {
 export function MessageList({
   turns,
   pendingInterrupt,
+  pendingInterrupts,
   upload,
   busy,
   onApprove,
+  onApproveAll,
   latestAiMessageId,
   actionBar,
   onReminderAction,
@@ -257,9 +261,15 @@ export function MessageList({
 
   useEffect(() => {
     if (scrollRef.current !== null) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [rendered, pendingInterrupt, upload.phase]);
+  }, [rendered, pendingInterrupt, upload.phase, pendingInterrupts]);
 
-  if (turns.length === 0 && pendingInterrupt === null && upload.phase === "idle") {
+  const interrupts = pendingInterrupts !== undefined && pendingInterrupts !== null
+    ? (pendingInterrupts.length > 0 ? pendingInterrupts : pendingInterrupt !== null ? [pendingInterrupt] : [])
+    : pendingInterrupt !== null ? [pendingInterrupt] : [];
+
+  const hasInterrupts = interrupts.length > 0;
+
+  if (turns.length === 0 && !hasInterrupts && upload.phase === "idle") {
     return null;
   }
   return (
@@ -285,8 +295,28 @@ export function MessageList({
             Upload failed: {upload.detail}
           </p>
         )}
-        {pendingInterrupt !== null && (
-          <InterruptPanel value={pendingInterrupt} onApprove={onApprove} disabled={busy} />
+        {hasInterrupts && (
+          <>
+            {interrupts.map((value, idx) => (
+              <InterruptPanel
+                key={idx}
+                value={value}
+                onApprove={onApprove}
+                disabled={busy}
+              />
+            ))}
+            {interrupts.length > 1 && onApproveAll !== undefined && (
+              <div className="widget-wrap" data-testid="interrupt-approve-all">
+                <button
+                  className="btn btn-primary"
+                  onClick={() => onApproveAll(interrupts.map(() => ({ accept: true })))}
+                  disabled={busy}
+                >
+                  Approve all
+                </button>
+              </div>
+            )}
+          </>
         )}
       </div>
     </div>

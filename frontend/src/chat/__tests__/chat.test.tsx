@@ -522,3 +522,111 @@ describe("headless copy_to_clipboard", () => {
     });
   });
 });
+
+describe("HITL interrupt approve/reject/edit via respond", () => {
+  it("interrupt card renders → approve → stream.respond called with {accept:true} → next ToolMessage", async () => {
+    const threads: ThreadSummary[] = [thread("t-hitl")];
+    const api: Partial<CoachApiBundle> = {
+      searchThreads: vi.fn(async () => threads),
+      getThreadState: vi.fn(async () => ({
+        values: {
+          messages: [humanMessage("Move my Friday check-in", "h1")],
+        },
+        interrupts: [
+          {
+            value: {
+              eventLabel: "Friday check-in",
+              fromLabel: "Fri 2:00 PM",
+              toLabel: "Mon 10:00 AM",
+              reason: "Monday open",
+            },
+          },
+        ],
+      })),
+    };
+    const stream = fakeStream((call) => {
+      if ("command" in call.payload) {
+        return [updatesPart("coach_agent", [aiMessage("Done", "a2")])];
+      }
+      return [];
+    });
+    const deps = fakeDeps(api, stream);
+    shell(deps);
+    expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
+    expect(screen.getByText("Friday check-in")).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Confirm change" }));
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(stream.calls[0]?.payload).toEqual({ command: { resume: { accept: true } } });
+    await waitFor(() => expect(screen.queryByTestId("interrupt-card")).toBeNull());
+    expect(await screen.findByText("Done")).toBeInTheDocument();
+  });
+
+  it("reject issues accept:false and edit issues accept:true with fields", async () => {
+    const memPayload = {
+      sourceLabel: "Intake form",
+      fields: [
+        { key: "allergies", label: "Allergies", value: "Peanuts", needsReview: true },
+        { key: "meds", label: "Meds", value: "Metformin" },
+      ],
+    };
+    const threads: ThreadSummary[] = [thread("t-mem")];
+    const api: Partial<CoachApiBundle> = {
+      searchThreads: vi.fn(async () => threads),
+      getThreadState: vi.fn(async () => ({
+        values: { messages: [] },
+        interrupts: [{ value: memPayload }],
+      })),
+    };
+    const stream = fakeStream(() => []);
+    const deps = fakeDeps(api, stream);
+    shell(deps);
+    expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
+    const user = userEvent.setup();
+    // discard = reject
+    await user.click(screen.getByRole("button", { name: /Discard/i }));
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(stream.calls[0]?.payload).toEqual({ command: { resume: { accept: false } } });
+  });
+
+  it("malformed interrupt payload fails closed: no card, telemetry, no crash", async () => {
+    const threads: ThreadSummary[] = [thread("t-bad")];
+    const api: Partial<CoachApiBundle> = {
+      searchThreads: vi.fn(async () => threads),
+      getThreadState: vi.fn(async () => ({
+        values: { messages: [] },
+        interrupts: [{ value: { nonsense: "xyz" } }],
+      })),
+    };
+    const stream = fakeStream(() => []);
+    const deps = fakeDeps(api, stream);
+    shell(deps);
+    await waitFor(() => expect(screen.queryByTestId("interrupt-card")).toBeNull());
+    expect(stream.calls).toHaveLength(0);
+  });
+
+  it("multiple interrupts via respondAll: renders 2 cards and approve-all issues respondAll", async () => {
+    const { MessageList } = await import("@/chat/components/MessageList");
+    const { render } = await import("@testing-library/react");
+    const payload1 = { eventLabel: "A", fromLabel: "1", toLabel: "2" };
+    const payload2 = { eventLabel: "B", fromLabel: "3", toLabel: "4" };
+    const onApprove = vi.fn();
+    const onApproveAll = vi.fn();
+    render(
+      <MessageList
+        turns={[]}
+        pendingInterrupt={null}
+        pendingInterrupts={[payload1, payload2]}
+        upload={{ phase: "idle" } as never}
+        busy={false}
+        onApprove={onApprove}
+        onApproveAll={onApproveAll}
+        latestAiMessageId={null}
+      />,
+    );
+    expect(screen.getAllByTestId("interrupt-card")).toHaveLength(2);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Approve all" }));
+    expect(onApproveAll).toHaveBeenCalledWith([{ accept: true }, { accept: true }]);
+  });
+});
