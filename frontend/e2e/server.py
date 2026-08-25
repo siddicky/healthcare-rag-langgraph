@@ -689,6 +689,7 @@ def main() -> int:
     runfile = Path(args.runfile)
     perimeter = args.perimeter
     alt_perimeter = "v2" if perimeter == "v1" else "v1"
+    history_branch_ui = os.getenv("COACH_E2E_HISTORY_BRANCH_UI", "0") == "1"
 
     import tempfile
 
@@ -845,6 +846,7 @@ def main() -> int:
         "NEXT_PUBLIC_SUPABASE_URL": dep_url,
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": ANON_KEY,
         "NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER": perimeter,
+        "NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI": "1" if history_branch_ui else "0",
         "NEXT_TELEMETRY_DISABLED": "1",
     }
     build_log = (logs / "next-build.log").open("wb")
@@ -894,6 +896,7 @@ def main() -> int:
                 "alt_perimeter": alt_perimeter,
                 "perimeter": perimeter,
                 "next_public_perimeter": perimeter,
+                "history_branch_ui": history_branch_ui,
                 "frontend_url": frontend_url,
                 "u1": {
                     "email": U1_EMAIL,

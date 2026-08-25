@@ -5,6 +5,7 @@ import type { DispatchActionId, DispatchHandlers } from "@/catalog/dispatch";
 import { isAiMessage } from "@/chat/model";
 import { OPENERS, UPLOAD_OPENER } from "@/chat/coachProtocol";
 import { useCoachStream, type CoachStreamDeps } from "@/chat/useCoachStream";
+import { isHistoryBranchUiEnabled } from "@/chat/featureGates";
 import { ActionBar } from "./ActionBar";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
@@ -72,10 +73,11 @@ export function ChatShell({
     chat.turns.length > 0 || chat.pendingInterrupt !== null || chat.upload.phase !== "idle" || valuesHasStructured;
 
   const isV2 = process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
+  const historyUi = isHistoryBranchUiEnabled();
   const history = (chat as unknown as { history?: import("@/chat/useCoachStream").ThreadHistory[] | null }).history ?? null;
   const historyLoading = (chat as unknown as { historyLoading?: boolean }).historyLoading === true;
   const selectedCheckpointId = (chat as unknown as { selectedCheckpointId?: string | null }).selectedCheckpointId ?? null;
-  const showHistory = isV2 && history !== null && history.length > 0;
+  const showHistory = isV2 && historyUi && history !== null && history.length > 0;
 
   return (
     <div className="app">
@@ -217,8 +219,11 @@ export function ChatShell({
             values={(chat as unknown as { values?: Record<string, unknown> }).values ?? (chat as unknown as { catalogValues?: Record<string, unknown> }).catalogValues}
             valuesEnvelopes={(chat as unknown as { valuesEnvelopes?: readonly import("@/catalog/envelopes").DataEnvelope[] }).valuesEnvelopes}
             valuesTrees={(chat as unknown as { valuesTrees?: readonly unknown[] }).valuesTrees}
-            onEditTurn={(turnKey, newText, checkpointId) =>
-              void (chat as unknown as { editAndResubmit?: (k: string, t: string, c: string) => Promise<void> }).editAndResubmit?.(turnKey, newText, checkpointId)
+            onEditTurn={
+              historyUi
+                ? (turnKey, newText, checkpointId) =>
+                    void (chat as unknown as { editAndResubmit?: (k: string, t: string, c: string) => Promise<void> }).editAndResubmit?.(turnKey, newText, checkpointId)
+                : undefined
             }
             actionBar={
               <ActionBar
@@ -227,6 +232,7 @@ export function ChatShell({
                 feedbackFailed={feedbackFailed}
                 disabled={chat.busy}
                 onRegenerate={() => void chat.regenerate()}
+                canBranch={historyUi}
                 onBranch={() => void chat.branch()}
                 onFeedback={(score) => void chat.sendFeedback(score)}
               />

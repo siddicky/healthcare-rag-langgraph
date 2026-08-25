@@ -2,6 +2,8 @@ import { expect, request, test, type APIRequestContext, type Page } from "@playw
 import path from "node:path";
 import {
   envelopesOf,
+  historyBranchUiEnabled,
+  HISTORY_BRANCH_UI_SKIP_REASON,
   internalHeaders,
   memberApi,
   monthOf,
@@ -347,6 +349,11 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
   });
 
   await test.step("branch copies history into a new thread", async () => {
+    // Early return (not test.skip) so the rest of the serial journey still runs.
+    if (!historyBranchUiEnabled(run)) {
+      test.info().annotations.push({ type: "skip", description: HISTORY_BRANCH_UI_SKIP_REASON });
+      return;
+    }
     const before = await page.locator(".thread-item").count();
     const copyResponse = page.waitForResponse(
       (response) => response.request().method() === "POST" && response.url().endsWith("/copy"),

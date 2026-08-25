@@ -1,5 +1,7 @@
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import {
+  historyBranchUiEnabled,
+  HISTORY_BRANCH_UI_SKIP_REASON,
   memberApi,
   readRun,
   serverWithPerimeter,
@@ -50,6 +52,10 @@ test("history + time-travel UI smoke (v2 gated)", async ({ page }) => {
   const run = readRun();
   if (!isV2(run)) {
     test.skip(true, "history/time-travel requires NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER=v2 (run with COACH_E2E_PERIMETER=v2)");
+    return;
+  }
+  if (!historyBranchUiEnabled(run)) {
+    test.skip(true, HISTORY_BRANCH_UI_SKIP_REASON);
     return;
   }
   const api = await memberApi(run, run.u1.token);

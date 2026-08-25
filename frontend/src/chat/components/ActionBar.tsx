@@ -13,6 +13,7 @@ export function ActionBar({
   feedbackFailed,
   disabled,
   onRegenerate,
+  canBranch = true,
   onBranch,
   onFeedback,
 }: {
@@ -21,6 +22,8 @@ export function ActionBar({
   feedbackFailed: boolean;
   disabled: boolean;
   onRegenerate: () => void;
+  /** Owner-disabled by default via ChatShell's history/branch UI gate. */
+  canBranch?: boolean;
   onBranch: () => void;
   onFeedback: (score: 1 | -1) => void;
 }) {
@@ -37,15 +40,17 @@ export function ActionBar({
           <RefreshIcon />
         </button>
       )}
-      <button
-        className="msg-action-btn"
-        title="Branch into a new thread"
-        aria-label="Branch into a new thread"
-        disabled={disabled}
-        onClick={() => onBranch()}
-      >
-        <BranchIcon />
-      </button>
+      {canBranch && (
+        <button
+          className="msg-action-btn"
+          title="Branch into a new thread"
+          aria-label="Branch into a new thread"
+          disabled={disabled}
+          onClick={() => onBranch()}
+        >
+          <BranchIcon />
+        </button>
+      )}
       <button
         className={`msg-action-btn${feedbackSent === 1 ? " up-active" : ""}`}
         title="Good response"
