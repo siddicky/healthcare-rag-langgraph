@@ -426,3 +426,99 @@ describe("erase flow via the marker", () => {
     expect(screen.getByRole("heading", { name: "Nymble Coach" })).toBeInTheDocument();
   });
 });
+
+describe("headless copy_to_clipboard", () => {
+  it("copyToClipboardExecute writes via clipboard and falls back", async () => {
+    const { copyToClipboardExecute, COPY_TOOL, HEADLESS_TOOLS } = await import(
+      "@/chat/useCoachStream"
+    );
+    expect(COPY_TOOL.name).toBe("copy_to_clipboard");
+    expect(HEADLESS_TOOLS).toHaveLength(1);
+    expect(HEADLESS_TOOLS[0]?.tool.name).toBe("copy_to_clipboard");
+
+    const writeText = vi.fn(async () => undefined);
+    const originalClipboard = navigator.clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      writable: true,
+      configurable: true,
+    });
+    await expect(copyToClipboardExecute({ text: "hello" })).resolves.toBe("copied");
+    expect(writeText).toHaveBeenCalledWith("hello");
+
+    // fallback when clipboard missing
+    delete (navigator as unknown as Record<string, unknown>).clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+    const execMock = vi.fn(() => true);
+    Object.defineProperty(document, "execCommand", {
+      value: execMock,
+      writable: true,
+      configurable: true,
+    });
+    await expect(copyToClipboardExecute({ text: "fallback text" })).resolves.toBe("copied");
+    expect(execMock).toHaveBeenCalledWith("copy");
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("headless interrupt is recognized and filtered from user-facing interrupts", async () => {
+    const { isHeadlessToolInterrupt, filterOutHeadlessToolInterrupts } = await import(
+      "@langchain/langgraph-sdk"
+    );
+    const headless = {
+      id: "int-1",
+      value: {
+        type: "tool",
+        tool_call: { name: "copy_to_clipboard", args: { text: "copy me" }, id: "tc-1" },
+      },
+    };
+    expect(isHeadlessToolInterrupt(headless.value)).toBe(true);
+    expect(filterOutHeadlessToolInterrupts([headless as never])).toHaveLength(0);
+
+    const userFacing = { id: "int-2", value: { eventLabel: "Friday check-in" } };
+    expect(isHeadlessToolInterrupt(userFacing.value)).toBe(false);
+    expect(filterOutHeadlessToolInterrupts([userFacing as never])).toHaveLength(1);
+  });
+
+  it("scripted turn: interrupt with headless payload → execute → ToolMessage success", async () => {
+    const writeText = vi.fn(async () => undefined);
+    const originalClipboard = navigator.clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      writable: true,
+      configurable: true,
+    });
+    const { HEADLESS_TOOLS } = await import("@/chat/useCoachStream");
+    const { handleHeadlessToolInterrupt, isHeadlessToolInterrupt } = await import(
+      "@langchain/langgraph-sdk"
+    );
+    const interrupt = {
+      type: "tool" as const,
+      toolCall: { name: "copy_to_clipboard" as const, args: { text: "snippet to copy" }, id: "tc-99" },
+    };
+    expect(isHeadlessToolInterrupt({ type: "tool", tool_call: interrupt.toolCall })).toBe(true);
+    const result = await handleHeadlessToolInterrupt(interrupt, [...HEADLESS_TOOLS] as never);
+    expect(result.toolCallId).toBe("tc-99");
+    expect(result.value).toBe("copied");
+    expect(writeText).toHaveBeenCalledWith("snippet to copy");
+
+    const unknownInterrupt = {
+      type: "tool" as const,
+      toolCall: { name: "unknown_tool" as const, args: {}, id: "tc-unknown" },
+    };
+    const unknown = await handleHeadlessToolInterrupt(unknownInterrupt, [...HEADLESS_TOOLS] as never);
+    expect((unknown.value as { error: string }).error).toMatch(/is not registered/);
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+  });
+});

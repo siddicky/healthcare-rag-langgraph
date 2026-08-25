@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useStream as useLangChainStream } from "@langchain/react";
 import type { Client } from "@langchain/langgraph-sdk";
+import { chatTelemetry } from "./stream";
 import {
   CoachApiError,
   type ThreadStateProjection,
@@ -93,7 +94,66 @@ export interface CoachStreamHandle {
 
 export type CoachUseStream = (options: CoachStreamOptions) => CoachStreamHandle;
 
+/** Headless clipboard tool — one safe client-side tool, fail-closed on unknown. */
+const COPY_TOOL = {
+  name: "copy_to_clipboard" as const,
+  description: "Copy text to the member's clipboard (client-side)",
+  schema: {
+    type: "object" as const,
+    properties: {
+      text: { type: "string" as const, description: "Text to copy" },
+    },
+    required: ["text" as const],
+    additionalProperties: false,
+  },
+};
+
+async function copyToClipboardExecute(args: { text: string }): Promise<string> {
+  const text = args.text;
+  // Fail-closed on bad args without logging raw text
+  if (typeof text !== "string") throw new Error("copy_to_clipboard: missing text");
+  try {
+    if (
+      typeof navigator !== "undefined" &&
+      navigator.clipboard &&
+      typeof navigator.clipboard.writeText === "function"
+    ) {
+      await navigator.clipboard.writeText(text);
+      return "copied";
+    }
+  } catch {
+    // fall through to legacy fallback
+  }
+  // Fallback for test/jsdom or legacy browsers: hidden textarea + execCommand
+  try {
+    if (typeof document !== "undefined") {
+      const el = document.createElement("textarea");
+      el.value = text;
+      el.setAttribute("readonly", "");
+      el.style.position = "fixed";
+      el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.select();
+      const ok = document.execCommand?.("copy");
+      document.body.removeChild(el);
+      if (ok) return "copied";
+    }
+  } catch {
+    // fall through to error
+  }
+  throw new Error("Clipboard unavailable");
+}
+
+const HEADLESS_TOOLS = [
+  {
+    tool: COPY_TOOL,
+    execute: copyToClipboardExecute,
+  },
+] as const;
+
 export function useLangChainCoachStream(options: CoachStreamOptions): CoachStreamHandle {
+  // Cast through unknown: HeadlessTool tuple typing is stricter than the
+  // runtime accepts for CoachStreamState; the wire shape is checked below.
   return useLangChainStream<CoachStreamState>({
     client: options.client,
     assistantId: options.assistantId,
@@ -101,8 +161,33 @@ export function useLangChainCoachStream(options: CoachStreamOptions): CoachStrea
     messagesKey: options.messagesKey,
     optimistic: options.optimistic,
     onThreadId: options.onThreadId,
+    tools: HEADLESS_TOOLS as unknown as Parameters<typeof useLangChainStream>[0]["tools"],
+    onTool: (event) => {
+      const detail =
+        event.phase === "start"
+          ? `${event.name} start len=${String((event.args as { text?: string } | undefined)?.text?.length ?? 0)}`
+          : event.phase === "success"
+            ? `${event.name} success`
+            : `${event.name} error: ${event.error?.message ?? "unknown"}`;
+      if (event.phase === "error" && (event.error?.message ?? "").includes("is not registered")) {
+        chatTelemetry({ kind: "unknown_interrupt", detail });
+        return;
+      }
+      if (event.phase === "error") {
+        chatTelemetry({ kind: "unknown_interrupt", detail });
+        return;
+      }
+      // Success/start telemetry kept minimal; no PII.
+      if (process.env.NODE_ENV !== "test") {
+        // Avoid noisy logs in tests; still emit via sink for assertions if needed.
+        chatTelemetry({ kind: "unknown_interrupt", detail: `[headless] ${detail}` });
+      }
+    },
   });
 }
+
+// Re-export for tests / external wiring
+export { COPY_TOOL, copyToClipboardExecute, HEADLESS_TOOLS };
 
 export interface CoachSignOut {
   signOut(): Promise<unknown>;
