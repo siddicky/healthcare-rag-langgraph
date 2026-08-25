@@ -15,7 +15,7 @@ openwiki:
 
 # Answer structuring and citation verification
 
-`AnswerValidator.structure_and_validate_async` (`healthcare_rag/processors/validation.py`) takes the generated plain answer plus its exact retrieval bundle and temporary prompt-ID map. It is a stronger model tier than generation; its structured output is `CitedAnswerResult(statements=[StatementWithCitations])`, where each citation has `doc_id`, `source_name`, and `quote` (`healthcare_rag/models/answers.py`). The structuring prompt asks for verbatim answer segments and citations based on `[doc_N]` markers (`prompts/answer_structuring.yaml.j2`).
+`AnswerValidator.structure_and_validate_async` (`healthcare_rag/processors/validation.py`) takes the generated plain answer plus its exact retrieval bundle and temporary prompt-ID map. It is a stronger model tier than generation; its structured output is `CitedAnswerResult(statements=[StatementWithCitations])`, where each citation has `doc_id`, `source_name`, and `quote` (`healthcare_rag/models/answers.py`). The structuring prompt asks for verbatim answer segments and citations based on `[doc_N]` markers (`healthcare_rag/prompts/answer_structuring.yaml.j2`).
 
 `validation.py` is a thin orchestrator over three collaborator modules:
 
