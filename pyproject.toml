@@ -1,6 +1,6 @@
 [project]
 name = "healthcare-rag"
-version = "1.2.0"
+version = "1.2.1"
 description = "Hybrid RAG agent with answer validation over healthcare product monographs (Lipitor, Metformin)"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
