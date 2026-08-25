@@ -190,7 +190,7 @@ jobs:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
-if [ -z "${GH_TOKEN:-}" ]; then
+          if [ -z "${GH_TOKEN:-}" ]; then
             echo "::error::CONTENT_AND_PULL_REQUESTS secret is not set; cannot publish the GitHub release."
             exit 1
           fi
