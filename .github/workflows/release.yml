@@ -163,7 +163,7 @@ jobs:
         env:
           # A PAT (or App token) with contents:write on this repo. GITHUB_TOKEN
           # cannot be used: refs it pushes do not trigger the Deploy workflow.
-          RELEASE_TAG_TOKEN: ${{ secrets.RELEASE_TAG_TOKEN }}
+          RELEASE_TAG_TOKEN: ${{ secrets.CONTENT_AND_PULL_REQUESTS }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
@@ -186,7 +186,7 @@ jobs:
       - name: Publish the GitHub release
         if: ${{ !inputs.dry_run }}
         env:
-          GH_TOKEN: ${{ secrets.RELEASE_TAG_TOKEN }}
+          GH_TOKEN: ${{ secrets.CONTENT_AND_PULL_REQUESTS }}
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
