@@ -16,12 +16,12 @@ WEAVIATE_PORT = "8080"
 # revert this value to "memory" and redeploy the previous image digest —
 # see docs/deploy.md §0b and .omo/evidence/postgres-flip-signoff.md.
 SERVER_STORAGE = "postgres"  # STAGED ROLLOUT — do NOT flip to "postgres" in this PR. Flip is release N+1, gated on Fly Postgres provisioning (todo 18: fly postgres create + fly postgres attach) + recorded compliance sign-off per docs/deploy.md §0b. See docs/deploy.md §6 for the rollback trap.
-# Member stream perimeter: prod stays on v1 until the human-gated v2 flip
-# (docs/deploy.md §0c). v2 widens the member surface to history/join/join-stream/
-# cancel + messages stream mode + resumable + enqueue. The frontend var
-# NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER is baked wherever the member
-# frontend is built — flip BOTH together.
-HC_RAG_MEMBER_STREAM_PERIMETER = "v1"
+# Member stream perimeter: v2 (FLIPPED 2026-08-25 by owner directive — see
+# docs/deploy.md §0c for the recorded authorization). v2 widens the member
+# surface to history/join/join-stream/cancel + messages stream mode + resumable
+# + enqueue. The frontend var NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER is
+# baked wherever the member frontend is built — flip BOTH together.
+HC_RAG_MEMBER_STREAM_PERIMETER = "v2"
 SERVER_PORT = "8000"
 # The coach reminder tools call the Agent Server cron API from inside the
 # graph run (reminders.py:531 defaults to localhost:2024 — the langgraph dev

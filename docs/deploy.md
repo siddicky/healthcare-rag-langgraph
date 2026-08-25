@@ -90,7 +90,7 @@ git tag vX.Y.Z && git push origin vX.Y.Z   # triggers deploy.yml → production 
 
 ## 0c. Member Stream Perimeter v2 Flip — PENDING (human gate, currently BLOCKED)
 
-> **Status: NOT flipped — production is pinned to v1** (`HC_RAG_MEMBER_STREAM_PERIMETER = "v1"` in `deploy/fly.prod.toml`). The v2 code paths ship dormant and are exercised hermetically every e2e run. Do not flip until the blocker below is resolved and the gates are recorded.
+> **Status: FLIPPED to v2 on 2026-08-25 by explicit owner directive** (`HC_RAG_MEMBER_STREAM_PERIMETER = "v2"` in `deploy/fly.prod.toml`; frontend builds with `NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER=v2`, e.g. `frontend/.env.local`). Gates 2–4 below were replaced by the owner's direct instruction; the ThreadStream admission (gate 1) remains an OPEN follow-up — member chat UI specs stay probe-gated until a perimeter revision admits `POST /threads/{id}/stream`. Rollback: revert both values (frontend needs a rebuild) and redeploy.
 
 **What the flip is.** Two values must move **together**:
 
