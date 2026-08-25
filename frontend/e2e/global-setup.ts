@@ -1,5 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
-import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 
 const E2E_DIR = __dirname;
@@ -35,6 +35,7 @@ function waitUntilReady(timeoutMs: number): Runfile {
 
 export default async function globalSetup(): Promise<void> {
   mkdirSync(TMP_DIR, { recursive: true });
+  rmSync(RUNFILE, { force: true });
   const log = writeFileSync.bind(null, SERVER_LOG);
   log("");
 

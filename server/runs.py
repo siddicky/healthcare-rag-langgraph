@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncGenerator, Mapping
 from typing import Final
 
 from langgraph_sdk import Auth
@@ -13,6 +13,7 @@ from starlette.routing import Route
 from server.auth import require_scope_match
 from server.run_engine import (
     CancelRequest,
+    CheckpointMissing,
     JSONValue,
     QueueFull,
     RunConflict,
@@ -46,6 +47,8 @@ async def _lookup(request: Request) -> tuple[RunEngine, str, str]:
     thread_id = request.path_params["thread_id"]
     run_id = request.path_params["run_id"]
     if not await engine.storage.threads.contains(thread_id) or run_id not in engine.runtime:
+        raise RunMissing
+    if engine.runtime[run_id].thread_id != thread_id:
         raise RunMissing
     return engine, thread_id, run_id
 
@@ -90,6 +93,8 @@ async def create_run(request: Request) -> Response:
         return JSONResponse(
             {"detail": "Thread already has an active run"}, status_code=409
         )
+    except CheckpointMissing:
+        return JSONResponse({"detail": "Checkpoint not found"}, status_code=404)
     except QueueFull:
         return JSONResponse(
             {"detail": "Run queue is full"},
@@ -160,13 +165,17 @@ def _frame(event: str, data: JSONValue) -> bytes:
     return f"event: {event}\ndata: {compact}\n\n".encode()
 
 
-async def _stream(runtime: RunRuntime) -> AsyncIterator[bytes]:
-    offset = 0
+async def _stream(runtime: RunRuntime, *, replay: bool) -> AsyncGenerator[bytes, None]:
+    next_event = runtime.event_count - len(runtime.events) if replay else runtime.event_count
     while True:
-        while offset < len(runtime.events):
-            mode, data = runtime.events[offset]
-            offset += 1
+        buffer_start = runtime.event_count - len(runtime.events)
+        if next_event < buffer_start:
+            next_event = buffer_start
+        if next_event < runtime.event_count:
+            mode, data = runtime.events[next_event - buffer_start]
+            next_event += 1
             yield _frame(mode, data)
+            continue
         if runtime.done.is_set():
             return
         changed = runtime.changed
@@ -179,7 +188,9 @@ async def stream_run(request: Request) -> Response:
         return response
     record = json.loads(bytes(response.body))
     runtime = _engine(request).runtime[record["run_id"]]
-    return StreamingResponse(_stream(runtime), media_type="text/event-stream")
+    return StreamingResponse(
+        _stream(runtime, replay=True), media_type="text/event-stream"
+    )
 
 
 async def join_stream(request: Request) -> Response:
@@ -187,8 +198,10 @@ async def join_stream(request: Request) -> Response:
         engine, _, run_id = await _lookup(request)
     except RunMissing:
         return JSONResponse({"detail": "Run not found"}, status_code=404)
+    runtime = engine.runtime[run_id]
     return StreamingResponse(
-        _stream(engine.runtime[run_id]), media_type="text/event-stream"
+        _stream(runtime, replay=runtime.request.stream_resumable),
+        media_type="text/event-stream",
     )
 
 

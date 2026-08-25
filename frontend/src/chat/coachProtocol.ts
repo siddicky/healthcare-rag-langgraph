@@ -52,6 +52,19 @@ export const THREAD_SELECT_FIELDS = [
   "status",
 ] as const;
 
+const UUID_PATH_SEGMENT =
+  "[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}";
+export const HISTORY_PATH = new RegExp(`^/threads/${UUID_PATH_SEGMENT}/history$`);
+export const JOIN_PATH = new RegExp(
+  `^/threads/${UUID_PATH_SEGMENT}/runs/${UUID_PATH_SEGMENT}/join$`,
+);
+export const JOIN_STREAM_PATH = new RegExp(
+  `^/threads/${UUID_PATH_SEGMENT}/runs/${UUID_PATH_SEGMENT}/join/stream$`,
+);
+export const CANCEL_PATH = new RegExp(
+  `^/threads/${UUID_PATH_SEGMENT}/runs/${UUID_PATH_SEGMENT}/cancel$`,
+);
+
 /**
  * The ONLY channels the chat reads out of the projected latest-state
  * response `{values, interrupts}`. Everything else in `values` is ignored
@@ -77,6 +90,30 @@ export const RUN_STREAM_PARAMS: RunStreamFixedParams = {
   ifNotExists: "reject",
   multitaskStrategy: "reject",
 };
+
+export interface RunStreamFixedParamsV2 {
+  streamMode: ["updates", "messages"];
+  streamSubgraphs: false;
+  streamResumable: true;
+  durability: "exit";
+  ifNotExists: "reject";
+  multitaskStrategy: "enqueue";
+}
+
+export const RUN_STREAM_PARAMS_V2: RunStreamFixedParamsV2 = {
+  streamMode: ["updates", "messages"],
+  streamSubgraphs: false,
+  streamResumable: true,
+  durability: "exit",
+  ifNotExists: "reject",
+  multitaskStrategy: "enqueue",
+};
+
+export function getRunStreamParams(): RunStreamFixedParams | RunStreamFixedParamsV2 {
+  return process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2"
+    ? RUN_STREAM_PARAMS_V2
+    : RUN_STREAM_PARAMS;
+}
 
 /** A member run input: `{question}` or `{question: SENTINEL, attachment_id}`. */
 export type RunInput = {

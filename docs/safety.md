@@ -412,3 +412,69 @@ they do not replace its limits and do not assert any certified compliance status
 
 This addendum documents engineering boundaries only. It makes no HIPAA, SOC 2,
 GDPR, PHIPA, PIPEDA, or other legal/compliance certification claim.
+
+## Member stream perimeter v2 (useStream)
+
+The member route allow-list enforced by `MemberPerimeterMiddleware`
+(`healthcare_rag/agent/perimeter.py`) has an env-gated v2 widening. It extends
+the coach addendum above; it does not change the gate, the sanitizer, or the
+state projection.
+
+**Env gate.** `HC_RAG_MEMBER_STREAM_PERIMETER` (server, read once at import;
+default `v1`) and `NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER` (frontend twin,
+baked into the bundle at `next build`; exact value `"v2"` selects v2).
+Production stays on v1 until the human-gated flip in `docs/deploy.md` §0c.
+
+**What v2 admits (legacy runs surface).** In addition to every v1 route,
+unchanged:
+
+- `GET /threads/{id}/history` — newest-first checkpoint entries (ids, values,
+  tasks, interrupts) behind the same authenticated thread-read policy.
+- `GET /threads/{id}/runs/{run_id}/join` and `.../join/stream` — join or
+  re-attach to an in-flight run; `join/stream` replays the buffered events of
+  a resumable run from the start.
+- `POST /threads/{id}/runs/{run_id}/cancel` — cancel an in-flight run (empty
+  body, no query string).
+- Run envelopes: `stream_mode` keeps `updates` mandatory and permits unique
+  combinations of `updates`, `messages`, and `values`; `stream_resumable` is
+  fixed `true` and `multitask_strategy` fixed `enqueue` (a second turn while a
+  run is in flight queues server-side FIFO instead of being rejected). The
+  input/command allow-lists, the fixed fields, and the private-sentinel sweep
+  are unchanged — a v1 envelope on a v2 server (and vice versa) is denied.
+- **Cancel is admitted by the perimeter but still scoped by platform auth.**
+  `POST .../cancel` must arrive body-less and query-less to pass the
+  perimeter; under real `langgraph dev` the platform auth layer then denies
+  members on the cancel action itself (`403 "Forbidden"` — `auth.py` has no
+  member accept handler for it; the clean-room server answers `404 "Run not
+  found"` instead). The SDK's own `cancel()` sends query parameters, which the
+  perimeter rejects — a member-capable cancel needs a reviewed auth handler
+  and a matched perimeter rule before the flip.
+
+**Safety posture.** The widening adds read and abort views over checkpointed
+state the member already owns; it adds no new writer, no new identifier-bearing
+field, and no cross-thread reach. History and join return the same projected,
+scrubbed state as `GET /threads/{id}/state`; resumable replays re-send events
+that were already projected when first streamed. Enqueue changes scheduling,
+not persistence. The `copy_to_clipboard` headless tool's `onTool` telemetry
+scrubs text length only (`len=<n>`) and never logs raw content.
+
+**Known limit — ThreadStream transport divergence (measured 2026-08-25).**
+The frontend's `@langchain/react` `useStream` client does not use the legacy
+`runs/stream` surface at all. Its `StreamController` submits through the
+v2-native ThreadStream transport — `POST /threads/{id}/stream` plus
+`/threads/{id}/stream/events` (SSE/WebSocket) and a query-parameter cancel —
+regardless of which perimeter envelope the env selects (`NEXT_PUBLIC_...`
+only chooses the run envelope, not the transport). No perimeter version —
+v1 or v2 — admits those routes, so every member chat turn dies with `403
+"Route is not available"`. The hermetic Playwright run (`frontend/e2e/`)
+caught this: it boots the real stack with a main and a flipped-perimeter
+Agent Server, asserts both directions (v1 rejects history/join/join-stream/
+cancel and the v2 envelope; v2 accepts them), and probe-gates the
+chat-driving UI specs on `POST /threads/{id}/stream` admission so they
+activate the day a reviewed perimeter revision admits the transport. Until
+then the member chat UI cannot run against the perimeter, and prod keeps v1.
+
+**Where this is pinned.** `tests/agent/test_perimeter_v2.py` (pure shapes),
+`frontend/e2e/history.spec.ts` (hermetic, both perimeters, zero external
+network), `deploy/fly.prod.toml` (explicit `HC_RAG_MEMBER_STREAM_PERIMETER =
+"v1"` pin).

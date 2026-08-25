@@ -22,6 +22,51 @@ export interface WireMessage {
   tool_calls?: WireToolCall[];
   tool_call_id?: string;
   status?: string;
+  additional_kwargs?: Record<string, unknown>;
+  reasoning_content?: unknown;
+  reasoning?: unknown;
+}
+
+/** Reasoning text when the model exposed a thinking trace (GPT-5 reasoning). */
+export function messageReasoning(message: WireMessage): string | null {
+  const record = message as Record<string, unknown>;
+  const ak =
+    record.additional_kwargs !== null &&
+    typeof record.additional_kwargs === "object" &&
+    !Array.isArray(record.additional_kwargs)
+      ? (record.additional_kwargs as Record<string, unknown>)
+      : null;
+  if (ak !== null) {
+    if (typeof ak.reasoning === "string" && ak.reasoning.trim() !== "") return ak.reasoning;
+    if (typeof ak.reasoning_content === "string" && ak.reasoning_content.trim() !== "") return ak.reasoning_content;
+  }
+  if (typeof record.reasoning_content === "string" && (record.reasoning_content as string).trim() !== "") {
+    return record.reasoning_content as string;
+  }
+  if (typeof record.reasoning === "string" && (record.reasoning as string).trim() !== "") {
+    return record.reasoning as string;
+  }
+  if (Array.isArray(message.content)) {
+    const parts: string[] = [];
+    for (const block of message.content) {
+      if (typeof block !== "object" || block === null) continue;
+      const b = block as Record<string, unknown>;
+      const type = b.type;
+      if (type !== "reasoning" && type !== "thinking" && type !== "reasoning_content") continue;
+      for (const key of ["text", "reasoning", "thinking", "content", "reasoning_content"] as const) {
+        const value = b[key];
+        if (typeof value === "string" && value.trim() !== "") {
+          parts.push(value);
+          break;
+        }
+      }
+    }
+    if (parts.length > 0) {
+      const joined = parts.join("\n\n").trim();
+      return joined === "" ? null : joined;
+    }
+  }
+  return null;
 }
 
 /** Text content of a wire message: plain string or text blocks. */

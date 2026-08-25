@@ -13,6 +13,12 @@ export interface Runfile {
   ready: boolean;
   dep_url: string;
   server_url: string;
+  /** Member stream perimeter of the main server + baked frontend ("v1"|"v2"). */
+  perimeter?: string;
+  next_public_perimeter?: string;
+  /** Second Agent Server running the flipped perimeter (always booted). */
+  alt_server_url?: string;
+  alt_perimeter?: string;
   frontend_url: string;
   u1: RunIdentity;
   u2: RunIdentity;
@@ -32,12 +38,51 @@ export function readRun(): Runfile {
   return JSON.parse(readFileSync(runfile, "utf8")) as Runfile;
 }
 
-export async function memberApi(run: Runfile, token: string): Promise<APIRequestContext> {
+export async function memberApi(
+  run: Runfile,
+  token: string,
+  baseUrl?: string,
+): Promise<APIRequestContext> {
   return request.newContext({
-    baseURL: run.server_url,
+    baseURL: baseUrl ?? run.server_url,
     extraHTTPHeaders: { authorization: `Bearer ${token}` },
   });
 }
+
+/** Base URL of the run's server running the requested perimeter, or null. */
+export function serverWithPerimeter(run: Runfile, perimeter: "v1" | "v2"): string | null {
+  if (run.perimeter === perimeter) return run.server_url;
+  if (run.alt_perimeter === perimeter && run.alt_server_url) return run.alt_server_url;
+  return null;
+}
+
+/**
+ * True when the server the FRONTEND points at admits the v2-native
+ * ThreadStream transport (POST /threads/{id}/stream) — the surface
+ * `@langchain/react` useStream submits through. Both perimeter versions
+ * deny it today (v2 widened the legacy runs/stream surface instead), so
+ * every chat-driving UI spec probe-gates on this and skips with the
+ * finding until a reviewed perimeter revision admits the transport.
+ */
+export async function threadStreamAdmitted(api: APIRequestContext): Promise<boolean> {
+  const create = await api.post("/threads", { data: {} });
+  if (create.status() !== 200) throw new Error(`probe thread create failed: ${create.status()}`);
+  const { thread_id: threadId } = (await create.json()) as { thread_id: string };
+  try {
+    const probe = await api.post(`/threads/${threadId}/stream`, { data: {} });
+    try {
+      await probe.dispose();
+    } catch {
+      // SSE response — dropping the context is enough
+    }
+    return probe.status() !== 403;
+  } finally {
+    await api.delete(`/threads/${threadId}`);
+  }
+}
+
+export const THREAD_STREAM_SKIP_REASON =
+  "member frontend chats through the @langchain/react useStream ThreadStream transport (POST /threads/{id}/stream), which the member perimeter (v1 and v2) does not admit — see docs/safety.md 'Member stream perimeter v2 (useStream)'. UI specs auto-activate once a reviewed perimeter revision admits the transport.";
 
 export function internalHeaders(run: Runfile, owner: string): Record<string, string> {
   return {

@@ -133,12 +133,14 @@ async def test_memory_registry_keeps_raw_run_input() -> None:
                 assistant_id="toy",
                 input={"question": literal},
                 multitask_strategy="enqueue",
+                stream_resumable=True,
             ),
         )
 
     stored = await storage.runs.get(str(record["run_id"]))
     assert stored is not None
     assert literal in json.dumps(stored)
+    assert stored["stream_resumable"] is True
 
 
 @pytest.mark.anyio
@@ -159,6 +161,7 @@ async def test_postgres_row_redacts_payloads_and_runtime_keeps_input(postgres_ur
                     assistant_id="toy",
                     input={"question": literal},
                     multitask_strategy="enqueue",
+                    stream_resumable=True,
                 ),
             )
             input_run_id = str(record["run_id"])
@@ -184,6 +187,7 @@ async def test_postgres_row_redacts_payloads_and_runtime_keeps_input(postgres_ur
         stored_json = json.dumps(stored)
         assert literal not in stored_json
         assert stored[input_run_id]["input"] == PERSISTED_PAYLOAD_REDACTION
+        assert stored[input_run_id]["stream_resumable"] is True
         assert stored[command_run_id]["command"] == PERSISTED_PAYLOAD_REDACTION
     finally:
         for run_id in run_ids:

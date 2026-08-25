@@ -1,8 +1,8 @@
 import type { Client } from "@langchain/langgraph-sdk";
 import { LANGGRAPH_URL } from "@/lib/env";
 import {
+  getRunStreamParams,
   RUN_ASSISTANT_ID,
-  RUN_STREAM_PARAMS,
   THREAD_SELECT_FIELDS,
   type ResumePayload,
   type RunInput,
@@ -67,6 +67,9 @@ export interface ThreadStateProjection {
   values: { messages?: unknown[] };
   interrupts: unknown[];
 }
+
+export type ThreadHistoryEntry = Record<string, unknown>;
+export type RunResult = Record<string, unknown>;
 
 /** POST /threads — the member create envelope is EXACTLY the empty object. */
 export async function createThread(fetcher: CoachFetch): Promise<ThreadSummary> {
@@ -133,10 +136,44 @@ export async function copyThread(fetcher: CoachFetch, threadId: string): Promise
 export async function getThreadState(
   fetcher: CoachFetch,
   threadId: string,
+  checkpointId?: string,
 ): Promise<ThreadStateProjection> {
-  const response = await fetcher(`/threads/${threadId}/state`);
+  const path =
+    checkpointId !== undefined && checkpointId !== ""
+      ? `/threads/${threadId}/state?checkpoint_id=${encodeURIComponent(checkpointId)}`
+      : `/threads/${threadId}/state`;
+  const response = await fetcher(path);
   if (!response.ok) await fail(response);
   return (await response.json()) as ThreadStateProjection;
+}
+
+export async function getThreadHistory(
+  fetcher: CoachFetch,
+  threadId: string,
+): Promise<ThreadHistoryEntry[]> {
+  const response = await fetcher(`/threads/${threadId}/history`);
+  if (!response.ok) await fail(response);
+  return (await response.json()) as ThreadHistoryEntry[];
+}
+
+export async function joinRun(
+  fetcher: CoachFetch,
+  threadId: string,
+  runId: string,
+): Promise<RunResult> {
+  const response = await fetcher(`/threads/${threadId}/runs/${runId}/join`);
+  if (!response.ok) await fail(response);
+  return (await response.json()) as RunResult;
+}
+
+export async function cancelRun(
+  fetcher: CoachFetch,
+  threadId: string,
+  runId: string,
+): Promise<RunResult> {
+  const response = await fetcher(`/threads/${threadId}/runs/${runId}/cancel`, { method: "POST" });
+  if (!response.ok) await fail(response);
+  return (await response.json()) as RunResult;
 }
 
 export interface UploadResponseBody {
@@ -215,8 +252,8 @@ export function streamRun(
   threadId: string,
   payload: { input: RunInput } | { command: { resume: ResumePayload } },
 ): AsyncIterable<RunStreamPart> {
-  return client.runs.stream(threadId, RUN_ASSISTANT_ID, {
-    ...RUN_STREAM_PARAMS,
+  return client.runs.stream<["updates"] | ["updates", "messages"]>(threadId, RUN_ASSISTANT_ID, {
+    ...getRunStreamParams(),
     ...payload,
   });
 }

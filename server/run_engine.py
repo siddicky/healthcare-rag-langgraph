@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import logging
 from collections import deque
-from collections.abc import AsyncIterator, Mapping
+from collections.abc import AsyncIterator, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import ClassVar, Final, Literal, Protocol, TypeAlias, runtime_checkable
@@ -10,6 +10,7 @@ from uuid import uuid4
 
 import anyio
 from anyio.abc import TaskGroup
+from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
@@ -21,6 +22,7 @@ from server.storage import Storage
 JSONValue: TypeAlias = JsonValue
 
 QUEUE_LIMIT: Final = 100
+EVENT_BUFFER_LIMIT: Final = 100
 PERSISTED_PAYLOAD_REDACTION: Final = "[redacted]"
 NONTERMINAL_RUN_STATUSES: Final[frozenset[str]] = frozenset({"pending", "running"})
 
@@ -88,9 +90,9 @@ class RunRequest(BaseModel):
     input: dict[str, JSONValue] | None = None
     command: ResumeCommand | None = None
     config: dict[str, JSONValue] = Field(default_factory=dict)
-    stream_mode: list[Literal["updates", "custom", "values"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
+    stream_mode: list[Literal["updates", "custom", "values", "messages", "messages-tuple"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
     stream_subgraphs: Literal[False] = False
-    stream_resumable: Literal[False] = False
+    stream_resumable: bool = False
     durability: Literal["exit"] = "exit"
     if_not_exists: Literal["reject"] = "reject"
     multitask_strategy: Literal["reject", "enqueue", "interrupt"] = "reject"
@@ -98,17 +100,49 @@ class RunRequest(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def coerce_stream_mode(cls, data: object) -> object:
+        if isinstance(data, dict) and "forkFrom" in data:
+            data = dict(data)
+            fork_from = data.pop("forkFrom")
+            config = data.get("config", {})
+            if not isinstance(config, dict):
+                raise ValueError("config must be an object")
+            configurable = config.get("configurable", {})
+            if not isinstance(configurable, dict):
+                raise ValueError("config.configurable must be an object")
+            checkpoint_id = configurable.get("checkpoint_id")
+            if checkpoint_id is not None and checkpoint_id != fork_from:
+                raise ValueError("forkFrom conflicts with config.configurable.checkpoint_id")
+            configurable = {**configurable, "checkpoint_id": fork_from}
+            data["config"] = {**config, "configurable": configurable}
         if isinstance(data, dict) and "stream_mode" in data:
             sm = data["stream_mode"]
             if isinstance(sm, str):
                 data = dict(data)
                 data["stream_mode"] = [sm]
+                sm = data["stream_mode"]
+            if isinstance(sm, list):
+                coerced: list[str] = []
+                changed = False
+                for item in sm:
+                    if item == "messages-tuple":
+                        coerced.append("messages")
+                        changed = True
+                    else:
+                        coerced.append(item)  # type: ignore[arg-type]
+                if changed:
+                    data = dict(data)
+                    data["stream_mode"] = coerced
         return data
 
     @model_validator(mode="after")
     def exactly_one_payload(self) -> RunRequest:
         if (self.input is None) == (self.command is None):
             raise ValueError("exactly one of input or command is required")
+        configurable = self.config.get("configurable")
+        if isinstance(configurable, dict) and "checkpoint_id" in configurable:
+            checkpoint_id = configurable["checkpoint_id"]
+            if not isinstance(checkpoint_id, str) or not checkpoint_id.strip():
+                raise ValueError("checkpoint_id must be a non-empty string")
         return self
 
 
@@ -130,7 +164,7 @@ class GraphRunner(Protocol):
         input: dict[str, JSONValue] | Command[str],
         config: dict[str, JSONValue],
         *,
-        stream_mode: list[str],
+        stream_mode: Sequence[str],
         durability: Literal["exit"],
     ) -> AsyncIterator[tuple[str, JSONValue]]: ...
 
@@ -151,10 +185,18 @@ class RunRuntime:
     done: anyio.Event = field(default_factory=anyio.Event)
     changed: anyio.Event = field(default_factory=anyio.Event)
     events: list[tuple[str, JSONValue]] = field(default_factory=list)
+    event_count: int = 0
     output: dict[str, JSONValue] = field(default_factory=dict)
     pre_values: dict[str, JSONValue] = field(default_factory=dict)
     scope: anyio.CancelScope | None = None
     rollback: bool = False
+
+    def append_event(self, mode: str, data: JSONValue) -> None:
+        self.events.append((mode, data))
+        self.event_count += 1
+        overflow = len(self.events) - EVENT_BUFFER_LIMIT
+        if overflow > 0:
+            del self.events[:overflow]
 
 
 class RunConflict(Exception):
@@ -166,6 +208,10 @@ class QueueFull(Exception):
 
 
 class RunMissing(Exception):
+    pass
+
+
+class CheckpointMissing(Exception):
     pass
 
 
@@ -204,6 +250,13 @@ class RunEngine:
         *,
         auth_user: dict[str, JSONValue] | None = None,
     ) -> dict[str, object]:
+        configurable = request.config.get("configurable")
+        if isinstance(configurable, dict) and "checkpoint_id" in configurable:
+            checkpoint_config: RunnableConfig = {
+                "configurable": {**configurable, "thread_id": thread_id},
+            }
+            if await self.storage.saver.aget_tuple(checkpoint_config) is None:
+                raise CheckpointMissing
         replay_key = self._replay_key(thread_id, request)
         if replay_key is not None and replay_key in self.command_replays:
             replay = await self.storage.runs.get(self.command_replays[replay_key])
@@ -233,6 +286,7 @@ class RunEngine:
             # forged principal back on GET /runs/{id} and hand it to anything
             # that reads the record instead of the runtime.
             "config": _sanitized_config(request.config),
+            "stream_resumable": request.stream_resumable,
             "status": "pending",
             "created_at": datetime.now(UTC).isoformat(),
         }
@@ -284,10 +338,10 @@ class RunEngine:
                 async for mode, data in graph.astream(
                     graph_input,
                     graph_config,
-                    stream_mode=["updates", "custom"],
+                    stream_mode=runtime.request.stream_mode,
                     durability="exit",
                 ):
-                    runtime.events.append((mode, _to_jsonable(data)))  # type: ignore[arg-type]
+                    runtime.append_event(mode, _to_jsonable(data))  # type: ignore[arg-type]
                     runtime.changed.set()
                     runtime.changed = anyio.Event()
             cancelled = scope.cancel_called

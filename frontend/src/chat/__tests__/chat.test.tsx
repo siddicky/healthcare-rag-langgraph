@@ -1,8 +1,8 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatShell } from "@/chat/components/ChatShell";
-import type { CoachApiBundle, CoachChatDeps, CoachStreamBundle } from "@/chat/useCoachChat";
+import type { CoachApiBundle, CoachStreamDeps } from "@/chat/useCoachStream";
 import { CoachApiError, type ThreadSummary } from "@/chat/coachApi";
 import { ERASE_MARKER_NAME, SENTINEL_QUESTION } from "@/chat/coachProtocol";
 import {
@@ -20,7 +20,7 @@ import {
 
 const EMAIL = "member@example.com";
 
-function shell(deps: CoachChatDeps) {
+function shell(deps: CoachStreamDeps) {
   return render(<ChatShell deps={deps} email={EMAIL} onSignedOut={() => {}} />);
 }
 
@@ -30,6 +30,10 @@ async function settled() {
 
 beforeEach(() => {
   window.localStorage.clear();
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("openers", () => {
@@ -45,7 +49,30 @@ describe("openers", () => {
     expect(stream.calls[0]?.payload).toEqual({
       input: { question: "Log today's weight" },
     });
+    expect(stream.calls[0]?.options).toMatchObject({
+      streamMode: ["updates"],
+      streamResumable: false,
+      multitaskStrategy: "reject",
+    });
     expect(await screen.findByText("Here you go.")).toBeInTheDocument();
+  });
+
+  it("submits the resumable messages envelope when the member perimeter is v2", async () => {
+    vi.stubEnv("NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER", "v2");
+    const stream = fakeStream(() => [
+      updatesPart("coach_agent", [aiMessage("Queued.", "a1")]),
+    ]);
+    shell(fakeDeps({}, stream));
+    const user = userEvent.setup();
+
+    await user.click(await screen.findByRole("button", { name: "Log today's weight" }));
+
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(stream.calls[0]?.options).toMatchObject({
+      streamMode: ["updates", "messages"],
+      streamResumable: true,
+      multitaskStrategy: "enqueue",
+    });
   });
 
   it("routes the upload opener to the attach input instead of sending", async () => {
@@ -169,18 +196,14 @@ describe("server reset during an active conversation", () => {
       searchCount += 1;
       return searchCount === 1 ? [thread("t-missing")] : [];
     });
-    const stream: CoachStreamBundle & { calls: StreamCall[] } = {
-      calls: [],
-      streamRun(threadId, payload) {
-        stream.calls.push({ threadId, payload });
-        return (async function* () {
+    const stream = fakeStream(() =>
+      (async function* () {
           throw Object.assign(
             new Error('HTTP 404: {"detail":"Thread not found"}'),
             { status: 404 },
           );
-        })();
-      },
-    };
+        })(),
+    );
     const deps = fakeDeps(
       {
         searchThreads,
@@ -355,18 +378,14 @@ describe("sidebar thread management", () => {
 describe("one active run per thread", () => {
   it("locks the composer while a run streams", async () => {
     const gate: { release: (() => void) | null } = { release: null };
-    const stream: CoachStreamBundle & { calls: StreamCall[] } = {
-      calls: [],
-      streamRun(threadId, payload) {
-        stream.calls.push({ threadId, payload });
-        return (async function* () {
+    const stream = fakeStream(() =>
+      (async function* () {
           await new Promise<void>((resolve) => {
             gate.release = resolve;
           });
           yield updatesPart("coach_agent", [aiMessage("done", "a1")]);
-        })();
-      },
-    };
+        })(),
+    );
     const deps = fakeDeps({}, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -405,5 +424,209 @@ describe("erase flow via the marker", () => {
     expect(deleted[deleted.length - 1]).toBe("t-1");
     expect(await screen.findByText(/All saved data erased/i)).toBeInTheDocument();
     expect(screen.getByRole("heading", { name: "Nymble Coach" })).toBeInTheDocument();
+  });
+});
+
+describe("headless copy_to_clipboard", () => {
+  it("copyToClipboardExecute writes via clipboard and falls back", async () => {
+    const { copyToClipboardExecute, COPY_TOOL, HEADLESS_TOOLS } = await import(
+      "@/chat/useCoachStream"
+    );
+    expect(COPY_TOOL.name).toBe("copy_to_clipboard");
+    expect(HEADLESS_TOOLS).toHaveLength(1);
+    expect(HEADLESS_TOOLS[0]?.tool.name).toBe("copy_to_clipboard");
+
+    const writeText = vi.fn(async () => undefined);
+    const originalClipboard = navigator.clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      writable: true,
+      configurable: true,
+    });
+    await expect(copyToClipboardExecute({ text: "hello" })).resolves.toBe("copied");
+    expect(writeText).toHaveBeenCalledWith("hello");
+
+    // fallback when clipboard missing
+    delete (navigator as unknown as Record<string, unknown>).clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: undefined,
+      writable: true,
+      configurable: true,
+    });
+    const execMock = vi.fn(() => true);
+    Object.defineProperty(document, "execCommand", {
+      value: execMock,
+      writable: true,
+      configurable: true,
+    });
+    await expect(copyToClipboardExecute({ text: "fallback text" })).resolves.toBe("copied");
+    expect(execMock).toHaveBeenCalledWith("copy");
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+  });
+
+  it("headless interrupt is recognized and filtered from user-facing interrupts", async () => {
+    const { isHeadlessToolInterrupt, filterOutHeadlessToolInterrupts } = await import(
+      "@langchain/langgraph-sdk"
+    );
+    const headless = {
+      id: "int-1",
+      value: {
+        type: "tool",
+        tool_call: { name: "copy_to_clipboard", args: { text: "copy me" }, id: "tc-1" },
+      },
+    };
+    expect(isHeadlessToolInterrupt(headless.value)).toBe(true);
+    expect(filterOutHeadlessToolInterrupts([headless as never])).toHaveLength(0);
+
+    const userFacing = { id: "int-2", value: { eventLabel: "Friday check-in" } };
+    expect(isHeadlessToolInterrupt(userFacing.value)).toBe(false);
+    expect(filterOutHeadlessToolInterrupts([userFacing as never])).toHaveLength(1);
+  });
+
+  it("scripted turn: interrupt with headless payload → execute → ToolMessage success", async () => {
+    const writeText = vi.fn(async () => undefined);
+    const originalClipboard = navigator.clipboard;
+    Object.defineProperty(navigator, "clipboard", {
+      value: { writeText },
+      writable: true,
+      configurable: true,
+    });
+    const { HEADLESS_TOOLS } = await import("@/chat/useCoachStream");
+    const { handleHeadlessToolInterrupt, isHeadlessToolInterrupt } = await import(
+      "@langchain/langgraph-sdk"
+    );
+    const interrupt = {
+      type: "tool" as const,
+      toolCall: { name: "copy_to_clipboard" as const, args: { text: "snippet to copy" }, id: "tc-99" },
+    };
+    expect(isHeadlessToolInterrupt({ type: "tool", tool_call: interrupt.toolCall })).toBe(true);
+    const result = await handleHeadlessToolInterrupt(interrupt, [...HEADLESS_TOOLS] as never);
+    expect(result.toolCallId).toBe("tc-99");
+    expect(result.value).toBe("copied");
+    expect(writeText).toHaveBeenCalledWith("snippet to copy");
+
+    const unknownInterrupt = {
+      type: "tool" as const,
+      toolCall: { name: "unknown_tool" as const, args: {}, id: "tc-unknown" },
+    };
+    const unknown = await handleHeadlessToolInterrupt(unknownInterrupt, [...HEADLESS_TOOLS] as never);
+    expect((unknown.value as { error: string }).error).toMatch(/is not registered/);
+    Object.defineProperty(navigator, "clipboard", {
+      value: originalClipboard,
+      writable: true,
+      configurable: true,
+    });
+  });
+});
+
+describe("HITL interrupt approve/reject/edit via respond", () => {
+  it("interrupt card renders → approve → stream.respond called with {accept:true} → next ToolMessage", async () => {
+    const threads: ThreadSummary[] = [thread("t-hitl")];
+    const api: Partial<CoachApiBundle> = {
+      searchThreads: vi.fn(async () => threads),
+      getThreadState: vi.fn(async () => ({
+        values: {
+          messages: [humanMessage("Move my Friday check-in", "h1")],
+        },
+        interrupts: [
+          {
+            value: {
+              eventLabel: "Friday check-in",
+              fromLabel: "Fri 2:00 PM",
+              toLabel: "Mon 10:00 AM",
+              reason: "Monday open",
+            },
+          },
+        ],
+      })),
+    };
+    const stream = fakeStream((call) => {
+      if ("command" in call.payload) {
+        return [updatesPart("coach_agent", [aiMessage("Done", "a2")])];
+      }
+      return [];
+    });
+    const deps = fakeDeps(api, stream);
+    shell(deps);
+    expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
+    expect(screen.getByText("Friday check-in")).toBeInTheDocument();
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Confirm change" }));
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(stream.calls[0]?.payload).toEqual({ command: { resume: { accept: true } } });
+    await waitFor(() => expect(screen.queryByTestId("interrupt-card")).toBeNull());
+    expect(await screen.findByText("Done")).toBeInTheDocument();
+  });
+
+  it("reject issues accept:false and edit issues accept:true with fields", async () => {
+    const memPayload = {
+      sourceLabel: "Intake form",
+      fields: [
+        { key: "allergies", label: "Allergies", value: "Peanuts", needsReview: true },
+        { key: "meds", label: "Meds", value: "Metformin" },
+      ],
+    };
+    const threads: ThreadSummary[] = [thread("t-mem")];
+    const api: Partial<CoachApiBundle> = {
+      searchThreads: vi.fn(async () => threads),
+      getThreadState: vi.fn(async () => ({
+        values: { messages: [] },
+        interrupts: [{ value: memPayload }],
+      })),
+    };
+    const stream = fakeStream(() => []);
+    const deps = fakeDeps(api, stream);
+    shell(deps);
+    expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
+    const user = userEvent.setup();
+    // discard = reject
+    await user.click(screen.getByRole("button", { name: /Discard/i }));
+    await waitFor(() => expect(stream.calls).toHaveLength(1));
+    expect(stream.calls[0]?.payload).toEqual({ command: { resume: { accept: false } } });
+  });
+
+  it("malformed interrupt payload fails closed: no card, telemetry, no crash", async () => {
+    const threads: ThreadSummary[] = [thread("t-bad")];
+    const api: Partial<CoachApiBundle> = {
+      searchThreads: vi.fn(async () => threads),
+      getThreadState: vi.fn(async () => ({
+        values: { messages: [] },
+        interrupts: [{ value: { nonsense: "xyz" } }],
+      })),
+    };
+    const stream = fakeStream(() => []);
+    const deps = fakeDeps(api, stream);
+    shell(deps);
+    await waitFor(() => expect(screen.queryByTestId("interrupt-card")).toBeNull());
+    expect(stream.calls).toHaveLength(0);
+  });
+
+  it("multiple interrupts via respondAll: renders 2 cards and approve-all issues respondAll", async () => {
+    const { MessageList } = await import("@/chat/components/MessageList");
+    const { render } = await import("@testing-library/react");
+    const payload1 = { eventLabel: "A", fromLabel: "1", toLabel: "2" };
+    const payload2 = { eventLabel: "B", fromLabel: "3", toLabel: "4" };
+    const onApprove = vi.fn();
+    const onApproveAll = vi.fn();
+    render(
+      <MessageList
+        turns={[]}
+        pendingInterrupt={null}
+        pendingInterrupts={[payload1, payload2]}
+        upload={{ phase: "idle" } as never}
+        busy={false}
+        onApprove={onApprove}
+        onApproveAll={onApproveAll}
+        latestAiMessageId={null}
+      />,
+    );
+    expect(screen.getAllByTestId("interrupt-card")).toHaveLength(2);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Approve all" }));
+    expect(onApproveAll).toHaveBeenCalledWith([{ accept: true }, { accept: true }]);
   });
 });

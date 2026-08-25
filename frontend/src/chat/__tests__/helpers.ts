@@ -1,8 +1,19 @@
 import { vi } from "vitest";
-import type { CoachChatDeps, CoachApiBundle, CoachStreamBundle } from "@/chat/useCoachChat";
+import { useRef, useState } from "react";
+import { Client } from "@langchain/langgraph-sdk";
+import type {
+  CoachApiBundle,
+  CoachStreamDeps,
+  CoachStreamHandle,
+  CoachStreamOptions,
+  CoachSubmitOptions,
+  CoachUseStream,
+} from "@/chat/useCoachStream";
 import type { RunStreamPart } from "@/chat/coachApi";
 import type { ThreadSummary } from "@/chat/coachApi";
 import type { ResumePayload, RunInput } from "@/chat/coachProtocol";
+import { applyStreamPart } from "@/chat/stream";
+import type { WireMessage } from "@/chat/model";
 
 export function thread(id: string, overrides: Partial<ThreadSummary> = {}): ThreadSummary {
   return {
@@ -28,36 +39,137 @@ export function fakeApi(overrides: Partial<CoachApiBundle> = {}): CoachApiBundle
   };
 }
 
-export type StreamCall = { threadId: string; payload: { input: RunInput } | { command: { resume: ResumePayload } } };
+export type StreamCall = {
+  readonly threadId: string;
+  readonly payload: { input: RunInput } | { command: { resume: ResumePayload } };
+  readonly options?: CoachSubmitOptions;
+};
 
-export function fakeStream(
-  responses: (call: StreamCall, callIndex: number) => RunStreamPart[],
-): CoachStreamBundle & { calls: StreamCall[] } {
-  const calls: StreamCall[] = [];
-  return {
-    calls,
-    streamRun: (threadId, payload) => {
-      const callIndex = calls.length;
-      calls.push({ threadId, payload });
-      const parts = responses({ threadId, payload }, callIndex);
-      return (async function* (): AsyncGenerator<RunStreamPart> {
-        for (const part of parts) yield part;
-      })();
-    },
-  };
+export interface ScriptedCoachStream {
+  readonly calls: StreamCall[];
+  readonly client: Client;
+  readonly useStream: CoachUseStream;
 }
 
-export function emptyStream(): CoachStreamBundle & { calls: StreamCall[] } {
+export function fakeStream(
+  responses: (call: StreamCall, callIndex: number) => Iterable<RunStreamPart> | AsyncIterable<RunStreamPart>,
+): ScriptedCoachStream {
+  const calls: StreamCall[] = [];
+  const stopCalls: Array<{ cancel?: boolean }> = [];
+  let disconnectCalls = 0;
+  let serverRunAlive = false;
+  const client = new Client({ apiUrl: "http://coach.test" });
+  const useStream = (options: CoachStreamOptions): CoachStreamHandle => {
+    const [messages, setMessages] = useState<WireMessage[]>([]);
+    const [interrupts, setInterrupts] = useState<unknown[]>([]);
+    const [isLoading, setIsLoading] = useState(false);
+    const [isThreadLoading, setIsThreadLoading] = useState(false);
+    const [error, setError] = useState<unknown>(undefined);
+    const messagesRef = useRef<WireMessage[]>([]);
+
+    const run = async (call: StreamCall): Promise<void> => {
+      const callIndex = calls.length;
+      calls.push(call);
+      serverRunAlive = true;
+      const resumable = (call.options as unknown as Record<string, unknown>)?.streamResumable === true;
+      if (resumable) serverRunAlive = true;
+      setIsLoading(true);
+      setError(undefined);
+      try {
+        for await (const part of responses(call, callIndex)) {
+          const next = applyStreamPart(messagesRef.current, part);
+          messagesRef.current = next.messages;
+          setMessages(next.messages);
+          if (next.interruptValue !== null) setInterrupts([{ value: next.interruptValue }]);
+        }
+      } catch (streamError) {
+        setError(streamError);
+        throw streamError;
+      } finally {
+        setIsLoading(false);
+        serverRunAlive = false;
+      }
+    };
+
+    const stop = async (opts?: { cancel?: boolean }) => {
+      stopCalls.push({ cancel: opts?.cancel });
+      if (opts?.cancel === false) {
+        setIsLoading(false);
+        return;
+      }
+      serverRunAlive = false;
+      setIsLoading(false);
+    };
+
+    const disconnect = async () => {
+      disconnectCalls += 1;
+      stopCalls.push({ cancel: false });
+      setIsLoading(false);
+    };
+
+    return {
+      values: { messages },
+      messages,
+      toolCalls: [] as never[],
+      interrupts,
+      interrupt: interrupts[0],
+      isLoading,
+      isThreadLoading,
+      error,
+      threadId: options.threadId,
+      submit: (input: RunInput, submitOptions: CoachSubmitOptions) =>
+        run({ threadId: submitOptions.threadId, payload: { input }, options: submitOptions }),
+      respond: (response: ResumePayload) => {
+        const threadId = options.threadId;
+        if (threadId === null) return Promise.resolve();
+        setInterrupts([]);
+        return run({ threadId, payload: { command: { resume: response } } });
+      },
+      respondAll: (responses: ResumePayload[] | Record<string, unknown>) => {
+        const threadId = options.threadId;
+        if (threadId === null) return Promise.resolve();
+        setInterrupts([]);
+        const list: ResumePayload[] = Array.isArray(responses) ? (responses as ResumePayload[]) : Object.values(responses as Record<string, ResumePayload>);
+        return (async () => {
+          for (const r of list) {
+            await run({ threadId, payload: { command: { resume: r } } });
+          }
+        })();
+      },
+      stop: stop as unknown as CoachStreamHandle["stop"],
+      disconnect: disconnect as unknown as CoachStreamHandle["disconnect"],
+      getThread: () => {
+        if (options.threadId !== null && serverRunAlive) {
+          setIsThreadLoading(true);
+          setTimeout(() => setIsThreadLoading(false), 0);
+        }
+        return { threadId: options.threadId } as unknown as ReturnType<CoachStreamHandle["getThread"]>;
+      },
+    } as unknown as CoachStreamHandle & { _stopCalls?: unknown; _disconnectCalls?: unknown };
+  };
+  const streamObj: ScriptedCoachStream & { stopCalls: typeof stopCalls; disconnectCalls: () => number; serverAlive: () => boolean } = {
+    calls,
+    client,
+    useStream,
+  } as unknown as ScriptedCoachStream & { stopCalls: typeof stopCalls; disconnectCalls: () => number; serverAlive: () => boolean };
+  (streamObj as unknown as Record<string, unknown>).stopCalls = stopCalls;
+  (streamObj as unknown as Record<string, unknown>).disconnectCalls = () => disconnectCalls;
+  (streamObj as unknown as Record<string, unknown>).serverAlive = () => serverRunAlive;
+  return streamObj;
+}
+
+export function emptyStream(): ScriptedCoachStream {
   return fakeStream(() => []);
 }
 
 export function fakeDeps(
   api: Partial<CoachApiBundle> = {},
-  stream: CoachStreamBundle & { calls: StreamCall[] } = emptyStream(),
-): CoachChatDeps & { api: CoachApiBundle; stream: CoachStreamBundle & { calls: StreamCall[] } } {
+  stream: ScriptedCoachStream = emptyStream(),
+): CoachStreamDeps & { readonly api: CoachApiBundle } {
   return {
     api: fakeApi(api),
-    stream,
+    client: stream.client,
+    useStream: stream.useStream,
     auth: { signOut: vi.fn(async () => undefined) },
     sleep: vi.fn(async () => undefined),
     newUploadId: () => "00000000-0000-4000-8000-000000000001",

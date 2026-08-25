@@ -25,9 +25,10 @@ export interface StreamStateDelta {
 }
 
 export interface ChatTelemetryEvent {
-  kind: "unknown_node" | "unknown_interrupt" | "stream_error";
+  kind: "unknown_node" | "unknown_interrupt" | "unknown_tool" | "stream_error";
   node?: string;
   detail?: string;
+  name?: string;
 }
 
 export const chatTelemetrySink: { emit: (event: ChatTelemetryEvent) => void } = {

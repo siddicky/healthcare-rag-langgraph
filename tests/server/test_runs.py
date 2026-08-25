@@ -12,12 +12,14 @@ from anyio.lowlevel import checkpoint
 from httpx_sse import aconnect_sse
 from langchain_core.runnables import RunnableConfig
 from langgraph.graph import END, START, StateGraph
-from langgraph.types import interrupt
+from langgraph.types import StreamWriter, interrupt
 from langgraph_sdk import Auth
+from starlette.applications import Starlette
 
 from server.app import create_app
 from server.config import ServerConfig
-from server.run_engine import JSONValue, RunRequest
+from server.run_engine import JSONValue, RunEngine, RunRequest, RunRuntime
+from server.runs import _stream
 
 
 class ToyState(TypedDict, total=False):
@@ -43,7 +45,7 @@ _AUTH_USER_SEEN: list[object] = []
 
 @dataclass(frozen=True, slots=True)
 class Harness:
-    app: object
+    app: Starlette
     client: httpx.AsyncClient
     control: ToyControl
 
@@ -63,7 +65,9 @@ async def harness(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[Harness]:
     # Any other spelling silently stops config injection and this node would
     # observe nothing at all — which is exactly how the principal assertion below
     # rotted into a no-op.
-    async def step(state: ToyState, config: RunnableConfig) -> ToyState:
+    async def step(
+        state: ToyState, config: RunnableConfig, writer: StreamWriter
+    ) -> ToyState:
         configurable = config.get("configurable", {})
         _AUTH_USER_SEEN.append(
             configurable.get("langgraph_auth_user")
@@ -72,6 +76,7 @@ async def harness(monkeypatch: pytest.MonkeyPatch) -> AsyncIterator[Harness]:
         )
         match state.get("mode"):
             case "block":
+                writer({"phase": "before-block"})
                 control.started.set()
                 await control.release.wait()
                 return {"value": state.get("value", 0) + 1}
@@ -239,6 +244,158 @@ async def test_stream_uses_event_and_data_sse_frames(harness: Harness) -> None:
 
 
 @pytest.mark.anyio
+async def test_resumable_stream_disconnect_replays_then_closes_after_completion(
+    harness: Harness,
+) -> None:
+    created = await create(
+        harness,
+        body(
+            {"mode": "block"},
+            stream_mode=["custom", "updates"],
+            stream_resumable=True,
+        ),
+    )
+    assert created.status_code == 200
+    run_id = created.json()["run_id"]
+    await harness.control.started.wait()
+    engine: RunEngine = harness.app.state.run_engine
+    runtime = engine.runtime[run_id]
+    disconnected = _stream(runtime, replay=True)
+    first_frame = await anext(disconnected)
+    await disconnected.aclose()
+
+    harness.control.release.set()
+    await runtime.done.wait()
+    rejoined = await harness.client.get(
+        f"/threads/thread-1/runs/{run_id}/join/stream"
+    )
+
+    assert first_frame == b'event: custom\ndata: {"phase":"before-block"}\n\n'
+    assert rejoined.status_code == 200
+    assert rejoined.content.startswith(first_frame)
+    assert b'event: updates\ndata: {"step":{"value":1}}\n\n' in rejoined.content
+
+
+@pytest.mark.anyio
+async def test_stream_endpoint_accepts_resumable_flag(harness: Harness) -> None:
+    async with aconnect_sse(
+        harness.client,
+        "POST",
+        "/threads/thread-1/runs/stream",
+        json=body({"value": 6}, stream_resumable=True),
+    ) as source:
+        events = [(event.event, event.json()) async for event in source.aiter_sse()]
+
+    assert events == [("updates", {"step": {"value": 7}})]
+
+
+@pytest.mark.anyio
+async def test_history_checkpoint_forks_stream_run_with_selected_parent(
+    harness: Harness,
+) -> None:
+    # Given: a completed run and its latest checkpoint.
+    initial = await harness.client.post(
+        "/threads/thread-1/runs/wait", json=body({"value": 2})
+    )
+    history = await harness.client.get("/threads/thread-1/history")
+
+    assert initial.status_code == 200
+    assert history.status_code == 200
+    checkpoint_id = history.json()[0]["checkpoint_id"]
+
+    # When: a streamed run starts from that checkpoint.
+    forked = body(
+        {"value": 10},
+        config={"configurable": {"checkpoint_id": checkpoint_id}},
+    )
+    async with aconnect_sse(
+        harness.client,
+        "POST",
+        "/threads/thread-1/runs/stream",
+        json=forked,
+    ) as source:
+        _ = [event async for event in source.aiter_sse()]
+
+    # Then: the fork input checkpoint points to the selected checkpoint.
+    fork_history = (
+        await harness.client.get("/threads/thread-1/history")
+    ).json()
+    assert any(
+        item["parent_checkpoint_id"] == checkpoint_id for item in fork_history
+    )
+    assert "tasks" not in fork_history[0]
+
+
+@pytest.mark.anyio
+async def test_fork_from_alias_maps_to_checkpoint_and_bad_ids_are_rejected(
+    harness: Harness,
+) -> None:
+    # Given: a checkpoint from a completed run.
+    _ = await harness.client.post(
+        "/threads/thread-1/runs/wait", json=body({"value": 2})
+    )
+    history = (
+        await harness.client.get("/threads/thread-1/history")
+    ).json()
+    checkpoint_id = history[0]["checkpoint_id"]
+
+    # When: the alias, an unknown checkpoint, and an empty checkpoint are submitted.
+    aliased = await create(
+        harness,
+        body({"value": 4}, forkFrom=checkpoint_id),
+    )
+    alias_output = await harness.client.get(
+        f"/threads/thread-1/runs/{aliased.json()['run_id']}/join"
+    )
+    missing = await create(
+        harness,
+        body(
+            {"value": 4},
+            config={"configurable": {"checkpoint_id": str(uuid4())}},
+        ),
+    )
+    empty = await create(
+        harness,
+        body({"value": 4}, config={"configurable": {"checkpoint_id": ""}}),
+    )
+
+    # Then: the alias runs from the checkpoint and invalid IDs fail at submission.
+    assert alias_output.status_code == 200
+    assert aliased.json()["config"]["configurable"]["checkpoint_id"] == checkpoint_id
+    assert missing.status_code == 404
+    assert empty.status_code == 422
+
+
+def test_run_runtime_event_buffer_evicts_oldest_after_one_hundred() -> None:
+    runtime = RunRuntime(
+        request=RunRequest(assistant_id="toy", input={"value": 1}),
+        thread_id="thread-1",
+    )
+
+    for value in range(101):
+        runtime.append_event("custom", value)
+
+    assert len(runtime.events) == 100
+    assert runtime.events[0] == ("custom", 1)
+    assert runtime.events[-1] == ("custom", 100)
+
+
+@pytest.mark.anyio
+async def test_join_stream_rejects_run_from_different_thread(harness: Harness) -> None:
+    created = await create(harness, body({"value": 4}, stream_resumable=True))
+    run_id = created.json()["run_id"]
+    engine: RunEngine = harness.app.state.run_engine
+    await engine.runtime[run_id].done.wait()
+    await engine.storage.threads.save("thread-2", {"thread_id": "thread-2"})
+
+    response = await harness.client.get(
+        f"/threads/thread-2/runs/{run_id}/join/stream"
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.anyio
 async def test_graph_error_sets_error_status(harness: Harness) -> None:
     created = await create(harness, body({"mode": "fail"}))
     record = await wait_status(harness, created.json()["run_id"], "error")
@@ -275,7 +432,7 @@ async def test_pending_queue_is_bounded_server_wide(harness: Harness) -> None:
     [
         ("/threads/missing/runs", body({"value": 1}), 404),
         ("/threads/thread-1/runs", body({}, multitask_strategy="parallel"), 422),
-        ("/threads/thread-1/runs/stream", body({}, stream_mode=["messages"]), 422),
+        ("/threads/thread-1/runs/stream", body({}, stream_mode=["bogus_mode"]), 422),
         ("/threads/thread-1/runs", body({"cron_wake": {}}), 403),
     ],
 )

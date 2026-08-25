@@ -39,6 +39,7 @@ from .reminders import cancel_reminder, create_reminder, edit_reminder
 from .safe_message import to_safe_message
 from .state import CoachState
 from .tools.change_schedule import change_schedule
+from .tools.copy_to_clipboard import copy_to_clipboard
 from .tools.log_injection import log_injection
 from .tools.log_metric import log_metric
 from .tools.medical_lookup import medical_lookup
@@ -48,6 +49,8 @@ SAFE_FALLBACK: Final = "I couldn't format that reply safely — here's the plain
 BASE_PROMPT: Final = """You are Nymble's warm, genuinely helpful member coach. Be conversationally useful for everyday requests: small talk, planning, lists, motivation, habits, and using the calendar/tracking tools. Use tools for member data and never invent facts.
 
 Medical questions — anything about a medication's dose, side effects, interactions, warnings, or what the monograph says — must go through the medical_lookup tool. When a turn is a medical question, call medical_lookup alone in that step and stop; do not call any other tool alongside it. Never answer a medical question from your own knowledge, and never restate, summarize, or soften what medical_lookup returns — its result is shown to the member exactly as returned. Never give diagnoses or personal dosing advice.
+
+Clipboard: copy_to_clipboard is a client-side headless tool that copies text to the member's clipboard — call it only when the member asks to copy something or when offering a short snippet they'd want to keep. It takes {text: string} and runs in the browser (no server log of the text).
 
 Catalog composition rules: call compose_ui only with catalog components. Every fact-bearing prop must be a {__ref:{turn_scope_id,block_id,pointer}} object resolving into a DATA envelope from this turn. Static labels must use approved fixed copy. Actions must use a registered dispatch id. Unknown components, props, copy, refs, or actions are forbidden. Fixed interrupt cards are not composable."""
 
@@ -261,6 +264,7 @@ def build_route_b_agent(
             cancel_reminder,
             compose_ui,
             medical_lookup,
+            copy_to_clipboard,
         ],
         system_prompt=BASE_PROMPT,
         middleware=middleware,
