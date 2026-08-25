@@ -61,7 +61,13 @@ def test_member_principal_is_still_held_to_the_contract_routes() -> None:
     response = client.post("/assistants/search", json={})
 
     assert response.status_code == 403
-    assert response.json() == {"detail": "Route is not available"}
+    assert response.json() == {"detail": "Invalid assistant search body"}
+
+    admitted = client.post(
+        "/assistants/search", json={"graph_id": "coach", "limit": 10, "offset": 0}
+    )
+    assert admitted.status_code == 200
+    assert admitted.json() == {"path": "/assistants/search"}
 
 
 def test_anonymous_request_is_still_unauthorized() -> None:

@@ -283,7 +283,22 @@ async def read_coach_assistant(
     if _is_studio(ctx):
         return None
     del ctx, value
-    return {"graph_id": "coach"}
+    # langgraph-api matches assistant scope filters against assistant METADATA
+    # only, so a {"graph_id": "coach"} filter would hide every assistant,
+    # including `coach` itself. Assistant records carry no member data (name,
+    # graph_id, schema config); the member perimeter pins /assistants/search
+    # bodies to graph_id == "coach", and thread/run access stays owner-scoped.
+    return {}
+
+
+@auth.on.assistants.search
+async def search_coach_assistant(
+    ctx: Auth.types.AuthContext, value: Auth.types.on.assistants.search.value
+) -> AuthDecision:
+    if _is_studio(ctx):
+        return None
+    del ctx, value
+    return {}
 
 
 def _cron_owner(ctx: Auth.types.AuthContext) -> str | None:
