@@ -275,7 +275,7 @@ async def test_pending_queue_is_bounded_server_wide(harness: Harness) -> None:
     [
         ("/threads/missing/runs", body({"value": 1}), 404),
         ("/threads/thread-1/runs", body({}, multitask_strategy="parallel"), 422),
-        ("/threads/thread-1/runs/stream", body({}, stream_mode=["messages"]), 422),
+        ("/threads/thread-1/runs/stream", body({}, stream_mode=["bogus_mode"]), 422),
         ("/threads/thread-1/runs", body({"cron_wake": {}}), 403),
     ],
 )

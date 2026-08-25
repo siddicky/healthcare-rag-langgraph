@@ -88,7 +88,7 @@ class RunRequest(BaseModel):
     input: dict[str, JSONValue] | None = None
     command: ResumeCommand | None = None
     config: dict[str, JSONValue] = Field(default_factory=dict)
-    stream_mode: list[Literal["updates", "custom", "values"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
+    stream_mode: list[Literal["updates", "custom", "values", "messages", "messages-tuple"]] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
     stream_subgraphs: Literal[False] = False
     stream_resumable: Literal[False] = False
     durability: Literal["exit"] = "exit"
@@ -103,6 +103,19 @@ class RunRequest(BaseModel):
             if isinstance(sm, str):
                 data = dict(data)
                 data["stream_mode"] = [sm]
+                sm = data["stream_mode"]
+            if isinstance(sm, list):
+                coerced: list[str] = []
+                changed = False
+                for item in sm:
+                    if item == "messages-tuple":
+                        coerced.append("messages")
+                        changed = True
+                    else:
+                        coerced.append(item)  # type: ignore[arg-type]
+                if changed:
+                    data = dict(data)
+                    data["stream_mode"] = coerced
         return data
 
     @model_validator(mode="after")
@@ -284,7 +297,7 @@ class RunEngine:
                 async for mode, data in graph.astream(
                     graph_input,
                     graph_config,
-                    stream_mode=["updates", "custom"],
+                    stream_mode=runtime.request.stream_mode,
                     durability="exit",
                 ):
                     runtime.events.append((mode, _to_jsonable(data)))  # type: ignore[arg-type]
