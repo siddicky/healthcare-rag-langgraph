@@ -88,6 +88,28 @@ git tag vX.Y.Z && git push origin vX.Y.Z   # triggers deploy.yml → production 
 
 ---
 
+## 0c. Member Stream Perimeter v2 Flip — PENDING (human gate, currently BLOCKED)
+
+> **Status: NOT flipped — production is pinned to v1** (`HC_RAG_MEMBER_STREAM_PERIMETER = "v1"` in `deploy/fly.prod.toml`). The v2 code paths ship dormant and are exercised hermetically every e2e run. Do not flip until the blocker below is resolved and the gates are recorded.
+
+**What the flip is.** Two values must move **together**:
+
+1. `deploy/fly.prod.toml` `[env]`: `HC_RAG_MEMBER_STREAM_PERIMETER = "v1"` → `"v2"` (server-side allow-list: adds `GET /threads/{id}/history`, `GET .../runs/{run_id}/join`, `GET .../join/stream`, `POST .../cancel`; run envelopes gain `messages`/`values` stream modes, `stream_resumable`, and `multitask_strategy: enqueue`).
+2. The member frontend build: `NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER=v2` — this is **baked at `next build` time**, so it is set wherever the frontend bundle is built, not via `fly secrets set`. There is no mixed mode: each server version accepts only its own envelope (`v2` fixes `stream_resumable: true` + `multitask_strategy: enqueue`; a v1 envelope on a v2 server is denied, and vice versa), so the two values must move in the same release window.
+
+**Blocker (measured 2026-08-25, hermetic e2e).** The member frontend's `@langchain/react` `useStream` transport submits through the v2-native ThreadStream endpoints (`POST /threads/{id}/stream`, `/threads/{id}/stream/events`, query-parameter cancel) **regardless of the perimeter env** — the env only selects the run envelope. No perimeter version (v1 or v2) admits those routes, so every member chat turn currently fails with `403 {"detail":"Route is not available"}`. The member chat UI is blocked on a perimeter revision, after which this flip can proceed. See `docs/safety.md` → "Member stream perimeter v2 (useStream)".
+
+**Gates before flipping (in order):**
+
+1. A reviewed perimeter revision admits the ThreadStream surface (route + envelope validation for `/threads/{id}/stream` and `/stream/events`), **plus a member auth-handler + perimeter rule pair that actually makes run cancel work for members** (today cancel passes the v2 perimeter but the platform auth layer denies members `403 "Forbidden"`, and the SDK's cancel sends query parameters the perimeter rejects), shipped in a release with its own `make eval` / `make eval-multiturn` receipts — safety metrics flat, correctness/recall within ±0.02.
+2. Hermetic e2e green in v2 mode: `COACH_E2E_PERIMETER=v2 bun --cwd frontend run playwright` (this boots the v2 frontend against a v2 server; the v2 UI specs unskip automatically once the capability probe passes).
+3. Regression gate current (`.omo/evidence/regression-gate.txt` matches the flipping HEAD).
+4. Dated sign-off recorded in `.omo/evidence/` naming: the widened member route set, the enqueue/resumable posture, and that history/join expose no new identifier-bearing field (projection unchanged).
+
+**Rollback.** Revert the TOML value to `"v1"` and redeploy the previous digest; the frontend requires a **rebuild** with the v1 `NEXT_PUBLIC_` value (it is baked into the bundle, not runtime-switchable).
+
+---
+
 ## 1. Bootstrap — one-time setup (apps ×2, volume, secret seeding BEFORE the first pipeline deploy)
 
 > Do this once per Fly organization. After this, every deploy comes from the tag pipeline (§3). The first pipeline deploy must never boot secret-less, so **seed secrets in §1.3 before you push the first tag**.

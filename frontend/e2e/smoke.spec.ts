@@ -8,6 +8,8 @@ import {
   nextFriday,
   nextWeekday,
   readRun,
+  threadStreamAdmitted,
+  THREAD_STREAM_SKIP_REASON,
   threadState,
   type DataEnvelope,
   type Runfile,
@@ -17,16 +19,27 @@ import {
 const SCREENSHOTS = path.join(__dirname, "__screenshots__");
 const COMPOSER = 'textarea[aria-label="Message your coach"]';
 const REGENERATE = '[data-testid="action-bar"] button[aria-label="Regenerate"]';
-const RUN_ENVELOPE = {
-  assistant_id: "coach",
-  input: { question: "hello there" },
-  stream_mode: ["updates"],
-  stream_subgraphs: false,
-  stream_resumable: false,
-  durability: "exit",
-  if_not_exists: "reject",
-  multitask_strategy: "reject",
-};
+
+/**
+ * A perimeter-VALID run envelope: under a v2 server the v1 fixed values
+ * (resumable=false / reject) would be denied for the wrong reason, so the
+ * sentinel's 403s must each be attributable to the violation under test
+ * (cron_wake input, foreign attachment, webhook/metadata keys).
+ */
+function runEnvelope(): Record<string, unknown> {
+  const v2 = readRun().perimeter === "v2";
+  return {
+    assistant_id: "coach",
+    input: { question: "hello there" },
+    stream_mode: ["updates"],
+    stream_subgraphs: false,
+    ...(v2
+      ? { stream_resumable: true, multitask_strategy: "enqueue" }
+      : { stream_resumable: false, multitask_strategy: "reject" }),
+    durability: "exit",
+    if_not_exists: "reject",
+  };
+}
 
 const shared: { u1ThreadId: string; u1UploadId: string; u2ThreadId: string } = {
   u1ThreadId: "",
@@ -112,8 +125,17 @@ function reminderPresent(state: { values: { messages?: unknown[] } }): boolean {
   });
 }
 
+async function gateOnThreadStream(): Promise<void> {
+  const run = readRun();
+  const api = await memberApi(run, run.u1.token);
+  const admitted = await threadStreamAdmitted(api);
+  await api.dispose();
+  test.skip(!admitted, THREAD_STREAM_SKIP_REASON);
+}
+
 test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, feedback, branch", async ({ page }) => {
   test.setTimeout(300_000);
+  await gateOnThreadStream();
   const run = readRun();
   const api = await memberApi(run, run.u1.token);
   const createdThreads = trackThreadCreations(page);
@@ -389,6 +411,7 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
 
 test("u2 isolation: own threads only, cross-identity upload rejected", async ({ page }) => {
   test.setTimeout(120_000);
+  await gateOnThreadStream();
   const run = readRun();
   const api = await memberApi(run, run.u2.token);
   const createdThreads = trackThreadCreations(page);
@@ -410,7 +433,7 @@ test("u2 isolation: own threads only, cross-identity upload rejected", async ({ 
 
   const hijack = await api.post(`/threads/${shared.u2ThreadId}/runs/stream`, {
     data: {
-      ...RUN_ENVELOPE,
+      ...runEnvelope(),
       input: { question: "Please review this document.", attachment_id: shared.u1UploadId },
     },
   });
@@ -435,6 +458,22 @@ test("perimeter sentinel: member token rejection set", async () => {
   test.setTimeout(60_000);
   const run = readRun();
   const api = await memberApi(run, run.u1.token);
+  if (shared.u1ThreadId === "" || shared.u2ThreadId === "") {
+    // The journey/isolation tests were probe-skipped — create the threads
+    // the cross-identity assertions need, under their owning identities.
+    if (shared.u1ThreadId === "") {
+      const create = await api.post("/threads", { data: {} });
+      expect(create.status()).toBe(200);
+      shared.u1ThreadId = ((await create.json()) as { thread_id: string }).thread_id;
+    }
+    if (shared.u2ThreadId === "") {
+      const u2Api = await memberApi(run, run.u2.token);
+      const create = await u2Api.post("/threads", { data: {} });
+      expect(create.status()).toBe(200);
+      shared.u2ThreadId = ((await create.json()) as { thread_id: string }).thread_id;
+      await u2Api.dispose();
+    }
+  }
   const stream = `/threads/${shared.u1ThreadId}/runs/stream`;
 
   const cronSearch = await api.post("/runs/crons/search", { data: {} });
@@ -447,7 +486,7 @@ test("perimeter sentinel: member token rejection set", async () => {
 
   const wakeRun = await api.post(stream, {
     data: {
-      ...RUN_ENVELOPE,
+      ...runEnvelope(),
       input: {
         cron_wake: {
           reminder_id: "00000000-0000-4000-8000-000000000001",
@@ -461,12 +500,12 @@ test("perimeter sentinel: member token rejection set", async () => {
   expect(wakeRun.status()).toBe(403);
 
   const webhookRun = await api.post(stream, {
-    data: { ...RUN_ENVELOPE, webhook: "https://example.com/hook" },
+    data: { ...runEnvelope(), webhook: "https://example.com/hook" },
   });
   expect(webhookRun.status()).toBe(403);
 
   const metadataRun = await api.post(stream, {
-    data: { ...RUN_ENVELOPE, metadata: { injected: true } },
+    data: { ...runEnvelope(), metadata: { injected: true } },
   });
   expect(metadataRun.status()).toBe(403);
 
@@ -498,6 +537,7 @@ test("perimeter sentinel: member token rejection set", async () => {
 
 test("open chat recovers when its active thread disappears", async ({ page }) => {
   test.setTimeout(120_000);
+  await gateOnThreadStream();
   const run = readRun();
   const api = await memberApi(run, run.u1.token);
   const createdThreads = trackThreadCreations(page);

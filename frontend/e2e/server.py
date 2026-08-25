@@ -19,6 +19,18 @@ Boots the FULL local stack with ZERO external network:
 Everything is torn down on SIGTERM/SIGINT/exit: process groups are killed and
 ports released. A JSON runfile is written for the Playwright suite.
 
+The member stream perimeter is selectable: ``--perimeter v1|v2`` (default
+``COACH_E2E_PERIMETER`` or ``v1``) sets ``HC_RAG_MEMBER_STREAM_PERIMETER`` on
+the main Agent Server and bakes ``NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER``
+into the frontend build. A second Agent Server with the flipped perimeter is
+always booted (``alt_server_url`` in the runfile) so the suite asserts both
+the v1 rejected-route set and the v2 widened shapes at API level in one
+hermetic run. NOTE: the member frontend chats through the ``@langchain/react``
+useStream ThreadStream transport (``POST /threads/{id}/stream``) regardless of
+perimeter env — the env only selects the run envelope — and NO perimeter
+version admits that route today, so chat-driving UI specs probe-gate and skip
+with the finding (docs/safety.md "Member stream perimeter v2 (useStream)").
+
 Run: .venv/bin/python frontend/e2e/server.py --runfile <path>
 """
 
@@ -410,6 +422,23 @@ class FixtureHandler(BaseHTTPRequestHandler):
                 [cls._call("medical_lookup", {"query": raw_question})]
             )
 
+        if question == "show markdown":
+            return cls._content_completion(
+                "# Test Heading\n\n"
+                "This is **bold** text.\n\n"
+                "- alpha\n"
+                "- beta\n\n"
+                "[docs](https://example.com)"
+            )
+
+        if question == "show markdown table":
+            return cls._content_completion(
+                "| Field | Value |\n"
+                "| --- | --- |\n"
+                "| a | 1 |\n"
+                "| b | 2 |\n"
+            )
+
         return cls._content_completion("Hello from your coach.")
 
     @staticmethod
@@ -581,8 +610,21 @@ def _wait_http(url: str, timeout: float) -> bool:
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--runfile", required=True)
+    parser.add_argument(
+        "--perimeter",
+        choices=["v1", "v2"],
+        default=os.getenv("COACH_E2E_PERIMETER", "v1"),
+        help=(
+            "Member stream perimeter for the MAIN server and the built "
+            "frontend (default: COACH_E2E_PERIMETER or v1). A second Agent "
+            "Server with the flipped perimeter is always booted so the "
+            "Playwright suite asserts both directions hermetically."
+        ),
+    )
     args = parser.parse_args()
     runfile = Path(args.runfile)
+    perimeter = args.perimeter
+    alt_perimeter = "v2" if perimeter == "v1" else "v1"
 
     import tempfile
 
@@ -592,9 +634,11 @@ def main() -> int:
 
     dep_port = _free_port()
     server_port = _free_port()
+    alt_port = _free_port()
     frontend_port = _free_port()
     dep_url = f"http://127.0.0.1:{dep_port}"
     server_url = f"http://127.0.0.1:{server_port}"
+    alt_url = f"http://127.0.0.1:{alt_port}"
     frontend_url = f"http://127.0.0.1:{frontend_port}"
 
     dependency_server = ThreadingHTTPServer(("127.0.0.1", dep_port), FixtureHandler)
@@ -628,6 +672,7 @@ def main() -> int:
         ),
         "COACH_SOCKET_GUARD_MARKER": str(marker_path),
         "LANGGRAPH_API_URL": server_url,
+        "HC_RAG_MEMBER_STREAM_PERIMETER": perimeter,
         "PYTHONPATH": f"{workdir}{os.pathsep}{os.environ.get('PYTHONPATH', '')}",
     }
 
@@ -697,11 +742,45 @@ def main() -> int:
         print("socket guard did not activate", file=sys.stderr)
         return 1
 
+    # Alt Agent Server with the FLIPPED perimeter: same graph/config/gateway,
+    # other HC_RAG_MEMBER_STREAM_PERIMETER. The suite asserts v1 rejections and
+    # v2 shapes against BOTH servers in one run; its own cwd keeps the
+    # `.langgraph_api` on-disk state separate from the main server's.
+    alt_workdir = workdir / "alt-server"
+    alt_logs = alt_workdir / "logs"
+    alt_logs.mkdir(parents=True, exist_ok=True)
+    alt_environment = environment | {
+        "HC_RAG_MEMBER_STREAM_PERIMETER": alt_perimeter,
+        "LANGGRAPH_API_URL": alt_url,
+    }
+    alt_log = (alt_logs / "langgraph-dev.log").open("wb")
+    alt_proc = subprocess.Popen(
+        [
+            str(ROOT / ".venv/bin/langgraph"),
+            "dev",
+            "--no-browser",
+            "--no-reload",
+            "--config",
+            str(config_path),
+            "--port",
+            str(alt_port),
+            "--server-log-level",
+            os.getenv("COACH_E2E_LOG_LEVEL", "error"),
+        ],
+        cwd=alt_workdir,
+        env=alt_environment,
+        start_new_session=True,
+        stdout=alt_log,
+        stderr=subprocess.STDOUT,
+    )
+    children.append(alt_proc)
+
     bun = "bun"
     build_env = os.environ | {
         "NEXT_PUBLIC_LANGGRAPH_URL": server_url,
         "NEXT_PUBLIC_SUPABASE_URL": dep_url,
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": ANON_KEY,
+        "NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER": perimeter,
         "NEXT_TELEMETRY_DISABLED": "1",
     }
     build_log = (logs / "next-build.log").open("wb")
@@ -733,12 +812,24 @@ def main() -> int:
         print((logs / "next-start.log").read_text(errors="replace"), file=sys.stderr)
         return 1
 
+    if alt_proc.poll() is not None or not _wait_http(f"{alt_url}/ok", 120):
+        teardown()
+        print(
+            (alt_logs / "langgraph-dev.log").read_text(errors="replace"),
+            file=sys.stderr,
+        )
+        return 1
+
     runfile.write_text(
         json.dumps(
             {
                 "ready": True,
                 "dep_url": dep_url,
                 "server_url": server_url,
+                "alt_server_url": alt_url,
+                "alt_perimeter": alt_perimeter,
+                "perimeter": perimeter,
+                "next_public_perimeter": perimeter,
                 "frontend_url": frontend_url,
                 "u1": {
                     "email": U1_EMAIL,
@@ -771,7 +862,7 @@ def main() -> int:
         stop.wait()
     finally:
         teardown()
-        for handle in (server_log, frontend_log):
+        for handle in (server_log, alt_log, frontend_log):
             handle.close()
     return 0
 
