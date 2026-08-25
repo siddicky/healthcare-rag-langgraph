@@ -285,7 +285,7 @@ def _validate_run_start(
     if config is not None:
         _validate_checkpoint_config(config, path_thread_id)
     strategy = params.get("multitaskStrategy")
-    if strategy is not None and strategy != "enqueue":
+    if strategy is not None and strategy not in {"reject", "enqueue", "interrupt"}:
         _deny("Invalid run.start multitask strategy", 400)
 
 
