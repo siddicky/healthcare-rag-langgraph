@@ -3,9 +3,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 /**
- * Forbidden-modes guard: the chat streams UPDATES-ONLY through the single
- * fixed run envelope — no token/typewriter streaming, no other stream mode
- * anywhere in the shipped chat sources.
+ * Forbidden-modes guard: the chat streams updates, plus messages only in the
+ * env-gated v2 envelope. No token/typewriter streaming or other stream mode
+ * exists anywhere in the shipped chat sources.
  */
 
 const CHAT_SOURCES = [
@@ -48,14 +48,22 @@ const BANNED_STREAM_MODES = [
   "'tasks'",
 ];
 
+const ALLOWED_STREAM_MODE_DECLARATIONS = new Set([
+  'streamMode:["updates"]',
+  'streamMode:["updates","messages"]',
+]);
+
 describe("forbidden stream modes and token streaming (source grep)", () => {
-  it("declares streamMode ONLY as updates (type and value), nowhere else", () => {
+  it("declares only the v1 and v2 streamMode envelopes", () => {
     let declarations = 0;
     for (const path of CHAT_SOURCES) {
       const text = source(path);
-      const occurrences = text.match(/streamMode\s*:\s*[^,;\n]+/g) ?? [];
+      const occurrences = text.match(/streamMode\s*:\s*\[[^\]\n]+\]/g) ?? [];
       for (const occurrence of occurrences) {
-        expect(occurrence.replace(/\s+/g, ""), `${path}: ${occurrence}`).toBe('streamMode:["updates"]');
+        expect(
+          ALLOWED_STREAM_MODE_DECLARATIONS.has(occurrence.replace(/\s+/g, "")),
+          `${path}: ${occurrence}`,
+        ).toBe(true);
         declarations += 1;
       }
     }
@@ -77,7 +85,11 @@ describe("forbidden stream modes and token streaming (source grep)", () => {
       for (const banned of ["typewriter", "tokenStream", "textChunk", "contentChunk", "onToken"]) {
         expect(text.includes(banned), `${path} must not contain ${banned}`).toBe(false);
       }
-      expect(text.match(/streamMode[^;\n]*"messages"/), path).toBeNull();
+      const withoutV2Envelope = text.replace(
+        /streamMode\s*:\s*\[\s*"updates"\s*,\s*"messages"\s*\]/g,
+        "",
+      );
+      expect(withoutV2Envelope.match(/streamMode[^;\n]*"messages"/), path).toBeNull();
     }
   });
 

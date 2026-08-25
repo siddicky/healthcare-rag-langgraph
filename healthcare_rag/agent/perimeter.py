@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import re
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
@@ -11,13 +12,20 @@ JSONValue: TypeAlias = JsonValue
 JSONBody: TypeAlias = dict[str, JSONValue] | list[JSONValue] | None
 
 DOCUMENT_REVIEW_QUESTION: Final = "Please review this document."
+HC_RAG_MEMBER_STREAM_PERIMETER: Final = os.getenv(
+    "HC_RAG_MEMBER_STREAM_PERIMETER", "v1"
+)
 _UUID: Final = (
     r"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}"
 )
 _THREAD: Final = re.compile(rf"^/threads/{_UUID}$")
 _COPY: Final = re.compile(rf"^/threads/{_UUID}/copy$")
 _STATE: Final = re.compile(rf"^/threads/{_UUID}/state$")
+_HISTORY: Final = re.compile(rf"^/threads/{_UUID}/history$")
 _STREAM: Final = re.compile(rf"^/threads/{_UUID}/runs/stream$")
+_JOIN: Final = re.compile(rf"^/threads/{_UUID}/runs/{_UUID}/join$")
+_JOIN_STREAM: Final = re.compile(rf"^/threads/{_UUID}/runs/{_UUID}/join/stream$")
+_CANCEL: Final = re.compile(rf"^/threads/{_UUID}/runs/{_UUID}/cancel$")
 _UPLOAD_STATUS: Final = re.compile(r"^/coach/uploads/[0-9a-fA-F-]+/status$")
 _SELECT_FIELDS: Final = frozenset(
     {"thread_id", "created_at", "updated_at", "metadata", "status"}
@@ -25,13 +33,20 @@ _SELECT_FIELDS: Final = frozenset(
 _SEARCH_KEYS: Final = frozenset({"select", "limit", "offset", "sort_by", "sort_order"})
 _RUN_FIXED: Final = {
     "assistant_id": "coach",
-    "stream_mode": ["updates"],
     "stream_subgraphs": False,
-    "stream_resumable": False,
     "durability": "exit",
     "if_not_exists": "reject",
+}
+_RUN_V1_FIXED: Final = {
+    "stream_mode": ["updates"],
+    "stream_resumable": False,
     "multitask_strategy": "reject",
 }
+_RUN_V2_FIXED: Final = {
+    "stream_resumable": True,
+    "multitask_strategy": "enqueue",
+}
+_RUN_V2_STREAM_MODES: Final = frozenset({"updates", "messages", "values"})
 _PRIVATE_SENTINELS: Final = frozenset(
     {"question", "attachment_id", "cron_wake", "pending_document_op_id"}
 )
@@ -89,14 +104,16 @@ def _validate_fields(fields: JSONValue) -> None:
     if not isinstance(fields, list):
         _deny("Resume fields must be a list")
     for field in fields:
-        if not isinstance(field, dict) or frozenset(field) != {"key", "value"}:
+        if not isinstance(field, dict) or frozenset(field) != frozenset(
+            {"key", "value"}
+        ):
             _deny("Invalid resume field")
         if not isinstance(field["key"], str) or not isinstance(field["value"], str):
             _deny("Invalid resume field")
 
 
 def _validate_resume(command: JSONValue) -> None:
-    if not isinstance(command, dict) or frozenset(command) != {"resume"}:
+    if not isinstance(command, dict) or frozenset(command) != frozenset({"resume"}):
         _deny("Invalid resume command")
     resume = command["resume"]
     if not isinstance(resume, dict) or set(resume) - {"accept", "fields"}:
@@ -110,12 +127,34 @@ def _validate_resume(command: JSONValue) -> None:
 
 def _validate_run(body: JSONBody) -> None:
     value = _require_body_mapping(body)
-    expected = frozenset(_RUN_FIXED) | ({"input"} if "input" in value else {"command"})
+    version_fixed = (
+        _RUN_V2_FIXED
+        if HC_RAG_MEMBER_STREAM_PERIMETER == "v2"
+        else _RUN_V1_FIXED
+    )
+    expected = (
+        frozenset(_RUN_FIXED)
+        | frozenset(version_fixed)
+        | frozenset({"stream_mode"})
+        | frozenset({"input"} if "input" in value else {"command"})
+    )
     if frozenset(value) != expected:
         _deny("Invalid run envelope")
-    for key, required in _RUN_FIXED.items():
+    for key, required in (_RUN_FIXED | version_fixed).items():
         if value.get(key) != required:
             _deny("Invalid run envelope")
+    stream_mode = value.get("stream_mode")
+    if HC_RAG_MEMBER_STREAM_PERIMETER == "v2":
+        if (
+            not isinstance(stream_mode, list)
+            or not stream_mode
+            or "updates" not in stream_mode
+            or len(stream_mode) != len(set(stream_mode))
+            or any(mode not in _RUN_V2_STREAM_MODES for mode in stream_mode)
+        ):
+            _deny("Invalid run envelope")
+    elif stream_mode != _RUN_V1_FIXED["stream_mode"]:
+        _deny("Invalid run envelope")
     if "command" in value:
         _validate_resume(value["command"])
         return
@@ -156,6 +195,22 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
     if method == "POST" and _COPY.fullmatch(path) and not query and body is None:
         return
     if method == "GET" and _STATE.fullmatch(path) and not query and body is None:
+        return
+    if (
+        HC_RAG_MEMBER_STREAM_PERIMETER == "v2"
+        and method == "GET"
+        and (_HISTORY.fullmatch(path) or _JOIN.fullmatch(path) or _JOIN_STREAM.fullmatch(path))
+        and not query
+        and body is None
+    ):
+        return
+    if (
+        HC_RAG_MEMBER_STREAM_PERIMETER == "v2"
+        and method == "POST"
+        and _CANCEL.fullmatch(path)
+        and not query
+        and body is None
+    ):
         return
     if method == "POST" and _STREAM.fullmatch(path) and not query:
         _validate_run(body)
@@ -210,6 +265,7 @@ def project_state(payload: JSONBody) -> dict[str, JSONValue]:
 
 __all__ = [
     "DOCUMENT_REVIEW_QUESTION",
+    "HC_RAG_MEMBER_STREAM_PERIMETER",
     "PerimeterDenied",
     "project_state",
     "validate_member_request",
