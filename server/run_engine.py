@@ -10,6 +10,7 @@ from uuid import uuid4
 
 import anyio
 from anyio.abc import TaskGroup
+from langchain_core.runnables import RunnableConfig
 from langgraph.types import Command
 from pydantic import BaseModel, ConfigDict, Field, JsonValue, model_validator
 
@@ -99,6 +100,20 @@ class RunRequest(BaseModel):
     @model_validator(mode="before")
     @classmethod
     def coerce_stream_mode(cls, data: object) -> object:
+        if isinstance(data, dict) and "forkFrom" in data:
+            data = dict(data)
+            fork_from = data.pop("forkFrom")
+            config = data.get("config", {})
+            if not isinstance(config, dict):
+                raise ValueError("config must be an object")
+            configurable = config.get("configurable", {})
+            if not isinstance(configurable, dict):
+                raise ValueError("config.configurable must be an object")
+            checkpoint_id = configurable.get("checkpoint_id")
+            if checkpoint_id is not None and checkpoint_id != fork_from:
+                raise ValueError("forkFrom conflicts with config.configurable.checkpoint_id")
+            configurable = {**configurable, "checkpoint_id": fork_from}
+            data["config"] = {**config, "configurable": configurable}
         if isinstance(data, dict) and "stream_mode" in data:
             sm = data["stream_mode"]
             if isinstance(sm, str):
@@ -123,6 +138,11 @@ class RunRequest(BaseModel):
     def exactly_one_payload(self) -> RunRequest:
         if (self.input is None) == (self.command is None):
             raise ValueError("exactly one of input or command is required")
+        configurable = self.config.get("configurable")
+        if isinstance(configurable, dict) and "checkpoint_id" in configurable:
+            checkpoint_id = configurable["checkpoint_id"]
+            if not isinstance(checkpoint_id, str) or not checkpoint_id.strip():
+                raise ValueError("checkpoint_id must be a non-empty string")
         return self
 
 
@@ -191,6 +211,10 @@ class RunMissing(Exception):
     pass
 
 
+class CheckpointMissing(Exception):
+    pass
+
+
 class RunEngine:
     """Mutable queue coordinator for checkpointed graph runs."""
 
@@ -226,6 +250,13 @@ class RunEngine:
         *,
         auth_user: dict[str, JSONValue] | None = None,
     ) -> dict[str, object]:
+        configurable = request.config.get("configurable")
+        if isinstance(configurable, dict) and "checkpoint_id" in configurable:
+            checkpoint_config: RunnableConfig = {
+                "configurable": {**configurable, "thread_id": thread_id},
+            }
+            if await self.storage.saver.aget_tuple(checkpoint_config) is None:
+                raise CheckpointMissing
         replay_key = self._replay_key(thread_id, request)
         if replay_key is not None and replay_key in self.command_replays:
             replay = await self.storage.runs.get(self.command_replays[replay_key])

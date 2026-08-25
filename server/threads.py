@@ -608,6 +608,61 @@ async def get_thread_state(request: Request) -> Response:
     return JSONResponse(_to_jsonable(payload))  # type: ignore[arg-type]
 
 
+async def get_thread_history(request: Request) -> Response:
+    storage: Storage = request.app.state.storage
+    thread_id = request.path_params["thread_id"]
+    if await _purge_if_expired(storage, thread_id):
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+    record = await storage.threads.get(thread_id)
+    if record is None:
+        return JSONResponse({"detail": "Not Found"}, status_code=404)
+    try:
+        scope_filter = await request.app.state.auth_engine.run_policy(
+            "threads", "read", request.user, {"thread_id": thread_id}  # type: ignore[arg-type]
+        )
+        if scope_filter is not None:
+            require_scope_match(record, scope_filter)
+    except Auth.exceptions.HTTPException as exc:
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+    graph = await _thread_graph(request, storage, thread_id)
+    if graph is None:
+        return JSONResponse([])
+    config: dict[str, object] = {
+        "configurable": {"thread_id": thread_id, "checkpoint_ns": ""}
+    }
+    get_history = getattr(graph, "aget_state_history")
+    history: list[dict[str, object]] = []
+    async for snapshot in get_history(config):
+        checkpoint = snapshot.config.get("configurable", {})
+        parent_config = snapshot.parent_config
+        parent_checkpoint = (
+            parent_config.get("configurable", {})
+            if isinstance(parent_config, dict)
+            else {}
+        )
+        interrupts = [
+            {"id": pending.id, "value": pending.value}
+            for task in snapshot.tasks
+            for pending in (task.interrupts or [])
+        ]
+        history.append(
+            {
+                "checkpoint_id": checkpoint.get("checkpoint_id"),
+                "parent_checkpoint_id": parent_checkpoint.get("checkpoint_id"),
+                "config": snapshot.config,
+                "parent_config": parent_config,
+                "values": snapshot.values,
+                "next": list(snapshot.next),
+                "metadata": snapshot.metadata,
+                "created_at": snapshot.created_at,
+                "tasks": snapshot.tasks,
+                "interrupts": interrupts,
+            }
+        )
+    return JSONResponse(_to_jsonable(history))  # type: ignore[arg-type]
+
+
 async def copy_thread(request: Request) -> Response:
     storage: Storage = request.app.state.storage
     thread_id = request.path_params["thread_id"]
@@ -676,6 +731,7 @@ routes: list[Route] = [
     Route("/threads/{thread_id}", get_thread, methods=["GET"]),
     Route("/threads/{thread_id}", patch_thread, methods=["PATCH"]),
     Route("/threads/{thread_id}", delete_thread, methods=["DELETE"]),
+    Route("/threads/{thread_id}/history", get_thread_history, methods=["GET"]),
     Route("/threads/{thread_id}/state", get_thread_state, methods=["GET"]),
     Route("/threads/{thread_id}/copy", copy_thread, methods=["POST"]),
 ]

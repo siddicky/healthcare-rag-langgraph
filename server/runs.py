@@ -13,6 +13,7 @@ from starlette.routing import Route
 from server.auth import require_scope_match
 from server.run_engine import (
     CancelRequest,
+    CheckpointMissing,
     JSONValue,
     QueueFull,
     RunConflict,
@@ -92,6 +93,8 @@ async def create_run(request: Request) -> Response:
         return JSONResponse(
             {"detail": "Thread already has an active run"}, status_code=409
         )
+    except CheckpointMissing:
+        return JSONResponse({"detail": "Checkpoint not found"}, status_code=404)
     except QueueFull:
         return JSONResponse(
             {"detail": "Run queue is full"},

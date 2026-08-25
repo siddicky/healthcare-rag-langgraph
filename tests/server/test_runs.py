@@ -289,6 +289,82 @@ async def test_stream_endpoint_accepts_resumable_flag(harness: Harness) -> None:
     assert events == [("updates", {"step": {"value": 7}})]
 
 
+@pytest.mark.anyio
+async def test_history_checkpoint_forks_stream_run_with_selected_parent(
+    harness: Harness,
+) -> None:
+    # Given: a completed run and its latest checkpoint.
+    initial = await harness.client.post(
+        "/threads/thread-1/runs/wait", json=body({"value": 2})
+    )
+    history = await harness.client.get("/threads/thread-1/history")
+
+    assert initial.status_code == 200
+    assert history.status_code == 200
+    checkpoint_id = history.json()[0]["checkpoint_id"]
+
+    # When: a streamed run starts from that checkpoint.
+    forked = body(
+        {"value": 10},
+        config={"configurable": {"checkpoint_id": checkpoint_id}},
+    )
+    async with aconnect_sse(
+        harness.client,
+        "POST",
+        "/threads/thread-1/runs/stream",
+        json=forked,
+    ) as source:
+        _ = [event async for event in source.aiter_sse()]
+
+    # Then: the fork input checkpoint points to the selected checkpoint.
+    fork_history = (
+        await harness.client.get("/threads/thread-1/history")
+    ).json()
+    assert any(
+        item["parent_checkpoint_id"] == checkpoint_id for item in fork_history
+    )
+
+
+@pytest.mark.anyio
+async def test_fork_from_alias_maps_to_checkpoint_and_bad_ids_are_rejected(
+    harness: Harness,
+) -> None:
+    # Given: a checkpoint from a completed run.
+    _ = await harness.client.post(
+        "/threads/thread-1/runs/wait", json=body({"value": 2})
+    )
+    history = (
+        await harness.client.get("/threads/thread-1/history")
+    ).json()
+    checkpoint_id = history[0]["checkpoint_id"]
+
+    # When: the alias, an unknown checkpoint, and an empty checkpoint are submitted.
+    aliased = await create(
+        harness,
+        body({"value": 4}, forkFrom=checkpoint_id),
+    )
+    alias_output = await harness.client.get(
+        f"/threads/thread-1/runs/{aliased.json()['run_id']}/join"
+    )
+    missing = await create(
+        harness,
+        body(
+            {"value": 4},
+            config={"configurable": {"checkpoint_id": str(uuid4())}},
+        ),
+    )
+    empty = await create(
+        harness,
+        body({"value": 4}, config={"configurable": {"checkpoint_id": ""}}),
+    )
+
+    # Then: the alias runs from the checkpoint and invalid IDs fail at submission.
+    assert alias_output.status_code == 200
+    assert aliased.json()["config"]["configurable"]["checkpoint_id"] == checkpoint_id
+    assert missing.status_code == 404
+    assert empty.status_code == 422
+
+
 def test_run_runtime_event_buffer_evicts_oldest_after_one_hundred() -> None:
     runtime = RunRuntime(
         request=RunRequest(assistant_id="toy", input={"value": 1}),
