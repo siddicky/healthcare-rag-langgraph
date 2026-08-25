@@ -16,6 +16,8 @@ export interface Runfile {
   /** Member stream perimeter of the main server + baked frontend ("v1"|"v2"). */
   perimeter?: string;
   next_public_perimeter?: string;
+  /** Whether the frontend build enabled the history (TimeTravel) + branching UI. */
+  history_branch_ui?: boolean;
   /** Second Agent Server running the flipped perimeter (always booted). */
   alt_server_url?: string;
   alt_perimeter?: string;
@@ -86,6 +88,13 @@ export async function threadStreamAdmitted(api: APIRequestContext): Promise<bool
 
 export const THREAD_STREAM_SKIP_REASON =
   "member frontend chats through the @langchain/react useStream ThreadStream transport (POST /threads/{id}/stream/events SSE + POST /threads/{id}/commands), which the member perimeter (v1 and v2) does not admit — see docs/safety.md 'Member stream perimeter v2 (useStream)'. UI specs auto-activate once a reviewed perimeter revision admits the transport.";
+
+export const HISTORY_BRANCH_UI_SKIP_REASON =
+  "history/branching UI disabled by default (NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI≠1)";
+
+export function historyBranchUiEnabled(run: Runfile): boolean {
+  return run.history_branch_ui === true;
+}
 
 export function internalHeaders(run: Runfile, owner: string): Record<string, string> {
   return {
