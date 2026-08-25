@@ -40,6 +40,7 @@ import {
   type UploadUi,
 } from "./uploadFlow";
 import { clearThreadTitles, deriveTitle, getThreadTitle, setThreadTitle } from "./titles";
+import { isHistoryBranchUiEnabled } from "./featureGates";
 import { envelopesFromValues, treesFromValues } from "@/catalog/values";
 import type { DataEnvelope } from "@/catalog/envelopes";
 
@@ -783,7 +784,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
           await reconcileThreadMessages(threadId);
         }
         maybeStartErase(messagesRef.current, threadId);
-        if (isForkV2Enabled()) void fetchHistory();
+        if (isForkV2Enabled() && isHistoryBranchUiEnabled()) void fetchHistory();
         return true;
       } catch (streamError) {
         if (isMissingThreadError(streamError)) {
@@ -1076,7 +1077,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
           },
         } as CoachSubmitOptions & { forkFrom: string });
         maybeStartErase(messagesRef.current, threadId);
-        void fetchHistory();
+        if (isHistoryBranchUiEnabled()) void fetchHistory();
         return true;
       } catch (streamError) {
         if (isMissingThreadError(streamError) || (streamError instanceof CoachApiError && (streamError as CoachApiError).status === 404)) {
@@ -1278,7 +1279,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
 
   // Auto-fetch history when thread changes in v2 (best-effort, gated)
   useEffect(() => {
-    if (!isForkV2Enabled() || deps.api.getThreadHistory === undefined) return;
+    if (!isForkV2Enabled() || !isHistoryBranchUiEnabled() || deps.api.getThreadHistory === undefined) return;
     if (activeThreadId === null) {
       setHistory(null);
       setSelectedCheckpointId(null);

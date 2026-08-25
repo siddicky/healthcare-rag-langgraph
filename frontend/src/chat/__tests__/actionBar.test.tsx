@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { ChatShell } from "@/chat/components/ChatShell";
@@ -33,6 +33,11 @@ async function sendAndSettle(user: ReturnType<typeof userEvent.setup>, stream: R
 
 beforeEach(() => {
   window.localStorage.clear();
+  vi.stubEnv("NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI", "1");
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe("action bar — regenerate", () => {
@@ -153,6 +158,22 @@ describe("action bar — branch", () => {
     await waitFor(() => expect(copyThread).toHaveBeenCalledWith("t-1"));
     await waitFor(() => expect(getThreadState).toHaveBeenCalledWith("t-copy"));
     expect(await screen.findByText("same answer")).toBeInTheDocument();
+  });
+});
+
+describe("action bar — history/branch UI gate (default off)", () => {
+  it("renders NO Branch button (and no edit affordance) when NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI ≠ 1", async () => {
+    vi.stubEnv("NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI", "");
+    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Plain answer.", "a1")])]);
+    shellWith(stream);
+    const user = userEvent.setup();
+    await user.type(await screen.findByLabelText("Message your coach"), "gate question");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+    expect(await screen.findByText("Plain answer.")).toBeInTheDocument();
+    expect(screen.getByTestId("action-bar")).toBeInTheDocument();
+    expect(screen.queryByRole("button", { name: "Branch into a new thread" })).toBeNull();
+    expect(screen.queryByTestId("turn-edit-btn")).toBeNull();
+    expect(screen.queryByTestId("time-travel-panel")).toBeNull();
   });
 });
 

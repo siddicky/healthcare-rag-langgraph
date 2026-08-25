@@ -17,6 +17,7 @@ const EMAIL = "member@example.com";
 
 beforeEach(() => {
   window.localStorage.clear();
+  vi.stubEnv("NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI", "1");
 });
 
 afterEach(() => {
