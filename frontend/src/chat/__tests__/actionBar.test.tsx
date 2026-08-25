@@ -41,7 +41,7 @@ describe("action bar — regenerate", () => {
     let releaseBusyPoll: (() => void) | null = null;
     const getThread = vi.fn((id: string): Promise<ThreadSummary> => {
       statusCalls.push(id);
-      if (statusCalls.length === 1) {
+      if (statusCalls.length === 2) {
         return new Promise((resolve) => {
           releaseBusyPoll = () => resolve(thread(id, { status: "busy" }));
         });
@@ -58,9 +58,10 @@ describe("action bar — regenerate", () => {
     await user.type(await screen.findByLabelText("Message your coach"), "What is a healthy breakfast?");
     await user.click(screen.getByRole("button", { name: "Send" }));
     expect(await screen.findByText("A protein-forward breakfast.")).toBeInTheDocument();
+    expect(getThread).toHaveBeenCalledTimes(1);
 
     await user.click(screen.getByRole("button", { name: "Regenerate" }));
-    expect(getThread).toHaveBeenCalledTimes(1);
+    expect(getThread).toHaveBeenCalledTimes(2);
     expect(stream.calls).toHaveLength(1);
 
     (releaseBusyPoll ?? (() => {}))();
