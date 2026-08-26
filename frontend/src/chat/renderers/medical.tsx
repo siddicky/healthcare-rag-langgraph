@@ -9,10 +9,8 @@ import { ReminderCard } from "@/components/generative-ui/ReminderCard";
  * (healthcare_rag/agent/coach_agent.py — build_route_b_agent's fixed list).
  *
  * SAFETY CONTRACT: `medical_lookup` is `return_direct` — the model never
- * paraphrases its answer. This renderer shows the relayed ToolMessage content
- * VERBATIM through the shared Markdown component, styled exactly like AiBubble
- * (`.bubble-row assistant` > avatar + `.bubble assistant`), which is what
- * e2e/smoke.spec.ts asserts against.
+ * paraphrases its answer. Its renderer claims the tool without adding another
+ * visible surface; the relayed terminal AI message owns the answer verbatim.
  *
  * The remaining named tools render name + status + on-brand minimal cards;
  * reminder tools reuse ReminderCard visuals for their confirmed state. Args
@@ -236,6 +234,7 @@ export function NamedToolCard({
   );
 }
 
+/** Claims medical_lookup while the relayed terminal AI message remains its only visible owner. */
 export function MedicalLookupBubble(_props: { status: ToolRenderStatus; result?: string }): null {
   return null;
 }

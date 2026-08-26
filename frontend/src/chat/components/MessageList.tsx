@@ -15,9 +15,9 @@ import { DocumentIngestCard } from "@/components/generative-ui/DocumentIngestCar
 import { Markdown } from "@/components/generative-ui/Markdown";
 import { MemoryExtractionCard } from "@/components/generative-ui/MemoryExtractionCard";
 import { ReminderCard } from "@/components/generative-ui/ReminderCard";
-import { CalendarChangePayloadSchema } from "@/chat/model";
 import {
   aiDisplayText,
+  CalendarChangePayloadSchema,
   composeTreesForTurn,
   isAiMessage,
   isToolMessage,
@@ -27,9 +27,9 @@ import {
   parseMemoryConfirmation,
   parseReminderDelivery,
   reminderActionTurn,
-  type TurnModel,
-  type WireMessage,
+  type TurnModel, type WireMessage,
 } from "@/chat/model";
+import { selectFinalAssistantMessage } from "@/chat/finalAssistantMessage";
 import { ReasoningBlock } from "./ReasoningBlock";
 import { chatTelemetry } from "@/chat/stream";
 import type { ResumePayload } from "@/chat/coachProtocol";
@@ -222,7 +222,7 @@ function TurnView({
   const humanText = turn.human !== null ? messageText(turn.human.content) : "";
   const trees = composeTreesForTurn(turn);
   const scopeId = turn.scopeId ?? "";
-  const finalAssistantMessage = [...turn.messages].reverse().find(isAiMessage);
+  const finalAssistantMessage = selectFinalAssistantMessage(turn.messages);
   const generativeToolResults = toolCallsForTurn(turn, toolCalls);
   const combinedEnvelopes = valuesEnvelopes !== undefined && valuesEnvelopes.length > 0 ? [...turn.envelopes, ...valuesEnvelopes] : turn.envelopes;
   const canEdit = onEditTurn !== undefined && turn.human !== null && process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
@@ -335,6 +335,8 @@ export interface MessageListProps {
   onApproveAll?: (resumes: ResumePayload[]) => void;
   latestAiMessageId: string | null;
   actionBar?: React.ReactNode;
+  interruptSurface?: React.ReactNode;
+  hasTransportInterrupt?: boolean;
   /** Full-mode ReminderCard actions dispatch new chat turns in the member's phrasing. */
   onReminderAction?: (text: string) => void;
   /** Handlers for composed-tree dispatch ids (catalog Button actions). */
@@ -357,6 +359,8 @@ export function MessageList({
   onApproveAll,
   latestAiMessageId,
   actionBar,
+  interruptSurface,
+  hasTransportInterrupt = false,
   onReminderAction,
   dispatchHandlers,
   toolCalls,
@@ -370,7 +374,7 @@ export function MessageList({
 
   useEffect(() => {
     if (scrollRef.current !== null) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-  }, [rendered, pendingInterrupt, upload.phase, pendingInterrupts]);
+  }, [rendered, pendingInterrupt, upload.phase, pendingInterrupts, hasTransportInterrupt]);
 
   const interrupts = pendingInterrupts !== undefined && pendingInterrupts !== null
     ? (pendingInterrupts.length > 0 ? pendingInterrupts : pendingInterrupt !== null ? [pendingInterrupt] : [])
@@ -412,7 +416,7 @@ export function MessageList({
   const hasInterrupts = interrupts.length > 0;
   const hasValuesContent = allValuesTrees.length > 0 || allValuesEnvelopes.length > 0;
 
-  if (turns.length === 0 && !hasInterrupts && upload.phase === "idle" && !hasValuesContent) {
+  if (turns.length === 0 && !hasInterrupts && !hasTransportInterrupt && upload.phase === "idle" && !hasValuesContent) {
     return null;
   }
   return (
@@ -470,6 +474,7 @@ export function MessageList({
             )}
           </>
         )}
+        {interruptSurface}
       </div>
     </div>
   );

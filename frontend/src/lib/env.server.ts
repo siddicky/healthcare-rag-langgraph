@@ -1,7 +1,7 @@
 /**
- * Server-only configuration. NEVER import this from a client component —
- * these names are deliberately NOT NEXT_PUBLIC_* and must never reach the
- * browser bundle (see src/lib/env.ts for the client-side convention).
+ * Server-only accessors. NEVER import this module from a client component.
+ * `NEXT_PUBLIC_LANGGRAPH_URL` is accepted as a deployment alias, but it is
+ * read here only to configure the server-side CopilotKit proxy.
  */
 
 /**

@@ -256,6 +256,14 @@ describe("interrupt payload classification", () => {
     expect(kind.kind).toBe("memory-extraction");
   });
 
+  it("classifies serialized memory-extraction payloads from AG-UI interrupt metadata", () => {
+    const kind = classifyInterruptPayload(JSON.stringify({
+      sourceLabel: "intake-form.pdf",
+      fields: [{ key: "dose", label: "Dose", value: "500mg", needsReview: true }],
+    }));
+    expect(kind.kind).toBe("memory-extraction");
+  });
+
   it("returns unknown for anything else (renders nothing, never crashes)", () => {
     expect(classifyInterruptPayload({ whatever: 1 }).kind).toBe("unknown");
     expect(classifyInterruptPayload("nope").kind).toBe("unknown");

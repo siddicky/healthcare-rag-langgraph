@@ -395,6 +395,10 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
     await expect(review).toBeVisible({ timeout: 60_000 });
     await expect(review).toContainText("Found in");
     await expect(review).toContainText("Lipitor");
+    await page.screenshot({
+      path: path.join(SCREENSHOTS, "memory-extraction-interrupt.png"),
+      fullPage: true,
+    });
     await review.getByRole("button", { name: "Edit Dose time" }).click();
     await review.locator("input.form-input").fill("Morning");
     await review.locator("input.form-input").press("Enter");

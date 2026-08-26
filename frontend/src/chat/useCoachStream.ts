@@ -139,6 +139,7 @@ export interface CoachStreamHandle {
   readonly isThreadLoading: boolean;
   readonly error: unknown;
   readonly threadId: string | null;
+  readonly rendersInterrupts?: boolean;
   submit(input: RunInput, options: CoachSubmitOptions): Promise<void>;
   respond(
     response: ResumePayload,
@@ -568,6 +569,7 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
     isThreadLoading: isThreadLoading || !isReady,
     error,
     threadId: options.threadId ?? agent.threadId,
+    rendersInterrupts: true,
     submit: run,
     respond,
     respondAll,
@@ -1590,6 +1592,7 @@ export function useCoachStream(deps: CoachStreamDeps) {
     toolCalls,
     pendingInterrupt,
     pendingInterrupts,
+    interruptsRenderedByTransport: stream.rendersInterrupts === true,
     busy: busy || stream.isLoading,
     isLoading: stream.isLoading,
     isThreadLoading: stream.isThreadLoading,

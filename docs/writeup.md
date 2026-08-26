@@ -1,11 +1,11 @@
 # healthcare-rag: technical write-up
 
-Abdullah Siddique. Senior Python Engineer (contract) take-home, nymble health. Aug 18 to 25, 2026.
+Abdullah Siddique. Senior Python Engineer (contract) take-home, nymble health. Aug 18 to 26, 2026.
 
 - Repo: [siddicky/healthcare-rag-langgraph](https://github.com/siddicky/healthcare-rag-langgraph) (private fork of timpowellgit/healthcare-rag)
 - Design system: [siddicky/nymble-health-design-system](https://github.com/siddicky/nymble-health-design-system)
-- Video: [ADD LINK]
-- Submission page (evidence index for everything below): [ADD LINK]
+- Video: TBD, final walkthrough recording pending
+- Findings deep-dive (evidence index for everything below, 12 chapters): [claude.ai/code/artifact/6821cb1b](https://claude.ai/code/artifact/6821cb1b-3364-4794-9aa6-b949f786a621)
 
 Every number in this document comes from a committed report under `evals/results/` or a decision record under `docs/decisions/`. The day-by-day reasoning lives in `docs/journey.json`, rendered at `docs/journey.html`. Where I cite a finding as F-something or a decision as D-something, that is its id in the journey file.
 
@@ -51,7 +51,7 @@ Files: `healthcare_rag/processors/safety.py`, `refusal_boundary.py`, `docs/safet
 
 ### Direction 1: standards you would inherit
 
-**What I built.** Replaced the 182-package frozen `requirements.txt` with a `uv`-managed `pyproject.toml` with `evals`/`ingest`/`dev` extras. `make venv` runs `uv venv --python 3.12` then an editable install. Python floor raised to 3.11 to match the code. CODEOWNERS on the safety gate and deploy config. 1,816 backend tests, run in CI without any API key on purpose.
+**What I built.** Replaced the 182-package frozen `requirements.txt` with a `uv`-managed `pyproject.toml` with `evals`/`ingest`/`dev` extras. `make venv` runs `uv venv --python 3.12` then an editable install. Python floor raised to 3.11 to match the code. CODEOWNERS on the safety gate and deploy config. 1,955 backend tests, run in CI without any API key on purpose.
 
 Then the part I am more proud of. On Aug 23 the repo had 142 open Dependabot alerts, two critical. 136 of them were raised against `requirements.txt`, which by then nothing in the build read: not the Makefile, not the Dockerfile, not compose, not any workflow. I deleted the file. That removed the vulnerable manifest rather than dismissing the alerts. The six real alerts were in `uv.lock`; four cleared with one cryptography upgrade, two were deferred with a written reachability argument (D18, `docs/decisions/dependabot-requirements-txt.md`).
 
@@ -63,19 +63,21 @@ I also got something wrong here and put the correction on the record. My first w
 
 **What I built.** Two things, in this order. First a design system as its own repo, because I did not want to invent a look for a company that already has one. I captured nymble.health's production stylesheet (SHA-pinned, Aug 20), reorganised it into 66 tokens and 32 React components with values never altered, added 16 guideline cards and two UI kits, and wrote a `SKILL.md` so an AI tool can design on-brand without being told the palette. The one substitution is flagged in the README: Filson Pro is commercial, so headlines use Quicksand until someone drops the real font files in.
 
-Then the member-facing app. Next.js 16, Supabase login, chatting over the LangGraph streaming SDK. The coach is "Nymble AI Coach", a name pill and a monogram, no mascot. The UI the coach renders is a declarative catalog: trend cards, a mini calendar, an injection tracker, and so on. The rule that makes this safe is that a fact prop is never a literal. It is a `__ref` into a same-turn data envelope the server produced, resolved by JSON pointer, rejected if the model tries to smuggle a number or a weekday through a static label.
+Then the member-facing app. Next.js 16, Supabase login. The coach is "Nymble AI Coach", a name pill and a monogram, no mascot. The UI the coach renders is a declarative catalog: trend cards, a mini calendar, an injection tracker, and so on. The rule that makes this safe is that a fact prop is never a literal. It is a `__ref` into a same-turn data envelope the server produced, resolved by JSON pointer, rejected if the model tries to smuggle a number or a weekday through a static label.
 
 Four fixed-contract interrupt cards gate real writes behind a confirm or decline: schedule change, extracted-memory review, document upload, reminder. The answer to "did the change actually happen?" is that resolved outcomes persist as permanent cards in the transcript. Not a toast. The conversation is the record.
 
-**Why this way.** The catalog-with-refs pattern came from LangChain's generative-UI docs. I chose it over free-form UI generation because a coach that can put a number on screen that the server did not produce is a coach that can hallucinate a dose in a nice card.
+The transport underneath that got rebuilt on Aug 25, and it is worth saying why rather than just describing the new version. The original build drove a custom `useCoachChat.ts` engine straight over the LangGraph streaming SDK. In production it 403'd real members. The fix was not a patch, it was a transport swap: `/chat` now mounts a `CopilotKitProvider` against a runtime route (`/api/copilotkit`), and the engine is CopilotKit v2's headless `useAgent`, driven by `useCoachStream.ts`. The four interrupt cards did not go away, they moved from one `InterruptPanel.tsx` component to hooks registered inside the provider (`useInterrupt`, `useRenderTool`, a fail-closed catch-all renderer for anything unregistered). One vendor bug came with it: CopilotKit 0.1.95 would JSON-serialize an internal context object and leak its ids into the prompt, worked around with a no-op override on the middleware that carries it. The old `useStream` transport and its LangChain wiring were deleted for good in the same release, v1.5.0.
 
-**Second pass.** No dark mode. Accessibility is thin, aria attributes in a handful of components and none in the message list. No frontend deploy config, it is deployed by hand. All three are honest gaps.
+**Why this way.** The catalog-with-refs pattern came from LangChain's generative-UI docs. I chose it over free-form UI generation because a coach that can put a number on screen that the server did not produce is a coach that can hallucinate a dose in a nice card. The transport swap was not optional, a 403 in production is not a design choice to weigh.
+
+**Second pass.** No dark mode. Accessibility is thin, aria attributes in a handful of components and none in the message list. No frontend deploy config, it is deployed by hand. The transport rewrite is not fully settled either: branching and history UI shipped and were then disabled by default the same day (PR #57) pending more hardening, and the reliability follow-up for it is still an open PR as I write this.
 
 ### Direction 3: a safety net for regressions
 
 **What I built.** An eval harness first, before anything else. 86 golden examples (45 core, 41 held out) across eight categories including the safety ones. A calibrated LLM judge (gpt-5.6-sol) with 21 hand-labelled calibration cases that every judge must pass, plus deterministic checks that do not need a model (`numeric_advice_leak`, `forbidden_content`, chunk and page recall). A 27-conversation, 131-turn multi-turn harness for drift, carry-over and PII persistence. A CI gate script with `--fail-under`. Stage ablations that kill each of the five runtime stages in turn and measure what breaks.
 
-Every run is committed. 67 reports, each a Markdown summary paired with a JSON of per-query raw outputs: the answer, retrieved chunks, all 27 metric scores, the safety outcome, latency, cost, the git SHA it ran at, and a LangSmith run URL. A seal script refuses to trust a report unless the checkout that produced it was clean.
+Every run is committed. 73 reports, each a Markdown summary paired with a JSON of per-query raw outputs: the answer, retrieved chunks, all 27 metric scores, the safety outcome, latency, cost, the git SHA it ran at, and a LangSmith run URL. A seal script refuses to trust a report unless the checkout that produced it was clean.
 
 Two things the harness taught me that I did not expect. Run-to-run variance is real. The same configuration scored core correctness 0.75 and 0.86 in two runs (F15). So the rules became: pair every comparison against a fresh reference in the same session, treat ±0.05 as noise, use two repetitions for anything that decides something. And a retrieval-recall win does not imply an answer-quality win, which is why the retrieval gate has a judged second stage (F40, more below).
 
@@ -177,7 +179,9 @@ I used AI tools for nearly all of the typing and a good share of the thinking, a
 
 Claude Code was the primary driver, running oh-my-claudecode, an orchestration layer that gives it named roles: a planner that interviews before it plans, executors that work in git worktrees, verifiers that check claims against evidence in a separate pass. The pattern I leaned on hardest was the "deep interview": for the retrieval work, seven rounds of clarifying questions with a 10% ambiguity gate before any code, producing a mission spec with the evaluator contract frozen ahead of results. The two retrieval missions ran as "autoresearch" loops against that spec. `.omc/autoresearch/` and `docs/experiments/` hold the raw trail.
 
-Codex (OpenAI) was the adversarial reviewer. Nine review artefacts under `.omc/artifacts/ask/`. It rejected the six-branch consolidation merge (PR #7) on first pass and made me fix things before it passed. Its first review of the eval harness is why there is a deterministic `numeric_advice_leak` check beside the LLM judge, a `--fail-under` CI gate, and chunk-file hashes in every report's metadata (T13). Two different models with two different biases disagreeing is worth more than one agreeing with itself.
+Codex (OpenAI) started as the adversarial reviewer. Nine review artefacts under `.omc/artifacts/ask/`. It rejected the six-branch consolidation merge (PR #7) on first pass and made me fix things before it passed. Its first review of the eval harness is why there is a deterministic `numeric_advice_leak` check beside the LLM judge, a `--fail-under` CI gate, and chunk-file hashes in every report's metadata (T13). Two different models with two different biases disagreeing is worth more than one agreeing with itself.
+
+It graduated from reviewer to implementer on Aug 25, when the custom chat transport started 403ing members in production. I handed that to Codex directly, on its own branch, rather than fixing it myself: it diagnosed the transport as the actual defect, rebuilt member chat on CopilotKit v2 (`useCoachStream.ts`, the renderer registrations, the middleware ordering fix for a real CopilotKit vendor bug), got it through the hermetic e2e suite, and shipped it as v1.5.0. As I write this it is still on that branch fixing the reliability follow-ups, PR #60, open.
 
 OpenWiki generated the repo wiki and, more usefully, forced me to keep `AGENTS.md` honest, because the wiki reads them.
 
@@ -219,7 +223,7 @@ Reporting a number before verifying it. The cryptography claim (PR #16) and the 
 - `openwiki/`, 51 pages, regenerated daily by `.github/workflows/openwiki-update.yml` into a PR.
 - `docs/journey.json` and `docs/journey.html`, the decision trail with evidence ids.
 - Seven decision records in `docs/decisions/`, each with a verdict.
-- `evals/`, with 67 committed reports and their raw per-query JSON, the calibration set, the seal gate, and the two-stage retrieval gate as a reusable CLI.
+- `evals/`, with 73 committed reports and their raw per-query JSON, the calibration set, the seal gate, and the two-stage retrieval gate as a reusable CLI.
 - Make targets an agent can call: `eval`, `eval-multiturn`, `eval-agent`, `parity`, `deployed-smoke-gate`, `rollback`.
 - The smoke scripts as an executable spec of the server.
 - `.omo/plans/` (six plans) and `.omo/evidence/` (64 evidence files) from the orchestration layer, and `.omc/specs/` with the platform-outage diagnosis.
@@ -232,7 +236,7 @@ If a stranger clones this fork tomorrow and turns on their own AI tool, the firs
 
 ## Appendix: the journey, day by day
 
-This is the reasoning chain behind sections 2 and 3, in the order it happened. `docs/journey.json` is the source; it has 26 timeline entries, 42 findings, 18 decisions and 25 experiments, and every id below is an id in that file. The journey file stops on Aug 23 at the retrieval work. The last three days come from the PR history.
+This is the reasoning chain behind sections 2 and 3, in the order it happened. `docs/journey.json` is the source; it has 26 timeline entries, 42 findings, 18 decisions and 25 experiments, and every id below is an id in that file. The journey file stops on Aug 23 at the retrieval work. Everything from Aug 24 on comes from the PR history.
 
 ### Aug 18, the baseline day
 
@@ -325,6 +329,14 @@ That day is what "ship it" actually looks like. Nothing in it is clever. All of 
 ### Aug 25, the coach as one agent
 
 Replaced the coach's LLM decision list with a deterministic pre-agent gate and a single top-level `create_agent` with a `medical_lookup` tool that relays into the RAG graph and returns its answer verbatim (#43). A follow-up fix strips any assistant prose emitted alongside a `medical_lookup` call, closing a path where the model could add its own words around a grounded answer. Tagged v1.2.0.
+
+### Aug 25 to 26, the transport rewrite
+
+Four small releases (v1.2.1 through v1.4.1) in between, mostly workflow token plumbing. The real event was the frontend chat transport, and it started as a production incident, not a refactor: the custom `useCoachChat.ts` engine over the raw LangGraph SDK was 403ing real members. I handed the fix to Codex on its own branch rather than patching it myself.
+
+It came back with a transport swap, not a patch: CopilotKit v2's headless `useAgent`, a new `/api/copilotkit` runtime route, and a `CopilotKitMiddleware` pinned outermost on the coach agent so everything the runtime emits sees the final safety-scrubbed projections. Server-side it also added checkpoint forking for branching and time travel, resumable runs for join and rejoin, and token-level message streaming instead of values-only. The four interrupt cards moved from one `InterruptPanel.tsx` component to hooks registered under the provider. It found and worked around a real vendor bug along the way, a CopilotKit 0.1.95 issue that would have serialized an internal context object into the prompt. All of it passed the hermetic e2e suite before merging. Shipped as v1.5.0 (PR #58, Aug 26).
+
+Not everything in that branch was kept on. Branching and history UI shipped and were disabled by default the same day (PR #57), a second, more conservative call than the first ship. Reliability follow-ups are still in progress on a new branch, PR #60, open as I write this appendix.
 
 ### What the chain looks like from above
 

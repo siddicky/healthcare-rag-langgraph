@@ -168,8 +168,7 @@ export function useMemoryExtractionInterrupt(): ReactElement | null {
 /**
  * Mount-once component registering BOTH interrupt handlers. At most one
  * returns an element per pending interrupt (the `enabled` predicates are
- * disjoint); that element renders wherever this component mounts. Todo 11
- * wires it into the shell when the headless filter retires InterruptPanel.
+ * disjoint); that element renders wherever this component mounts.
  */
 export function registerInterruptHandlers(): ReactElement | null {
   const calendar = useCalendarChangeInterrupt();

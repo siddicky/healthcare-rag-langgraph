@@ -190,6 +190,26 @@ describe("MessageList toolCalls wiring", () => {
     expect(screen.queryByTestId("tool-call-wrap")).toBeNull();
   });
 
+  it("keeps the last visible assistant output when a trailing tool placeholder is empty", () => {
+    const messages: WireMessage[] = [
+      { type: "human", id: "h1", content: "Show my schedule" },
+      { type: "ai", id: "a1", content: "Here is your current schedule." },
+      {
+        type: "ai",
+        id: "a2",
+        content: "",
+        tool_calls: [{ id: "tc-schedule", name: "view_schedule", args: { month: "2026-08" } }],
+      },
+    ];
+
+    render(
+      <MessageList turns={buildTurns(messages)} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} />,
+    );
+
+    expect(screen.getByText("Here is your current schedule.")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-card")).toBeNull();
+  });
+
   it("keeps stream.toolCalls out of the member transcript", () => {
     const messages = wireMessagesForToolCalls();
     const turns = buildTurns(messages);
