@@ -670,3 +670,12 @@ async def test_state_surfaces_pending_interrupts(harness: Harness) -> None:
     assert isinstance(entry, dict)
     assert isinstance(entry.get("id"), str) and entry["id"]
     assert entry.get("value") == {"kind": "approval"}
+    # The CopilotKit/AG-UI adapter reads pending interrupts EXCLUSIVELY from
+    # tasks[].interrupts (ThreadTask wire shape) — without this key the
+    # document-review and calendar-change interrupt cards never render.
+    tasks = state.json().get("tasks")
+    assert isinstance(tasks, list) and len(tasks) == 1
+    task = tasks[0]
+    assert isinstance(task.get("id"), str) and isinstance(task.get("name"), str)
+    assert task.get("error") is None
+    assert task.get("interrupts") == interrupts

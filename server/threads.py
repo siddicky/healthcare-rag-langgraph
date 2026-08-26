@@ -13,6 +13,40 @@ logger = logging.getLogger("MedicalRAG")
 from langgraph_sdk import Auth
 
 
+def _task_payloads(snapshot: object) -> list[dict[str, object]]:
+    # ThreadTask wire shape (langgraph_sdk schema): the CopilotKit/AG-UI
+    # adapter reads pending interrupts EXCLUSIVELY from
+    # tasks[].interrupts on the thread-state snapshot — the flat top-level
+    # `interrupts` list is not enough for it. Subgraph interrupts (e.g.
+    # change_schedule inside coach_agent) surface on the root task.
+    tasks: list[dict[str, object]] = []
+    for task in getattr(snapshot, "tasks", None) or ():
+        interrupts = [
+            {"id": pending.id, "value": pending.value}
+            for pending in (task.interrupts or ())
+        ]
+        tasks.append(
+            {
+                "id": task.id,
+                "name": task.name,
+                "error": task.error,
+                "interrupts": interrupts,
+                "checkpoint": getattr(task, "checkpoint", None),
+                "state": None,
+                "result": getattr(task, "result", None),
+            }
+        )
+    return tasks
+
+
+def _flat_interrupts(tasks: list[dict[str, object]]) -> list[dict[str, object]]:
+    return [
+        interrupt
+        for task in tasks
+        for interrupt in task["interrupts"]  # type: ignore[index]
+    ]
+
+
 def _to_jsonable(obj: object) -> object:
     if obj is None or isinstance(obj, (bool, int, float, str)):
         return obj
@@ -581,7 +615,9 @@ async def get_thread_state(request: Request) -> Response:
 
     graph = await _thread_graph(request, storage, thread_id)
     if graph is None:
-        return JSONResponse({"values": {}, "next": [], "interrupts": []})
+        return JSONResponse(
+            {"values": {}, "next": [], "tasks": [], "interrupts": []}
+        )
     try:
         get_state = getattr(graph, "aget_state")
         snapshot = await get_state(config)
@@ -595,15 +631,12 @@ async def get_thread_state(request: Request) -> Response:
         raise
     # Pending interrupts live on the graph snapshot's tasks, never in channel
     # values — the oracle surfaces them as {id, value} entries.
-    interrupts = [
-        {"id": pending.id, "value": pending.value}
-        for task in snapshot.tasks
-        for pending in (task.interrupts or [])
-    ]
+    tasks = _task_payloads(snapshot)
     payload: dict[str, object] = {
         "values": snapshot.values,
         "next": list(snapshot.next),
-        "interrupts": interrupts,
+        "tasks": tasks,
+        "interrupts": _flat_interrupts(tasks),
     }
     return JSONResponse(_to_jsonable(payload))  # type: ignore[arg-type]
 
