@@ -1,11 +1,17 @@
-# Experiment evidence trail
+# Retrieval experiment archive
 
-Raw artefacts behind the retrieval decisions in `docs/decisions/` and the write-up in `docs/retrieval-experiments.md`.
-Copied verbatim from the (git-excluded) `.omc/autoresearch/<mission>/` working directories so the evidence travels with the repo.
+This directory preserves the evidence behind the retrieval decisions in
+`docs/decisions/` and the summary in `docs/retrieval-experiments.md`. The files
+are copies from git-excluded `.omo/autoresearch/<mission>/` working directories.
+Treat them as historical records, not current configuration or a place to run
+new experiments.
 
-| dir | contents |
+| Directory | Archived evidence |
 |---|---|
-| `pageindex-vs-weaviate/` | `deep-interview-spec.md` (requirements + frozen thresholds, written **before** any result), `mission.md`, `evaluator.json`, `decision-log.md` (timestamped iteration log), `evaluations/` (evaluator JSON per iteration) |
-| `pinecone-rerank/` | same shape; `evaluations/iteration-0002.json` = 4-arm stage 1, `iteration-0003-diag-pinecone-dense.json` = labelled diagnostic, `iteration-0003.json` = paired stage 2 |
+| `pageindex-vs-weaviate/` | The pre-result `deep-interview-spec.md`, mission, evaluator contract, timestamped decision log, and evaluator JSON for each recorded iteration |
+| `pinecone-rerank/` | The mission, inherited gate contract, timestamped decision log, four-arm stage 1 (`iteration-0002.json`), labelled dense-only diagnostic (`iteration-0003-diag-pinecone-dense.json`), and paired stage 2 (`iteration-0003.json`) |
 
-The evaluator itself is `evals/pageindex_gate.py`; the per-run `run_baseline` reports it consumed are under `evals/results/` (`pinecone-rerank*`, `pi-gate-*`, `pageindex-vs-weaviate*`, `pinecone-dense-diag*`).
+`evals/pageindex_gate.py` is the reusable evaluator. Its durable reports are in
+`evals/results/`, chiefly `pageindex-vs-weaviate*`, `pinecone-rerank*`,
+`pinecone-dense-diag*`, and the `pi-gate-*` paired runs. Read those reports and
+the matching decision record before proposing another retrieval change.
