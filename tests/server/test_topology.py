@@ -136,7 +136,11 @@ async def test_native_routes_pass_through_perimeter(
 
     assert created.json()["metadata"] == {"user_id": "member-a"}
     assert denied_stream.status_code == 403
-    assert state.json() == {"values": {}, "interrupts": []}
+    state_payload = state.json()
+    assert state_payload["values"] == {}
+    assert state_payload["interrupts"] == []
+    assert state_payload.get("tasks", []) == []
+    assert state_payload.get("next", []) == []
 
 
 @pytest.mark.anyio
