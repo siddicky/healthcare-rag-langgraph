@@ -127,7 +127,70 @@ async def get_assistant(request: Request) -> JSONResponse:
     return JSONResponse(target)
 
 
+async def get_assistant_graph(request: Request) -> JSONResponse:
+    """Node/edge topology for visualization, mirroring langgraph-api's contract:
+    ``graph.aget_graph(xray=...).to_json()`` with each node's ``data.id`` stripped.
+    Required by the AG-UI LangGraph client (``client.assistants.getGraph``), which
+    every non-regenerate agent run calls unconditionally.
+    """
+    assistant_id = request.path_params.get("assistant_id", "")
+    all_items = _all_assistants(request)
+    target = next((a for a in all_items if a["assistant_id"] == assistant_id), None)
+    if target is None:
+        return JSONResponse({"detail": "Assistant not found"}, status_code=404)
+
+    policy_value: dict[str, Any] = {"assistant_id": assistant_id, "metadata": target.get("metadata", {})}
+    try:
+        scope_filter = await _run_policy(request, policy_value)
+    except Auth.exceptions.HTTPException as exc:
+        return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+
+    if scope_filter is not None:
+        try:
+            require_scope_match(target, scope_filter)
+            if "graph_id" in scope_filter and target.get("graph_id") != scope_filter["graph_id"]:
+                return JSONResponse({"detail": "Assistant not found"}, status_code=404)
+        except Auth.exceptions.HTTPException as exc:
+            return JSONResponse({"detail": exc.detail}, status_code=exc.status_code)
+        for k, v in scope_filter.items():
+            if target.get(k) != v and target.get("metadata", {}).get(k) != v:
+                return JSONResponse({"detail": "Assistant not found"}, status_code=404)
+
+    xray: bool | int = False
+    xray_query = request.query_params.get("xray")
+    if xray_query:
+        if xray_query in ("true", "True"):
+            xray = True
+        elif xray_query in ("false", "False"):
+            xray = False
+        else:
+            try:
+                xray = int(xray_query)
+            except ValueError:
+                return JSONResponse({"detail": "Invalid xray value"}, status_code=422)
+            if xray <= 0:
+                return JSONResponse({"detail": "Invalid xray value"}, status_code=422)
+
+    raw_graphs: dict[str, Any] = getattr(request.app.state, "raw_graphs", {})
+    graph = raw_graphs.get(target["graph_id"])
+    if graph is None:
+        return JSONResponse({"detail": "Assistant not found"}, status_code=404)
+
+    try:
+        drawable_graph = await graph.aget_graph(xray=xray)
+    except NotImplementedError:
+        return JSONResponse({"detail": "The graph does not support visualization"}, status_code=422)
+
+    json_graph = drawable_graph.to_json()
+    for node in json_graph.get("nodes", []):
+        data = node.get("data")
+        if isinstance(data, dict):
+            data.pop("id", None)
+    return JSONResponse(json_graph)
+
+
 routes: list[Route] = [
     Route("/assistants/search", search_assistants, methods=["POST"]),
     Route("/assistants/{assistant_id}", get_assistant, methods=["GET"]),
+    Route("/assistants/{assistant_id}/graph", get_assistant_graph, methods=["GET"]),
 ]

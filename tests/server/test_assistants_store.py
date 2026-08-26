@@ -124,7 +124,7 @@ def _make_real_like_assistants_auth() -> Auth:
     return auth
 
 
-def _build_app_with_routes(routes, auth: Auth, *, local_dev: bool = False, config: ServerConfig | None = None, storage: Storage | None = None) -> Starlette:
+def _build_app_with_routes(routes, auth: Auth, *, local_dev: bool = False, config: ServerConfig | None = None, storage: Storage | None = None, raw_graphs: dict[str, Any] | None = None) -> Starlette:
     from server.auth import AuthPolicyEngine
 
     cfg = config or _make_graph_config()
@@ -132,6 +132,8 @@ def _build_app_with_routes(routes, auth: Auth, *, local_dev: bool = False, confi
     app = Starlette(routes=routes, middleware=[AuthMiddleware.as_starlette(auth, local_dev)])
     app.state.config = cfg  # type: ignore[attr-defined]
     app.state.storage = st  # type: ignore[attr-defined]
+    if raw_graphs is not None:
+        app.state.raw_graphs = raw_graphs  # type: ignore[attr-defined]
     engine = AuthPolicyEngine(auth)
     app.state.auth_engine = engine  # type: ignore[attr-defined]
     class _R:
@@ -282,6 +284,49 @@ async def test_assistants_get_by_id():
             assert missing.status_code in (403, 404), f"member healthcare_rag should be hidden, got {missing.status_code} {missing.text}"
             notfound = await c2.get("/assistants/does_not_exist", headers={"authorization": "Bearer good"})
             assert notfound.status_code == 404
+
+
+@pytest.mark.anyio
+async def test_assistants_get_graph():
+    from healthcare_rag.agent import coach
+    from healthcare_rag.graph import graph as healthcare_rag_graph
+    from server.assistants import routes
+
+    auth = _make_stub_auth()
+    cfg = _make_graph_config()
+    from langgraph.checkpoint.memory import InMemorySaver
+    storage = Storage(saver=InMemorySaver(), store=InMemoryStore(index=None))
+    raw_graphs = {"coach": coach, "healthcare_rag": healthcare_rag_graph}
+
+    # Studio can fetch the graph topology for both assistants
+    app = _build_app_with_routes(routes, auth, local_dev=True, config=cfg, storage=storage, raw_graphs=raw_graphs)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app), base_url="http://test") as client:
+        for gid in ["coach", "healthcare_rag"]:
+            resp = await client.get(f"/assistants/{gid}/graph")
+            assert resp.status_code == 200, f"GET {gid}/graph studio failed: {resp.text}"
+            body = resp.json()
+            assert "nodes" in body and "edges" in body, f"missing nodes/edges: {body}"
+            assert len(body["nodes"]) > 0, f"expected at least one node for {gid}"
+            for node in body["nodes"]:
+                data = node.get("data")
+                if isinstance(data, dict):
+                    assert "id" not in data, f"node data.id should be stripped: {node}"
+
+        # Unknown assistant -> 404
+        notfound = await client.get("/assistants/does_not_exist/graph")
+        assert notfound.status_code == 404
+
+        # Invalid xray -> 422
+        bad_xray = await client.get("/assistants/coach/graph", params={"xray": "not-a-bool-or-int"})
+        assert bad_xray.status_code == 422, bad_xray.text
+
+    # Member scoped to coach can fetch coach's graph but not healthcare_rag's
+    app2 = _build_app_with_routes(routes, auth, local_dev=False, config=cfg, storage=storage, raw_graphs=raw_graphs)
+    async with httpx.AsyncClient(transport=httpx.ASGITransport(app=app2), base_url="http://test") as c2:
+        ok = await c2.get("/assistants/coach/graph", headers={"authorization": "Bearer good"})
+        assert ok.status_code == 200, ok.text
+        missing = await c2.get("/assistants/healthcare_rag/graph", headers={"authorization": "Bearer good"})
+        assert missing.status_code in (403, 404), f"member healthcare_rag/graph should be hidden, got {missing.status_code} {missing.text}"
 
 
 @pytest.mark.anyio
