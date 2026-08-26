@@ -90,9 +90,18 @@ class RunRequest(BaseModel):
     command: ResumeCommand | None = None
     config: dict[str, JSONValue] = Field(default_factory=dict)
     stream_mode: list[
-        Literal["updates", "custom", "values", "messages", "messages-tuple"]
+        Literal[
+            "updates", "custom", "values", "messages", "messages-tuple", "events"
+        ]
     ] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
-    stream_subgraphs: Literal[False] = False
+    # The locked CopilotKit adapter (@ag-ui/langgraph 0.0.42) always streams
+    # with stream_subgraphs=True. Accepted for wire parity; not forwarded
+    # into graph.astream, whose subgraph tuples ((ns, (mode, data))) would
+    # change the engine's (mode, data) unpacking — member frames stay
+    # root-scoped. langgraph itself ignores unknown extra modes like
+    # "events" (verified against the pinned runtime), so the adapter's
+    # default mode list passes through harmlessly.
+    stream_subgraphs: bool = False
     stream_resumable: bool = False
     durability: Literal["exit"] = "exit"
     if_not_exists: Literal["reject"] = "reject"
