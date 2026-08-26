@@ -1,77 +1,89 @@
-# Pinned Oracle Environment
+# Pinned oracle environment
 
-Isolated environment for parity characterization against the real `langgraph-api`.
+This directory isolates the real `langgraph-api` used to characterize the OSS
+Agent Server compatibility contract. Production must not install this package.
 
-## Pinned pair
+## Pinned versions
 
 | package | version | reason |
 |---------|---------|--------|
-| `langgraph-cli[inmem]` | `==0.4.31` | repo dev extra `>=0.4.31,<0.5` — compatible range |
-| `langgraph-api` | `==0.12.6` | published on PyPI, matches `langgraph.json:api_version` |
+| `langgraph-cli[inmem]` | `==0.4.31` | Compatible with the repo's `>=0.4.31,<0.5` development range |
+| `langgraph-api` | `==0.12.6` | Matches `api_version` in the root `langgraph.json` |
 
-`langgraph-cli[inmem]==0.4.31` declares `langgraph-api>=0.5.35,<1.0.0` for its `inmem` extra,
-so `0.12.6` is within range. The repo dev venv resolves `langgraph-api==0.13.0` via
-`[tool.uv] constraint-dependencies` and is **NOT** the characterization source.
+The normal development environment resolves `langgraph-api==0.13.0` through
+`pyproject.toml` constraints. It is not the characterization source.
 
-## Verify resolution
+## Build the oracle environment
 
-The oracle pins and this repo are installed in a **single** resolution pass —
-`langgraph.json:dependencies` is `["."]`, so the server needs both, and
-resolving them separately lets the second install downgrade a package the first
-one pinned:
+Run these commands from the repository root. Install the oracle pins and this
+repository in one resolution pass:
 
 ```bash
 uv venv tests/server/oracle/.venv --python 3.12
-uv pip install --no-config --python tests/server/oracle/.venv/bin/python \
+uv pip install --no-config \
+  --python tests/server/oracle/.venv/bin/python \
   -r tests/server/oracle/requirements.txt -e . --no-build-isolation
-tests/server/oracle/.venv/bin/python -c "import langgraph_api; print(langgraph_api.__version__)"
-# → 0.12.6
-tests/server/oracle/.venv/bin/python -c "import langgraph_grpc_common.proto"
-# no output = the grpc stack matches its generated stubs
+tests/server/oracle/.venv/bin/python -c \
+  "import langgraph_api; assert langgraph_api.__version__ == '0.12.6'"
+tests/server/oracle/.venv/bin/python -c \
+  "import langgraph_grpc_common.proto"
 ```
 
-`--no-config` bypasses `pyproject.toml:constraint-dependencies` which would otherwise force `>=0.13`.
+`--no-config` bypasses the repository's `constraint-dependencies`, which would
+force `langgraph-api>=0.13`. The single resolution pass also checks the shared
+gRPC constraint. `langgraph-api==0.12.6` requires `grpcio>=1.80,<1.81`, so the
+repository keeps `weaviate-client<4.16.3` to avoid its conflicting `grpcio<1.80`
+requirement.
 
-That single pass is also what keeps the grpc pin honest. `langgraph-api==0.12.6`
-requires `grpcio>=1.80,<1.81`, and `weaviate-client>=4.16.3` requires
-`grpcio<1.80` — disjoint. The repo caps `weaviate-client<4.16.3` for exactly
-this reason (see `pyproject.toml`); if that cap is ever lifted while
-`langgraph.json:api_version` is still `0.12.6`, this install now fails at
-resolve time instead of producing a venv whose server dies on import with
-`the grpc package installed is at version 1.78.0, but the generated code ...
-depends on grpcio>=1.80.0`.
+Do not edit `.venv/` by hand. Rebuild it with the commands above.
 
-## Run the oracle server
-
-Dependencies are `["."]` so the server needs this repo on `PYTHONPATH`.
-Run with `cwd` = repo root so `./healthcare_rag/...` graph paths resolve:
+## Run the parity gate
 
 ```bash
-# from repo root
-tests/server/oracle/.venv/bin/langgraph dev \
+OPENAI_API_KEY=dummy make parity
+```
+
+`make parity` sets `ORACLE=1` and runs `tests/server/contract`. The session
+fixture starts the pinned server on port 2025, waits for `/ok`, preserves its
+log tail on startup failure, and stops it after the suite. Override the port if 2025
+is occupied:
+
+```bash
+OPENAI_API_KEY=dummy ORACLE_PORT=2026 make parity
+```
+
+Without `ORACLE=1`, oracle-marked tests skip locally. CI builds this environment
+and runs the oracle lane in `.github/workflows/server-parity.yml`. The OSS
+contract tests run separately without the proprietary package.
+
+The JSON files in `tests/server/contract/fixtures/` record behavior observed
+against `langgraph-api==0.12.6`, including accepted deviations. They are review
+evidence, not a replacement for the executable parity tests. The unchanged
+`scripts/langgraph_smoke.py` and `scripts/deployed_smoke.py` remain the broader
+server compatibility contract.
+
+## Run the oracle server directly
+
+From the repository root:
+
+```bash
+OPENAI_API_KEY=dummy tests/server/oracle/.venv/bin/langgraph dev \
   --config tests/server/oracle/langgraph.json \
   --port 2025 --no-browser --no-reload
 ```
 
-`tests/server/oracle/langgraph.json` is a verbatim copy of the repo `langgraph.json`
-(graph/auth/http/store/api_version). Running with `cwd`=repo root keeps all
-`./healthcare_rag/...` relative paths valid. No path rewriting is needed.
-
-If `langgraph dev` is invoked with a different `cwd`, adjust the `graphs`/`auth`/`http`
-paths to be relative to that `cwd` or absolute.
-
-Optional Studio dev-mode auth bypass (local-only, not production):
+For local Studio access, enable the upstream development auth variant:
 
 ```bash
-LANGSMITH_LANGGRAPH_API_VARIANT=local_dev \
-  tests/server/oracle/.venv/bin/langgraph dev --config tests/server/oracle/langgraph.json --port 2025 --no-browser
+OPENAI_API_KEY=dummy LANGSMITH_LANGGRAPH_API_VARIANT=local_dev \
+  tests/server/oracle/.venv/bin/langgraph dev \
+  --config tests/server/oracle/langgraph.json \
+  --port 2025 --no-browser --no-reload
 ```
 
-Without the env var, the StudioUser trigger is disabled and unauthenticated requests get 401.
+Without that variant, unauthenticated protected requests return 401.
 
-## Config file
-
-`langgraph.json` here is intentionally identical to `../../langgraph.json` — the
-contract tests run with `cwd` = repo root so relative paths resolve unchanged.
-If you need to run from `tests/server/oracle/` as cwd, rewrite graph paths to
-`../../healthcare_rag/...` accordingly.
+`tests/server/oracle/langgraph.json` must stay byte-for-byte identical to the
+root `langgraph.json`. Its graph paths and `dependencies: ["."]` assume the
+repository root is the working directory. Do not run this copy from
+`tests/server/oracle/` or rewrite only its graph paths.
