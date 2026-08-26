@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { CopilotKit as CopilotKitProvider } from "@copilotkit/react-core/v2";
 import "./chat.css";
 import { ChatShell } from "@/chat/components/ChatShell";
+import { CoachToolRenderers } from "@/chat/renderers";
 import { createBrowserDeps } from "@/chat/coachClient";
 import { getSupabase } from "@/lib/supabase";
 import {
@@ -60,6 +61,7 @@ export default function ChatPage() {
       useSingleEndpoint={false}
       headers={copilotKitHeaders}
     >
+      <CoachToolRenderers />
       <ChatShell
         deps={createBrowserDeps()}
         email={session.email}
