@@ -23,7 +23,8 @@ openwiki:
 - **`validation_citations.py`** — `resolve_citation_ids` replaces each temporary `doc_N` with its original document UUID using `prompt_id_map`; `validate_citations_and_build_answer` runs per-statement fuzzy/exact quote verification (`_FuzzyProcess` wraps `fuzzywuzzy.process.extractOne`) and renders the final answer string.
 - **`validation_rendering.py`** — pure text helpers: `format_statement` (strip old `[doc_N]` markers, append sorted/deduplicated valid ones), `convert_linebreaks`, `join_statements`, and the `FALLBACK_MESSAGE` constant shared by every failure path.
 
-```mermaid
+<!-- openwiki: mermaid parse failed and this diagram was converted to a text fence so it does not break rendering. Fix the diagram source and restore the mermaid fence. Parser error: Heuristic: an unescaped angle bracket inside a label breaks rendering; rephrase the label. -->
+```text
 flowchart TD
   P["plain answer plus formatted docs"] --> S["LLM structure -> CitedAnswerResult"]
   S --> F1{"find_source_citations(plain_answer)"}
