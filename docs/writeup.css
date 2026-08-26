@@ -1,0 +1,359 @@
+/* writeup.css — document stylesheet for docs/writeup.md rendered to HTML.
+   Every value is lifted from the nymble design system tokens vendored in
+   frontend/src/design/tokens/ (captured from nymble.health, 2026-08-20).
+   Values are not altered; this file only maps them onto document elements.
+   Display face: Quicksand stands in for Filson Pro (commercial, not redistributable). */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400;1,600;1,700&family=Quicksand:wght@400;500;600;700&display=swap');
+
+:root {
+  /* colors — tokens/colors.css */
+  --rust: #631300;
+  --carrot: #ea492a;
+  --carrot-accessible: #c2390f;
+  --carrot-dark: #d13d20;
+  --gold: #eda94f;
+  --camel: #9e4d14;
+  --birch: #faf3e3;
+  --white: #ffffff;
+  --warm-white: #fdf8f0;
+  --rust-10: rgba(99, 19, 0, 0.1);
+  --rust-50: rgba(99, 19, 0, 0.5);
+  --gold-20: rgba(237, 169, 79, 0.2);
+  --gold-30: rgba(237, 169, 79, 0.3);
+  --success: #2d7d32;
+  --error: #c62828;
+
+  /* type — tokens/typography.css */
+  --font-headline: 'Quicksand', 'Georgia', 'Times New Roman', serif;
+  --font-body: 'Nunito Sans', 'SF Pro Text', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  --text-h1: 56px;
+  --text-h2: 40px;
+  --text-h3: 28px;
+  --text-h4: 22px;
+  --text-body-size: 18px;
+  --text-body-mobile: 16px;
+  --text-label: 14px;
+  --tracking-display: -0.03em;
+  --tracking-label: 0.1em;
+  --leading-display: 1.1;
+  --leading-body: 1.4;
+  --leading-editorial: 1.8;
+
+  /* spacing — tokens/spacing.css */
+  --space-xs: 8px;
+  --space-sm: 16px;
+  --space-md: 24px;
+  --space-lg: 32px;
+  --space-xl: 48px;
+  --space-2xl: 64px;
+  --space-3xl: 96px;
+  --max-narrow: 800px;
+  --gutter-desktop: 64px;
+  --gutter-tablet: 32px;
+  --gutter-mobile: 24px;
+
+  /* shape and elevation — tokens/radii.css, tokens/shadows.css */
+  --border-radius: 16px;
+  --border-radius-sm: 12px;
+  --border-radius-pill: 100px;
+  --shadow-sm: 0 2px 12px rgba(99, 19, 0, 0.06);
+  --shadow-md: 0 4px 24px rgba(99, 19, 0, 0.08);
+
+  /* motion — tokens/motion.css */
+  --transition-fast: 0.2s ease-in-out;
+}
+
+/* ---------- page ---------- */
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: var(--birch);
+  color: var(--rust);
+  font-family: var(--font-body);
+  font-size: var(--text-body-size);
+  line-height: var(--leading-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* top brand rule: carrot with a gold tail, as on the assignment PDF header */
+body::before {
+  content: '';
+  display: block;
+  height: 5px;
+  background: linear-gradient(90deg, var(--carrot) 0%, var(--carrot) 62%, var(--gold) 62%, var(--gold) 100%);
+}
+
+.doc, main, article {
+  max-width: var(--max-narrow);
+  margin: 0 auto;
+  padding: var(--space-xl) var(--gutter-desktop) var(--space-3xl);
+}
+
+/* ---------- headings ---------- */
+
+h1, h2, h3, h4 {
+  font-family: var(--font-headline);
+  color: var(--rust);
+  letter-spacing: var(--tracking-display);
+  line-height: var(--leading-display);
+  font-weight: 700;
+  margin: 0;
+}
+
+h1 {
+  font-size: var(--text-h1);
+  color: var(--carrot); /* vivid carrot is for large display type only */
+  margin: var(--space-md) 0 var(--space-sm);
+}
+
+h2 {
+  font-size: var(--text-h2);
+  margin: var(--space-2xl) 0 var(--space-md);
+  padding-top: var(--space-lg);
+  border-top: 1px solid var(--rust-10);
+}
+
+h3 {
+  font-size: var(--text-h3);
+  margin: var(--space-xl) 0 var(--space-sm);
+}
+
+h4 {
+  font-size: var(--text-h4);
+  margin: var(--space-lg) 0 var(--space-xs);
+}
+
+/* gold accent line under the document title */
+h1 + p::before {
+  content: '';
+  display: block;
+  width: 60px;
+  height: 3px;
+  background: var(--gold);
+  border-radius: 2px;
+  margin: 0 0 var(--space-sm);
+}
+
+/* ---------- body copy (editorial rhythm) ---------- */
+
+p {
+  margin: 0 0 var(--space-md);
+  line-height: var(--leading-editorial);
+  text-wrap: pretty;
+}
+
+/* front-matter lines directly under the title read as muted labels */
+h1 + p,
+h1 + p + ul {
+  font-size: var(--text-label);
+  line-height: var(--leading-body);
+  color: var(--camel);
+}
+h1 + p + ul { margin-bottom: var(--space-lg); }
+h1 + p + ul li { margin-bottom: 2px; }
+
+strong, b { font-weight: 700; color: var(--rust); }
+em, i { font-style: italic; }
+
+a {
+  color: var(--carrot-accessible); /* small-text carrot must be the accessible shade */
+  text-decoration: none;
+  border-bottom: 1px solid var(--gold-30);
+  transition: color var(--transition-fast), border-color var(--transition-fast);
+}
+a:hover, a:focus-visible {
+  color: var(--carrot-dark);
+  border-bottom-color: var(--carrot-dark);
+}
+
+hr {
+  border: 0;
+  height: 1px;
+  background: var(--rust-10);
+  margin: var(--space-2xl) 0;
+}
+/* an hr immediately before a section heading would double the heading's own rule */
+hr + h2 { border-top: 0; padding-top: 0; margin-top: 0; }
+
+/* ---------- lists ---------- */
+
+ul, ol {
+  margin: 0 0 var(--space-md);
+  padding-left: var(--space-md);
+  line-height: var(--leading-editorial);
+}
+
+li { margin-bottom: var(--space-xs); }
+li > p { margin-bottom: var(--space-xs); }
+
+ul { list-style: none; padding-left: var(--space-md); }
+ul li { position: relative; }
+ul li::before {
+  content: '·';
+  position: absolute;
+  left: calc(-1 * var(--space-md) + 4px);
+  color: var(--carrot-accessible);
+  font-weight: 700;
+  font-size: 1.3em;
+  line-height: 1.2;
+}
+
+ol { padding-left: var(--space-md); }
+ol li::marker {
+  font-family: var(--font-headline);
+  font-weight: 700;
+  color: var(--carrot-accessible);
+}
+
+/* ---------- code ---------- */
+
+code, kbd, pre {
+  font-family: var(--font-mono);
+}
+
+/* inline code in the brief's carrot monospace; the accessible shade because it is small text */
+code {
+  font-size: 0.86em;
+  font-weight: 600;
+  color: var(--carrot-accessible);
+  background: var(--gold-20);
+  padding: 1px 6px;
+  border-radius: 6px;
+}
+
+pre {
+  margin: 0 0 var(--space-md);
+  padding: var(--space-sm) var(--space-md);
+  background: var(--warm-white);
+  color: var(--carrot-accessible);
+  border: 1px solid var(--gold-30);
+  border-radius: var(--border-radius-sm);
+  overflow-x: auto;
+  line-height: 1.55;
+  font-size: 14px;
+}
+pre code {
+  background: transparent;
+  color: inherit;
+  font-weight: 400;
+  padding: 0;
+  font-size: inherit;
+}
+
+/* ---------- quotes ---------- */
+
+/* the brand's editorial pull-quote: a carrot rule, italic, on birch */
+blockquote {
+  margin: var(--space-lg) 0;
+  padding: var(--space-sm) var(--space-md);
+  border-left: 4px solid var(--carrot);
+  background: var(--warm-white);
+  border-radius: 0 var(--border-radius) var(--border-radius) 0;
+  font-style: italic;
+}
+blockquote p { margin: 0; }
+blockquote p + p { margin-top: var(--space-xs); }
+
+/* ---------- tables ---------- */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 0 0 var(--space-lg);
+  background: var(--white);
+  border-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+  font-size: 15px;
+  line-height: var(--leading-body);
+}
+th, td {
+  text-align: left;
+  vertical-align: top;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--rust-10);
+}
+th {
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--camel);
+  background: var(--warm-white);
+}
+tr:last-child td { border-bottom: 0; }
+td code { font-size: 0.82em; }
+
+/* wide tables scroll inside their own box, never the page */
+.table-wrap { overflow-x: auto; margin: 0 0 var(--space-lg); }
+
+/* ---------- labels and small print ---------- */
+
+.label, .eyebrow {
+  font-size: var(--text-label);
+  font-weight: 600;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--camel);
+}
+
+.tag {
+  display: inline-block;
+  background: var(--gold-20);
+  color: var(--camel);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  padding: 4px 12px;
+  border-radius: var(--border-radius-pill);
+}
+
+.card {
+  background: var(--white);
+  border-radius: var(--border-radius);
+  padding: var(--space-md);
+  box-shadow: var(--shadow-sm);
+  margin: 0 0 var(--space-md);
+}
+.card.birch { background: var(--birch); box-shadow: none; }
+
+small, .muted { color: var(--camel); font-size: var(--text-label); }
+
+/* ---------- responsive ---------- */
+
+@media (max-width: 1023px) {
+  .doc, main, article { padding-left: var(--gutter-tablet); padding-right: var(--gutter-tablet); }
+}
+
+@media (max-width: 767px) {
+  body { font-size: var(--text-body-mobile); }
+  .doc, main, article { padding: var(--space-lg) var(--gutter-mobile) var(--space-2xl); }
+  h1 { font-size: 36px; }
+  h2 { font-size: 30px; margin-top: var(--space-xl); }
+  h3 { font-size: 24px; }
+  h4 { font-size: 20px; }
+  table { font-size: 14px; }
+}
+
+/* ---------- print (PDF export) ---------- */
+
+@media print {
+  body { background: var(--white); }
+  body::before { display: none; }
+  .doc, main, article { max-width: none; padding: 0; }
+  a { border-bottom: 0; color: var(--rust); }
+  a[href^="http"]::after { content: ' (' attr(href) ')'; font-size: 0.8em; color: var(--camel); }
+  h2 { page-break-before: auto; break-inside: avoid; }
+  h3, h4 { break-after: avoid; }
+  pre, blockquote, table, .card { break-inside: avoid; box-shadow: none; border: 1px solid var(--rust-10); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; }
+}

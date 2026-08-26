@@ -1,6 +1,6 @@
 "use client";
 
-import { Fragment, useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { DataEnvelope } from "@/catalog/envelopes";
 import { parseDataEnvelope } from "@/catalog/envelopes";
 import type { DispatchHandlers } from "@/catalog/dispatch";
@@ -35,7 +35,13 @@ import { chatTelemetry } from "@/chat/stream";
 import type { ResumePayload } from "@/chat/coachProtocol";
 import type { UploadUi } from "@/chat/uploadFlow";
 import { InterruptPanel, ReminderEnvelopeCards } from "./InterruptPanel";
-import { ToolCallCard, type ToolCallView } from "./ToolCallCard";
+import type { ToolCallView } from "./ToolCallCard";
+import {
+  LogInjectionToolView,
+  LogMetricToolView,
+  ReminderListToolView,
+  ViewScheduleToolView,
+} from "@/chat/renderers/envelope-tools";
 
 /**
  * A calendar-change confirmation DATA envelope —
@@ -138,35 +144,25 @@ function AiMessageCards({ message, onReminderAction }: { message: WireMessage; o
 
 function synthesizeToolCallsForTurn(turn: TurnModel): ToolCallView[] {
   const toolById = new Map<string, WireMessage>();
-  for (const m of turn.messages) {
-    if (isToolMessage(m) && typeof m.tool_call_id === "string") toolById.set(m.tool_call_id, m);
+  for (const message of turn.messages) {
+    if (isToolMessage(message) && typeof message.tool_call_id === "string") {
+      toolById.set(message.tool_call_id, message);
+    }
   }
   const calls: ToolCallView[] = [];
-  for (const m of turn.messages) {
-    if (!isAiMessage(m) || !Array.isArray(m.tool_calls)) continue;
-    for (const tc of m.tool_calls) {
-      const correlated = toolById.get(tc.id);
-      let status = "running";
-      let output: unknown = null;
-      let error: string | undefined;
-      if (correlated !== undefined) {
-        if (correlated.status === "error") {
-          status = "error";
-          error = typeof correlated.content === "string" ? correlated.content : JSON.stringify(correlated.content);
-        } else {
-          status = "finished";
-          output = correlated.content;
-        }
-      }
+  for (const message of turn.messages) {
+    if (!isAiMessage(message) || !Array.isArray(message.tool_calls)) continue;
+    for (const toolCall of message.tool_calls) {
+      const correlated = toolById.get(toolCall.id);
       calls.push({
-        id: tc.id,
-        callId: tc.id,
-        name: tc.name,
-        args: tc.args,
-        input: tc.args,
-        output,
-        status,
-        error,
+        id: toolCall.id,
+        callId: toolCall.id,
+        name: toolCall.name,
+        args: toolCall.args,
+        input: toolCall.args,
+        output: correlated?.content,
+        status: correlated === undefined ? "running" : correlated.status === "error" ? "error" : "finished",
+        error: correlated?.status === "error" ? messageText(correlated.content) : undefined,
         namespace: [],
       });
     }
@@ -175,16 +171,35 @@ function synthesizeToolCallsForTurn(turn: TurnModel): ToolCallView[] {
 }
 
 function toolCallsForTurn(turn: TurnModel, all: readonly ToolCallView[] | undefined): ToolCallView[] {
-  if (all !== undefined && all.length > 0) {
-    const ids = new Set<string>();
-    for (const m of turn.messages) {
-      if (Array.isArray(m.tool_calls)) for (const tc of m.tool_calls) ids.add(tc.id);
-      if (isToolMessage(m) && typeof m.tool_call_id === "string") ids.add(m.tool_call_id);
+  if (all === undefined || all.length === 0) return synthesizeToolCallsForTurn(turn);
+  const ids = new Set<string>();
+  for (const message of turn.messages) {
+    if (Array.isArray(message.tool_calls)) {
+      for (const toolCall of message.tool_calls) ids.add(toolCall.id);
     }
-    if (ids.size === 0) return [];
-    return all.filter((c) => ids.has(c.id) || (c.callId !== undefined && ids.has(c.callId)));
+    if (isToolMessage(message) && typeof message.tool_call_id === "string") ids.add(message.tool_call_id);
   }
-  return synthesizeToolCallsForTurn(turn);
+  return all.filter((call) => ids.has(call.id) || (call.callId !== undefined && ids.has(call.callId)));
+}
+
+function GenerativeToolResult({ call }: { call: ToolCallView }) {
+  const complete = ["complete", "finished", "success"].includes(call.status);
+  const result = call.output ?? call.result;
+  if (!complete || typeof result !== "string") return null;
+  switch (call.name) {
+    case "log_metric":
+      return <LogMetricToolView status="complete" result={result} />;
+    case "log_injection":
+      return <LogInjectionToolView status="complete" result={result} />;
+    case "view_schedule":
+      return <ViewScheduleToolView status="complete" result={result} />;
+    case "create_reminder":
+    case "edit_reminder":
+    case "cancel_reminder":
+      return <ReminderListToolView toolName={call.name} status="complete" result={result} />;
+    default:
+      return null;
+  }
 }
 
 function TurnView({
@@ -207,7 +222,8 @@ function TurnView({
   const humanText = turn.human !== null ? messageText(turn.human.content) : "";
   const trees = composeTreesForTurn(turn);
   const scopeId = turn.scopeId ?? "";
-  const turnToolCalls = toolCallsForTurn(turn, toolCalls);
+  const finalAssistantMessage = [...turn.messages].reverse().find(isAiMessage);
+  const generativeToolResults = toolCallsForTurn(turn, toolCalls);
   const combinedEnvelopes = valuesEnvelopes !== undefined && valuesEnvelopes.length > 0 ? [...turn.envelopes, ...valuesEnvelopes] : turn.envelopes;
   const canEdit = onEditTurn !== undefined && turn.human !== null && process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
   const [editing, setEditing] = useState(false);
@@ -284,21 +300,19 @@ function TurnView({
           </div>
         </div>
       )}
-      {turn.messages.filter(isAiMessage).map((message) => (
-        <Fragment key={messageKey(message)}>
-          <AiBubble message={message} />
-          <AiMessageCards message={message} onReminderAction={onReminderAction} />
-        </Fragment>
-      ))}
+      {finalAssistantMessage !== undefined ? (
+        <div key={messageKey(finalAssistantMessage)}>
+          <AiBubble message={finalAssistantMessage} />
+          <AiMessageCards message={finalAssistantMessage} onReminderAction={onReminderAction} />
+        </div>
+      ) : null}
       {trees.map(({ callId, tree }) => (
         <div className="widget-wrap" key={callId} data-testid="compose-tree">
           <CatalogTree tree={tree} envelopes={combinedEnvelopes} turnScopeId={scopeId} handlers={dispatchHandlers ?? {}} />
         </div>
       ))}
-      {turnToolCalls.map((call) => (
-        <div className="widget-wrap" key={call.id} data-testid="tool-call-wrap">
-          <ToolCallCard call={call} />
-        </div>
+      {generativeToolResults.map((call) => (
+        <GenerativeToolResult key={call.id} call={call} />
       ))}
       {turn.messages.filter(isToolMessage).map((message) => (
         <ToolEnvelopeCards key={messageKey(message)} message={message} />

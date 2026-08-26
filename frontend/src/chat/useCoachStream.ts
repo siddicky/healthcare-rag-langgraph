@@ -1139,12 +1139,13 @@ export function useCoachStream(deps: CoachStreamDeps) {
   const send = useCallback(
     async (text: string): Promise<void> => {
       const question = text.trim();
-      if (question === "") return;
-      // Attachments ride the SENTINEL shape; resolve input once.
       const attachmentId =
         uploadRef.current.phase === "staged" && uploadRef.current.stage === "done"
           ? uploadRef.current.info.uploadId
           : undefined;
+      if (question === "" && attachmentId === undefined) return;
+      const displayQuestion = question === "" ? SENTINEL_QUESTION : question;
+      // Attachments ride the SENTINEL shape; resolve input once.
       const input: RunInput =
         attachmentId === undefined
           ? { question }
@@ -1154,21 +1155,21 @@ export function useCoachStream(deps: CoachStreamDeps) {
       // v2 server also supports multitaskStrategy:"enqueue" (see getRunStreamParams),
       // but local buffering keeps v1 fallback queue-consistent and drains in order.
       if (busyRef.current || stream.isLoading) {
-        enqueueSend(question, input, willConsumeAttachment);
+        enqueueSend(displayQuestion, input, willConsumeAttachment);
         return;
       }
       const threadId = await ensureThread();
       if (busyRef.current || stream.isLoading) {
-        enqueueSend(question, input, willConsumeAttachment);
+        enqueueSend(displayQuestion, input, willConsumeAttachment);
         return;
       }
       const echo: WireMessage = {
         type: "human",
         id: `local-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        content: question,
+        content: displayQuestion,
       };
       commitMessages(mergeMessages(messagesRef.current, [echo]));
-      if (getThreadTitle(threadId) === null) setThreadTitle(threadId, deriveTitle(question));
+      if (getThreadTitle(threadId) === null) setThreadTitle(threadId, deriveTitle(displayQuestion));
       if (willConsumeAttachment) setUpload(applyUploadEvent(uploadRef.current, { kind: "consumed" }));
       await runStream(threadId, { input });
     },

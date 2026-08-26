@@ -2,7 +2,6 @@
 
 import { z } from "zod";
 import { useRenderTool } from "@copilotkit/react-core/v2/headless";
-import { Markdown } from "@/components/generative-ui/Markdown";
 import { ReminderCard } from "@/components/generative-ui/ReminderCard";
 
 /**
@@ -237,53 +236,8 @@ export function NamedToolCard({
   );
 }
 
-/**
- * medical_lookup renderer — the relayed monograph answer, byte-verbatim.
- * Mirrors MessageList's AiBubble structure so e2e assertions on
- * `.bubble.assistant` keep working while the run is live.
- */
-export function MedicalLookupBubble({ status, result }: { status: ToolRenderStatus; result?: string }) {
-  const content = typeof result === "string" ? result : "";
-  if (status !== "complete" || content === "") {
-    return (
-      <div className="widget-wrap" data-testid="medical-lookup-pending">
-        <span
-          style={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 6,
-            fontSize: 12,
-            fontWeight: 600,
-            letterSpacing: "0.06em",
-            textTransform: "uppercase",
-            color: "var(--camel)",
-          }}
-        >
-          <span
-            aria-hidden
-            style={{
-              width: 14,
-              height: 14,
-              border: "2px solid var(--rust-10)",
-              borderTopColor: "var(--carrot)",
-              borderRadius: "50%",
-              display: "inline-block",
-              animation: "ds-spin 0.8s linear infinite",
-            }}
-          />
-          Looking up the monograph…
-        </span>
-      </div>
-    );
-  }
-  return (
-    <div className="bubble-row assistant">
-      <div className="avatar">N</div>
-      <div className="bubble assistant" data-testid="medical-answer">
-        <Markdown content={content} />
-      </div>
-    </div>
-  );
+export function MedicalLookupBubble(_props: { status: ToolRenderStatus; result?: string }): null {
+  return null;
 }
 
 export function RememberFactCard({ name, status, error }: ToolRenderProps) {

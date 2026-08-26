@@ -384,9 +384,9 @@ describe("document upload flow", () => {
     await settled();
     expect(getUploadStatus.mock.calls.length).toBe(pollsAfterDone);
 
-    const composer = screen.getByLabelText("Message your coach");
-    await user.type(composer, "please");
-    await user.click(screen.getByRole("button", { name: "Send" }));
+    const sendButton = screen.getByRole("button", { name: "Send" });
+    expect(sendButton).toBeEnabled();
+    await user.click(sendButton);
     await waitFor(() => expect(stream.calls).toHaveLength(1));
     const call = stream.calls[0] as StreamCall;
     expect(call.payload).toEqual({
@@ -719,7 +719,7 @@ describe("scripted AG-UI transport smoke", () => {
     await user.click(screen.getByRole("button", { name: "Send" }));
 
     expect(await screen.findByText("Move my check-in")).toBeInTheDocument();
-    expect(await screen.findByTestId("tool-call-card")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-card")).toBeNull();
     expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
     await user.click(screen.getByRole("button", { name: "Confirm change" }));
 
