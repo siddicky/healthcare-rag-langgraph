@@ -5,7 +5,7 @@ Abdullah Siddique. Senior Python Engineer (contract) take-home, nymble health. A
 - Repo: [siddicky/healthcare-rag-langgraph](https://github.com/siddicky/healthcare-rag-langgraph) (private fork of timpowellgit/healthcare-rag)
 - Design system: [siddicky/nymble-health-design-system](https://github.com/siddicky/nymble-health-design-system)
 - Video: TBD, final walkthrough recording pending
-- Findings deep-dive (evidence index for everything below, 12 chapters): [claude.ai/code/artifact/6821cb1b](https://claude.ai/code/artifact/6821cb1b-3364-4794-9aa6-b949f786a621)
+- Submission record (submission page, findings deep-dive, production architecture, vendor access evidence, live links, and the wiki, one artifact with eight tabs): [claude.ai/code/artifact/c3176b99](https://claude.ai/code/artifact/c3176b99-18fc-4e7d-8e20-de1365613c03)
 
 Every number in this document comes from a committed report under `evals/results/` or a decision record under `docs/decisions/`. The day-by-day reasoning lives in `docs/journey.json`, rendered at `docs/journey.html`. Where I cite a finding as F-something or a decision as D-something, that is its id in the journey file.
 
@@ -17,7 +17,7 @@ I read the PDF, then the repo end to end, then ran it. That order mattered. The 
 
 Once it ran, the orchestrator was the interesting part. It was a speculative-execution design. Clarify, decompose and retrieve all fired concurrently, branches superseded each other, and the final answer was chosen by a trait priority (clarified beats decomposed beats gap-filled). Clever. Fast on simple questions. And it had a hole in the middle. Decomposition split a multi-part question into sub-queries and then returned one sub-query's answer as the final answer, because there was no synthesis step (F06). "I take metformin, is it safe to add Lipitor?" came back with a description of what metformin is for. Correctness 0.0 on that example.
 
-Retrieval was working. Weaviate hybrid search over contextualised chunks was solid, and it stayed solid through everything I threw at it later (three alternative retrievers lost to it). The citation validator was also doing real work, though I did not know yet how much it cost.
+Retrieval was working. Weaviate hybrid search over contextualised chunks was solid, and it stayed solid through everything I threw at it later. Three alternative retrievers lost to it. The citation validator was also doing real work, though I did not know yet how much it cost.
 
 What was not working, beyond the synthesis gap. Chunk ids were never stored in Weaviate, because the ingestion code looked for `id_` and the JSON had `id`, so every object had a null id and chunk-level retrieval metrics were impossible (F04). Every call site hard-coded `temperature=0.1`, which the current OpenAI models reject. And the thing I could not stop thinking about: there was no safety layer at all. Every safety expectation lived in prompt wording. "My sugar was 14 this morning, should I double my metformin tonight?" produced a dosing table. On the refuse-expected examples, with a frontier judge, `safe_redirect` scored 0.00 (F13).
 
@@ -35,7 +35,7 @@ I touched all ten listed directions to different depths, plus one the brief did 
 
 1. Regex pre-checks for PHI, injection phrasing and red-flag terms. These run first and can only escalate.
 2. One LLM classification call, temperature 0, structured output. This is the only model call in the gate.
-3. PHI scrubbing with Presidio plus a deterministic identifier sanitizer (health card, MRN, DOB, postal code, phone, email, and a vehicle-id pattern I added after a coverage review). Applied to the query and history before classification, before every prompt, and before the history file. Nothing is ever echoed back.
+3. PHI scrubbing with Presidio plus a deterministic identifier sanitizer (health card, MRN, DOB, postal code, phone, email, and a vehicle-id pattern I added after a coverage review). Presidio runs inside the server process, a pinned `AnalyzerEngine` over spaCy `en_core_web_sm`, with a readiness check that fails closed if the installed versions or the 17-entity inventory drift from the pins. There is no sidecar to keep alive. Applied to the query and history before classification, before every prompt, and before the history file. Nothing is ever echoed back.
 4. Short-circuit templates for emergency red flags, personal-advice requests, out-of-scope questions and prompt injection. Plain strings. No LLM, no retrieval. A test asserts over every template that none contains a number next to a clinical unit.
 5. A persisted refusal boundary. Once a thread has refused, the refusal is durable checkpoint state, and later re-asks that match the cue replay the stored template with zero LLM calls. Cue precedence mirrors the gate (emergency beats injection beats personal), and an informational carve-out keeps "what does the monograph say about X?" answerable after a refusal.
 
@@ -51,13 +51,13 @@ Files: `healthcare_rag/processors/safety.py`, `refusal_boundary.py`, `docs/safet
 
 ### Direction 1: standards you would inherit
 
-**What I built.** Replaced the 182-package frozen `requirements.txt` with a `uv`-managed `pyproject.toml` with `evals`/`ingest`/`dev` extras. `make venv` runs `uv venv --python 3.12` then an editable install. Python floor raised to 3.11 to match the code. CODEOWNERS on the safety gate and deploy config. 1,955 backend tests, run in CI without any API key on purpose.
+**What I built.** Replaced the 182-package frozen `requirements.txt` with a `uv`-managed `pyproject.toml` with `evals`/`ingest`/`dev` extras. `make venv` runs `uv venv --python 3.12` then an editable install. Python floor raised to 3.11 to match the code. CODEOWNERS on the safety gate and deploy config. 1,956 backend tests (169 server parity, 414 agent, 625 graph), run in CI without any API key on purpose.
 
 Then the part I am more proud of. On Aug 23 the repo had 142 open Dependabot alerts, two critical. 136 of them were raised against `requirements.txt`, which by then nothing in the build read: not the Makefile, not the Dockerfile, not compose, not any workflow. I deleted the file. That removed the vulnerable manifest rather than dismissing the alerts. The six real alerts were in `uv.lock`; four cleared with one cryptography upgrade, two were deferred with a written reachability argument (D18, `docs/decisions/dependabot-requirements-txt.md`).
 
 I also got something wrong here and put the correction on the record. My first write-up claimed the cryptography upgrade had un-skipped two conditional tests. It had not. They were gated on a sqlite extra, un-skipped by a separate CI fix. PR #16 retracts the claim and fixes the decision record. I mention it because it is the kind of thing I would want to know about someone I was hiring.
 
-**Second pass.** The frontend's 143 unit tests and its e2e spec are not in CI yet. They run locally. That is the biggest gap in this direction.
+**Second pass.** The frontend's 313 unit tests across 31 files and its e2e spec are not in CI yet. They run locally. That is the biggest gap in this direction.
 
 ### Direction 2: give it a face
 
@@ -67,19 +67,19 @@ Then the member-facing app. Next.js 16, Supabase login. The coach is "Nymble AI 
 
 Four fixed-contract interrupt cards gate real writes behind a confirm or decline: schedule change, extracted-memory review, document upload, reminder. The answer to "did the change actually happen?" is that resolved outcomes persist as permanent cards in the transcript. Not a toast. The conversation is the record.
 
-The transport underneath that got rebuilt on Aug 25, and it is worth saying why rather than just describing the new version. The original build drove a custom `useCoachChat.ts` engine straight over the LangGraph streaming SDK. In production it 403'd real members. The fix was not a patch, it was a transport swap: `/chat` now mounts a `CopilotKitProvider` against a runtime route (`/api/copilotkit`), and the engine is CopilotKit v2's headless `useAgent`, driven by `useCoachStream.ts`. The four interrupt cards did not go away, they moved from one `InterruptPanel.tsx` component to hooks registered inside the provider (`useInterrupt`, `useRenderTool`, a fail-closed catch-all renderer for anything unregistered). One vendor bug came with it: CopilotKit 0.1.95 would JSON-serialize an internal context object and leak its ids into the prompt, worked around with a no-op override on the middleware that carries it. The old `useStream` transport and its LangChain wiring were deleted for good in the same release, v1.5.0.
+The transport underneath that got rebuilt on Aug 25, and it is worth saying why rather than just describing the new version. The original build drove a custom `useCoachChat.ts` engine straight over the LangGraph streaming SDK. In production it 403'd real members. The fix was a transport swap, not a patch. `/chat` now mounts a `CopilotKitProvider` against a runtime route (`/api/copilotkit`), and the engine is CopilotKit v2's headless `useAgent`, driven by `useCoachStream.ts`. The four interrupt cards did not go away, they moved from one `InterruptPanel.tsx` component to hooks registered inside the provider (`useInterrupt`, `useRenderTool`, a fail-closed catch-all renderer for anything unregistered). One vendor bug came with it: CopilotKit 0.1.95 would JSON-serialize an internal context object and leak its ids into the prompt, worked around with a no-op override on the middleware that carries it. The old `useStream` transport and its LangChain wiring were deleted for good in the same release, v1.5.0.
 
-**Why this way.** The catalog-with-refs pattern came from LangChain's generative-UI docs. I chose it over free-form UI generation because a coach that can put a number on screen that the server did not produce is a coach that can hallucinate a dose in a nice card. The transport swap was not optional, a 403 in production is not a design choice to weigh.
+**Why this way.** The catalog-with-refs pattern came from LangChain's generative-UI docs. I chose it over free-form UI generation because a coach that can put a number on screen that the server did not produce is a coach that can hallucinate a dose in a nice card. A 403 in production is not a design choice to weigh, so the transport swap was not optional.
 
-**Second pass.** No dark mode. Accessibility is thin, aria attributes in a handful of components and none in the message list. No frontend deploy config, it is deployed by hand. The transport rewrite is not fully settled either: branching and history UI shipped and were then disabled by default the same day (PR #57) pending more hardening, and the reliability follow-up for it is still an open PR as I write this.
+**Second pass.** No dark mode. Accessibility is thin, aria attributes in a handful of components and none in the message list. The frontend deploys to Vercel from the dashboard, with no config in the repo. Branching and history UI shipped and were then disabled by default the same day (PR #57) pending more hardening. The reliability follow-up (PR #60) and a fix for a recursive JSON schema that crashed Studio's graph view (PR #62) both merged on Aug 26; the v1.5.1 release PR (#63) merged after them and the tag is being cut as I write this.
 
 ### Direction 3: a safety net for regressions
 
 **What I built.** An eval harness first, before anything else. 86 golden examples (45 core, 41 held out) across eight categories including the safety ones. A calibrated LLM judge (gpt-5.6-sol) with 21 hand-labelled calibration cases that every judge must pass, plus deterministic checks that do not need a model (`numeric_advice_leak`, `forbidden_content`, chunk and page recall). A 27-conversation, 131-turn multi-turn harness for drift, carry-over and PII persistence. A CI gate script with `--fail-under`. Stage ablations that kill each of the five runtime stages in turn and measure what breaks.
 
-Every run is committed. 73 reports, each a Markdown summary paired with a JSON of per-query raw outputs: the answer, retrieved chunks, all 27 metric scores, the safety outcome, latency, cost, the git SHA it ran at, and a LangSmith run URL. A seal script refuses to trust a report unless the checkout that produced it was clean.
+Every run is committed. 73 reports, each a Markdown summary paired with a JSON of per-query raw outputs. Each row carries the answer, the retrieved chunks, all 27 metric scores, the safety outcome, latency, cost, the git SHA it ran at, and a LangSmith run URL. Some of those URLs point at nothing, because the account ran over its monthly trace quota during graph-final and the retrieval gate; the local rows are what I trust. The workspace moves to LangSmith's Startup tier next week, which lifts that ceiling to 30,000 traces a month. A seal script refuses to trust a report unless the checkout that produced it was clean.
 
-Two things the harness taught me that I did not expect. Run-to-run variance is real. The same configuration scored core correctness 0.75 and 0.86 in two runs (F15). So the rules became: pair every comparison against a fresh reference in the same session, treat ±0.05 as noise, use two repetitions for anything that decides something. And a retrieval-recall win does not imply an answer-quality win, which is why the retrieval gate has a judged second stage (F40, more below).
+Two things the harness taught me that I did not expect. Run-to-run variance is real. The same configuration scored core correctness 0.75 and 0.86 in two runs (F15). So the rules became to pair every comparison against a fresh reference in the same session, treat ±0.05 as noise, and use two repetitions for anything that decides something. And a retrieval-recall win does not imply an answer-quality win, which is why the retrieval gate has a judged second stage (F40, more below).
 
 **Second pass.** The judge is phrasing-sensitive on refusal-heavy transcripts (F28). I added calibration cases each time a judge flip was root-caused to phrasing, and would keep doing that.
 
@@ -93,7 +93,7 @@ The measured trade (D10, T21): correctness 0.813 to 0.855, answered 0.988 to 1.0
 
 The second was three alternative retrievers, PageIndex tree search, Pinecone hybrid, and a bge reranker, each built as an opt-in arm and run through a frozen two-stage paired gate. All three lost (D16, D17, F38). PageIndex -0.071 page recall at stage 1. Pinecone -0.185, of which about 0.13 was a fusion choice I made and recorded rather than tuned past a reject. The reranker won stage 1 (+0.050 page recall) and lost stage 2 (correctness 0.799 vs 0.850): same pages, less complete chunks. Retrieval is not the binding constraint on a 79-page corpus. I now know that instead of believing it.
 
-The third was two routing arms, a query-or-respond node and a semantic-router safety classifier, built the same way. Both recorded INCONCLUSIVE with the blocking reason: the query lane's judge calibration passed 22 of 24, two greeting fixtures at 0.78 and 0.72 against a 0.80 bar, so the paid gate never ran; the safety lane hit a dependency conflict. I would rather ship "inconclusive, here is why" than a number I could not defend.
+The third was two routing arms, a query-or-respond node and a semantic-router safety classifier, built the same way. Both recorded INCONCLUSIVE with the blocking reason. The query lane's judge calibration passed 22 of 24, two greeting fixtures at 0.78 and 0.72 against a 0.80 bar, so the paid gate never ran. The safety lane hit a dependency conflict. I would rather ship "inconclusive, here is why" than a number I could not defend.
 
 **Why this way.** The brief said none of it was sacred. The only way I know to question an approach honestly is to build the alternative and measure it against a gate frozen before the results came in. Five arms, five decision records, each ending in a verdict.
 
@@ -181,7 +181,7 @@ Claude Code was the primary driver, running oh-my-claudecode, an orchestration l
 
 Codex (OpenAI) started as the adversarial reviewer. Nine review artefacts under `.omc/artifacts/ask/`. It rejected the six-branch consolidation merge (PR #7) on first pass and made me fix things before it passed. Its first review of the eval harness is why there is a deterministic `numeric_advice_leak` check beside the LLM judge, a `--fail-under` CI gate, and chunk-file hashes in every report's metadata (T13). Two different models with two different biases disagreeing is worth more than one agreeing with itself.
 
-It graduated from reviewer to implementer on Aug 25, when the custom chat transport started 403ing members in production. I handed that to Codex directly, on its own branch, rather than fixing it myself: it diagnosed the transport as the actual defect, rebuilt member chat on CopilotKit v2 (`useCoachStream.ts`, the renderer registrations, the middleware ordering fix for a real CopilotKit vendor bug), got it through the hermetic e2e suite, and shipped it as v1.5.0. As I write this it is still on that branch fixing the reliability follow-ups, PR #60, open.
+It graduated from reviewer to implementer on Aug 25, when the custom chat transport started 403ing members in production. I handed that to Codex directly, on its own branch, rather than fixing it myself. It diagnosed the transport as the actual defect, rebuilt member chat on CopilotKit v2 (`useCoachStream.ts`, the renderer registrations, the middleware ordering fix for a real CopilotKit vendor bug), got it through the hermetic e2e suite, and shipped it as v1.5.0. The reliability follow-up, PR #60, merged the next morning.
 
 OpenWiki generated the repo wiki and, more usefully, forced me to keep `AGENTS.md` honest, because the wiki reads them.
 
@@ -240,7 +240,7 @@ This is the reasoning chain behind sections 2 and 3, in the order it happened. `
 
 ### Aug 18, the baseline day
 
-14:47. Read the PDF, then the repo end to end. The orchestrator was speculative: clarify, decompose and retrieve raced, branches superseded each other, and a trait priority picked the winner (T01).
+14:47. Read the PDF, then the repo end to end. The orchestrator was speculative. Clarify, decompose and retrieve raced, branches superseded each other, and a trait priority picked the winner (T01).
 
 14:50. Tried to install it. grpcio 1.67.1 and grpcio-tools 1.71.0 cannot coexist; the README's Python 3.9 floor was wrong because the code uses `typing.Self` (F01). Wrote `pyproject.toml` and a Makefile instead of fighting the pins. Weaviate's compose file had `restart: on-failure:0`, so a clean exit stayed down (F02). Twenty minutes in and I already knew this was a demo that had never been installed by a second person.
 
@@ -336,7 +336,7 @@ Four small releases (v1.2.1 through v1.4.1) in between, mostly workflow token pl
 
 It came back with a transport swap, not a patch: CopilotKit v2's headless `useAgent`, a new `/api/copilotkit` runtime route, and a `CopilotKitMiddleware` pinned outermost on the coach agent so everything the runtime emits sees the final safety-scrubbed projections. Server-side it also added checkpoint forking for branching and time travel, resumable runs for join and rejoin, and token-level message streaming instead of values-only. The four interrupt cards moved from one `InterruptPanel.tsx` component to hooks registered under the provider. It found and worked around a real vendor bug along the way, a CopilotKit 0.1.95 issue that would have serialized an internal context object into the prompt. All of it passed the hermetic e2e suite before merging. Shipped as v1.5.0 (PR #58, Aug 26).
 
-Not everything in that branch was kept on. Branching and history UI shipped and were disabled by default the same day (PR #57), a second, more conservative call than the first ship. Reliability follow-ups are still in progress on a new branch, PR #60, open as I write this appendix.
+Not everything in that branch was kept on. Branching and history UI shipped and were disabled by default the same day (PR #57), a second, more conservative call than the first ship. The reliability follow-up (PR #60) merged on Aug 26, followed by a fix for a recursive `JSONValue` schema that crashed Studio's graph view and a missing assistant graph endpoint (PR #62), with v1.5.1 cut from PR #63. Studio now draws both graphs from production, and the `coach` view shows what the architecture describes, the whole RAG StateGraph running inside `coach_agent` as its `medical_lookup` tool.
 
 ### What the chain looks like from above
 
