@@ -1,146 +1,125 @@
 ---
-type: application
-title: Coach agent service
-description: The LangGraph Agent Server "coach" graph and HTTP perimeter - routing, safety gate reuse, member data tools, reminders, uploads, feedback, and self-erase - deployed separately from the healthcare RAG graph.
-tags: [agent, langgraph, coach, server]
+type: agent architecture
+title: Coach agent architecture and medical relay
+description: The separately deployed coach graph uses deterministic operational routing, constrained member tools, a medical lookup relay into the healthcare RAG graph, and validated data-bound UI composition. Offline evaluation exercises this boundary with in-process fakes rather than certifying a deployment.
+tags: [agent, langgraph, coach, medical-relay, catalog]
 openwiki:
   roles: [architecture, domain, integration]
   change_kinds: [public-api, lifecycle]
-  source_paths: [healthcare_rag/agent/build.py, healthcare_rag/agent/gate.py, healthcare_rag/agent/rag_relay.py, healthcare_rag/agent/coach_agent.py, healthcare_rag/agent/cleanup.py, langgraph.json]
-  symbols: [coach, build_coach_graph, coach_gate, CoachSafetyGate, rag_relay, erase_my_data, coach_agent, CoachState, prepare_thread_deletion, clear_cleanup_marker, _is_studio, _PRIVATE_SENTINELS]
-  test_paths: [tests/agent/test_coach_gate.py, tests/agent/test_rag_relay.py, tests/agent/test_route_b.py, tests/agent/test_server_perimeter.py, tests/agent/test_perimeter_studio.py, tests/agent/test_perimeter_composed.py]
-  invariants: [Every turn is scrubbed through the shared PrivacySanitizer before routing or persistence., Medical monograph questions go through the full healthcare graph via rag_relay; the coach agent itself never gives medical advice., The erase flow is fail-closed: the confirmation marker is only emitted when remote cron and upload cleanup both succeed.]
-  validation_commands: [make test, make eval-agent]
+  source_paths: [healthcare_rag/agent/build.py, healthcare_rag/agent/gate.py, healthcare_rag/agent/coach_agent.py, healthcare_rag/agent/rag_relay.py, healthcare_rag/agent/compose_ui.py, evals/coach_engine.py]
+  symbols: [coach, build_coach_graph, coach_gate, coach_agent, medical_lookup, relay_question, validate_composition, finalize_coach, CoachEngine]
+  test_paths: [tests/agent/test_coach_gate.py, tests/agent/test_route_b.py, tests/agent/test_rag_relay.py]
+  invariants: [The entry gate routes operational and deterministic safety cases but does not decide medical versus coaching., Medical answers are produced by the healthcare RAG child through medical_lookup rather than by coach prose., Fact-bearing catalog props must resolve from same-turn tool data envelopes.]
+  validation_commands: [make test, make eval-agent, make eval-agent-multiturn]
+verified:
+  - by: openwiki/0.4.0
+    at: 2026-08-26T20:21:43.477Z
 ---
 
-# Coach agent service
+# Coach agent architecture and medical relay
 
-> Canonical change pages: [coach routing and catalog](coach-routing.md), [member perimeter](member-perimeter.md), and [member data lifecycle](member-data-lifecycle.md). This overview remains supporting context.
+The `coach` graph is the member-facing LangGraph workflow. Its graph builder defines a distinct state/input/output contract and compiles a graph named `coach`; it is not the healthcare RAG graph. The normal coach path is a tool-using agent for planning and member-data interactions. It does **not** own medical-answer safety: medication and monograph content must travel through `medical_lookup` to the complete healthcare RAG child graph, whose safety and validation behavior remains in force.
 
-`healthcare_rag/agent/` is a second, deployed product surface next to the CLI
-RAG graph: the **coach** LangGraph graph (a medication-adherence behavior
-coach for members) served by the LangGraph Agent Server. `langgraph.json`
-registers two graphs — `healthcare_rag` (the pipeline documented in
-[architecture](../architecture/overview.md)) and `coach`
-(`healthcare_rag/agent/__init__.py:coach`) — plus a LangGraph store
-(`openai:text-embedding-3-small`, dims 1536), auth
-(`healthcare_rag/agent/auth.py:auth`), and a custom Starlette HTTP app
-(`healthcare_rag/agent/http_app.py:app`) with MCP/A2A disabled.
+For the adjacent authorization, storage, deletion, and browser contracts, see [member perimeter](member-perimeter.md), [member data lifecycle](member-data-lifecycle.md), and [member frontend](../frontend/member-frontend.md). [Coach routing](coach-routing.md) is the detailed routing and catalog reference.
 
-## Graph topology
-
-`build_coach_graph` (`healthcare_rag/agent/build.py`) wires one entry gate that
-routes to exactly one handler, every handler flows into `finalize`, then END:
+## Request flow and ownership
 
 ```mermaid
-flowchart TD
-  START --> G["coach_gate: features + scrub_phi + CoachSafetyGate classify"]
-  G -->|cron wake, HMAC-valid| RD["reminder_delivery"]
-  G -->|attachment| CD["claim_document / review_document"]
-  G -->|red flag / injection / identifier recall / bad category| SC["short_circuit (templated)"]
-  G -->|erase request| ER["erase_my_data"]
-  G -->|medical / monograph token| RA["rag_relay (Route A)"]
-  G -->|coaching intent| CA["coach_agent (Route B tools)"]
-  RD & CD & SC & ER & RA & CA --> F["finalize_coach"] --> END
+sequenceDiagram
+  participant Member as Member client
+  participant Coach as Coach graph
+  participant Gate as Deterministic gate
+  participant RouteB as Route B agent
+  participant Tools as Member tools
+  participant Relay as Medical lookup relay
+  participant RAG as Healthcare RAG child
+  participant Final as Final projection
+  Member->>Coach: question or attachment or cron wake
+  Coach->>Gate: route scrubbed turn
+  alt operational or deterministic safety case
+    Gate->>Coach: selected handler
+  else ordinary turn
+    Gate->>RouteB: safe-projected messages
+    alt model calls member tool
+      RouteB->>Tools: scoped tool operation
+      Tools-->>RouteB: data envelope or result
+    else model calls medical lookup
+      RouteB->>Relay: query and current config
+      Relay->>RAG: invoke full healthcare graph
+      RAG-->>Relay: validated answer or refusal
+      Relay-->>RouteB: exact medical tool result
+    end
+    RouteB-->>Coach: projected messages and follow ups
+  end
+  Coach->>Final: sanitize terminal channel
+  Final-->>Member: messages and follow ups
 ```
 
-- **`coach_gate`** (`agent/gate.py`) computes turn features
-  (`agent/features.py`: attachment, erase request, anaphoric follow-up,
-  unexplained medical token), scrubs the question with the shared
-  `scrub_phi` → [PrivacySanitizer](../privacy/sanitizer.md), and classifies
-  with `CoachSafetyGate`, a subclass of the RAG
-  [safety gate](../safety/gate.md)'s `SafetyGate` that adds a 5 s
-  `asyncio.timeout` and a deterministic `ambiguous` fallback when the
-  classifier fails (failure then routes to `short_circuit`, never to Route A).
-  `cron_wake` turns are validated with an HMAC `wake_token` against the store
-  record before they can deliver a reminder.
-- **Route A — `rag_relay`** (`agent/rag_relay.py`) runs the scrubbed question
-  through the full healthcare RAG graph as a child compiled with
-  `checkpointer=True`, so healthcare history and refusal boundaries persist
-  per coach thread. `HC_RAG_RELAY_MODE=pipeline` is a degraded fallback that
-  recompiles the graph with a fresh in-memory saver and a UUID thread per
-  turn. Refusals and child failures surface as fixed strings, never raw
-  errors.
-- **Route B — `coach_agent`** (`agent/coach_agent.py`) is a LangChain
-  `create_agent` with the tools `view_schedule`, `change_schedule`,
-  `log_injection`, `log_metric`, `create/edit/cancel_reminder`, `remember_fact`,
-  and `compose_ui`, behind `ToolCallLimitMiddleware` and a middleware that
-  projects model output through `to_safe_message` and rejects invalid catalog
-  compositions before state update. Its base prompt forbids medical advice,
-  dosing decisions, diagnoses, and monograph claims. All member data goes
-  through the store with privacy scans (`agent/store_data.py`,
-  `agent/memory.py`, `agent/tools/`).
-- **`erase_my_data`** (`agent/erase.py`) is the self-serve deletion path:
-  it sets an `erasing` gate marker, deletes the user's crons and upload
-  reservations via the deployment client, then `delete_all_for_user` on the
-  store; the `erase_confirmation_v1` marker is emitted only if both remote
-  cleanups succeeded (fail-closed). `scripts/forget_member.py`
-  (`make forget-member`) drives this against a deployment.
-- **Documents** (`agent/documents.py`) claim and review member uploads,
-  backed by the `/coach/uploads` HTTP routes (`agent/uploads.py`).
+Caption: the coach owns operational dispatch, member tools, and response projection; the healthcare RAG child owns the medical-answer pipeline.
 
-## HTTP perimeter, auth, and deployment
+`CoachState` deliberately keeps raw request fields such as `question`, `attachment_id`, and cron payloads as untracked values. The public `CoachOutput` contains only `messages` and `follow_ups`. At terminal handling, `finalize_coach()` re-projects the complete message channel through `to_safe_message()` and clears pending document-operation state. The projection recursively PHI-scrubs content and tool arguments, retains message/tool correlation and tool error status, and drops provider metadata before state is retained or returned.
 
-The custom app (`agent/http_app.py`) serves `/coach/uploads`,
-`/coach/uploads/{id}/status`, `/coach/feedback`, and an internal-only version
-probe, wrapped in `MemberPerimeterMiddleware` (`agent/perimeter_middleware.py`,
-composed with `agent/perimeter.py`) and CORS restricted to
-`COACH_ALLOWED_ORIGINS`. Its lifespan fails startup unless
-`LANGSMITH_FEEDBACK_PROJECT_ID` names a valid, probe-able LangSmith feedback
-project — feedback is stored run-less, so it cannot leak member content into
-traces. Auth (`agent/auth.py`) maps principals to member/coordinator roles;
-`tests/agent/test_auth.py`, `tests/agent/test_perimeter_composed.py`, and
-`tests/agent/test_server_perimeter.py` pin the perimeter.
+## Deterministic entry gate
 
-**LangSmith Studio principals.** `langgraph.json` keeps
-`auth.disable_studio_auth: false`, so workspace operators reach the deployment
-as `StudioUser` principals. `MemberPerimeterMiddleware` passes them straight
-through (`perimeter_middleware.py` — a Studio user is an operator, not a
-member), and every authorization handler in `agent/auth.py` short-circuits
-`_is_studio(ctx)` to an allow (`deny_all`, thread create/read/search/delete,
-coach assistant read, cron scopes). Members and anonymous requests are held to
-exactly the previous contract; `tests/agent/test_perimeter_studio.py` pins all
-three outcomes and asserts the config flag stays false.
+`coach_gate()` is a fixed precedence list, not an LLM classifier and not a medical-intent router. It first scrubs the question, replaces it with a scrubbed `HumanMessage`, clears the raw untracked question, and resets follow-ups. It then selects exactly one target:
 
-**Member thread deletion.** A member `DELETE /threads/{id}` is gated by an
-ownership pre-check plus `prepare_thread_deletion` (`agent/cleanup.py`): it
-writes a `cleanup_pending` gate marker, pauses the thread's reminders in the
-store, then deletes their platform crons over the internal headers. If any
-remote step fails the response is a retryable `503` with a "Reminders are
-paused; deletion cleanup can be retried" notice — reminders stay paused, so a
-retry cannot fire an orphaned cron. After the platform confirms deletion, the
-middleware synthesizes `204` and clears the marker
-(`clear_cleanup_marker`). Member-facing `GET .../state` responses are
-re-projected through `perimeter.py:project_state`, which strips the private
-sentinels `question`, `attachment_id`, `cron_wake`, and
-`pending_document_op_id` (filtered out, not denied — the whole response is
-never 500'd for their presence).
+1. A cron wake is checked first. A valid wake requires an active stored reminder with matching reminder, user, and configured thread IDs plus a constant-time wake-token comparison. The payload is cleared in either outcome; valid wakes go to `reminder_delivery`, while forged or unresolvable wakes go to `short_circuit`.
+2. An attachment goes to `claim_document` before text safety or erasure handling.
+3. Deterministic red-flag, prompt-injection, or identifier-recall signals go to `short_circuit`.
+4. Recognized erase phrasing goes to `erase_my_data`.
+5. Every other turn—including a medical question—goes to `coach_agent`.
 
-`langgraph.json` also pins the Presidio/spaCy models into the
-deployed image via `dockerfile_lines` (see
-[PrivacySanitizer](../privacy/sanitizer.md) for why exact versions matter).
-Reminders fire through the cron client (`agent/cron_client.py`,
-`agent/reminders.py`) with a wake-token handshake.
+The graph registers document, reminder, short-circuit, Route B, erasure, and finalization nodes. Ordinary terminal handlers feed `finalize`; document claiming hands off to its document-review flow. `short_circuit()` makes no model call: it selects the appropriate fixed emergency, injection, identifier-recall, or out-of-scope response from the scrubbed human message and produces no follow-ups.
 
-## Evaluating the coach
+This ordering is an important extension boundary. Add a new deterministic branch only when it must outrank ordinary tool use, then update the gate tests for precedence and safe output shape. Do not add a medical branch here merely to enforce medical safety: the supported architecture is a constrained Route B tool call into the healthcare graph.
 
-The coach has its own offline harnesses that run the graph in-process against
-`evals/agent_cases.py` with fakes (`evals/offline_agent_fakes.py`):
-`make eval-agent` (`evals/run_agent.py`) and `make eval-agent-multiturn`
-(`evals/run_agent_multiturn.py`), reports via `evals/agent_report.py`, and a
-coach parity gate (`evals/agent_parity.py`, `evals/check_agent_parity.py`).
-Ten-check deployment validation is `make deployed-smoke`
-(`scripts/deployed_smoke.py`) against `LANGGRAPH_DEPLOYMENT_URL`.
+## Route B: bounded tool ownership
 
-**Change guidance:** routing changes start in `coach_gate`/`RouteTarget`
-(`agent/gate.py`) and are covered by `tests/agent/test_coach_gate.py` and
-`tests/agent/test_route_b.py`; Route A wiring by `tests/agent/test_rag_relay.py`;
-member-data tools by `tests/agent/test_store_data.py`,
-`test_tool_log_metric.py`, `test_tool_log_injection.py`,
-`test_tool_change_schedule.py`, `test_tool_view_schedule.py`; reminders by
-`tests/agent/test_reminders.py`; the perimeter/auth contract by
-`tests/agent/test_perimeter_composed.py` and
-`tests/agent/test_perimeter_studio.py`. Deployed-surface changes
-(`langgraph.json`, auth, perimeter, HTTP routes) additionally need
-`tests/agent/test_deploy_config.py` plus `make deployed-smoke`. Run
-`make test` first — all of `tests/agent/` is offline.
+`coach_agent()` invokes a fresh, checkpointer-free LangChain agent with only safe-projected messages. It derives `AgentContext(user_id, thread_id, human_msg_id)` server-side: the user comes from authenticated configuration and a missing human-message ID is generated before the call. The dynamic prompt reads saved profile and episodic facts only from namespaces under that authenticated user.
+
+The fixed tool catalog owns member-facing operations: memory, metric and injection logging, schedule viewing/changing, reminder create/edit/cancel, `compose_ui`, `medical_lookup`, and browser-side `copy_to_clipboard`. Tool policy is not just prompt text:
+
+- The base prompt prohibits self-generated medical answers, diagnoses, and personal dosing advice; it requires a medical turn to call `medical_lookup` alone.
+- `SafeModelResponseMiddleware` safe-projects model output. If the model includes `medical_lookup`, it removes assistant prose and discards sibling tool calls, so no preamble or concurrent member mutation accompanies the medical result.
+- `ToolCallLimitMiddleware` permits only one `change_schedule` invocation per agent run. Its interrupt-producing behavior therefore cannot be multiplied in one run.
+- The terminal medical tool message is converted to an AI message containing exactly its tool content. The agent extracts follow-ups only from the tool artifact.
+
+These controls make the model choose a tool but prevent a model response from becoming an alternative medical-answer authority. They also establish the safe-change rule: adding a member capability requires a tool contract, authenticated data scope, response projection, and focused tests—not only a prompt update.
+
+## Medical relay: healthcare graph remains the authority
+
+`medical_lookup` is a `return_direct` tool that delegates its query and runtime configuration to `relay_question()`. The relay invokes a complete compiled healthcare graph. In the default mode the child was compiled with `checkpointer=True` and receives the caller configuration, so healthcare conversation history and refusal boundaries persist within the coach thread under the tool's checkpoint namespace.
+
+For a normal validated result, the relay adds the fixed monograph introduction and optional follow-up bullets. A healthcare-child safety short circuit is returned unchanged, without framing or follow-ups. A child error, missing answer, or exception becomes the fixed retrieval-failure message rather than exposing an internal exception.
+
+`HC_RAG_RELAY_MODE=pipeline` changes this lifecycle deliberately: each lookup compiles a full child graph with a new in-memory saver and a UUID thread. It retains the child safety and validation stages but loses child multi-turn memory. Use this degraded mode only where that continuity loss is acceptable; it is not a way to bypass medical safety.
+
+## Generated UI is data-bound, not model-authored fact text
+
+`compose_ui` itself is an acknowledgement tool. The enforcement point is `validate_composition()`, called before the model output enters state. It accepts only a closed component catalog and each component's exact fact-bearing/static prop allow-list.
+
+Fact-bearing props must be `__ref` objects that name the current turn scope, a tool DATA-envelope block, and an RFC 6901 JSON pointer. Validation rejects unknown components or props, malformed references, references from another turn, absent blocks or pointers, and values whose resolved JSON type does not match the prop. Static values are constrained to allowlisted copy, dispatch IDs, presentation enums, and safe structures; literal numeric or clinical-looking claims cannot be used as static copy.
+
+On the first invalid composition in an agent run, middleware replaces its tree with an empty tree and supplies an error tool message so the model can correct itself or respond in plain text. A further invalid cycle yields `SAFE_FALLBACK` with no tool calls. This means a new catalog component, prop, action, copy string, or tool envelope is a backend/frontend contract change; coordinate it with the member frontend's same-turn hydration and closed dispatch behavior.
+
+## Offline behavioral evaluation boundary
+
+`CoachEngine` builds the real coach topology with `InMemorySaver` and `InMemoryStore`, temporarily substitutes an offline Route B agent, and installs offline graph resources/search. It invokes normal graph turns with member configuration, reads checkpoints to identify healthcare-child lineage, and resolves retrieved contexts against a local chunk catalog. This supports deterministic assertions about routing, medical-child history/boundaries, documents, reminders, and catalog validation without a deployed service or live model.
+
+`make eval-agent` runs the in-process single-turn harness. It checks informational and refusal healthcare-child cases, non-medical Route B behavior, document decisions, reminder delivery/caps, and catalog reference acceptance/rejection, then writes baseline and candidate reports. `make eval-agent-multiturn` replays the `mt-017` scripted conversation and fails when its expected child boundary behavior, safety drift, or boundary-violation counters do not match.
+
+These are behavioral regression gates, not deployment certification: they use deterministic fake gateway/search resources and in-memory persistence. Pair them with focused unit tests and deployment/perimeter testing when changing real credentials, persistence, runtime configuration, or HTTP integration.
+
+## Focused verification
+
+- `tests/agent/test_coach_gate.py` pins deterministic gate routing, valid versus forged cron wakes, attachment handling, erasure routing, and the untracked/safe output boundary.
+- `tests/agent/test_route_b.py` pins medical-tool exclusivity and verbatim relay rendering, parent-thread child history, composition rejection/fallback, same-turn references, schedule limiting, and final projection.
+- `tests/agent/test_rag_relay.py` pins output framing, unchanged child refusals, raw-error suppression/recovery, and the fresh saver/thread semantics of pipeline mode.
+
+Run the focused suite and offline behavioral checks with:
+
+```bash
+uv run pytest tests/agent/test_coach_gate.py tests/agent/test_route_b.py tests/agent/test_rag_relay.py -q
+make eval-agent
+make eval-agent-multiturn
+```

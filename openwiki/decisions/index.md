@@ -1,3 +1,3 @@
 # Files
 
-- [Evidence-backed scope and remaining boundaries](submission-scope.md) - Completed production-readiness, regression-protection, AI-contributor, and safety directions as shown by source, tests, decisions, and recorded evidence, separated from future work.
+- [Engineering decisions, evidence, and remaining scope](submission-scope.md) - Evidence-based record of production readiness, regression protection, healthcare safety, and AI-contributor directions. It separates implemented behavior and measured findings from design intent, trade-offs, and unmeasured proposals.
