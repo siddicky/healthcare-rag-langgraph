@@ -10,11 +10,12 @@
     "playwright": "playwright test"
   },
   "dependencies": {
+    "@copilotkit/react-core": "1.69.1",
+    "@copilotkit/runtime": "1.69.1",
     "@json-render/core": "^0.20.0",
     "@json-render/react": "^0.20.0",
     "@langchain/core": "^1.1.48",
     "@langchain/langgraph-sdk": "^1.9.31",
-    "@langchain/react": "^1.0.32",
     "@supabase/supabase-js": "^2.112.3",
     "next": "16.3.2",
     "react": "19.2.8",

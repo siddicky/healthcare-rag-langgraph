@@ -10,8 +10,6 @@ import {
   nextFriday,
   nextWeekday,
   readRun,
-  threadStreamAdmitted,
-  THREAD_STREAM_SKIP_REASON,
   threadState,
   type DataEnvelope,
   type Runfile,
@@ -78,19 +76,22 @@ async function expectAssistantCount(page: Page, text: string, count: number): Pr
   await waitForIdle(page);
 }
 
+/**
+ * Thread ids as seen by the CopilotKit transport: the browser never POSTs
+ * /threads itself any more — thread creation happens server-side inside the
+ * runtime, and every AG-UI run request carries the id in its body.
+ */
 function trackThreadCreations(page: Page): string[] {
   const ids: string[] = [];
-  page.on("response", (response) => {
-    if (response.request().method() !== "POST") return;
-    if (!response.url().endsWith("/threads")) return;
-    void response
-      .json()
-      .then((body) => {
-        if (body && typeof body.thread_id === "string") ids.push(body.thread_id);
-      })
-      .catch(() => {
-        // non-JSON thread response — nothing to track
-      });
+  page.on("request", (request) => {
+    if (request.method() !== "POST") return;
+    if (!request.url().includes("/api/copilotkit/agent/coach/run")) return;
+    try {
+      const body = request.postDataJSON() as { threadId?: unknown };
+      if (typeof body?.threadId === "string") ids.push(body.threadId);
+    } catch {
+      // non-JSON run request — nothing to track
+    }
   });
   return ids;
 }
@@ -127,17 +128,8 @@ function reminderPresent(state: { values: { messages?: unknown[] } }): boolean {
   });
 }
 
-async function gateOnThreadStream(): Promise<void> {
-  const run = readRun();
-  const api = await memberApi(run, run.u1.token);
-  const admitted = await threadStreamAdmitted(api);
-  await api.dispose();
-  test.skip(!admitted, THREAD_STREAM_SKIP_REASON);
-}
-
 test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, feedback, branch", async ({ page }) => {
   test.setTimeout(300_000);
-  await gateOnThreadStream();
   const run = readRun();
   const api = await memberApi(run, run.u1.token);
   const createdThreads = trackThreadCreations(page);
@@ -419,7 +411,6 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
 
 test("u2 isolation: own threads only, cross-identity upload rejected", async ({ page }) => {
   test.setTimeout(120_000);
-  await gateOnThreadStream();
   const run = readRun();
   const api = await memberApi(run, run.u2.token);
   const createdThreads = trackThreadCreations(page);
@@ -545,7 +536,6 @@ test("perimeter sentinel: member token rejection set", async () => {
 
 test("open chat recovers when its active thread disappears", async ({ page }) => {
   test.setTimeout(120_000);
-  await gateOnThreadStream();
   const run = readRun();
   const api = await memberApi(run, run.u1.token);
   const createdThreads = trackThreadCreations(page);

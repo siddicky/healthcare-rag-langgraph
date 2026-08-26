@@ -3,7 +3,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Awaitable, Callable, Sequence
 from dataclasses import dataclass
-from typing import Final, TypedDict, cast
+from typing import Any, Final, TypedDict, cast
 from uuid import uuid4
 
 from langchain.agents import create_agent
@@ -29,6 +29,7 @@ from langchain_core.runnables import RunnableConfig
 from langchain_core.runnables.base import Runnable
 from langgraph.runtime import Runtime
 from langgraph.store.base import BaseStore
+from copilotkit import CopilotKitMiddleware
 from typing_extensions import override
 
 from healthcare_rag.graph.resources import get as get_resources
@@ -198,6 +199,25 @@ class SafeModelResponseMiddleware(
 safe_model_response = SafeModelResponseMiddleware()
 
 
+class RouteBCopilotKitMiddleware(CopilotKitMiddleware):
+    """Pass-through CopilotKit emitter that never serializes AgentContext.
+
+    copilotkit 0.1.95's app-context note JSON-serializes ``runtime.context``
+    whenever no CopilotKit payload is present, which crashes on our frozen
+    dataclass context and would otherwise leak internal ids into the prompt.
+    With no payload (the only state this agent is ever served in until the
+    runtime proxy lands), it emits nothing — byte-identical to no middleware.
+    """
+
+    @override
+    def _build_app_context_note(
+        self, state: dict[str, Any], runtime_context: Any = None
+    ) -> str | None:
+        if not self._get_copilotkit_context(state, runtime_context):
+            return None
+        return super()._build_app_context_note(state, runtime_context)
+
+
 @dynamic_prompt
 async def memory_segment(request: ModelRequest[AgentContext | None]) -> str:
     """Append auth-scoped memory to the fixed Route-B system contract."""
@@ -243,6 +263,15 @@ def build_route_b_agent(
     middleware = cast(
         "Sequence[AgentMiddleware[AgentState[None], AgentContext | None, None]]",
         (
+            # Order-pinned: the CopilotKit middleware must stay FIRST
+            # (outermost) so everything it emits to the CopilotKit runtime
+            # observes the final projections — safe_model_response blanking
+            # medical preambles and rewriting invalid compositions,
+            # memory_segment prompt assembly, and relay_medical_answer's
+            # terminal relay. Moving it inward would expose pre-projection
+            # messages; it is otherwise a pass-through emitter (default
+            # constructor, no state exposure).
+            RouteBCopilotKitMiddleware(),
             safe_model_response,
             memory_segment,
             ToolCallLimitMiddleware[None, AgentContext | None](

@@ -13,7 +13,7 @@ import {
   type CoachFetch,
 } from "./coachApi";
 import {
-  useLangChainCoachStream,
+  useCopilotKitCoachStream,
   type CoachStreamDeps,
 } from "./useCoachStream";
 import { getSupabase } from "@/lib/supabase";
@@ -46,7 +46,7 @@ export function createBrowserDeps(): CoachStreamDeps {
       postFeedback: (feedback) => postFeedback(fetcher, feedback),
     },
     client,
-    useStream: useLangChainCoachStream,
+    useStream: useCopilotKitCoachStream,
     auth: { signOut: () => supabase.auth.signOut() },
     sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
     newUploadId: () => crypto.randomUUID(),

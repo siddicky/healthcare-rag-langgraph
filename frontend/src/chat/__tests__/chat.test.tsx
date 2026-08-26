@@ -9,7 +9,7 @@ import {
   aiMessage,
   emptyStream,
   fakeDeps,
-  fakeStream,
+  fakeAgent,
   humanMessage,
   interruptPart,
   thread,
@@ -38,7 +38,7 @@ afterEach(() => {
 
 describe("openers", () => {
   it("sends a text opener as a new run", async () => {
-    const stream = fakeStream(() => [
+    const stream = fakeAgent(() => [
       updatesPart("coach_agent", [aiMessage("Here you go.", "a1")]),
     ]);
     const deps = fakeDeps({}, stream);
@@ -59,7 +59,7 @@ describe("openers", () => {
 
   it("submits the resumable messages envelope when the member perimeter is v2", async () => {
     vi.stubEnv("NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER", "v2");
-    const stream = fakeStream(() => [
+    const stream = fakeAgent(() => [
       updatesPart("coach_agent", [aiMessage("Queued.", "a1")]),
     ]);
     shell(fakeDeps({}, stream));
@@ -90,7 +90,7 @@ describe("openers", () => {
   it("waits for a finishing server run before opening a new stream", async () => {
     const statuses = [thread("11111111-1111-4111-8111-111111111111", { status: "busy" })];
     const getThread = vi.fn(async () => statuses.shift() ?? thread("11111111-1111-4111-8111-111111111111"));
-    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
+    const stream = fakeAgent(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
     const deps = fakeDeps({ getThread }, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -114,7 +114,7 @@ describe("new conversation", () => {
       searchCount += 1;
       return searchCount === 1 ? [] : [thread(restThreadId)];
     });
-    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
+    const stream = fakeAgent(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
     const deps = fakeDeps({ createThread, searchThreads }, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -132,7 +132,7 @@ describe("new conversation", () => {
   });
 
   it("clears the transcript and starts fresh (thread created lazily on next send)", async () => {
-    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
+    const stream = fakeAgent(() => [updatesPart("coach_agent", [aiMessage("Logged.", "a1")])]);
     const deps = fakeDeps({}, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -154,7 +154,7 @@ describe("thread switch via latest-state read", () => {
       "nymble:thread-titles",
       JSON.stringify({ [firstThreadId]: "First chat", [selectedThreadId]: "Selected chat" }),
     );
-    const stream = fakeStream(() => [updatesPart("coach_agent", [aiMessage("reply", "a-reply")])]);
+    const stream = fakeAgent(() => [updatesPart("coach_agent", [aiMessage("reply", "a-reply")])]);
     const deps = fakeDeps(
       {
         searchThreads: vi.fn(async () => [thread(firstThreadId), thread(selectedThreadId)]),
@@ -251,13 +251,13 @@ describe("server reset during an active conversation", () => {
       searchCount += 1;
       return searchCount === 1 ? [thread("t-missing")] : [];
     });
-    const stream = fakeStream(() =>
+    const stream = fakeAgent(() =>
       (async function* () {
-          throw Object.assign(
-            new Error('HTTP 404: {"detail":"Thread not found"}'),
-            { status: 404 },
-          );
-        })(),
+        throw Object.assign(
+          new Error('HTTP 404: {"detail":"Thread not found"}'),
+          { status: 404 },
+        );
+      })(),
     );
     const deps = fakeDeps(
       {
@@ -316,7 +316,7 @@ describe("reload during a pending interrupt (fixture)", () => {
         ],
       })),
     };
-    const stream = fakeStream(() => [updatesPart("coach_agent", [toolMessage("{}", "t1", "c1", "success")])]);
+    const stream = fakeAgent(() => [updatesPart("coach_agent", [toolMessage("{}", "t1", "c1", "success")])]);
     const deps = fakeDeps(api, stream);
     shell(deps);
     expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
@@ -347,7 +347,7 @@ describe("reload during a pending interrupt (fixture)", () => {
         ],
       })),
     };
-    const stream = fakeStream(() => []);
+    const stream = fakeAgent(() => []);
     const deps = fakeDeps(api, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -367,7 +367,7 @@ describe("document upload flow", () => {
       statusIndex += 1;
       return { stage };
     });
-    const stream = fakeStream(() => [updatesPart("finalize_coach", [aiMessage("I found a few details.", "a1")])]);
+    const stream = fakeAgent(() => [updatesPart("finalize_coach", [aiMessage("I found a few details.", "a1")])]);
     const deps = fakeDeps({ postUpload, getUploadStatus }, stream);
     shell(deps);
     const user = userEvent.setup();
@@ -433,13 +433,13 @@ describe("sidebar thread management", () => {
 describe("one active run per thread", () => {
   it("locks the composer while a run streams", async () => {
     const gate: { release: (() => void) | null } = { release: null };
-    const stream = fakeStream(() =>
+    const stream = fakeAgent(() =>
       (async function* () {
-          await new Promise<void>((resolve) => {
-            gate.release = resolve;
-          });
-          yield updatesPart("coach_agent", [aiMessage("done", "a1")]);
-        })(),
+        await new Promise<void>((resolve) => {
+          gate.release = resolve;
+        });
+        yield updatesPart("coach_agent", [aiMessage("done", "a1")]);
+      })(),
     );
     const deps = fakeDeps({}, stream);
     shell(deps);
@@ -466,7 +466,7 @@ describe("erase flow via the marker", () => {
       }),
       getThread: vi.fn(async (id: string) => thread(id)),
     };
-    const stream = fakeStream(() => [
+    const stream = fakeAgent(() => [
       updatesPart("finalize_coach", [
         aiMessage("All saved data erased.", "m1", { name: ERASE_MARKER_NAME }),
       ]),
@@ -599,7 +599,7 @@ describe("HITL interrupt approve/reject/edit via respond", () => {
         ],
       })),
     };
-    const stream = fakeStream((call) => {
+    const stream = fakeAgent((call) => {
       if ("command" in call.payload) {
         return [updatesPart("coach_agent", [aiMessage("Done", "a2")])];
       }
@@ -633,7 +633,7 @@ describe("HITL interrupt approve/reject/edit via respond", () => {
         interrupts: [{ value: memPayload }],
       })),
     };
-    const stream = fakeStream(() => []);
+    const stream = fakeAgent(() => []);
     const deps = fakeDeps(api, stream);
     shell(deps);
     expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
@@ -653,7 +653,7 @@ describe("HITL interrupt approve/reject/edit via respond", () => {
         interrupts: [{ value: { nonsense: "xyz" } }],
       })),
     };
-    const stream = fakeStream(() => []);
+    const stream = fakeAgent(() => []);
     const deps = fakeDeps(api, stream);
     shell(deps);
     await waitFor(() => expect(screen.queryByTestId("interrupt-card")).toBeNull());
@@ -683,5 +683,50 @@ describe("HITL interrupt approve/reject/edit via respond", () => {
     const user = userEvent.setup();
     await user.click(screen.getByRole("button", { name: "Approve all" }));
     expect(onApproveAll).toHaveBeenCalledWith([{ accept: true }, { accept: true }]);
+  });
+});
+
+describe("scripted AG-UI transport smoke", () => {
+  it("renders one turn through send, tool, interrupt, resume, and finalize", async () => {
+    const stream = fakeAgent((call) => {
+      if ("input" in call.payload) {
+        return [
+          updatesPart("coach_agent", [
+            aiMessage("", "agent-tool", {
+              tool_calls: [
+                { id: "schedule-call", name: "change_schedule", args: { day: "Monday" } },
+              ],
+            }),
+          ]),
+          interruptPart({
+            eventLabel: "Friday check-in",
+            fromLabel: "Friday",
+            toLabel: "Monday",
+          }),
+        ];
+      }
+      return [
+        updatesPart("coach_agent", [
+          toolMessage("updated", "schedule-result", "schedule-call", "success"),
+          aiMessage("Calendar updated.", "agent-final"),
+        ]),
+      ];
+    });
+    shell(fakeDeps({}, stream));
+    const user = userEvent.setup();
+
+    await user.type(await screen.findByLabelText("Message your coach"), "Move my check-in");
+    await user.click(screen.getByRole("button", { name: "Send" }));
+
+    expect(await screen.findByText("Move my check-in")).toBeInTheDocument();
+    expect(await screen.findByTestId("tool-call-card")).toBeInTheDocument();
+    expect(await screen.findByTestId("interrupt-card")).toBeInTheDocument();
+    await user.click(screen.getByRole("button", { name: "Confirm change" }));
+
+    await waitFor(() => expect(stream.calls).toHaveLength(2));
+    expect(stream.calls[1]?.payload).toEqual({ command: { resume: { accept: true } } });
+    expect(await screen.findByText("Calendar updated.")).toBeInTheDocument();
+    expect(screen.queryByTestId("interrupt-card")).toBeNull();
+    expect(screen.getAllByText("Move my check-in")).toHaveLength(1);
   });
 });

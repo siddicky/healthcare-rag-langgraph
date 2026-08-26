@@ -137,8 +137,17 @@ class MemberPerimeterMiddleware(BaseHTTPMiddleware):
                 body,
             )
             if request.method == "POST" and request.url.path == "/threads":
-                body = {"metadata": {"user_id": request.user.identity}}
-                request._body = json.dumps(body).encode()
+                next_body: dict[str, JSONValue] = {
+                    "metadata": {"user_id": request.user.identity}
+                }
+                supplied = body.get("thread_id") if isinstance(body, Mapping) else None
+                try:
+                    UUID(str(supplied))
+                except (ValueError, TypeError, AttributeError):
+                    pass
+                else:
+                    next_body["thread_id"] = str(supplied)
+                request._body = json.dumps(next_body).encode()
             if request.url.path.endswith("/copy") and not await _owns_copy_source(
                 request
             ):

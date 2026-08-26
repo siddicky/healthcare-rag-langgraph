@@ -80,20 +80,3 @@ export function applyStreamPart(
   }
   return { messages: next, interruptValue: null };
 }
-
-/**
- * Drive one SDK run stream to completion, folding parts through
- * `applyStreamPart` against a mutable accumulator the caller owns. Emits
- * the folded snapshot per part plus any interrupt value seen.
- */
-export async function consumeRunStream(
-  parts: AsyncIterable<StreamEventPart>,
-  accumulated: WireMessage[],
-  onFolded: (snapshot: { messages: WireMessage[]; interruptValue: unknown | null }) => void,
-): Promise<void> {
-  for await (const part of parts) {
-    const delta = applyStreamPart(accumulated, part);
-    accumulated.splice(0, accumulated.length, ...delta.messages);
-    onFolded(delta);
-  }
-}

@@ -2,8 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   memberApi,
   readRun,
-  threadStreamAdmitted,
-  THREAD_STREAM_SKIP_REASON,
   type Runfile,
   type RunIdentity,
 } from "./run";
@@ -30,19 +28,10 @@ async function send(page: Page, text: string): Promise<void> {
   await page.press(COMPOSER, "Enter");
 }
 
-async function gateOnThreadStream(): Promise<void> {
-  const run = readRun();
-  const api = await memberApi(run, run.u1.token);
-  const admitted = await threadStreamAdmitted(api);
-  await api.dispose();
-  test.skip(!admitted, THREAD_STREAM_SKIP_REASON);
-}
-
 test.describe.configure({ mode: "serial" });
 
 test("toolCalls card: medical_lookup renders AssembledToolCall lifecycle", async ({ page }) => {
   test.setTimeout(120_000);
-  await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
   await page.getByRole("button", { name: "New conversation" }).click();
@@ -64,7 +53,6 @@ test("toolCalls card: medical_lookup renders AssembledToolCall lifecycle", async
 
 test("toolCalls card ordering: tree before tool call before envelope within a turn", async ({ page }) => {
   test.setTimeout(180_000);
-  await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
   await page.getByRole("button", { name: "New conversation" }).click();

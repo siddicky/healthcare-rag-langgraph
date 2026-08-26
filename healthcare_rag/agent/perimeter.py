@@ -30,6 +30,9 @@ _CANCEL: Final = re.compile(rf"^/threads/{_UUID}/runs/{_UUID}/cancel$")
 _STREAM_EVENTS: Final = re.compile(rf"^/threads/{_UUID}/stream/events$")
 _COMMANDS: Final = re.compile(rf"^/threads/{_UUID}/commands$")
 _UPLOAD_STATUS: Final = re.compile(r"^/coach/uploads/[0-9a-fA-F-]+/status$")
+_ASSISTANT_SUBRESOURCE: Final = re.compile(
+    r"^/assistants/[A-Za-z0-9_-]+/(schemas|graph)$"
+)
 _SELECT_FIELDS: Final = frozenset(
     {"thread_id", "created_at", "updated_at", "metadata", "status"}
 )
@@ -65,6 +68,39 @@ _THREADSTREAM_CHANNELS: Final = frozenset(
 )
 _PRIVATE_SENTINELS: Final = frozenset(
     {"question", "attachment_id", "cron_wake", "pending_document_op_id"}
+)
+_ASSISTANT_SEARCH_KEYS: Final = frozenset({"graph_id", "limit", "offset"})
+# CopilotKit runtime v1.69.1 run envelope: the AG-UI adapter posts
+# `assistant_id` + `stream_mode` + exactly one of `input` (new turn) or
+# `command` (interrupt resume). `stream_subgraphs` is optional (the locked
+# @ag-ui/langgraph adapter does not send it), and its default stream modes
+# are ["events", "values", "updates", "messages-tuple"] — measured against
+# the locked runtime in e2e after the task-2 capture under-estimated both.
+_COPILOTKIT_RUN_FIXED_KEYS: Final = frozenset(
+    {"assistant_id", "stream_mode"}
+)
+_COPILOTKIT_RUN_OPTIONAL_KEYS: Final = frozenset(
+    {"stream_subgraphs", "stream_resumable", "durability", "if_not_exists",
+     "multitask_strategy"}
+)
+# The engine forwards the member run-envelope options through AG-UI
+# forwardedProps; the SDK serializes them into the upstream envelope. Values
+# mirror the member envelope's fixed posture (_RUN_FIXED / _RUN_V1_FIXED).
+_COPILOTKIT_RUN_DURABILITY: Final = frozenset({"exit", "async"})
+_COPILOTKIT_RUN_CONFLICT: Final = frozenset(
+    {"reject", "interrupt", "rollback", "enqueue"}
+)
+_COPILOTKIT_INPUT_KEYS: Final = frozenset(
+    {"question", "attachment_id", "messages", "tools", "copilotkit", "ag-ui"}
+)
+# The adapter injects "ag-ui": {tools, context, inject_a2ui_tool?} alongside
+# the client state (question/attachment_id) it merges into every run input.
+_COPILOTKIT_AG_UI_KEYS: Final = frozenset(
+    {"tools", "context", "inject_a2ui_tool"}
+)
+_COPILOTKIT_STREAM_MODES: Final = frozenset(
+    {"updates", "messages", "values", "custom", "tasks", "events",
+     "messages-tuple"}
 )
 
 
@@ -169,14 +205,19 @@ def _validate_member_input(
     *,
     allow_attachment: bool,
     require_attachment_uuid: bool,
+    require_question: bool = True,
     status_code: int = 403,
 ) -> None:
     allowed = {"question", "attachment_id"} if allow_attachment else {"question"}
     if not isinstance(run_input, dict) or frozenset(run_input) - allowed:
         _deny("Invalid run input", status_code)
     question = run_input.get("question")
-    if not isinstance(question, str) or not question:
+    if require_question and (
+        not isinstance(question, str) or not question
+    ):
         _deny("Question is required", status_code)
+    if question is not None and (not isinstance(question, str) or not question):
+        _deny("Invalid run input", status_code)
     attachment = run_input.get("attachment_id")
     if attachment is None:
         return
@@ -228,6 +269,120 @@ def _validate_run(body: JSONBody) -> None:
         allow_attachment=True,
         require_attachment_uuid=HC_RAG_MEMBER_STREAM_PERIMETER == "v2",
     )
+
+
+def _validate_assistant_search(body: JSONBody) -> None:
+    value = _require_body_mapping(body)
+    if frozenset(value) - _ASSISTANT_SEARCH_KEYS or "graph_id" not in value:
+        _deny("Invalid assistant search body")
+    if value["graph_id"] != "coach":
+        _deny("Invalid assistant search graph")
+    limit = value.get("limit", 10)
+    offset = value.get("offset", 0)
+    if not isinstance(limit, int) or isinstance(limit, bool) or not 1 <= limit <= 100:
+        _deny("Invalid assistant search limit")
+    if not isinstance(offset, int) or isinstance(offset, bool) or offset < 0:
+        _deny("Invalid assistant search offset")
+
+
+def _validate_copilotkit_command(command: JSONValue) -> None:
+    # The locked adapter echoes the interrupt payload back alongside the
+    # resume (`interruptEvent`); the direct member commands route stays
+    # strict {"resume"} — only this proxied contract tolerates the echo.
+    if (
+        not isinstance(command, dict)
+        or frozenset(command) - {"resume", "interruptEvent"}
+        or "resume" not in command
+    ):
+        _deny("Invalid resume command")
+    _validate_resume({"resume": command["resume"]})
+
+
+def _validate_copilotkit_run(body: JSONBody) -> None:
+    value = _require_body_mapping(body)
+    expected = _COPILOTKIT_RUN_FIXED_KEYS | _COPILOTKIT_RUN_OPTIONAL_KEYS
+    # Resumes carry BOTH: the merged conversation input and the resume
+    # command (measured from the locked runtime); new turns carry input only.
+    if "command" not in value and "input" not in value:
+        _deny("Invalid run envelope")
+    if not frozenset(value) <= expected | {"input", "command"}:
+        _deny("Invalid run envelope")
+    assistant_id = value["assistant_id"]
+    if assistant_id != "coach" and re.fullmatch(_UUID, str(assistant_id)) is None:
+        # The runtime sends either the graph id or the assistant UUID it
+        # resolved through /assistants/search (task-2 capture).
+        _deny("Invalid run envelope")
+    stream_mode = value["stream_mode"]
+    if (
+        not isinstance(stream_mode, list)
+        or not stream_mode
+        or len(stream_mode) != len(set(stream_mode))
+        or any(mode not in _COPILOTKIT_STREAM_MODES for mode in stream_mode)
+    ):
+        _deny("Invalid run envelope")
+    if "stream_subgraphs" in value and not isinstance(
+        value["stream_subgraphs"], bool
+    ):
+        _deny("Invalid run envelope")
+    if "stream_resumable" in value and not isinstance(
+        value["stream_resumable"], bool
+    ):
+        _deny("Invalid run envelope")
+    if "durability" in value and value["durability"] not in _COPILOTKIT_RUN_DURABILITY:
+        _deny("Invalid run envelope")
+    if "if_not_exists" in value and value["if_not_exists"] not in _COPILOTKIT_RUN_CONFLICT:
+        _deny("Invalid run envelope")
+    if (
+        "multitask_strategy" in value
+        and value["multitask_strategy"] not in _COPILOTKIT_RUN_CONFLICT
+    ):
+        _deny("Invalid run envelope")
+    if "command" in value:
+        _validate_copilotkit_command(value["command"])
+        if "input" not in value:
+            return
+    run_input = value["input"]
+    if not isinstance(run_input, dict) or "copilotkit" not in run_input:
+        _deny("Invalid run input")
+    if frozenset(run_input) - _COPILOTKIT_INPUT_KEYS:
+        _deny("Invalid run input")
+    _validate_member_input(
+        {key: run_input[key] for key in ("question", "attachment_id") if key in run_input},
+        allow_attachment=True,
+        require_attachment_uuid=HC_RAG_MEMBER_STREAM_PERIMETER == "v2",
+        # A resume continues from checkpointed state; the adapter's merged
+        # input legitimately carries no new question there.
+        require_question="command" not in value,
+    )
+    messages = run_input.get("messages")
+    if messages is not None and (
+        not isinstance(messages, list)
+        or any(
+            not isinstance(message, dict) or not message
+            for message in messages
+        )
+    ):
+        _deny("Invalid run input")
+    tools = run_input.get("tools")
+    if tools is not None and not isinstance(tools, list):
+        _deny("Invalid run input")
+    copilotkit = run_input["copilotkit"]
+    if not isinstance(copilotkit, dict) or frozenset(copilotkit) - {"actions", "context"}:
+        _deny("Invalid run input")
+    for key in ("actions", "context"):
+        item = copilotkit.get(key)
+        if item is not None and not isinstance(item, list):
+            _deny("Invalid run input")
+    ag_ui = run_input.get("ag-ui")
+    if ag_ui is not None:
+        if not isinstance(ag_ui, dict) or frozenset(ag_ui) - _COPILOTKIT_AG_UI_KEYS:
+            _deny("Invalid run input")
+        for key in ("tools", "context"):
+            item = ag_ui.get(key)
+            if item is not None and not isinstance(item, list):
+                _deny("Invalid run input")
+        if not isinstance(ag_ui.get("inject_a2ui_tool", True), bool):
+            _deny("Invalid run input")
 
 
 def _validate_stream_events(body: JSONBody) -> None:
@@ -404,10 +559,22 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
         _deny("Non-canonical path")
     if method == "GET" and path == "/ok" and not query:
         return
-    if method == "POST" and path == "/threads" and not query and body == {}:
-        return
+    if method == "POST" and path == "/threads" and not query:
+        if body == {}:
+            return
+        if (
+            isinstance(body, dict)
+            and frozenset(body) == frozenset({"metadata", "thread_id"})
+            and body["metadata"] == {}
+            and isinstance(body["thread_id"], str)
+            and re.fullmatch(_UUID, body["thread_id"]) is not None
+        ):
+            return
     if method == "POST" and path == "/threads/search" and not query:
         _validate_search(body)
+        return
+    if method == "POST" and path == "/assistants/search" and not query:
+        _validate_assistant_search(body)
         return
     if (
         method in {"GET", "DELETE"}
@@ -419,6 +586,13 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
     if method == "POST" and _COPY.fullmatch(path) and not query and body is None:
         return
     if method == "GET" and _STATE.fullmatch(path) and not query and body is None:
+        return
+    if (
+        method == "GET"
+        and _ASSISTANT_SUBRESOURCE.fullmatch(path)
+        and not query
+        and body is None
+    ):
         return
     if (
         HC_RAG_MEMBER_STREAM_PERIMETER == "v2"
@@ -453,7 +627,21 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
         _validate_command(body, str(commands_match.group(1)))
         return
     if method == "POST" and _STREAM.fullmatch(path) and not query:
-        _validate_run(body)
+        # The copilotkit and member envelopes can share the same top-level
+        # run-option keys, so route on the payload shape: `command` (resume)
+        # or an adapter-marked input belongs to the copilotkit contract,
+        # everything else to the member envelope.
+        is_copilotkit = isinstance(body, dict) and (
+            "command" in body
+            or (
+                isinstance(body.get("input"), dict)
+                and ("copilotkit" in body["input"] or "ag-ui" in body["input"])
+            )
+        )
+        if is_copilotkit:
+            _validate_copilotkit_run(body)
+        else:
+            _validate_run(body)
         return
     if method == "POST" and path in {"/coach/uploads", "/coach/feedback"} and not query:
         return
@@ -498,6 +686,11 @@ def project_state(payload: JSONBody) -> dict[str, JSONValue]:
     projected: dict[str, JSONValue] = {
         "values": _filter_pending_document_op_id(value.get("values", {})),
         "interrupts": value.get("interrupts", []),
+        # The CopilotKit adapter reads tasks[].interrupts and next from the
+        # post-run state snapshot; without them every completed turn ends in
+        # a client-side RUN_ERROR. Same owner-scoped read, same sweep.
+        "tasks": value.get("tasks", []),
+        "next": value.get("next", []),
     }
     _sweep(projected)
     return projected

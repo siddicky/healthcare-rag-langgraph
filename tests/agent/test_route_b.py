@@ -7,7 +7,14 @@ from typing import Any, Self, TypedDict
 
 import pytest
 from langchain_core.language_models.fake_chat_models import FakeMessagesListChatModel
-from langchain_core.messages import AIMessage, HumanMessage, ToolMessage
+from langchain_core.messages import (
+    AIMessage,
+    BaseMessage,
+    HumanMessage,
+    SystemMessage,
+    ToolMessage,
+)
+from pydantic import Field
 from langchain_core.runnables import RunnableConfig
 from langgraph.checkpoint.memory import InMemorySaver
 from langgraph.graph import START, StateGraph
@@ -16,6 +23,7 @@ from langgraph.store.memory import InMemoryStore
 from healthcare_rag.agent import rag_relay as relay_module
 from healthcare_rag.agent.build import build_coach_graph
 from healthcare_rag.agent.coach_agent import (
+    BASE_PROMPT,
     SAFE_FALLBACK,
     AgentContext,
     build_route_b_agent,
@@ -40,6 +48,30 @@ class ToolCapableFakeModel(FakeMessagesListChatModel):
         **kwargs: Any,
     ) -> Self:
         return self
+
+
+class PromptCapturingFakeModel(ToolCapableFakeModel):
+    """Records the system prompt seen on every model call (for dynamic-prompt checks)."""
+
+    seen_system_prompts: list[str] = Field(default_factory=list)
+
+    def _generate(
+        self,
+        messages: list[BaseMessage],
+        stop: list[str] | None = None,
+        run_manager: Any = None,
+        **kwargs: Any,
+    ) -> Any:
+        system = next(
+            (
+                message.content
+                for message in messages
+                if isinstance(message, SystemMessage)
+            ),
+            "",
+        )
+        self.seen_system_prompts.append(str(system))
+        return super()._generate(messages, stop=stop, run_manager=run_manager, **kwargs)
 
 
 def _context() -> AgentContext:
@@ -607,3 +639,237 @@ def test_finalize_projects_whole_channel_without_changing_ids() -> None:
     assert [message.id for message in result["messages"]] == ["human-1", "ai-1"]
     assert result["follow_ups"] == []
     assert result["pending_document_op_id"] is None
+
+
+# ---------------------------------------------------------------------------
+# Middleware-stack behaviour-neutrality characterizations.
+#
+# These five tests pin the observable behaviour of every downstream middleware
+# projection. They were written against the stack WITHOUT CopilotKitMiddleware
+# and must keep passing with it inserted outermost — proving that adding it
+# changes nothing in state (behaviour-neutral), not merely that it imports.
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_medical_lookup_round_trip_still_relays_verbatim_and_fires_relay_hook(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    async def fake_relay(question: str, config: RunnableConfig) -> tuple[str, list[str]]:
+        del config
+        return f"Here's what the monograph says:\n\n{question} answer.", ["Follow-up?"]
+
+    monkeypatch.setattr(
+        "healthcare_rag.agent.tools.medical_lookup.relay_question", fake_relay
+    )
+    model = ToolCapableFakeModel(
+        responses=[
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {
+                        "id": "lookup-1",
+                        "name": "medical_lookup",
+                        "args": {"query": "lipitor interactions"},
+                    }
+                ],
+            )
+        ]
+    )
+
+    # When
+    result = await build_route_b_agent(model, InMemoryStore()).ainvoke(
+        {
+            "messages": [
+                HumanMessage(id="human-1", content="what are lipitor interactions")
+            ]
+        },
+        _config(),
+        context=_context(),
+    )
+
+    # Then: relay_medical_answer fired — terminal ToolMessage became an AIMessage
+    # carrying the tool output verbatim (no paraphrase).
+    assert isinstance(result["messages"][-1], AIMessage)
+    assert result["messages"][-1].content == (
+        "Here's what the monograph says:\n\nlipitor interactions answer."
+    )
+    tool_message = next(
+        message for message in result["messages"] if isinstance(message, ToolMessage)
+    )
+    assert tool_message.name == "medical_lookup"
+    assert tool_message.tool_call_id == "lookup-1"
+
+
+@pytest.mark.asyncio
+async def test_mixed_call_guard_still_drops_sibling_calls_alongside_medical_lookup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given
+    async def fake_relay(question: str, config: RunnableConfig) -> tuple[str, list[str]]:
+        del question, config
+        return "Here's what the monograph says:\n\nanswer.", []
+
+    monkeypatch.setattr(
+        "healthcare_rag.agent.tools.medical_lookup.relay_question", fake_relay
+    )
+    model = ToolCapableFakeModel(
+        responses=[
+            AIMessage(
+                content="",
+                tool_calls=[
+                    {"id": "metric-1", "name": "log_metric", "args": {}},
+                    {
+                        "id": "lookup-1",
+                        "name": "medical_lookup",
+                        "args": {"query": "metformin dosing"},
+                    },
+                ],
+            )
+        ]
+    )
+
+    # When
+    result = await build_route_b_agent(model, InMemoryStore()).ainvoke(
+        {
+            "messages": [
+                HumanMessage(id="human-1", content="log my metric and metformin dosing")
+            ]
+        },
+        _config(),
+        context=_context(),
+    )
+
+    # Then: only medical_lookup executed; the sibling call never ran.
+    tool_messages = [
+        message for message in result["messages"] if isinstance(message, ToolMessage)
+    ]
+    assert [message.name for message in tool_messages] == ["medical_lookup"]
+    assert all(message.tool_call_id != "metric-1" for message in tool_messages)
+    assert result["messages"][-1].content == "Here's what the monograph says:\n\nanswer."
+
+
+@pytest.mark.asyncio
+async def test_invalid_composition_rewrites_then_second_offense_hits_safe_fallback() -> (
+    None
+):
+    # Given: the same invalid compose_ui call twice — first offense rewritten,
+    # second offense terminal.
+    invalid_args = {
+        "tree": [{"component": "TrendCard", "props": {"value": "literal"}}]
+    }
+    invalid_call = AIMessage(
+        content="",
+        tool_calls=[
+            {"id": "compose-bad", "name": "compose_ui", "args": invalid_args}
+        ],
+    )
+    model = ToolCapableFakeModel(responses=[invalid_call, invalid_call])
+
+    # When
+    result = await build_route_b_agent(model, InMemoryStore()).ainvoke(
+        {"messages": [HumanMessage(id="human-1", content="show progress")]},
+        _config(),
+        context=_context(),
+    )
+
+    # Then: first offense was rewritten to an empty tree with an error ToolMessage…
+    ai_messages = [
+        message for message in result["messages"] if isinstance(message, AIMessage)
+    ]
+    rewritten = [
+        call
+        for message in ai_messages
+        for call in message.tool_calls
+        if call["id"] == "compose-bad"
+    ]
+    assert rewritten == [
+        {
+            "name": "compose_ui",
+            "id": "compose-bad",
+            "args": {"tree": []},
+            "type": "tool_call",
+        }
+    ]
+    assert any(
+        isinstance(message, ToolMessage)
+        and message.name == "compose_ui"
+        and message.status == "error"
+        and message.tool_call_id == "compose-bad"
+        for message in result["messages"]
+    )
+    # …and the second offense terminated with SAFE_FALLBACK, no tool calls.
+    last = result["messages"][-1]
+    assert isinstance(last, AIMessage)
+    assert last.content == SAFE_FALLBACK
+    assert last.tool_calls == []
+
+
+@pytest.mark.asyncio
+async def test_change_schedule_run_limit_blocks_second_parallel_call_with_error_tool_message() -> (
+    None
+):
+    # Given: two change_schedule calls in one step; run_limit=1 blocks the second.
+    calls = [
+        {
+            "id": f"change-{index}",
+            "name": "change_schedule",
+            "args": {
+                "request": {
+                    "action": "add",
+                    "date": f"2027-02-0{index}",
+                    "kind": "check-in",
+                }
+            },
+        }
+        for index in (1, 2)
+    ]
+    model = ToolCapableFakeModel(responses=[AIMessage(content="", tool_calls=calls)])
+
+    # When
+    result = await build_route_b_agent(model, InMemoryStore()).ainvoke(
+        {"messages": [HumanMessage(id="human-1", content="add two check-ins")]},
+        _config(),
+        context=_context(),
+    )
+
+    # Then: only the first call reached the interrupt; the second was blocked by
+    # the limiter with an error ToolMessage and never scheduled.
+    blocked = [
+        message
+        for message in result["messages"]
+        if isinstance(message, ToolMessage)
+        and message.name == "change_schedule"
+        and message.status == "error"
+    ]
+    assert [message.tool_call_id for message in blocked] == ["change-2"]
+    assert len(result["__interrupt__"]) == 1
+    assert result["__interrupt__"][0].value["status"] == "pending"
+
+
+@pytest.mark.asyncio
+async def test_memory_segment_still_appended_after_base_prompt() -> None:
+    # Given: a stored profile fact the dynamic prompt should surface.
+    store = InMemoryStore()
+    await store.aput(
+        ("users", "user-1", "profile"),
+        "pref-1",
+        {"fact": "prefers morning workouts"},
+    )
+    model = PromptCapturingFakeModel(responses=[AIMessage(content="Noted.")])
+
+    # When
+    result = await build_route_b_agent(model, store).ainvoke(
+        {"messages": [HumanMessage(id="human-1", content="hello")]},
+        _config(),
+        context=_context(),
+    )
+
+    # Then: the system prompt is BASE_PROMPT plus the memory segment, unchanged.
+    assert result["messages"][-1].content == "Noted."
+    assert model.seen_system_prompts
+    for prompt in model.seen_system_prompts:
+        assert prompt.startswith(BASE_PROMPT)
+        assert "## Saved user memories" in prompt
+        assert "- prefers morning workouts" in prompt

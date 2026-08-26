@@ -50,10 +50,24 @@ export interface ScriptedCoachStream {
   readonly calls: StreamCall[];
   readonly client: Client;
   readonly useStream: CoachUseStream;
+  readonly agent: {
+    messages: WireMessage[];
+    isRunning: boolean;
+    run(call: StreamCall): Promise<void>;
+    subscribe(subscriber: ScriptedAgentSubscriber): { unsubscribe(): void };
+  };
   emitThreadId(threadId: string): void;
 }
 
-export function fakeStream(
+interface ScriptedAgentSubscriber {
+  onMessagesChanged?(): void;
+  onRunStarted?(): void;
+  onRunFinalized?(): void;
+  onInterrupt?(entries: unknown[]): void;
+  onError?(error: unknown): void;
+}
+
+export function fakeAgent(
   responses: (call: StreamCall, callIndex: number) => Iterable<RunStreamPart> | AsyncIterable<RunStreamPart>,
 ): ScriptedCoachStream {
   const sdkThreadId = "33333333-3333-4333-8333-333333333333";
@@ -62,6 +76,17 @@ export function fakeStream(
   let disconnectCalls = 0;
   let serverRunAlive = false;
   let onThreadId: CoachStreamOptions["onThreadId"] = () => undefined;
+  const subscribers = new Set<ScriptedAgentSubscriber>();
+  let executeRun: (call: StreamCall) => Promise<void> = async () => undefined;
+  const agent = {
+    messages: [] as WireMessage[],
+    isRunning: false,
+    run: (call: StreamCall) => executeRun(call),
+    subscribe: (subscriber: ScriptedAgentSubscriber) => {
+      subscribers.add(subscriber);
+      return { unsubscribe: () => subscribers.delete(subscriber) };
+    },
+  };
   const client = new Client({ apiUrl: "http://coach.test" });
   const useStream = (options: CoachStreamOptions): CoachStreamHandle => {
     onThreadId = options.onThreadId;
@@ -79,24 +104,36 @@ export function fakeStream(
       const resumable = (call.options as unknown as Record<string, unknown>)?.streamResumable === true;
       if (resumable) serverRunAlive = true;
       setIsLoading(true);
+      agent.isRunning = true;
+      for (const subscriber of subscribers) subscriber.onRunStarted?.();
       setError(undefined);
       try {
         for await (const part of responses(call, callIndex)) {
           const next = applyStreamPart(messagesRef.current, part);
-          messagesRef.current = next.messages;
-          setMessages(next.messages);
+          if (part.event !== "__interrupt__") {
+            messagesRef.current = next.messages;
+            agent.messages = next.messages;
+            setMessages(next.messages);
+            for (const subscriber of subscribers) subscriber.onMessagesChanged?.();
+          }
           if (next.interruptValue !== null) {
-            setInterrupts([{ id: "interrupt-1", value: next.interruptValue }]);
+            const entries = [{ id: "interrupt-1", value: next.interruptValue }];
+            setInterrupts(entries);
+            for (const subscriber of subscribers) subscriber.onInterrupt?.(entries);
           }
         }
       } catch (streamError) {
         setError(streamError);
+        for (const subscriber of subscribers) subscriber.onError?.(streamError);
         throw streamError;
       } finally {
         setIsLoading(false);
+        agent.isRunning = false;
         serverRunAlive = false;
+        for (const subscriber of subscribers) subscriber.onRunFinalized?.();
       }
     };
+    executeRun = run;
 
     const stop = async (opts?: { cancel?: boolean }) => {
       stopCalls.push({ cancel: opts?.cancel });
@@ -127,7 +164,7 @@ export function fakeStream(
       submit: (input: RunInput, submitOptions: CoachSubmitOptions) => {
         const threadId = options.threadId ?? submitOptions.threadId ?? sdkThreadId;
         if (options.threadId === null) options.onThreadId(threadId);
-        return run({ threadId, payload: { input }, options: submitOptions });
+        return agent.run({ threadId, payload: { input }, options: submitOptions });
       },
       respond: (
         response: ResumePayload,
@@ -136,7 +173,7 @@ export function fakeStream(
         const threadId = options.threadId;
         if (threadId === null) return Promise.resolve();
         setInterrupts([]);
-        return run({ threadId, payload: { command: { resume: response } }, respondOptions });
+        return agent.run({ threadId, payload: { command: { resume: response } }, respondOptions });
       },
       respondAll: (responses: ResumePayload[] | Record<string, unknown>) => {
         const threadId = options.threadId;
@@ -145,7 +182,7 @@ export function fakeStream(
         const list: ResumePayload[] = Array.isArray(responses) ? (responses as ResumePayload[]) : Object.values(responses as Record<string, ResumePayload>);
         return (async () => {
           for (const r of list) {
-            await run({ threadId, payload: { command: { resume: r } } });
+            await agent.run({ threadId, payload: { command: { resume: r } } });
           }
         })();
       },
@@ -164,6 +201,7 @@ export function fakeStream(
     calls,
     client,
     useStream,
+    agent,
     emitThreadId: (threadId: string) => onThreadId(threadId),
   } as unknown as ScriptedCoachStream & { stopCalls: typeof stopCalls; disconnectCalls: () => number; serverAlive: () => boolean };
   (streamObj as unknown as Record<string, unknown>).stopCalls = stopCalls;
@@ -171,6 +209,8 @@ export function fakeStream(
   (streamObj as unknown as Record<string, unknown>).serverAlive = () => serverRunAlive;
   return streamObj;
 }
+
+export const fakeStream = fakeAgent;
 
 export function emptyStream(): ScriptedCoachStream {
   return fakeStream(() => []);

@@ -176,11 +176,44 @@ def test_state_projection_rejects_private_sentinels_recursively() -> None:
     assert project_state({"values": {"messages": []}, "interrupts": []}) == {
         "values": {"messages": []},
         "interrupts": [],
+        "tasks": [],
+        "next": [],
     }
     with pytest.raises(PerimeterDenied):
         _ = project_state(
             {"values": {"nested": {"question": "private"}}, "interrupts": []}
         )
+    with pytest.raises(PerimeterDenied):
+        _ = project_state(
+            {
+                "values": {"messages": []},
+                "interrupts": [],
+                "tasks": [{"interrupts": [{"value": {"question": "private"}}]}],
+            }
+        )
+
+
+def test_state_projection_keeps_adapter_required_tasks_and_next() -> None:
+    """The CopilotKit adapter reads tasks[].interrupts and next post-run;
+    stripping them turns every completed turn into a client RUN_ERROR."""
+    from healthcare_rag.agent.perimeter import project_state
+
+    payload: JSONBody = {
+        "values": {"messages": []},
+        "interrupts": [],
+        "tasks": [
+            {
+                "id": "task-1",
+                "interrupts": [{"id": "i-1", "value": {"accept": True}}],
+            }
+        ],
+        "next": ["coach_agent"],
+        "metadata": {"writes": {}},
+    }
+    projected = project_state(payload)
+    assert projected["tasks"] == payload["tasks"]
+    assert projected["next"] == ["coach_agent"]
+    assert "metadata" not in projected
 
 
 def test_state_projection_filters_pending_document_op_id_recursively() -> None:
@@ -198,6 +231,8 @@ def test_state_projection_filters_pending_document_op_id_recursively() -> None:
     ) == {
         "values": {"messages": [], "nested": {"public": "safe"}},
         "interrupts": [],
+        "tasks": [],
+        "next": [],
     }
 
 
@@ -223,4 +258,6 @@ def test_state_projection_preserves_interrupt_while_filtering_pending_document_o
     assert project_state(payload) == {
         "values": {"messages": []},
         "interrupts": [interrupt],
+        "tasks": [],
+        "next": [],
     }

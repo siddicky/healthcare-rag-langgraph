@@ -70,6 +70,8 @@ def test_dependency_license_allowlist():
         # langgraph-checkpoint-postgres 3.1.2 (MIT, already covered by the
         # "langgraph" prefix). Keep the allowlist explicit by exact name.
         "psycopg", "psycopg-binary", "psycopg-pool",
+        # CopilotKit v2 transport (MIT, verified via importlib.metadata classifiers) — added by copilotkit-generative-ui plan
+        "copilotkit",
     }
     # Read pyproject dependencies
     import tomllib

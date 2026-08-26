@@ -51,43 +51,23 @@ export async function memberApi(
   });
 }
 
+/** Authenticated context against the Next `/api/copilotkit` runtime route. */
+export async function copilotApi(
+  run: Runfile,
+  token: string,
+): Promise<APIRequestContext> {
+  return request.newContext({
+    baseURL: run.frontend_url,
+    extraHTTPHeaders: { authorization: `Bearer ${token}` },
+  });
+}
+
 /** Base URL of the run's server running the requested perimeter, or null. */
 export function serverWithPerimeter(run: Runfile, perimeter: "v1" | "v2"): string | null {
   if (run.perimeter === perimeter) return run.server_url;
   if (run.alt_perimeter === perimeter && run.alt_server_url) return run.alt_server_url;
   return null;
 }
-
-/**
- * True when the server the FRONTEND points at admits the v2-native
- * ThreadStream transport (POST /threads/{id}/stream/events SSE +
- * POST /threads/{id}/commands — the surface `@langchain/react` useStream
- * submits through). The probe posts an INVALID subscription body: an
- * admitted route answers with an immediate protocol 400 (channels
- * required), while a perimeter denial is 403 — a valid body would open a
- * real SSE stream that (correctly) never closes and hang the probe.
- */
-export async function threadStreamAdmitted(api: APIRequestContext): Promise<boolean> {
-  const create = await api.post("/threads", { data: {} });
-  if (create.status() !== 200) throw new Error(`probe thread create failed: ${create.status()}`);
-  const { thread_id: threadId } = (await create.json()) as { thread_id: string };
-  try {
-    const probe = await api.post(`/threads/${threadId}/stream/events`, {
-      data: {},
-    });
-    try {
-      await probe.dispose();
-    } catch {
-      // response already consumed
-    }
-    return probe.status() !== 403;
-  } finally {
-    await api.delete(`/threads/${threadId}`);
-  }
-}
-
-export const THREAD_STREAM_SKIP_REASON =
-  "member frontend chats through the @langchain/react useStream ThreadStream transport (POST /threads/{id}/stream/events SSE + POST /threads/{id}/commands), which the member perimeter (v1 and v2) does not admit — see docs/safety.md 'Member stream perimeter v2 (useStream)'. UI specs auto-activate once a reviewed perimeter revision admits the transport.";
 
 export const HISTORY_BRANCH_UI_SKIP_REASON =
   "history/branching UI disabled by default (NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI≠1)";
