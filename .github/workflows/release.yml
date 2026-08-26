@@ -115,7 +115,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           COMMIT: ${{ steps.version.outputs.commit }}
           # Runs on every push to main, so it is the one check that must exist.
-          # REQUIRED_CHECK: "Offline test suite"
+          REQUIRED_CHECK: "Offline test suite"
           RELEASE_WORKFLOW_PATH: ".github/workflows/release.yml"
         run: |
           set -euo pipefail
