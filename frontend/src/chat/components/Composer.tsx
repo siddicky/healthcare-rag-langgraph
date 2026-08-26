@@ -24,7 +24,7 @@ export function Composer({
 
   function send() {
     const text = input.trim();
-    if (text === "" || disabled) return;
+    if (disabled || (text === "" && !attachmentReady)) return;
     onSend(text);
     setInput("");
   }
@@ -42,7 +42,7 @@ export function Composer({
     if (file !== undefined && !disabled) onAttach(file);
   }
 
-  const sendDisabled = disabled || input.trim() === "";
+  const sendDisabled = disabled || (input.trim() === "" && !attachmentReady);
 
   return (
     <div className="composer-wrap">

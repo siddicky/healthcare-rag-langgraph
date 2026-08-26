@@ -306,13 +306,21 @@ export type InterruptPayloadKind =
   | { kind: "unknown" };
 
 export function classifyInterruptPayload(value: unknown): InterruptPayloadKind {
-  if (typeof value !== "object" || value === null) return { kind: "unknown" };
-  if ("fromLabel" in value || "toLabel" in value) {
-    const parsed = CalendarChangePayloadSchema.safeParse(value);
+  let candidate = value;
+  if (typeof candidate === "string") {
+    try {
+      candidate = JSON.parse(candidate);
+    } catch {
+      return { kind: "unknown" };
+    }
+  }
+  if (typeof candidate !== "object" || candidate === null) return { kind: "unknown" };
+  if ("fromLabel" in candidate || "toLabel" in candidate) {
+    const parsed = CalendarChangePayloadSchema.safeParse(candidate);
     if (parsed.success) return { kind: "calendar-change", card: parsed.data };
   }
-  if ("sourceLabel" in value || "fields" in value) {
-    const parsed = MemoryExtractionPayloadSchema.safeParse(value);
+  if ("sourceLabel" in candidate || "fields" in candidate) {
+    const parsed = MemoryExtractionPayloadSchema.safeParse(candidate);
     if (parsed.success) return { kind: "memory-extraction", payload: parsed.data };
   }
   return { kind: "unknown" };

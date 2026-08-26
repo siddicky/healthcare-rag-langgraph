@@ -68,8 +68,11 @@ export function CoachToolRenderers() {
   useEnvelopeToolRenderers();
   registerMedicalRenderers();
   registerCatchAllRenderer();
-  const interruptSurface = registerInterruptHandlers();
   registerClipboardFrontendTool();
 
-  return <>{interruptSurface}</>;
+  return null;
+}
+
+export function CoachInterruptRenderer() {
+  return <>{registerInterruptHandlers()}</>;
 }

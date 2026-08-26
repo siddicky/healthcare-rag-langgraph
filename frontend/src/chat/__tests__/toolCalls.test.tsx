@@ -157,7 +157,60 @@ describe("ToolCallCard", () => {
 });
 
 describe("MessageList toolCalls wiring", () => {
-  it("maps stream.toolCalls to per-turn cards in turn order, no raw JSON", () => {
+  it("shows only the final assistant output and hides the raw tool call", () => {
+    const messages: WireMessage[] = [
+      { type: "human", id: "h1", content: "I can't breathe" },
+      { type: "ai", id: "a1", content: "Intermediate safety output" },
+      {
+        type: "ai",
+        id: "a2",
+        content: "",
+        tool_calls: [{ id: "tc-med", name: "medical_lookup", args: { query: "urgent breathing guidance" } }],
+      } as unknown as WireMessage,
+      { type: "tool", id: "t1", tool_call_id: "tc-med", content: "Final emergency guidance" },
+      { type: "ai", id: "a3", content: "Final emergency guidance" },
+    ];
+    const turns = buildTurns(messages);
+    const toolCalls: ToolCallView[] = [
+      makeCall({
+        id: "tc-med",
+        name: "medical_lookup",
+        args: { query: "urgent breathing guidance" },
+        status: "finished",
+        output: "Final emergency guidance",
+      }),
+    ];
+
+    render(
+      <MessageList turns={turns} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} toolCalls={toolCalls} />,
+    );
+
+    expect(screen.queryByText("Intermediate safety output")).toBeNull();
+    expect(screen.getAllByText("Final emergency guidance")).toHaveLength(1);
+    expect(screen.queryByTestId("tool-call-wrap")).toBeNull();
+  });
+
+  it("keeps the last visible assistant output when a trailing tool placeholder is empty", () => {
+    const messages: WireMessage[] = [
+      { type: "human", id: "h1", content: "Show my schedule" },
+      { type: "ai", id: "a1", content: "Here is your current schedule." },
+      {
+        type: "ai",
+        id: "a2",
+        content: "",
+        tool_calls: [{ id: "tc-schedule", name: "view_schedule", args: { month: "2026-08" } }],
+      },
+    ];
+
+    render(
+      <MessageList turns={buildTurns(messages)} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} />,
+    );
+
+    expect(screen.getByText("Here is your current schedule.")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-card")).toBeNull();
+  });
+
+  it("keeps stream.toolCalls out of the member transcript", () => {
     const messages = wireMessagesForToolCalls();
     const turns = buildTurns(messages);
     const toolCalls: ToolCallView[] = [
@@ -167,15 +220,46 @@ describe("MessageList toolCalls wiring", () => {
     const { container } = render(
       <MessageList turns={turns} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} toolCalls={toolCalls} />,
     );
-    const cards = screen.getAllByTestId("tool-call-card");
-    expect(cards).toHaveLength(2);
-    expect(cards[0]?.getAttribute("data-tool")).toBe("medical_lookup");
-    expect(cards[1]?.getAttribute("data-tool")).toBe("copy_to_clipboard");
+    expect(screen.queryByTestId("tool-call-card")).toBeNull();
+    expect(screen.getByText("Lipitor helps manage cholesterol.")).toBeInTheDocument();
     expect(container.textContent ?? "").not.toContain('"tool_calls"');
     expect(container.textContent ?? "").not.toContain('"turn_scope_id"');
   });
 
-  it("fallback synthesizes from WireMessage tool_calls when toolCalls prop is absent", () => {
+  it("renders a completed envelope tool as generative UI without raw arguments", () => {
+    const messages: WireMessage[] = [
+      { type: "human", id: "h1", content: "log my waist" },
+      {
+        type: "ai",
+        id: "a1",
+        content: "",
+        tool_calls: [{ id: "tc-waist", name: "log_metric", args: { metric: "waist", value: 82, unit: "cm" } }],
+      } as unknown as WireMessage,
+      {
+        type: "tool",
+        id: "t1",
+        tool_call_id: "tc-waist",
+        content: JSON.stringify({
+          turn_scope_id: "scope-1",
+          block_id: "trend:waist",
+          data: { label: "Waist", value: "82", unit: "cm", points: [84, 82] },
+          text: "Waist logged.",
+        }),
+      },
+      { type: "ai", id: "a2", content: "Logged your waist." },
+    ];
+
+    render(
+      <MessageList turns={buildTurns(messages)} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} />,
+    );
+
+    expect(screen.getByTestId("log-metric-card")).toHaveTextContent("Waist");
+    expect(screen.getByText("Logged your waist.")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-card")).toBeNull();
+    expect(screen.queryByText("waist", { exact: true })).toBeNull();
+  });
+
+  it("does not synthesize raw cards from WireMessage tool_calls", () => {
     const messages: WireMessage[] = [
       { type: "human", id: "h1", content: "hello" },
       {
@@ -187,12 +271,11 @@ describe("MessageList toolCalls wiring", () => {
     ];
     const turns = buildTurns(messages);
     render(<MessageList turns={turns} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} />);
-    expect(screen.getByTestId("tool-call-card")).toBeInTheDocument();
-    expect(screen.getByTestId("tool-call-card").getAttribute("data-tool")).toBe("query_metformin");
-    expect(screen.getByText("Running")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-card")).toBeNull();
+    expect(screen.queryByText("Running")).toBeNull();
   });
 
-  it("pending→success transition re-renders within MessageList when toolCalls prop updates", () => {
+  it("keeps pending and successful raw tool states hidden", () => {
     const messages: WireMessage[] = [
       { type: "human", id: "h1", content: "lookup" },
       {
@@ -207,15 +290,15 @@ describe("MessageList toolCalls wiring", () => {
     const { rerender } = render(
       <MessageList turns={turns} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} toolCalls={pending} />,
     );
-    expect(screen.getByTestId("tool-call-pending")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-pending")).toBeNull();
 
     const success: ToolCallView[] = [makeCall({ id: "tc-live", name: "medical_lookup", args: { question: "interactions" }, status: "finished", output: "No major interactions found." })];
     rerender(<MessageList turns={turns} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} toolCalls={success} />);
-    expect(screen.getByTestId("tool-call-result")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-result")).toBeNull();
     expect(screen.queryByTestId("tool-call-pending")).toBeNull();
   });
 
-  it("pending→error renders error alert inside MessageList", () => {
+  it("keeps pending and failed raw tool states hidden", () => {
     const messages: WireMessage[] = [
       { type: "human", id: "h1", content: "copy it" },
       {
@@ -230,11 +313,11 @@ describe("MessageList toolCalls wiring", () => {
     const { rerender } = render(
       <MessageList turns={turns} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} toolCalls={pending} />,
     );
-    expect(screen.getByText("Running")).toBeInTheDocument();
+    expect(screen.queryByText("Running")).toBeNull();
     const failed: ToolCallView[] = [makeCall({ id: "tc-err", name: "copy_to_clipboard", args: { text: "secret text" }, status: "error", error: "Clipboard unavailable" })];
     rerender(<MessageList turns={turns} pendingInterrupt={null} upload={{ phase: "idle" }} busy={false} onApprove={() => {}} latestAiMessageId={null} toolCalls={failed} />);
-    expect(screen.getByTestId("tool-call-error")).toBeInTheDocument();
-    expect(screen.getByText("Clipboard unavailable")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-error")).toBeNull();
+    expect(screen.queryByText("Clipboard unavailable")).toBeNull();
   });
 
   it("does not render raw tool envelope JSON as bubble text", () => {
@@ -255,6 +338,6 @@ describe("MessageList toolCalls wiring", () => {
     );
     expect(container.textContent ?? "").not.toContain('"turn_scope_id"');
     expect(container.textContent ?? "").not.toContain('"component"');
-    expect(screen.getByTestId("tool-call-card")).toBeInTheDocument();
+    expect(screen.queryByTestId("tool-call-card")).toBeNull();
   });
 });

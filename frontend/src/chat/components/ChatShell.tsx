@@ -6,6 +6,7 @@ import { isAiMessage } from "@/chat/model";
 import { OPENERS, UPLOAD_OPENER } from "@/chat/coachProtocol";
 import { useCoachStream, type CoachStreamDeps } from "@/chat/useCoachStream";
 import { isHistoryBranchUiEnabled } from "@/chat/featureGates";
+import { CoachInterruptRenderer } from "@/chat/renderers";
 import { ActionBar } from "./ActionBar";
 import { Composer } from "./Composer";
 import { MessageList } from "./MessageList";
@@ -73,6 +74,7 @@ export function ChatShell({
     chat.turns.length > 0 || chat.pendingInterrupt !== null || chat.upload.phase !== "idle" || valuesHasStructured;
 
   const isV2 = process.env.NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER === "v2";
+  const interruptsRenderedByTransport = chat.interruptsRenderedByTransport === true;
   const historyUi = isHistoryBranchUiEnabled();
   const history = (chat as unknown as { history?: import("@/chat/useCoachStream").ThreadHistory[] | null }).history ?? null;
   const historyLoading = (chat as unknown as { historyLoading?: boolean }).historyLoading === true;
@@ -206,13 +208,24 @@ export function ChatShell({
         ) : (
           <MessageList
             turns={chat.turns}
-            pendingInterrupt={chat.pendingInterrupt}
-            pendingInterrupts={(chat as unknown as { pendingInterrupts?: unknown[] }).pendingInterrupts ?? (chat.pendingInterrupt !== null ? [chat.pendingInterrupt] : [])}
+            pendingInterrupt={interruptsRenderedByTransport ? null : chat.pendingInterrupt}
+            pendingInterrupts={
+              interruptsRenderedByTransport
+                ? []
+                : (chat as unknown as { pendingInterrupts?: unknown[] }).pendingInterrupts ??
+                  (chat.pendingInterrupt !== null ? [chat.pendingInterrupt] : [])
+            }
             upload={chat.upload}
             busy={chat.busy}
             onApprove={(resume) => void chat.approveInterrupt(resume)}
             onApproveAll={(resumes) => void (chat as unknown as { approveInterrupts?: (rs: typeof resumes) => Promise<void> }).approveInterrupts?.(resumes)}
             latestAiMessageId={latestAiMessageId}
+            interruptSurface={
+              interruptsRenderedByTransport ? <CoachInterruptRenderer /> : null
+            }
+            hasTransportInterrupt={
+              interruptsRenderedByTransport && chat.pendingInterrupt !== null
+            }
             onReminderAction={(text) => void chat.send(text)}
             dispatchHandlers={dispatchHandlers}
             toolCalls={chat.toolCalls as unknown as import("./ToolCallCard").ToolCallView[]}

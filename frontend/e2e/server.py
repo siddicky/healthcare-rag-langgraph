@@ -364,10 +364,6 @@ class FixtureHandler(BaseHTTPRequestHandler):
             [m for m in messages[user_index + 1 :]]
         )
         all_blocks = cls._envelope_blocks(messages)
-        composed_in_turn = any(
-            "Composition accepted." in str(message.get("content", ""))
-            for message in results_after
-        )
         prior_trend_logged = any(
             block.get("block_id") == "trend:weight" for block in all_blocks
         )
@@ -383,6 +379,22 @@ class FixtureHandler(BaseHTTPRequestHandler):
                 None,
             )
 
+        if question == "show the generative ui demo":
+            if not results_after:
+                return cls._tool_calls_completion([
+                    cls._call("log_metric", {
+                        "metric": "waist", "value": 82, "unit": "cm",
+                    }),
+                    cls._call("log_injection", {
+                        "medication_name": "Demo medication",
+                        "dose_label": "Demo dose",
+                    }),
+                    cls._call("view_schedule", {
+                        "month": datetime.now(UTC).date().strftime("%Y-%m"),
+                    }),
+                ])
+            return cls._content_completion("Here is your generative UI demo.")
+
         if question == "log my weight":
             if turn_block("trend:weight") is None:
                 value = 80 if prior_trend_logged else 82
@@ -391,10 +403,6 @@ class FixtureHandler(BaseHTTPRequestHandler):
                         "metric": "weight", "value": value, "unit": "kg",
                     })]
                 )
-            if not composed_in_turn:
-                return cls._tool_calls_completion([cls._call("compose_ui", {
-                    "tree": cls._trend_tree(turn_block("trend:weight")),
-                })])
             return cls._content_completion("Logged your weight.")
 
         if question.startswith("schedule my weekly friday check-in"):
@@ -456,15 +464,17 @@ class FixtureHandler(BaseHTTPRequestHandler):
                 })])
             return cls._content_completion("Paused your reminder.")
 
+        if question == "cancel my log my weight reminder":
+            if not results_after:
+                return cls._tool_calls_completion([cls._call("cancel_reminder", {
+                    "target": "Log my weight",
+                })])
+            return cls._content_completion("Canceled your reminder.")
+
         if question == "what's on my calendar this month?":
             if not results_after:
                 return cls._tool_calls_completion([cls._call("view_schedule", {
                     "month": datetime.now(UTC).date().strftime("%Y-%m"),
-                })])
-            calendar = turn_block("calendar:")
-            if calendar is None or not composed_in_turn:
-                return cls._tool_calls_completion([cls._call("compose_ui", {
-                    "tree": cls._calendar_tree(calendar),
                 })])
             return cls._content_completion("Here is your month.")
 
@@ -476,11 +486,6 @@ class FixtureHandler(BaseHTTPRequestHandler):
             if not results_after:
                 return cls._tool_calls_completion([cls._call("view_schedule", {
                     "month": month,
-                })])
-            calendar = turn_block(f"calendar:{month}")
-            if calendar is None or not composed_in_turn:
-                return cls._tool_calls_completion([cls._call("compose_ui", {
-                    "tree": cls._calendar_tree(calendar),
                 })])
             return cls._content_completion("Here is your month.")
 
@@ -514,43 +519,6 @@ class FixtureHandler(BaseHTTPRequestHandler):
             )
 
         return cls._content_completion("Hello from your coach.")
-
-    @staticmethod
-    def _ref(envelope: dict[str, object] | None, pointer: str) -> dict[str, object]:
-        assert envelope is not None
-        return {
-            "__ref": {
-                "turn_scope_id": envelope["turn_scope_id"],
-                "block_id": envelope["block_id"],
-                "pointer": pointer,
-            }
-        }
-
-    @classmethod
-    def _trend_tree(cls, envelope: dict[str, object] | None) -> list[dict]:
-        props: dict[str, object] = {
-            "label": cls._ref(envelope, "/label"),
-            "value": cls._ref(envelope, "/value"),
-            "unit": cls._ref(envelope, "/unit"),
-            "points": cls._ref(envelope, "/points"),
-        }
-        assert isinstance(envelope, dict)
-        if "delta" in envelope["data"]:
-            props["delta"] = cls._ref(envelope, "/delta")
-            props["deltaGood"] = cls._ref(envelope, "/deltaGood")
-        return [{"component": "TrendCard", "props": props}]
-
-    @classmethod
-    def _calendar_tree(cls, envelope: dict[str, object] | None) -> list[dict]:
-        return [{
-            "component": "MiniCalendar",
-            "props": {
-                "monthLabel": cls._ref(envelope, "/monthLabel"),
-                "firstWeekday": cls._ref(envelope, "/firstWeekday"),
-                "daysInMonth": cls._ref(envelope, "/daysInMonth"),
-                "highlights": cls._ref(envelope, "/highlights"),
-            },
-        }]
 
     @staticmethod
     def _content_completion(content: str) -> dict[str, object]:

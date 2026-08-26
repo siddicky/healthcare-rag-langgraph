@@ -154,13 +154,14 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
     expect(trend.data.value).toBe("80");
     expect(trend.data.unit).toBe("kg");
     expect(trend.data.delta).toBe("-2.0 kg");
-    const card = page.getByTestId("compose-tree").last();
+    const card = page.getByTestId("log-metric-card").last();
     await expect(card).toContainText(String(trend.data.label));
     await expect(card).toContainText(String(trend.data.value));
     await expect(card).toContainText(String(trend.data.unit));
     await expect(card).toContainText(String(trend.data.delta));
     await expect(card.locator("svg polyline")).toHaveCount(1);
     await expect(card).not.toContainText("__ref");
+    await card.scrollIntoViewIfNeeded();
     await page.screenshot({ path: path.join(SCREENSHOTS, "trend-card.png"), fullPage: true });
   });
 
@@ -211,7 +212,7 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
     if (currentMonth !== finalMonth) {
       await send(page, `what's on my calendar in ${currentMonth}?`);
       await waitForIdle(page);
-      const tree = page.getByTestId("compose-tree").last();
+      const tree = page.getByTestId("view-schedule-card").last();
       const sameMonth = await latestEnvelope(api, shared.u1ThreadId, `calendar:${currentMonth}`);
       await expect(tree).toContainText(String(sameMonth.data.monthLabel));
       expect(sameMonth.data.highlights).toEqual([]);
@@ -220,7 +221,7 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
 
     await send(page, `what's on my calendar in ${finalMonth}?`);
     await waitForIdle(page);
-    const tree = page.getByTestId("compose-tree").last();
+    const tree = page.getByTestId("view-schedule-card").last();
     const finalMonthEnvelope = await latestEnvelope(api, shared.u1ThreadId, `calendar:${finalMonth}`);
     await expect(tree).toContainText(String(finalMonthEnvelope.data.monthLabel));
     expect(finalMonthEnvelope.data.highlights).toEqual([
@@ -387,11 +388,17 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
     await expect(ingest).toContainText("Ready to review", { timeout: 30_000 });
     await expect(page.getByText("Document ready to review")).toBeVisible();
 
-    await send(page, "please review");
+    const reviewSend = page.getByRole("button", { name: "Send" });
+    await expect(reviewSend).toBeEnabled();
+    await reviewSend.click();
     const review = page.getByTestId("interrupt-card");
     await expect(review).toBeVisible({ timeout: 60_000 });
     await expect(review).toContainText("Found in");
     await expect(review).toContainText("Lipitor");
+    await page.screenshot({
+      path: path.join(SCREENSHOTS, "memory-extraction-interrupt.png"),
+      fullPage: true,
+    });
     await review.getByRole("button", { name: "Edit Dose time" }).click();
     await review.locator("input.form-input").fill("Morning");
     await review.locator("input.form-input").press("Enter");
@@ -402,6 +409,7 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
     await expect(confirmation).toContainText("Morning");
     await expect(confirmation).toContainText("Lipitor");
     await expect(confirmation.locator("text=✓ Saved")).toHaveCount(2);
+    await confirmation.scrollIntoViewIfNeeded();
     await page.screenshot({ path: path.join(SCREENSHOTS, "memory-extraction-card.png"), fullPage: true });
     await waitForIdle(page);
   });

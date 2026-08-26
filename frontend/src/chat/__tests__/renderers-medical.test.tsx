@@ -8,48 +8,32 @@ import {
 } from "@/chat/renderers/medical";
 import { chatTelemetrySink } from "@/chat/stream";
 
-/**
- * Tests for the medical_lookup + named coach tool renderers (plan todo 8).
- * The medical answer is SAFETY-CRITICAL: it must render the relayed tool
- * result VERBATIM through the shared Markdown component — never paraphrased.
- */
-
 const ANSWER = "Take Metformin with meals to reduce stomach upset.";
 
 describe("MedicalLookupBubble (medical_lookup renderer)", () => {
-  it("renders the completed answer byte-verbatim in a .bubble.assistant", () => {
+  it("does not duplicate the completed answer owned by the terminal AI message", () => {
     const { container } = render(<MedicalLookupBubble status="complete" result={ANSWER} />);
-    const bubble = container.querySelector(".bubble.assistant");
-    expect(bubble).not.toBeNull();
-    // Byte-verbatim: rendered text === tool result content exactly.
-    expect(bubble?.textContent).toBe(ANSWER);
-    expect(screen.getByTestId("medical-answer")).toBeInTheDocument();
-    // Mirrors AiBubble's Markdown rendering path.
-    expect(bubble?.querySelector(".md-root")).not.toBeNull();
+    expect(container.firstChild).toBeNull();
+    expect(screen.queryByText(ANSWER)).toBeNull();
   });
 
-  it("renders markdown structure without paraphrasing content", () => {
+  it("does not expose the tool result markdown", () => {
     const md = "**Take with food.**\n\n- Start low\n- Titrate slowly";
     const { container } = render(<MedicalLookupBubble status="complete" result={md} />);
-    const bubble = container.querySelector(".bubble.assistant");
-    expect(bubble?.querySelector(".md-strong")).not.toBeNull();
-    expect(bubble?.querySelector(".md-ul")).not.toBeNull();
-    const text = bubble?.textContent ?? "";
-    expect(text).toContain("Take with food.");
-    expect(text).toContain("Start low");
-    expect(text).toContain("Titrate slowly");
+    expect(container.firstChild).toBeNull();
+    expect(container.textContent).toBe("");
   });
 
-  it("shows a pending state while running and no bubble yet", () => {
+  it("keeps the raw tool lifecycle hidden while running", () => {
     const { container } = render(<MedicalLookupBubble status="inProgress" />);
     expect(container.querySelector(".bubble.assistant")).toBeNull();
-    expect(screen.getByTestId("medical-lookup-pending")).toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 
-  it("keeps the pending state on executing with no result", () => {
+  it("keeps the raw tool lifecycle hidden while executing", () => {
     const { container } = render(<MedicalLookupBubble status="executing" result={undefined} />);
     expect(container.querySelector(".bubble.assistant")).toBeNull();
-    expect(screen.getByTestId("medical-lookup-pending")).toBeInTheDocument();
+    expect(container.firstChild).toBeNull();
   });
 });
 
@@ -200,14 +184,15 @@ describe("registerMedicalRenderers wiring", () => {
     );
   });
 
-  it("the medical_lookup registration renders the verbatim bubble", async () => {
+  it("the medical_lookup registration claims the tool without rendering it", async () => {
     const { registerMedicalRenderers } = await import("@/chat/renderers/medical");
     const RegisterMedical = registerMedicalRenderers;
     render(<RegisterMedical />);
     const med = captured.find((c) => c.name === "medical_lookup");
     expect(med).toBeDefined();
     const { container } = render(med!.render({ name: "medical_lookup", toolCallId: "t1", status: "complete", result: ANSWER }));
-    expect(container.querySelector(".bubble.assistant")?.textContent).toBe(ANSWER);
+    expect(container.firstChild).toBeNull();
+    expect(container.textContent).toBe("");
   });
 
   it("no telemetry is emitted for known named tools", async () => {

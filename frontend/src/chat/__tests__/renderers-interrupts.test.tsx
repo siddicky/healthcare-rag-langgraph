@@ -109,6 +109,7 @@ describe("enabled — payload-shape gating", () => {
     const config = memoryConfig();
     expect(config.enabled(legacyEvent(MEMORY_PAYLOAD))).toBe(true);
     expect(config.enabled(standardEvent(MEMORY_PAYLOAD))).toBe(true);
+    expect(config.enabled(standardEvent(JSON.stringify(MEMORY_PAYLOAD)))).toBe(true);
     expect(config.enabled(legacyEvent(CALENDAR_PAYLOAD))).toBe(false);
     expect(config.enabled(legacyEvent(null))).toBe(false);
   });
@@ -187,6 +188,16 @@ describe("memory-extraction handler rendering + resolve shapes", () => {
     expect(container.textContent).toContain("Metformin");
     expect(screen.getByRole("button", { name: "Save to profile" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Discard" })).toBeInTheDocument();
+  });
+
+  it("renders extracted fields when AG-UI serializes metadata.value", () => {
+    const element = memoryConfig().render({
+      event: standardEvent(JSON.stringify(MEMORY_PAYLOAD)),
+      resolve: vi.fn(),
+    });
+    render(element);
+    expect(screen.getByTestId("interrupt-card")).toHaveTextContent("intake-form.pdf");
+    expect(screen.getByTestId("interrupt-card")).toHaveTextContent("500mg");
   });
 
   it("Save resolves {accept: true, fields:[{key,value}]} with member edits applied", () => {
