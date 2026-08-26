@@ -46,7 +46,7 @@ jobs:
       version: ${{ steps.meta.outputs.version }}
     steps:
       - name: Check out repository (tag ref)
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ github.ref }}
           fetch-depth: 0
@@ -129,7 +129,7 @@ jobs:
       cancel-in-progress: false
     steps:
       - name: Check out repository (for deploy config)
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           # Use the same tag ref that was built; keeps deploy/fly.prod.toml pinned to the built commit.
           ref: ${{ github.ref }}
@@ -550,7 +550,7 @@ jobs:
           echo "Reason: $REASON"
 
       - name: Check out the target release
-        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
           ref: ${{ inputs.version }}
           fetch-depth: 0
