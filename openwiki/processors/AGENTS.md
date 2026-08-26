@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/processors/"
-openwiki_generated: true
+description: "Directory guide to each LangGraph stage's processor: which prompt template and Pydantic response model it uses, which model tier it runs on, and the owning node, plus the answer-structuring and fuzzy citation-verification pipeline."
 ---
 
 <!-- Parent: ../AGENTS.md -->

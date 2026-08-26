@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/frontend/"
-openwiki_generated: true
+description: "Directory guide to the member-facing Next.js App Router application in frontend/: Supabase login, the coach chat client/protocol, the declarative json-render catalog with data-ref hydration, and the deployed vs. hermetic Playwright E2E suites."
 ---
 
 <!-- Parent: ../AGENTS.md -->

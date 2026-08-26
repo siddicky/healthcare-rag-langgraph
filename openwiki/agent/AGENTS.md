@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/agent/"
-openwiki_generated: true
+description: "Directory guide to the LangGraph Agent Server 'coach' graph and its HTTP perimeter: routing, safety-gate reuse, member-data tools, reminders, file uploads, feedback capture, and self-erasure, deployed separately from the healthcare RAG graph."
 ---
 
 <!-- Parent: ../AGENTS.md -->

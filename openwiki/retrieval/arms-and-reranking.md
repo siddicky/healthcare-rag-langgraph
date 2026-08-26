@@ -28,18 +28,19 @@ attempts with 1 s/2 s backoff. `HC_RAG_RETRIEVER` selects the arm
 (`weaviate` default, `pageindex`, `pinecone`; unknown names raise), documented
 in `healthcare_rag/services/models.py`.
 
-<!-- openwiki: mermaid parse failed and this diagram was converted to a text fence so it does not break rendering. Fix the diagram source and restore the mermaid fence. Parser error: Heuristic: an unescaped angle bracket inside a label breaks rendering; rephrase the label. -->
-```text
+```mermaid
 flowchart LR
   R["retrieve_documents node"] --> S["resolve_arm(settings.retriever)"]
   S -->|weaviate default| W["hybrid_search: Weaviate hybrid alpha=0.65"]
-  S -->|pageindex| P["pageindex_search: LLM picks tree nodes -> page ranges -> chunks"]
-  S -->|pinecone| N["pinecone_search: dense + sparse, convex-scaled"]
+  S -->|pageindex| P["pageindex_search: LLM picks tree nodes, then page ranges, then chunks"]
+  S -->|pinecone| N["pinecone_search: dense plus sparse, convex-scaled"]
   W & P & N --> RR{"HC_RAG_RERANKER=pinecone?"}
-  RR -->|yes| X["rerank_documents: candidates -> top_k, fail-soft"]
-  RR -->|no| Q["QueryResultList -> union_results"]
+  RR -->|yes| X["rerank_documents: candidates trimmed to top_k, fail-soft"]
+  RR -->|no| Q["QueryResultList passed to union_results"]
   X --> Q
 ```
+
+Caption: `retrieve_documents` resolves one of three search callables from `HC_RAG_RETRIEVER`, then optionally reranks before results reach `union_results`.
 
 When reranking is on, the search call is given `limit=rerank_candidates` (only
 if the callable accepts a `limit` kwarg, `accepts_limit`) and

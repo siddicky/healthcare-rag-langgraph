@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/configuration/"
-openwiki_generated: true
+description: "Directory guide to model selection, environment variables, reasoning-compatible sampling parameters, stage ablations (HC_RAG_DISABLE_STAGES), connection settings, and conversation-history persistence."
 ---
 
 <!-- Parent: ../AGENTS.md -->

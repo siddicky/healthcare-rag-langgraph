@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/safety/"
-openwiki_generated: true
+description: "Directory guide to the runtime safety gate (first-touch classifier plus PHI scrubber) and the overall medical/privacy safety posture: what's enforced, what isn't, measured before/after impact, and required regression checks."
 ---
 
 <!-- Parent: ../AGENTS.md -->

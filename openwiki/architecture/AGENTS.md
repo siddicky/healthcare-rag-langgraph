@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/architecture/"
-openwiki_generated: true
+description: "Directory guide to the healthcare RAG StateGraph runtime documentation: how a query is routed through safety, preprocessing, fan-out retrieval, gap-fill, generation, validation, and finalization, and how GraphEngine projects results for the eval harness."
 ---
 
 <!-- Parent: ../AGENTS.md -->

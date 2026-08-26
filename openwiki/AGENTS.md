@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/"
-openwiki_generated: true
+description: "Directory guide to the generated OpenWiki knowledge base for the healthcare RAG repository: architecture, processors, retrieval, safety, observability, operations, privacy, agent server, and frontend, kept short-and-linky rather than long prose."
 ---
 
 <!-- Parent: ../AGENTS.md -->

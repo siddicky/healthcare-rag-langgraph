@@ -46,4 +46,4 @@ Do not infer experimental success from an adapter, smoke fixture, prompt, or emp
 
 ## Real-application verification
 
-For the base RAG: `make weaviate`, `make ingest`, and `make run` exercise the CLI; a preliminary streamed answer is **not** validated final output. For production-oriented coach work, use the offline agent harness first and only run `make deployed-smoke` with the required deployed configuration. The server remains in-memory by design, so restart behavior is a boundary rather than durable-data proof.
+For the base RAG: `make weaviate`, `make ingest`, and `make run` exercise the CLI; a preliminary streamed answer is **not** validated final output. For production-oriented coach work, use the offline agent harness first and only run `make deployed-smoke` with the required deployed configuration. The server's storage is dual-backend (`SERVER_STORAGE=memory` locally, `postgres` in production since v1.0.7 — see the [clean-room agent server](../server/agent-server.md)); do not assume either a restart always wipes state or that raw run input survives at rest, since the two backends diverge on both points.

@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/operations/"
-openwiki_generated: true
+description: "Directory guide to local development operations and the production deploy pipeline: uv setup, operating the local Weaviate vector store, ingesting corpus chunks, running the CLI, and the prod-only Fly deploy path."
 ---
 
 <!-- Parent: ../AGENTS.md -->

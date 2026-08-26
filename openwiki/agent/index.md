@@ -1,6 +1,6 @@
 # Files
 
-- [openwiki/agent/](AGENTS.md)
+- [openwiki/agent/](AGENTS.md) - Directory guide to the LangGraph Agent Server 'coach' graph and its HTTP perimeter: routing, safety-gate reuse, member-data tools, reminders, file uploads, feedback capture, and self-erasure, deployed separately from the healthcare RAG graph.
 - [Coach graph routing and safe catalog output](coach-routing.md) - How the coach LangGraph selects safety, RAG relay, Route B tools, document, reminder, and erasure paths while constraining renderable model output.
 - [Coach agent service](coach.md) - The LangGraph Agent Server "coach" graph and HTTP perimeter - routing, safety gate reuse, member data tools, reminders, uploads, feedback, and self-erase - deployed separately from the healthcare RAG graph.
 - [Member data, documents, reminders, and erasure](member-data-lifecycle.md) - Namespaced scrubbed member records and the failure-aware lifecycles for uploads, review interrupts, reminder cron delivery, cleanup, and self-erasure.
