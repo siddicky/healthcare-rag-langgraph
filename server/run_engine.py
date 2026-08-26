@@ -81,6 +81,11 @@ def _to_jsonable(obj: object) -> JSONValue:
 class ResumeCommand(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
     resume: JSONValue
+    # The locked CopilotKit runtime echoes the pending interrupt payload back
+    # alongside the resume (interruptEvent); the graph never reads it — the
+    # engine only consumes `resume`. Tolerated for wire parity; every other
+    # key still fails closed via extra="forbid".
+    interruptEvent: JSONValue | None = Field(default=None)  # wire name
 
 
 class RunRequest(BaseModel):
@@ -148,7 +153,11 @@ class RunRequest(BaseModel):
 
     @model_validator(mode="after")
     def exactly_one_payload(self) -> RunRequest:
-        if (self.input is None) == (self.command is None):
+        # The CopilotKit adapter's resume carries the merged conversation
+        # input alongside the command (measured from the locked runtime);
+        # the engine resumes from the command and ignores that input. Only
+        # a body with neither payload is invalid.
+        if self.input is None and self.command is None:
             raise ValueError("exactly one of input or command is required")
         configurable = self.config.get("configurable")
         if isinstance(configurable, dict) and "checkpoint_id" in configurable:

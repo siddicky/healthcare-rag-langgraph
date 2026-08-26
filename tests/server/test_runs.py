@@ -324,6 +324,56 @@ async def test_stream_endpoint_accepts_locked_adapter_envelope(harness: Harness)
 
 
 @pytest.mark.anyio
+async def test_stream_endpoint_accepts_locked_adapter_resume_envelope(
+    harness: Harness,
+) -> None:
+    """The adapter resume (CopilotKit runtime 1.69.1) carries the merged
+    conversation input ALONGSIDE command.resume, echoes the pending
+    interrupt back as command.interruptEvent, and re-sends the x-* header
+    config. Before the RunRequest fix this 422'd on both counts and no
+    interrupt card action ever reached the graph."""
+    interrupted = await create(harness, body({"mode": "interrupt"}))
+    _ = await wait_status(harness, interrupted.json()["run_id"], "interrupted")
+
+    async with aconnect_sse(
+        harness.client,
+        "POST",
+        "/threads/thread-1/runs/stream",
+        json=body(
+            {
+                "question": "Please review this document.",
+                "messages": [
+                    {
+                        "id": "m-1",
+                        "role": "user",
+                        "content": "Please review this document.",
+                    }
+                ],
+                "tools": [],
+                "ag-ui": {"tools": [], "context": []},
+                "copilotkit": {"actions": [], "context": []},
+            },
+            stream_mode=["events", "values", "updates", "messages-tuple"],
+            stream_subgraphs=True,
+            stream_resumable=True,
+            multitask_strategy="enqueue",
+            config={
+                "configurable": {
+                    "copilotkit_forwarded_headers": {"x-vercel-id": "iad1::abc"}
+                }
+            },
+            command={
+                "resume": {"accept": True},
+                "interruptEvent": {"kind": "approval"},
+            },
+        ),
+    ) as source:
+        events = [(event.event, event.json()) async for event in source.aiter_sse()]
+
+    assert ("updates", {"step": {"resumed": True}}) in events
+
+
+@pytest.mark.anyio
 async def test_history_checkpoint_forks_stream_run_with_selected_parent(
     harness: Harness,
 ) -> None:
