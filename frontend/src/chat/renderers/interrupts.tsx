@@ -51,7 +51,16 @@ export function isValidResumePayload(value: unknown): value is ResumePayload {
  *   rides `metadata.value` (the adapter mapping useCoachStream also reads).
  */
 export function interruptValueFromEvent(event: InterruptEvent): unknown {
-  const value = event.value;
+  let value = event.value;
+  // The locked adapter serializes the LangGraph interrupt value into the
+  // legacy `on_interrupt` custom event as a JSON string.
+  if (typeof value === "string") {
+    try {
+      value = JSON.parse(value);
+    } catch {
+      return value;
+    }
+  }
   if (typeof value !== "object" || value === null) return value;
   const record = value as Record<string, unknown>;
   if (typeof record.id === "string" && typeof record.reason === "string") {

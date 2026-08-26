@@ -5,8 +5,6 @@ import {
   memberApi,
   readRun,
   serverWithPerimeter,
-  threadStreamAdmitted,
-  THREAD_STREAM_SKIP_REASON,
   type Runfile,
   type RunIdentity,
 } from "./run";
@@ -59,12 +57,6 @@ test("history + time-travel UI smoke (v2 gated)", async ({ page }) => {
     return;
   }
   const api = await memberApi(run, run.u1.token);
-
-  if (!(await threadStreamAdmitted(api))) {
-    await api.dispose();
-    test.skip(true, THREAD_STREAM_SKIP_REASON);
-    return;
-  }
 
   await login(page, run, run.u1);
   await page.getByRole("button", { name: "New conversation" }).click();

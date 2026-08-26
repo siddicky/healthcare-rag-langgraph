@@ -24,6 +24,7 @@ const SSE_MARKER = "PROXY-SSE-MARKER-d41f";
 type RecordedCall = { method: string; path: string; authorization: string | null };
 
 const upstreamCalls: RecordedCall[] = [];
+let upstreamThreadVisible = true;
 
 const ASSISTANT = {
   assistant_id: "assistant-coach",
@@ -125,7 +126,9 @@ function stubUpstream(url: URL, init: RequestInit): Response {
 
   if (url.pathname === "/assistants/search") return json([ASSISTANT]);
   if (/^\/threads\/[^/]+$/.test(url.pathname) && init.method === "GET")
-    return json(threadBody(threadIdFromPath(url.pathname)));
+    return upstreamThreadVisible
+      ? json(threadBody(threadIdFromPath(url.pathname)))
+      : new Response(JSON.stringify({ detail: "Not Found" }), { status: 404 });
   if (url.pathname === "/threads" && init.method === "POST")
     return json(threadBody(String(safeJsonBody(init.body).thread_id)));
   if (/^\/threads\/[^/]+\/state$/.test(url.pathname))
@@ -226,6 +229,67 @@ describe("POST /agent/coach/run proxies an SSE stream", () => {
     // Default forwarding carries the member bearer to the LangGraph server.
     const streamCall = upstreamCalls.find((c) => c.path.endsWith("/runs/stream"));
     expect(streamCall?.authorization).toBe(AUTH_HEADER);
+  });
+});
+
+describe("thread ownership gate", () => {
+  it("answers the runtime thread listing with an empty page (no cross-member leak)", async () => {
+    const response = await route.GET(request("/threads", "GET", { authorization: AUTH_HEADER }));
+    expect(response.status).toBe(200);
+    const body = (await response.json()) as { threads: unknown[]; nextCursor: unknown };
+    expect(body.threads).toEqual([]);
+    expect(body.nextCursor).toBeNull();
+  });
+
+  it("answers 404 for a thread read the bearer cannot read upstream", async () => {
+    upstreamThreadVisible = false;
+    try {
+      const response = await route.GET(
+        request(`/threads/${crypto.randomUUID()}/messages`, "GET", { authorization: AUTH_HEADER }),
+      );
+      expect(response.status).toBe(404);
+    } finally {
+      upstreamThreadVisible = true;
+    }
+  });
+
+  it("answers 404 for a stop on a thread the bearer cannot read upstream", async () => {
+    upstreamThreadVisible = false;
+    try {
+      const response = await route.POST(
+        request(`/agent/coach/stop/${crypto.randomUUID()}`, "POST", { authorization: AUTH_HEADER }, "{}"),
+      );
+      expect(response.status).toBe(404);
+    } finally {
+      upstreamThreadVisible = true;
+    }
+  });
+
+  it("answers 404 for a connect on a thread the bearer cannot read upstream", async () => {
+    upstreamThreadVisible = false;
+    try {
+      const response = await route.POST(
+        request(
+          "/agent/coach/connect",
+          "POST",
+          { authorization: AUTH_HEADER },
+          JSON.stringify({ threadId: crypto.randomUUID(), runId: crypto.randomUUID() }),
+        ),
+      );
+      expect(response.status).toBe(404);
+    } finally {
+      upstreamThreadVisible = true;
+    }
+  });
+
+  it("lets an owned thread read through after the upstream probe passes", async () => {
+    const response = await route.GET(
+      request(`/threads/${crypto.randomUUID()}/messages`, "GET", { authorization: AUTH_HEADER }),
+    );
+    expect(response.status).toBeLessThan(500);
+    expect(
+      upstreamCalls.some((call) => /^\/threads\/[0-9a-f-]{36}$/.test(call.path)),
+    ).toBe(true);
   });
 });
 

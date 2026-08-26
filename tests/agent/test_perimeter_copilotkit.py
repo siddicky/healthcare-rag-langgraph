@@ -47,17 +47,110 @@ def test_copilotkit_captured_upstream_routes_are_admitted() -> None:
         "POST", f"/threads/{THREAD_ID}/runs/stream", "", COPILOTKIT_RUN
     )
     validate_member_request(
+        "POST", f"/threads/{THREAD_ID}/runs/stream", "", COPILOTKIT_RESUME
+    )
+
+
+def test_copilotkit_locked_adapter_default_envelope_is_admitted() -> None:
+    """The locked @ag-ui/langgraph adapter streams with its own default
+    stream modes and no stream_subgraphs key (measured in e2e, todo 10)."""
+    from healthcare_rag.agent.perimeter import validate_member_request
+
+    adapter_default: dict[str, JSONValue] = {
+        "assistant_id": "coach",
+        "input": {
+            **COPILOTKIT_RUN["input"],
+            "question": "hello there",
+            "ag-ui": {"tools": [], "context": []},
+        },
+        "stream_mode": ["events", "values", "updates", "messages-tuple"],
+    }
+    validate_member_request(
+        "POST", f"/threads/{THREAD_ID}/runs/stream", "", adapter_default
+    )
+    with pytest.raises(Exception, match="Invalid run input"):
+        validate_member_request(
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            "",
+            {
+                **adapter_default,
+                "input": {**adapter_default["input"], "ag-ui": {"bogus": True}},
+            },
+        )
+    with pytest.raises(Exception, match="Invalid run input"):
+        validate_member_request(
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            "",
+            {
+                **adapter_default,
+                "input": {**adapter_default["input"], "ag-ui": {"tools": "nope"}},
+            },
+        )
+    validate_member_request(
+        "POST",
+        f"/threads/{THREAD_ID}/runs/stream",
+        "",
+        {**adapter_default, "assistant_id": "cf4bdb04-27e2-5eb0-b5f0-29eedf7f9d39"},
+    )
+    validate_member_request(
         "POST",
         f"/threads/{THREAD_ID}/runs/stream",
         "",
         {
-            **COPILOTKIT_RUN,
-            "assistant_id": "cf4bdb04-27e2-5eb0-b5f0-29eedf7f9d39",
+            "assistant_id": "coach",
+            "command": {"resume": {"accept": False}},
+            "stream_mode": ["events", "values", "updates", "messages-tuple"],
         },
     )
+    # The engine forwards the member run-envelope options through AG-UI
+    # forwardedProps; the SDK serializes them into the upstream envelope.
+    forwarded: dict[str, JSONValue] = {
+        "assistant_id": "coach",
+        "input": {
+            **COPILOTKIT_RUN["input"],
+            "question": "hello there",
+            "ag-ui": {"tools": [], "context": []},
+        },
+        "stream_mode": ["updates"],
+        "stream_subgraphs": False,
+        "stream_resumable": False,
+        "durability": "exit",
+        "if_not_exists": "reject",
+        "multitask_strategy": "reject",
+    }
     validate_member_request(
-        "POST", f"/threads/{THREAD_ID}/runs/stream", "", COPILOTKIT_RESUME
+        "POST", f"/threads/{THREAD_ID}/runs/stream", "", forwarded
     )
+    # Measured resume shape: the adapter sends the merged input AND the
+    # command, echoing the interrupt payload back as `interruptEvent`.
+    validate_member_request(
+        "POST",
+        f"/threads/{THREAD_ID}/runs/stream",
+        "",
+        {
+            **forwarded,
+            "command": {
+                "resume": {"accept": True},
+                "interruptEvent": {"eventLabel": "Friday check-in"},
+            },
+        },
+    )
+    with pytest.raises(Exception, match="Invalid resume command"):
+        validate_member_request(
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            "",
+            {
+                **forwarded,
+                "command": {
+                    "resume": {"accept": True},
+                    "interruptEvent": {"x": 1},
+                    "bogus": True,
+                },
+            },
+        )
 
 
 @pytest.mark.parametrize(
@@ -76,12 +169,27 @@ def test_copilotkit_captured_upstream_routes_are_admitted() -> None:
         (
             "POST",
             f"/threads/{THREAD_ID}/runs/stream",
-            {**COPILOTKIT_RUN, "durability": "exit"},
+            {**COPILOTKIT_RUN, "assistant_id": "healthcare_rag"},
         ),
         (
             "POST",
             f"/threads/{THREAD_ID}/runs/stream",
-            {**COPILOTKIT_RUN, "assistant_id": "healthcare_rag"},
+            {**COPILOTKIT_RUN, "durability": "bogus"},
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {**COPILOTKIT_RUN, "multitask_strategy": "bogus"},
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {**COPILOTKIT_RUN, "if_not_exists": "bogus"},
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {**COPILOTKIT_RUN, "stream_resumable": "yes"},
         ),
         (
             "POST",

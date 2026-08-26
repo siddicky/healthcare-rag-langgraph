@@ -329,6 +329,32 @@ function agentEventNode(event: unknown): string | null {
   return typeof node === "string" ? node : null;
 }
 
+function agentEventNamespace(event: unknown): string {
+  if (typeof event !== "object" || event === null) return "";
+  const raw = (event as Record<string, unknown>).rawEvent;
+  if (typeof raw !== "object" || raw === null) return "";
+  const metadata = (raw as Record<string, unknown>).metadata;
+  if (typeof metadata !== "object" || metadata === null) return "";
+  const ns = (metadata as Record<string, unknown>).langgraph_checkpoint_ns;
+  return typeof ns === "string" ? ns : "";
+}
+
+/**
+ * Internal node names of the TOP-LEVEL coach agent (create_agent's model
+ * node and its middleware wrappers). Their streamed tokens ARE the member-
+ * visible answer — the old useStream surface exposed them through the
+ * coach_agent node update. Anything inside a SUBGRAPH (non-empty
+ * checkpoint namespace, e.g. the medical_lookup RAG child) stays hidden.
+ */
+function isTopLevelCoachInternal(node: string, namespace: string): boolean {
+  if (namespace !== "") return false;
+  return (
+    node === "model" ||
+    node.startsWith("CopilotKitMiddleware") ||
+    node.startsWith("ToolCallLimitMiddleware")
+  );
+}
+
 function projectAgentMessage(message: Message): WireMessage | null {
   switch (message.role) {
     case "user":
@@ -415,9 +441,21 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
   const [isThreadLoading, setIsThreadLoading] = useState(false);
   const [projectionVersion, setProjectionVersion] = useState(0);
   const hiddenMessageIdsRef = useRef<Set<string>>(new Set());
+  const connectInFlightRef = useRef(false);
+  const lastThreadIdRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (options.threadId !== null) agent.threadId = options.threadId;
+    const nextThreadId = options.threadId ?? null;
+    if (nextThreadId !== lastThreadIdRef.current) {
+      // A different conversation must not inherit the previous thread's
+      // projected messages/state; reconnect/replay repopulates both.
+      if (lastThreadIdRef.current !== null) {
+        agent.setMessages([]);
+        agent.setState({});
+      }
+      lastThreadIdRef.current = nextThreadId;
+    }
+    if (nextThreadId !== null) agent.threadId = nextThreadId;
   }, [agent, options.threadId]);
 
   useEffect(() => {
@@ -425,8 +463,12 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
     const subscriber: AgentSubscriber = {
       onEvent: ({ event }) => {
         const node = agentEventNode(event);
-        const id = agentMessageId(event);
-        if (node !== null && !isRenderedNode(node)) {
+        if (
+          node !== null &&
+          !isRenderedNode(node) &&
+          !isTopLevelCoachInternal(node, agentEventNamespace(event))
+        ) {
+          const id = agentMessageId(event);
           if (id !== null) hiddenMessageIdsRef.current.add(id);
           chatTelemetry({ kind: "unknown_node", node });
         }
@@ -461,11 +503,29 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
     [agent.messages, projectionVersion],
   );
 
+  const isReadyRef = useRef(isReady);
+  isReadyRef.current = isReady;
+  // The core swaps its provisional agent for the registered one when /info
+  // sync lands; a send racing that swap must execute on the REGISTERED
+  // agent, or its messages accumulate on an instance nothing renders.
+  const agentRef = useRef(agent);
+  agentRef.current = agent;
+
+  // The CopilotKit core registers agents asynchronously after /info; a send
+  // issued in that window must WAIT for readiness, not fail the turn.
+  const waitForReady = useCallback(async (): Promise<typeof agent> => {
+    const deadline = Date.now() + 15_000;
+    while (!isReadyRef.current) {
+      if (Date.now() > deadline) throw new Error("Coach connection is not ready.");
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    return agentRef.current;
+  }, []);
+
   const run = useCallback(
     async (input: RunInput, submitOptions: CoachSubmitOptions): Promise<void> => {
-      if (!isReady) throw new Error("Coach connection is not ready.");
+      const agent = await waitForReady();
       await refreshCopilotKitAuthorization();
-      agent.threadId = submitOptions.threadId;
       const nextState = { ...agent.state, question: input.question } as Record<string, unknown>;
       delete nextState.attachment_id;
       if (input.attachment_id !== undefined) nextState.attachment_id = input.attachment_id;
@@ -475,12 +535,24 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
         role: "user",
         content: input.question,
       });
-      const { threadId: _threadId, onError: _onError, ...forwardedProps } = submitOptions;
+      // streamMode/streamSubgraphs are transport-level for the OLD member
+      // envelope; the AG-UI adapter requires its own default modes
+      // (events/values/updates/messages-tuple) to build messages, so they
+      // must not be forwarded. Durability/multitask/resumable posture stays.
+      const {
+        threadId: _threadId,
+        onError: _onError,
+        streamMode: _streamMode,
+        streamSubgraphs: _streamSubgraphs,
+        ...forwardedProps
+      } = submitOptions;
       void _threadId;
       void _onError;
+      void _streamMode;
+      void _streamSubgraphs;
       await agent.runAgent({ forwardedProps });
     },
-    [agent, isReady],
+    [agent, waitForReady],
   );
 
   const respond = useCallback(
@@ -488,7 +560,7 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
       response: ResumePayload,
       respondOptions?: { readonly interruptId?: string; readonly namespace?: readonly string[] },
     ): Promise<void> => {
-      if (!isReady) throw new Error("Coach connection is not ready.");
+      await waitForReady();
       await refreshCopilotKitAuthorization();
       const first = interrupts[0];
       const fallbackId = interruptIdFromEntry(first);
@@ -497,11 +569,11 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
         throw new Error("The pending coach action no longer has a resume id.");
       }
       setInterrupts([]);
-      await agent.runAgent({
+      await agentRef.current.runAgent({
         resume: [{ interruptId, status: "resolved", payload: response }],
       });
     },
-    [agent, interrupts, isReady],
+    [interrupts, waitForReady],
   );
 
   const respondAll = useCallback(
@@ -533,15 +605,20 @@ export function useCopilotKitCoachStream(options: CoachStreamOptions): CoachStre
     submit: run,
     respond,
     respondAll,
-    stop: async () => agent.abortRun(),
-    disconnect: async () => agent.detachActiveRun(),
+    stop: async () => agentRef.current.abortRun(),
+    disconnect: async () => agentRef.current.detachActiveRun(),
     getThread: () => {
       if (!isReady || options.threadId === null) return null;
+      if (connectInFlightRef.current) return { threadId: options.threadId };
+      connectInFlightRef.current = true;
       setIsThreadLoading(true);
       void refreshCopilotKitAuthorization()
-        .then(() => agent.connectAgent())
+        .then(() => agentRef.current.connectAgent())
         .catch(setError)
-        .finally(() => setIsThreadLoading(false));
+        .finally(() => {
+          connectInFlightRef.current = false;
+          setIsThreadLoading(false);
+        });
       return { threadId: options.threadId };
     },
   };
@@ -696,12 +773,16 @@ export function useCoachStream(deps: CoachStreamDeps) {
     void stream.getThread?.();
   }, [stream]);
 
+  // Reconnect ONCE per thread selection. `stream` is a fresh object every
+  // render, so keying this effect on it re-fired getThread while
+  // isThreadLoading was true and stacked connectAgent calls until the
+  // browser ran out of connections (caught by the hermetic suite).
+  const getThreadRef = useRef(stream.getThread);
+  getThreadRef.current = stream.getThread;
   useEffect(() => {
     if (activeThreadId === null) return;
-    if (stream.isLoading || stream.isThreadLoading) {
-      void stream.getThread?.();
-    }
-  }, [activeThreadId, stream]);
+    void getThreadRef.current?.();
+  }, [activeThreadId]);
 
   const clearDisconnectFlag = useCallback(() => {
     if (wasDisconnectedRef.current) {

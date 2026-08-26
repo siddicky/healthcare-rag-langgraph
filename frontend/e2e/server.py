@@ -25,11 +25,14 @@ the main Agent Server and bakes ``NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER``
 into the frontend build. A second Agent Server with the flipped perimeter is
 always booted (``alt_server_url`` in the runfile) so the suite asserts both
 the v1 rejected-route set and the v2 widened shapes at API level in one
-hermetic run. NOTE: the member frontend chats through the ``@langchain/react``
-useStream ThreadStream transport (``POST /threads/{id}/stream``) regardless of
-perimeter env — the env only selects the run envelope — and NO perimeter
-version admits that route today, so chat-driving UI specs probe-gate and skip
-with the finding (docs/safety.md "Member stream perimeter v2 (useStream)").
+hermetic run. The member frontend chats through the CopilotKit transport:
+the browser drives ``/api/copilotkit`` (bearer-gated runtime route) and the
+runtime proxies to the loopback Agent Server via ``LANGGRAPH_DEPLOYMENT_URL``,
+so UI specs run unconditionally — the copilotkit run envelope is admitted in
+BOTH perimeter versions. Member run cancel (the upstream of the runtime's
+stop route) stays v2-only, so the cancellation scenario is v2-gated; the
+direct member surface (sidebar, uploads, feedback, erase, perimeter
+sentinels) is unchanged and still asserted directly.
 
 Run: .venv/bin/python frontend/e2e/server.py --runfile <path>
 """
@@ -481,6 +484,13 @@ class FixtureHandler(BaseHTTPRequestHandler):
                 })])
             return cls._content_completion("Here is your month.")
 
+        if question.startswith("slowly"):
+            # Scripted long-running turn: gives the suite a deterministic
+            # in-flight window for cancellation / restart / concurrency
+            # scenarios. Delay is env-tunable so probes can shorten it.
+            time.sleep(float(os.getenv("COACH_E2E_SLOW_TURN_SECONDS", "20")))
+            return cls._content_completion(f"Slow reply to: {raw_question}")
+
         if not results_after and any(drug in question for drug in ("metformin", "lipitor")):
             return cls._tool_calls_completion(
                 [cls._call("medical_lookup", {"query": raw_question})]
@@ -843,6 +853,10 @@ def main() -> int:
     bun = "bun"
     build_env = os.environ | {
         "NEXT_PUBLIC_LANGGRAPH_URL": server_url,
+        # Server-side only (src/lib/env.server.ts): the /api/copilotkit runtime
+        # route proxies to the loopback Agent Server. Read lazily at request
+        # time, so `next start` needs it even though the build does not.
+        "LANGGRAPH_DEPLOYMENT_URL": server_url,
         "NEXT_PUBLIC_SUPABASE_URL": dep_url,
         "NEXT_PUBLIC_SUPABASE_ANON_KEY": ANON_KEY,
         "NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER": perimeter,

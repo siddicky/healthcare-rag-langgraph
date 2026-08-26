@@ -29,9 +29,65 @@ import { langgraphDeploymentUrl } from "@/lib/env.server";
 
 const BASE_PATH = "/api/copilotkit";
 const BEARER_PATTERN = /^Bearer\s+\S+$/i;
+const THREAD_ID_PATTERN = /\/threads\/([0-9a-fA-F-]{36})(?:\/|$)/;
+const STOP_PATTERN = /\/agent\/coach\/stop\/([0-9a-fA-F-]{36})$/;
 
 function unauthorized(): Response {
   return Response.json({ error: "unauthorized" }, { status: 401 });
+}
+
+function notFound(): Response {
+  // Same shape as a perimeter denial: never reveal whether a thread exists.
+  return Response.json({ detail: "Not Found" }, { status: 404 });
+}
+
+/**
+ * Thread id addressed by the request URL, when any.
+ */
+function urlAddressedThreadId(request: Request): string | null {
+  const { pathname } = new URL(request.url);
+  return (
+    THREAD_ID_PATTERN.exec(pathname)?.[1] ?? STOP_PATTERN.exec(pathname)?.[1] ?? null
+  );
+}
+
+/**
+ * Run/connect address the thread through their JSON body. Every frontend
+ * flow creates the thread through the direct member surface BEFORE its
+ * first run (`ensureThread`), so a body threadId that does not exist
+ * upstream is never legitimate here — probing it keeps erased/foreign
+ * threads unrecoverable instead of letting the adapter re-create them.
+ */
+async function bodyThreadId(request: Request): Promise<string | null> {
+  if (!/\/agent\/coach\/(run|connect)$/.test(new URL(request.url).pathname)) {
+    return null;
+  }
+  try {
+    const body = (await request.clone().json()) as { threadId?: unknown };
+    return typeof body?.threadId === "string" ? body.threadId : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The runtime serves thread reads and stop from its own memory with no
+ * notion of ownership — without this probe ANY bearer could read another
+ * member's messages or abort their active run through the proxy. Ownership
+ * is delegated to the member perimeter on the loopback deployment: a thread
+ * that does not exist for THIS bearer (403/404 upstream) is answered 404
+ * here before the runtime ever sees it.
+ */
+async function authorizeThreadAccess(request: Request): Promise<void> {
+  const { pathname } = new URL(request.url);
+  if (pathname === `${BASE_PATH}/threads`) throw notFound();
+  const threadId = urlAddressedThreadId(request) ?? (await bodyThreadId(request));
+  if (threadId === null) return;
+  const upstream = await fetch(
+    `${langgraphDeploymentUrl()}/threads/${threadId}`,
+    { method: "GET", headers: { authorization: request.headers.get("authorization") ?? "" } },
+  );
+  if (!upstream.ok) throw notFound();
 }
 
 /** Unverified JWT `sub`, for logging only — enforcement happens downstream. */
@@ -90,12 +146,13 @@ function getHandler(): Promise<CopilotRuntimeFetchHandler> {
       basePath: BASE_PATH,
       hooks: {
         // The only every-route gate: reject before routing/dispatch.
-        onRequest({ request }) {
+        async onRequest({ request }) {
           const header = request.headers.get("authorization")?.trim() ?? "";
           if (!BEARER_PATTERN.test(header)) {
             logRequest(request.method, new URL(request.url).pathname, 401, "anonymous");
             throw unauthorized();
           }
+          await authorizeThreadAccess(request);
         },
         onResponse({ request, response }) {
           logRequest(
@@ -115,7 +172,24 @@ function getHandler(): Promise<CopilotRuntimeFetchHandler> {
   return handlerPromise;
 }
 
+function bearerChecked(request: Request): Response | null {
+  const header = request.headers.get("authorization")?.trim() ?? "";
+  if (BEARER_PATTERN.test(header)) return null;
+  logRequest(request.method, new URL(request.url).pathname, 401, "anonymous");
+  return unauthorized();
+}
+
 export async function GET(request: Request): Promise<Response> {
+  const rejected = bearerChecked(request);
+  if (rejected) return rejected;
+  const { pathname } = new URL(request.url);
+  if (pathname === `${BASE_PATH}/threads`) {
+    // The runtime's listing is memory-global — it would hand every member's
+    // thread ids to any bearer. Thread management is a direct-perimeter
+    // surface (ThreadSidebar/coachApi); the client's initialization probe
+    // gets an empty page so `useAgent` still becomes ready.
+    return Response.json({ threads: [], nextCursor: null });
+  }
   const handler = await getHandler();
   return asByteStream(await handler(request));
 }

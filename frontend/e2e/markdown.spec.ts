@@ -2,8 +2,6 @@ import { expect, test, type Page } from "@playwright/test";
 import {
   memberApi,
   readRun,
-  threadStreamAdmitted,
-  THREAD_STREAM_SKIP_REASON,
   type Runfile,
   type RunIdentity,
 } from "./run";
@@ -30,19 +28,10 @@ async function send(page: Page, text: string): Promise<void> {
   await page.press(COMPOSER, "Enter");
 }
 
-async function gateOnThreadStream(): Promise<void> {
-  const run = readRun();
-  const api = await memberApi(run, run.u1.token);
-  const admitted = await threadStreamAdmitted(api);
-  await api.dispose();
-  test.skip(!admitted, THREAD_STREAM_SKIP_REASON);
-}
-
 test.describe.configure({ mode: "serial" });
 
 test("markdown rendering: heading, bold, list and link render via Markdown component", async ({ page }) => {
   test.setTimeout(120_000);
-  await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
   await page.getByRole("button", { name: "New conversation" }).click();
@@ -59,15 +48,19 @@ test("markdown rendering: heading, bold, list and link render via Markdown compo
   await expect(mdRoot.locator(".md-strong")).toContainText("bold");
   await expect(mdRoot.locator(".md-ul .md-li")).toHaveCount(2);
   const link = mdRoot.locator(".md-a");
-  await expect(link).toHaveAttribute("href", "https://example.com");
   await expect(link).toHaveAttribute("target", "_blank");
+  // The Presidio identifier sanitizer (privacy.py, URL entity) redacts link
+  // URLs in member-visible content — the anchor must never carry the raw URL.
+  const href = await link.getAttribute("href");
+  expect(href).not.toContain("example.com");
+  expect(href).toContain("REDACTED_URL");
+  await expect(link).toHaveText("docs");
   await expect(bubble).not.toContainText("__ref");
   await expect(bubble).not.toContainText("```");
 });
 
 test("markdown table: GFM table renders with md-table classes", async ({ page }) => {
   test.setTimeout(120_000);
-  await gateOnThreadStream();
   const run = readRun();
   await login(page, run, run.u1);
   await page.getByRole("button", { name: "New conversation" }).click();

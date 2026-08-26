@@ -70,17 +70,37 @@ _PRIVATE_SENTINELS: Final = frozenset(
     {"question", "attachment_id", "cron_wake", "pending_document_op_id"}
 )
 _ASSISTANT_SEARCH_KEYS: Final = frozenset({"graph_id", "limit", "offset"})
-# CopilotKit runtime v1.69.1 run envelope (task-2 captured contract): the
-# AG-UI adapter posts exactly these top-level keys, with `input` for a new
-# turn and `command` for an interrupt resume.
+# CopilotKit runtime v1.69.1 run envelope: the AG-UI adapter posts
+# `assistant_id` + `stream_mode` + exactly one of `input` (new turn) or
+# `command` (interrupt resume). `stream_subgraphs` is optional (the locked
+# @ag-ui/langgraph adapter does not send it), and its default stream modes
+# are ["events", "values", "updates", "messages-tuple"] — measured against
+# the locked runtime in e2e after the task-2 capture under-estimated both.
 _COPILOTKIT_RUN_FIXED_KEYS: Final = frozenset(
-    {"assistant_id", "stream_mode", "stream_subgraphs"}
+    {"assistant_id", "stream_mode"}
+)
+_COPILOTKIT_RUN_OPTIONAL_KEYS: Final = frozenset(
+    {"stream_subgraphs", "stream_resumable", "durability", "if_not_exists",
+     "multitask_strategy"}
+)
+# The engine forwards the member run-envelope options through AG-UI
+# forwardedProps; the SDK serializes them into the upstream envelope. Values
+# mirror the member envelope's fixed posture (_RUN_FIXED / _RUN_V1_FIXED).
+_COPILOTKIT_RUN_DURABILITY: Final = frozenset({"exit", "async"})
+_COPILOTKIT_RUN_CONFLICT: Final = frozenset(
+    {"reject", "interrupt", "rollback", "enqueue"}
 )
 _COPILOTKIT_INPUT_KEYS: Final = frozenset(
-    {"question", "attachment_id", "messages", "tools", "copilotkit"}
+    {"question", "attachment_id", "messages", "tools", "copilotkit", "ag-ui"}
+)
+# The adapter injects "ag-ui": {tools, context, inject_a2ui_tool?} alongside
+# the client state (question/attachment_id) it merges into every run input.
+_COPILOTKIT_AG_UI_KEYS: Final = frozenset(
+    {"tools", "context", "inject_a2ui_tool"}
 )
 _COPILOTKIT_STREAM_MODES: Final = frozenset(
-    {"updates", "messages", "values", "custom", "tasks"}
+    {"updates", "messages", "values", "custom", "tasks", "events",
+     "messages-tuple"}
 )
 
 
@@ -185,14 +205,19 @@ def _validate_member_input(
     *,
     allow_attachment: bool,
     require_attachment_uuid: bool,
+    require_question: bool = True,
     status_code: int = 403,
 ) -> None:
     allowed = {"question", "attachment_id"} if allow_attachment else {"question"}
     if not isinstance(run_input, dict) or frozenset(run_input) - allowed:
         _deny("Invalid run input", status_code)
     question = run_input.get("question")
-    if not isinstance(question, str) or not question:
+    if require_question and (
+        not isinstance(question, str) or not question
+    ):
         _deny("Question is required", status_code)
+    if question is not None and (not isinstance(question, str) or not question):
+        _deny("Invalid run input", status_code)
     attachment = run_input.get("attachment_id")
     if attachment is None:
         return
@@ -260,12 +285,27 @@ def _validate_assistant_search(body: JSONBody) -> None:
         _deny("Invalid assistant search offset")
 
 
+def _validate_copilotkit_command(command: JSONValue) -> None:
+    # The locked adapter echoes the interrupt payload back alongside the
+    # resume (`interruptEvent`); the direct member commands route stays
+    # strict {"resume"} — only this proxied contract tolerates the echo.
+    if (
+        not isinstance(command, dict)
+        or frozenset(command) - {"resume", "interruptEvent"}
+        or "resume" not in command
+    ):
+        _deny("Invalid resume command")
+    _validate_resume({"resume": command["resume"]})
+
+
 def _validate_copilotkit_run(body: JSONBody) -> None:
     value = _require_body_mapping(body)
-    expected = _COPILOTKIT_RUN_FIXED_KEYS | (
-        {"input"} if "input" in value else {"command"}
-    )
-    if frozenset(value) != expected:
+    expected = _COPILOTKIT_RUN_FIXED_KEYS | _COPILOTKIT_RUN_OPTIONAL_KEYS
+    # Resumes carry BOTH: the merged conversation input and the resume
+    # command (measured from the locked runtime); new turns carry input only.
+    if "command" not in value and "input" not in value:
+        _deny("Invalid run envelope")
+    if not frozenset(value) <= expected | {"input", "command"}:
         _deny("Invalid run envelope")
     assistant_id = value["assistant_id"]
     if assistant_id != "coach" and re.fullmatch(_UUID, str(assistant_id)) is None:
@@ -280,11 +320,27 @@ def _validate_copilotkit_run(body: JSONBody) -> None:
         or any(mode not in _COPILOTKIT_STREAM_MODES for mode in stream_mode)
     ):
         _deny("Invalid run envelope")
-    if not isinstance(value["stream_subgraphs"], bool):
+    if "stream_subgraphs" in value and not isinstance(
+        value["stream_subgraphs"], bool
+    ):
+        _deny("Invalid run envelope")
+    if "stream_resumable" in value and not isinstance(
+        value["stream_resumable"], bool
+    ):
+        _deny("Invalid run envelope")
+    if "durability" in value and value["durability"] not in _COPILOTKIT_RUN_DURABILITY:
+        _deny("Invalid run envelope")
+    if "if_not_exists" in value and value["if_not_exists"] not in _COPILOTKIT_RUN_CONFLICT:
+        _deny("Invalid run envelope")
+    if (
+        "multitask_strategy" in value
+        and value["multitask_strategy"] not in _COPILOTKIT_RUN_CONFLICT
+    ):
         _deny("Invalid run envelope")
     if "command" in value:
-        _validate_resume(value["command"])
-        return
+        _validate_copilotkit_command(value["command"])
+        if "input" not in value:
+            return
     run_input = value["input"]
     if not isinstance(run_input, dict) or "copilotkit" not in run_input:
         _deny("Invalid run input")
@@ -294,6 +350,9 @@ def _validate_copilotkit_run(body: JSONBody) -> None:
         {key: run_input[key] for key in ("question", "attachment_id") if key in run_input},
         allow_attachment=True,
         require_attachment_uuid=HC_RAG_MEMBER_STREAM_PERIMETER == "v2",
+        # A resume continues from checkpointed state; the adapter's merged
+        # input legitimately carries no new question there.
+        require_question="command" not in value,
     )
     messages = run_input.get("messages")
     if messages is not None and (
@@ -313,6 +372,16 @@ def _validate_copilotkit_run(body: JSONBody) -> None:
     for key in ("actions", "context"):
         item = copilotkit.get(key)
         if item is not None and not isinstance(item, list):
+            _deny("Invalid run input")
+    ag_ui = run_input.get("ag-ui")
+    if ag_ui is not None:
+        if not isinstance(ag_ui, dict) or frozenset(ag_ui) - _COPILOTKIT_AG_UI_KEYS:
+            _deny("Invalid run input")
+        for key in ("tools", "context"):
+            item = ag_ui.get(key)
+            if item is not None and not isinstance(item, list):
+                _deny("Invalid run input")
+        if not isinstance(ag_ui.get("inject_a2ui_tool", True), bool):
             _deny("Invalid run input")
 
 
@@ -558,11 +627,18 @@ def validate_member_request(method: str, path: str, query: str, body: JSONBody) 
         _validate_command(body, str(commands_match.group(1)))
         return
     if method == "POST" and _STREAM.fullmatch(path) and not query:
-        body_keys = frozenset(body) if isinstance(body, dict) else None
-        if body_keys in (
-            _COPILOTKIT_RUN_FIXED_KEYS | {"input"},
-            _COPILOTKIT_RUN_FIXED_KEYS | {"command"},
-        ):
+        # The copilotkit and member envelopes can share the same top-level
+        # run-option keys, so route on the payload shape: `command` (resume)
+        # or an adapter-marked input belongs to the copilotkit contract,
+        # everything else to the member envelope.
+        is_copilotkit = isinstance(body, dict) and (
+            "command" in body
+            or (
+                isinstance(body.get("input"), dict)
+                and ("copilotkit" in body["input"] or "ag-ui" in body["input"])
+            )
+        )
+        if is_copilotkit:
             _validate_copilotkit_run(body)
         else:
             _validate_run(body)
@@ -610,6 +686,11 @@ def project_state(payload: JSONBody) -> dict[str, JSONValue]:
     projected: dict[str, JSONValue] = {
         "values": _filter_pending_document_op_id(value.get("values", {})),
         "interrupts": value.get("interrupts", []),
+        # The CopilotKit adapter reads tasks[].interrupts and next from the
+        # post-run state snapshot; without them every completed turn ends in
+        # a client-side RUN_ERROR. Same owner-scoped read, same sweep.
+        "tasks": value.get("tasks", []),
+        "next": value.get("next", []),
     }
     _sweep(projected)
     return projected
