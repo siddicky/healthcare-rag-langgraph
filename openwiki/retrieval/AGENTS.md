@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/retrieval/"
-openwiki_generated: true
+description: "Directory guide to the three A/B retrieval backends (Weaviate, PageIndex, Pinecone), the fail-soft cross-encoder reranker, and Weaviate's hybrid-search configuration, chunk schema, and ingestion/rebuild procedures."
 ---
 
 <!-- Parent: ../AGENTS.md -->

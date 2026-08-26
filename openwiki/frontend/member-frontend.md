@@ -31,6 +31,12 @@ Caption: client filtering improves robustness; the [member perimeter](../agent/m
 
 Uploads use the exact attachment sentinel and server-reported lifecycle state; polling does not invent progress. Feedback uses its dedicated endpoint. Erasure phase 2 snapshots all paginated owned threads and deletes the marker thread last; failure preserves retry state. See [member data lifecycle](../agent/member-data-lifecycle.md) for the backend record/cleanup protocol.
 
+## Member stream perimeter v2 (live in production)
+
+`NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER` (baked at `next build`) mirrors the server's [member perimeter v2](../agent/member-perimeter.md) flip and must always match the deployed server's version. `useCoachStream.ts` uses `@copilotkit/react-core/v2/headless`'s `useAgent`; under v2 the UI additionally supports: thread history and time-travel (`TimeTravel`, fork from a checkpoint), branching (copy a branch, fork from a checkpoint), joining/rejoining an in-flight or resumable run after a reload, a client submission queue (`QueueBar`) that lets a member submit a turn while one is already streaming (server-side `multitask_strategy=enqueue`), and editing a prior human turn (`MessageList`'s `canEdit`, gated on v2). Under v1 these UI paths are gated off and the corresponding specs skip (`frontend/e2e/history.spec.ts`).
+
+Focused tests: `frontend/src/chat/__tests__/timeTravel.test.tsx`, `branching.test.tsx`, `rejoin.test.tsx`, `queue.test.tsx`, `protocol.test.ts` (perimeter-exact request bodies for both versions). Run with `bun --cwd frontend run test`; the hermetic Playwright suite (`COACH_E2E_PERIMETER=v2 bun --cwd frontend run playwright`) exercises the full v2 protocol against a live server.
+
 ## Catalog and data envelopes
 
 `src/catalog/` has schemas, registry, hydration, rendering, dispatch, and telemetry for the same 11 composable backend components. The pipeline validates recursive wire shape, component schema, closed dispatch ID, same-turn `DataRef`, RFC-6901 pointer resolution, and then concrete hydrated values. Invalid node/subtree renders `null` while valid siblings survive with typed telemetry.

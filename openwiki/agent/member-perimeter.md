@@ -37,6 +37,14 @@ sequenceDiagram
 
 Caption: identity and request shape are validated before graph execution; response projection is enforced after it.
 
+## Member stream perimeter v2
+
+`HC_RAG_MEMBER_STREAM_PERIMETER` (`healthcare_rag/agent/perimeter.py`, read once at import, default `v1`) env-gates a widened member surface; its frontend twin `NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER` is baked into the frontend bundle at `next build` time. The two must move together — a v1 envelope on a v2 server (or vice versa) is denied, so there is no mixed mode (`docs/deploy.md` §0c). Production runs `v2` since 2026-08-25 (`deploy/fly.prod.toml`); the earlier ThreadStream-transport blocker (the SDK's `useStream` client submits through `/threads/{id}/stream/events` and `/threads/{id}/commands` regardless of the envelope perimeter) was resolved the same day — perimeter v2 now admits both routes with member-safe shapes (see the [clean-room agent server](../server/agent-server.md)'s ThreadStream protocol section).
+
+Beyond every v1 route, v2 adds: `GET /threads/{id}/history` (newest-first checkpoint entries), `GET .../runs/{run_id}/join` and `.../join/stream` (attach/replay an in-flight or resumable run), and `POST .../runs/{run_id}/cancel` (body-less, query-less). Run envelopes gain `messages`/`values` stream modes alongside mandatory `updates`, fix `stream_resumable=true`, and fix `multitask_strategy=enqueue` (a second turn while a run is in flight queues server-side instead of being rejected). Cancel is admitted by the perimeter but the platform auth layer still denies members on the cancel action itself pending a reviewed auth handler — this is a known, tracked gap, not a completed capability. The widening adds only read/abort views over state the member already owns (same projected, scrubbed shape as `GET /threads/{id}/state`); it changes no writer, gate, sanitizer, or state-projection rule. Full write-up: `docs/safety.md` → "Member stream perimeter v2 (useStream)".
+
+Pinned by `tests/agent/test_perimeter_v2.py` (envelope/command shapes for both versions) and `tests/server/test_protocol_stream.py` (clean-room route parity); the hermetic `frontend/e2e/history.spec.ts` exercises both perimeters with zero external network.
+
 ## Failure and test evidence
 
 Cross-user, expired, replayed, or cross-thread attachments fail closed. Client-provided user IDs, assistant IDs, cron wakes, metadata, state channels, and arbitrary streaming modes never gain authority. Studio may bypass member-shape checks but is not a member principal.

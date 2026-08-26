@@ -1,7 +1,7 @@
 ---
-type: "Reference"
+type: "Directory Guide"
 title: "openwiki/observability/"
-openwiki_generated: true
+description: "Directory guide to opt-in LangSmith tracing plus the eval/regression system: single-turn and multi-turn real-pipeline evaluations, the paired routing A/B gates comparing query-response and safety-classifier arms, metrics, reports, and the compare workflow."
 ---
 
 <!-- Parent: ../AGENTS.md -->
