@@ -6,16 +6,18 @@ Message timestamps are ISO-8601 strings in ``additional_kwargs["ts"]``.
 """
 
 import operator
-from typing import Annotated, Any, Literal, TypeAlias, TypedDict
+from typing import Annotated, Any, Literal, TypedDict
 
 from langchain_core.messages import AnyMessage
 from langgraph.channels.untracked_value import UntrackedValue
 from langgraph.graph.message import add_messages
+from typing_extensions import TypeAliasType
 
 from healthcare_rag.models.retrieval import QueryResultList
 
-JSONValue: TypeAlias = (
-    str | int | float | bool | None | list["JSONValue"] | dict[str, "JSONValue"]
+JSONValue = TypeAliasType(
+    "JSONValue",
+    "str | int | float | bool | None | list[JSONValue] | dict[str, JSONValue]",
 )
 
 

@@ -17,6 +17,7 @@ from typing import ClassVar, Final, Literal, TypeAlias, assert_never
 
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 from pydantic_core import PydanticCustomError
+from typing_extensions import TypeAliasType
 
 from .refusal_topics import (
     BoundaryTopic,
@@ -36,7 +37,10 @@ from .safety_responses import (
 )
 from .safety_signals import _FIRST_PERSON
 
-JSONValue: TypeAlias = str | int | float | bool | None | list["JSONValue"] | dict[str, "JSONValue"]
+JSONValue = TypeAliasType(
+    "JSONValue",
+    "str | int | float | bool | None | list[JSONValue] | dict[str, JSONValue]",
+)
 BoundaryKind: TypeAlias = Literal["personal_advice", "emergency", "injection"]
 BoundaryKey: TypeAlias = tuple[str, str] | tuple[str, str, str]
 
