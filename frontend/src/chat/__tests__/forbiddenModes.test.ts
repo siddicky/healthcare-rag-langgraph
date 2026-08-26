@@ -17,7 +17,6 @@ const CHAT_SOURCES = [
   "src/chat/erase.ts",
   "src/chat/uploadFlow.ts",
   "src/chat/titles.ts",
-  "src/chat/useCoachChat.ts",
   "src/chat/useCoachStream.ts",
   "src/chat/components/ChatShell.tsx",
   "src/chat/components/Composer.tsx",

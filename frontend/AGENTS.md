@@ -14,7 +14,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 # frontend
 
 ## Purpose
-The Nymble coach member app: a Next.js (App Router, TypeScript strict, Turbopack) client for the Nymble AI Coach. Members sign in with Supabase email+password, then chat with the coach over the LangGraph Agent Server's streaming SDK. The app renders a declarative, server-composed UI (the "catalog") for facts the model wants to show (trend cards, calendars, injection trackers) alongside four fixed-contract cards driven directly by interrupts/status/envelopes (calendar-change confirmations, memory extraction review, document ingest progress, reminders). Runner is **bun**; all commands run as `bun --cwd frontend run …` from the repo root.
+The Nymble coach member app: a Next.js (App Router, TypeScript strict, Turbopack) client for the Nymble AI Coach. Members sign in with Supabase email+password, then chat with the coach over the CopilotKit v2 headless transport: `/chat` mounts a `CopilotKitProvider` pointed at the runtime route `/api/copilotkit` (server env var `LANGGRAPH_DEPLOYMENT_URL`), the engine is `useAgent` (`src/chat/useCoachStream.ts` projects AG-UI messages onto the wire model), per-tool cards register through `useRenderTool` (`src/chat/renderers/`), and HITL interrupts render via `useInterrupt`. The app renders a declarative, server-composed UI (the "catalog") for facts the model wants to show (trend cards, calendars, injection trackers) alongside four fixed-contract cards driven directly by interrupts/status/envelopes (calendar-change confirmations, memory extraction review, document ingest progress, reminders). Runner is **bun**; all commands run as `bun --cwd frontend run …` from the repo root.
 
 ```
 bun --cwd frontend run dev     # develop on :3000
@@ -26,7 +26,7 @@ bun --cwd frontend run playwright   # Playwright E2E (hermetic)
 ## Key Files
 | File | Description |
 |------|-------------|
-| `package.json` | bun-managed scripts (`dev`, `build`, `start`, `test`, `playwright`); deps: `@json-render/{core,react}`, `@langchain/langgraph-sdk`, `@supabase/supabase-js`, `next@16`, `react@19`, `zod@4` |
+| `package.json` | bun-managed scripts (`dev`, `build`, `start`, `test`, `playwright`); deps: `@copilotkit/{react-core,runtime}`, `@json-render/{core,react}`, `@langchain/langgraph-sdk`, `@supabase/supabase-js`, `next@16`, `react@19`, `zod@4` |
 | `vitest.config.ts` | jsdom environment, `@/*` -> `src/*` alias, includes `src/**/*.test.{ts,tsx}`, setup in `vitest.setup.ts` |
 | `playwright.config.ts` | Hermetic E2E config — `workers: 1`, no static `baseURL` (ports allocated at boot by `e2e/server.py`, read from the runfile), global setup/teardown boot and tear down the whole offline stack |
 | `README.md` | Layout table, environment variables, and the catalog wire-contract short version |
@@ -36,7 +36,7 @@ bun --cwd frontend run playwright   # Playwright E2E (hermetic)
 |-----------|---------|
 | `src/app/` | Next.js App Router routes: `/`, `/login`, `/chat` (see `src/app/AGENTS.md`) |
 | `src/catalog/` | Declarative compose_ui wire schemas, hydration, dispatch map, json-render catalog + registry (see `src/catalog/AGENTS.md`) |
-| `src/chat/` | Coach protocol constants, API client, message model, stream reducer, the `useCoachChat` controller (see `src/chat/AGENTS.md`) |
+| `src/chat/` | Coach protocol constants, API client, message model, stream reducer, the `useCoachStream` controller + CopilotKit engine wiring, per-tool renderers (see `src/chat/AGENTS.md`) |
 | `src/components/` | Ported Nymble UI components: auth, core, data-display, generative-ui (see `src/components/AGENTS.md`) |
 | `src/design/` | Design system copied VERBATIM from `Nymble Health Design System/` — never edit by hand (see `src/design/AGENTS.md`) |
 | `src/lib/` | Supabase client, LangGraph SDK client factory, env config (see `src/lib/AGENTS.md`) |
@@ -58,7 +58,7 @@ bun --cwd frontend run playwright   # Playwright E2E (hermetic)
 - `bun --cwd frontend run build` type-checks the whole app — treat a failing build as a blocking type error, not just a bundling issue.
 
 ### Common Patterns
-- Dependency injection for testability: `useCoachChat` takes a `CoachChatDeps` bundle (api/stream/auth/sleep/newUploadId/poll) so component tests drive the full UI from scripted fakes; production wiring lives in `src/chat/coachClient.ts`.
+- Dependency injection for testability: `useCoachStream` takes a `CoachChatDeps` bundle (api/stream/auth/sleep/newUploadId/poll) so component tests drive the full UI from scripted fakes; production wiring lives in `src/chat/coachClient.ts`.
 - Fail-closed everywhere: unknown catalog components, unresolved/cross-turn refs, unknown dispatch ids, and unrecognized interrupt payloads all render nothing and emit a structured telemetry event instead of throwing.
 - Every member-facing HTTP call is shaped byte-for-byte to the perimeter contract (`healthcare_rag/agent/perimeter.py`) mirrored in `src/chat/coachProtocol.ts`.
 
@@ -69,7 +69,7 @@ bun --cwd frontend run playwright   # Playwright E2E (hermetic)
 - `server/` — the OSS Agent Server this app talks to in hermetic E2E (via `langgraph dev` in `e2e/server.py`).
 
 ### External
-- `next` 16, `react`/`react-dom` 19, `@langchain/langgraph-sdk`, `@supabase/supabase-js`, `@json-render/core` + `@json-render/react`, `zod` 4.
+- `next` 16, `react`/`react-dom` 19, `@copilotkit/react-core` + `@copilotkit/runtime` (v2 headless transport), `@langchain/langgraph-sdk`, `@supabase/supabase-js`, `@json-render/core` + `@json-render/react`, `zod` 4.
 - Dev/test: `vitest`, `@testing-library/react`, `jsdom`, `@playwright/test`, `typescript`.
 
 <!-- MANUAL: Notes added below this line are preserved on regeneration -->

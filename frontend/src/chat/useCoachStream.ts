@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useStream as useLangChainStream, useSubmissionQueue as useSdkSubmissionQueue } from "@langchain/react";
 import { useAgent, UseAgentUpdate } from "@copilotkit/react-core/v2/headless";
 import type { AgentSubscriber, Message } from "@ag-ui/client";
 import type { Client } from "@langchain/langgraph-sdk";
@@ -275,39 +274,6 @@ function isValidResumePayload(value: unknown): value is ResumePayload {
     }
   }
   return true;
-}
-
-export function useLangChainCoachStream(options: CoachStreamOptions): CoachStreamHandle {
-  // Cast through unknown: HeadlessTool tuple typing is stricter than the
-  // runtime accepts for CoachStreamState; the wire shape is checked below.
-  return useLangChainStream<CoachStreamState>({
-    client: options.client,
-    assistantId: options.assistantId,
-    threadId: options.threadId,
-    messagesKey: options.messagesKey,
-    optimistic: options.optimistic,
-    onThreadId: options.onThreadId,
-    tools: HEADLESS_TOOLS as unknown as Parameters<typeof useLangChainStream>[0]["tools"],
-    onTool: (event) => {
-      const detail =
-        event.phase === "start"
-          ? `${event.name} start len=${String((event.args as { text?: string } | undefined)?.text?.length ?? 0)}`
-          : event.phase === "success"
-            ? `${event.name} success`
-            : `${event.name} error: ${event.error?.message ?? "unknown"}`;
-      if (event.phase === "error" && (event.error?.message ?? "").includes("is not registered")) {
-        chatTelemetry({ kind: "unknown_interrupt", detail });
-        return;
-      }
-      if (event.phase === "error") {
-        chatTelemetry({ kind: "unknown_interrupt", detail });
-        return;
-      }
-      if (process.env.NODE_ENV !== "test") {
-        chatTelemetry({ kind: "unknown_interrupt", detail: `[headless] ${detail}` });
-      }
-    },
-  }) as unknown as CoachStreamHandle;
 }
 
 function agentMessageId(event: unknown): string | null {
@@ -1166,7 +1132,6 @@ export function useCoachStream(deps: CoachStreamDeps) {
       }
       const entry: QueuedEntry = { id: newQueueId(), input, createdAt: new Date() };
       setQueue((current) => [...current, entry]);
-      void useSdkSubmissionQueue;
     },
     [commitMessages],
   );

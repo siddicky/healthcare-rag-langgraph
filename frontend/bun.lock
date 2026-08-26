@@ -11,7 +11,6 @@
         "@json-render/react": "^0.20.0",
         "@langchain/core": "^1.1.48",
         "@langchain/langgraph-sdk": "^1.9.31",
-        "@langchain/react": "^1.0.32",
         "@supabase/supabase-js": "^2.112.3",
         "next": "16.3.2",
         "react": "19.2.8",
@@ -268,8 +267,6 @@
     "@langchain/langgraph-sdk": ["@langchain/langgraph-sdk@1.9.31", "", { "dependencies": { "@langchain/protocol": "^0.0.18", "@types/json-schema": "^7.0.15", "p-queue": "^9.0.1", "p-retry": "^7.1.1" }, "peerDependencies": { "@langchain/core": "^1.1.48", "react": "^18 || ^19", "react-dom": "^18 || ^19", "svelte": "^4.0.0 || ^5.0.0", "vue": "^3.0.0" }, "optionalPeers": ["react", "react-dom", "svelte", "vue"] }, "sha512-y1sSdq39IPb6mOX43+JiSezVbUdA8EBEJ1gvn91GP0jrLG0EcSApeRDCjRouyDpPXZ51bQXEQhA8CiHM0mzcAw=="],
 
     "@langchain/protocol": ["@langchain/protocol@0.0.18", "", {}, "sha512-XW1egQtPfsGI41w2AMZNFZrUIwFSQHTjVMZs0OaTpCAvht/QLoaPN8FQcsysMVypOhupG28J29yOorrc70otBQ=="],
-
-    "@langchain/react": ["@langchain/react@1.0.32", "", { "dependencies": { "@langchain/langgraph-sdk": "1.9.31" }, "peerDependencies": { "@langchain/core": "^1.1.48", "react": "^18 || ^19" } }, "sha512-PcLLD6ut39enSzHt6OFOxE8afpXcZ5dxb2IRrzHErMeWXbiLJ2LP5pV/M82+0mLIxHNROzN0qTQRrrrXgUHPKg=="],
 
     "@lit-labs/react": ["@lit-labs/react@2.1.3", "", { "dependencies": { "@lit/react": "^1.0.3" } }, "sha512-OD9h2JynerBQUMNzb563jiVpxfvPF0HjQkKY2mx0lpVYvD7F+rtJpOGz6ek+6ufMidV3i+MPT9SX62OKWHFrQg=="],
 
