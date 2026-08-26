@@ -1,6 +1,6 @@
 [project]
 name = "healthcare-rag"
-version = "1.5.1"
+version = "1.5.3"
 description = "Hybrid RAG agent with answer validation over healthcare product monographs (Lipitor, Metformin)"
 readme = "README.md"
 requires-python = ">=3.11,<3.15"
@@ -112,7 +112,6 @@ exclude = [
     ".pytest_cache",
     ".ruff_cache",
     ".venv",
-    "artifacts",
     "build",
     "dist",
     "frontend/.next",

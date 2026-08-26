@@ -133,7 +133,7 @@ function stubUpstream(url: URL, init: RequestInit): Response {
     return json(threadBody(String(safeJsonBody(init.body).thread_id)));
   if (/^\/threads\/[^/]+\/state$/.test(url.pathname))
     return json({ ...threadBody(threadIdFromPath(url.pathname)), next: [] });
-  if (/^\/assistants\/[^/]+\/schemas$/.test(url.pathname)) return json({});
+  if (/^\/assistants\/[^/]+\/schemas$/.test(url.pathname)) return new Response("", { status: 501 });
   if (/^\/assistants\/[^/]+\/graph$/.test(url.pathname)) return json({ nodes: [], edges: [] });
   if (/^\/threads\/[^/]+\/runs\/stream$/.test(url.pathname))
     return new Response(new TextEncoder().encode(SSE_FRAMES), {
@@ -205,7 +205,7 @@ describe("GET /info with bearer", () => {
 });
 
 describe("POST /agent/coach/run proxies an SSE stream", () => {
-  it("streams the stub upstream's AG-UI events through the handler", async () => {
+  it("streams AG-UI events when the upstream schemas endpoint is unimplemented", async () => {
     const runInput = {
       threadId: crypto.randomUUID(),
       runId: crypto.randomUUID(),
