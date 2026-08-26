@@ -31,6 +31,21 @@ const BASE_PATH = "/api/copilotkit";
 const BEARER_PATTERN = /^Bearer\s+\S+$/i;
 const THREAD_ID_PATTERN = /\/threads\/([0-9a-fA-F-]{36})(?:\/|$)/;
 const STOP_PATTERN = /\/agent\/coach\/stop\/([0-9a-fA-F-]{36})$/;
+type CoachSchemaKeys = Awaited<ReturnType<LangGraphAgent["getSchemaKeys"]>>;
+
+class CoachLangGraphAgent extends LangGraphAgent {
+  override getSchemaKeys(): Promise<CoachSchemaKeys> {
+    // The OSS server keeps /assistants/:id/schemas at 501 for protocol parity.
+    // Pin the member-visible subset so AG-UI does not drop the question and
+    // adapter markers through its HTTP-error fallback.
+    return Promise.resolve({
+      config: [],
+      context: [],
+      input: ["question", "attachment_id", "ag-ui", "copilotkit"],
+      output: ["messages"],
+    });
+  }
+}
 
 function unauthorized(): Response {
   return Response.json({ error: "unauthorized" }, { status: 401 });
@@ -134,7 +149,7 @@ function getHandler(): Promise<CopilotRuntimeFetchHandler> {
   handlerPromise ??= (async () => {
     const runtime = new CopilotRuntime({
       agents: {
-        coach: new LangGraphAgent({
+        coach: new CoachLangGraphAgent({
           deploymentUrl: langgraphDeploymentUrl(),
           graphId: "coach",
         }),

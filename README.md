@@ -1,7 +1,7 @@
 # Hybrid RAG Agent with Answer Validation
 [![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/siddicky/healthcare-rag-langgraph)](https://github.com/siddicky/healthcare-rag-langgraph/commits) [![Release](https://img.shields.io/github/v/tag/siddicky/healthcare-rag-langgraph?label=release)](https://github.com/siddicky/healthcare-rag-langgraph/tags)
 
-This project implements a sophisticated Retrieval-Augmented Generation (RAG) system designed to answer questions grounded in healthcare product monographs (e.g., Lipitor, Metformin). It tackles the challenge of providing accurate, grounded answers quickly, even for complex or ambiguous queries, by running a **conditional pipeline on a LangGraph `StateGraph`**.
+This project answers questions grounded in the Lipitor and Metformin product monographs. A LangGraph `StateGraph` runs the safety gate, retrieval, generation, and citation validation pipeline.
 
 Instead of a rigid sequential pipeline (or racing multiple answer paths), the graph branches at runtime: every query is first classified by a safety gate, then conditionally clarified, decomposed into parallel retrieval fan-outs, and merged into a single validated answer. Key capabilities include:
 
@@ -11,7 +11,7 @@ Instead of a rigid sequential pipeline (or racing multiple answer paths), the gr
 *   **Validated Answer Synthesis:** Generates a freeform answer incorporating retrieved context and history summary, followed by a rigorous multi-step validation process detailed further below. This validation ensures the final answer is factually grounded in the source documents by checking cited evidence.
 *   **Dialogue Promotion:** Suggests relevant follow-up questions based on the interaction.
 
-This orchestrated approach, powered by technologies like Weaviate, OpenAI, LangGraph and Docling (for document processing), aims to deliver fast, accurate, and context-aware responses for healthcare information retrieval, with per-thread conversation memory and controlled `GraphEngine` update streaming. LangGraph Studio and Agent Server remain development surfaces for non-sensitive synthetic input.
+The runtime has per-thread conversation memory and streams `GraphEngine` updates. LangGraph Studio and Agent Server remain development surfaces for non-sensitive synthetic input.
 
 The RAG graph is one of two graphs in this repo. The second, the **coach agent** (`healthcare_rag/agent/`), is the member-facing product on [nymble.site](https://www.nymble.site/chat): it wraps the whole RAG graph as its `medical_lookup` tool, so a drug question is answered only by the grounded pipeline and relayed verbatim, while schedules, reminders, metrics, document intake and erasure stay useful around it.
 
@@ -54,7 +54,7 @@ Three alternative retrievers (PageIndex, Pinecone hybrid, bge reranker) were bui
 
 ---
 
-## Core Pipeline Components
+## Core pipeline components
 
 **Clarification & Decomposition:**
 *   **Clarification:** Uses conversation history to interpret follow-up questions containing ambiguous references (like pronouns) that depend on previous turns in the dialogue.
@@ -119,7 +119,7 @@ graph TD;
 	classDef default fill:#f2f0ff,line-height:1.2
 ```
 
-## Technology Stack
+## Technology stack
 
 This project utilizes the following core technologies:
 
@@ -130,12 +130,12 @@ This project utilizes the following core technologies:
 *   [![Docker](https://img.shields.io/badge/Docker-Containerization-2496ED?logo=docker&logoColor=white)](https://www.docker.com/) - Used via Docker Compose for running Weaviate.
 *   [![Jinja2](https://img.shields.io/badge/Jinja2-Templating-B41717?logo=jinja&logoColor=white)](https://jinja.palletsprojects.com/) - For managing LLM prompts.
 *   Docling - Python library for document parsing and chunking (especially PDFs).
-*   [![Pydantic](https://img.shields.io/badge/Pydantic-v2.11.3-blue?logo=pydantic&logoColor=white)](https://docs.pydantic.dev/latest/) - For data validation, particularly in structuring LLM outputs.
+*   [Pydantic](https://docs.pydantic.dev/latest/) - Structured model output and runtime data validation.
 *   [![Mermaid](https://img.shields.io/badge/Mermaid-Diagrams-007F7F?logo=mermaid&logoColor=white)](https://mermaid.js.org/) - Used for rendering diagrams in this README.
 
 ---
 
-## Conditional Pipeline Orchestration (LangGraph)
+## Conditional pipeline orchestration
 
 The runtime is a custom LangGraph `StateGraph` (`healthcare_rag/graph/`) whose node names are the pipeline stages and whose conditional edges are the runtime self-evaluators:
 
@@ -157,14 +157,21 @@ remain limited to synthetic, non-sensitive input as described in
 
 ---
 
-## Coach Agent Platform
+## Coach agent platform
 
 The member-facing coach is a second LangGraph application under
-`healthcare_rag/agent/`, with its Next.js client under `frontend/`. Its ordered
-decision-list gate is the authority for every turn: D0a admits only validated,
-server-originated reminder wakes; D0b admits the fixed attachment review route;
-D1–D9 then select erasure, safety handling, monograph relay, or coaching tools.
-The model does not choose which perimeter it runs inside.
+`healthcare_rag/agent/`, with its Next.js client under `frontend/`. A short,
+model-free gate handles server-originated reminder wakes, attachments, safety
+regexes, and erasure requests. Every other turn goes to one top-level
+`create_agent` coach. Medical questions must use its `medical_lookup` tool,
+which returns the RAG graph's validated answer directly. The coach must not
+answer from its own medical knowledge or paraphrase the tool result.
+
+The member chat uses the CopilotKit v2 headless transport. `useAgent` carries
+the AG-UI stream, `useRenderTool` registers tool cards, and `useInterrupt`
+renders approval requests. Member run inputs contain `question` and, for an
+upload turn, an optional `attachment_id`. Interrupt resumes contain `accept`
+and optional `fields`.
 
 ```mermaid
 graph TD;
@@ -241,9 +248,16 @@ Queries utilize Weaviate's `hybrid` search function, specifically configured wit
 
 The system utilizes OpenAI's function calling capability to route the query to the appropriate Weaviate collection(s). Predefined function descriptions, one for each collection (e.g., "query_lipitor", "query_metformin"), are provided to the LLM along with the user query. The LLM analyzes the query and selects the relevant function(s) to call, thereby determining which specific collection(s) (Lipitor or Metformin) should be targeted for the subsequent hybrid search.
 
+Weaviate remains the default retriever. PageIndex and Pinecone retrieval, plus
+the Pinecone reranker, are opt-in experiment arms controlled by environment
+variables. They require their own indexes and credentials. The measured
+experiments rejected all three alternatives; see
+[`docs/retrieval-experiments.md`](docs/retrieval-experiments.md) before proposing
+another retrieval change, and use `evals/pageindex_gate.py` for paired tests.
+
 ---
 
-## Setup & Execution
+## Setup and execution
 
 **Requirements:** Python **3.11+** (the code uses `typing.Self`), [uv](https://docs.astral.sh/uv/), Docker (for Weaviate), an OpenAI API key. A LangSmith API key is optional but recommended (tracing + evals).
 
@@ -274,24 +288,24 @@ Compose network; the existing `make weaviate` workflow remains unchanged.
 > Dependencies live in `pyproject.toml`, resolved through `uv.lock`. Re-chunking the PDFs
 > (`healthcare_rag/processors/pdf_chunker.py`) needs the optional `ingest` extra (docling).
 
-**Configuration** — see `.env.example`. Model selection is centralised in
+**Configuration.** See `.env.example`. Model selection is centralised in
 `healthcare_rag/services/models.py` (`HC_RAG_LLM_MODEL`, `HC_RAG_VALIDATOR_MODEL`,
 `HC_RAG_REASONING_EFFORT`; defaults `gpt-5.6-luna` / `gpt-5.6-terra`).
 `HC_RAG_DISABLE_STAGES` short-circuits pipeline stages for ablation experiments.
 The routing defaults remain `HC_RAG_QUERY_RESPONSE_ARM=current` and
 `HC_RAG_SAFETY_CLASSIFIER=llm`.
 
-**Observability** — for synthetic/non-sensitive development input, set `LANGSMITH_TRACING=true` and every query is traced to LangSmith as a
+**Observability.** For synthetic/non-sensitive development input, set `LANGSMITH_TRACING=true` and every query is traced to LangSmith as a
 tree of named stages (clarify / decompose / retrieve / evaluate / answer / validate / follow-ups)
 with per-call token usage and cost. See `healthcare_rag/services/tracing.py`.
 
-**Evals** — `make eval PREFIX=<change>` runs the golden question set (`evals/golden_dataset.json`)
+**Evals.** `make eval PREFIX=<change>` runs the golden question set (`evals/golden_dataset.json`)
 through the real pipeline as a LangSmith experiment and writes `evals/results/<experiment>.md`
 (correctness, groundedness, safety behaviour, retrieval recall, latency p50/p95, cost per stage).
 `make eval-multiturn` does the same for multi-turn conversations. Details in `evals/README.md`.
 
-**Docs for humans and agents** — `AGENTS.md` (conventions), `openwiki/` (generated repo wiki,
-`make wiki-update` to refresh).
+**Docs for humans and agents.** `AGENTS.md` contains conventions. `openwiki/` is
+the generated repo wiki. Run `make wiki-update` to refresh it.
 
 ---
 
@@ -399,14 +413,14 @@ no semantic metrics. See
 
 ---
 
-## Example Query Flow
+## Example query flow
 
 Consider the query "What are the side effects of Lipitor?". The safety gate classifies it as in-scope informational (scrubbing any identifiers). The graph runs clarification and context extraction in parallel; the query is clear and simple, so decomposition produces a single retrieval branch. An LLM routes the query to the `Lipitor` collection using a function call. Weaviate performs hybrid retrieval. The merged results are evaluated; if sufficient, answer generation proceeds using the retrieved context and the history summary. A validation LLM checks the answer against the sources. Follow-up questions might be generated. The `finalize` node persists the scrubbed question and the validated answer to the thread and returns the final result. If the merged retrieval had been insufficient, the evaluation step would have triggered gap-filling sub-queries before answer generation.
 
 
 ---
 
-## Detailed Answer Validation and Hallucination Handling
+## Answer validation and hallucination handling
 
 To ensure the generated answers are factually grounded in the provided documents and to mitigate hallucinations, the system *(primarily via the `AnswerValidator` class, invoked by the `validate_answer` graph node)* employs a multi-step validation process after the initial answer generation:
 
