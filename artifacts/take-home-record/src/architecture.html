@@ -1,0 +1,477 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>System architecture</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:ital,wght@0,400;0,600;0,700;1,400&family=Quicksand:wght@500;600;700&display=swap">
+<style>
+  :root{
+    --rust:#631300; --carrot:#ea492a; --carrot-acc:#c2390f; --gold:#eda94f; --camel:#9e4d14;
+    --birch:#faf3e3; --white:#ffffff; --warm-white:#fdf8f0; --success:#2d7d32;
+    --rust-10:rgba(99,19,0,0.1); --rust-16:rgba(99,19,0,0.16); --gold-20:rgba(237,169,79,0.2); --gold-30:rgba(237,169,79,0.3);
+    --shadow-sm:0 2px 12px rgba(99,19,0,0.06);
+    --font-head:'Quicksand','Georgia','Times New Roman',serif;
+    --font-body:'Nunito Sans','SF Pro Text',-apple-system,BlinkMacSystemFont,'Segoe UI','Roboto',sans-serif;
+    --font-mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+    color-scheme:light;
+  }
+  *{box-sizing:border-box}
+  html{scrollbar-gutter:stable}
+  body{margin:0;background:var(--birch);color:var(--rust);font-family:var(--font-body);font-size:16px;line-height:1.5}
+  a{color:var(--carrot-acc)}
+  h1,h2,h3,h4{font-family:var(--font-head);color:var(--rust);margin:0;letter-spacing:-0.02em;text-wrap:balance}
+  p{margin:0}
+  code{font-family:var(--font-mono);font-size:.88em}
+  .topbar{height:5px;background:linear-gradient(90deg,var(--carrot) 0%,var(--carrot) 62%,var(--gold) 62%,var(--gold) 100%)}
+  .page{max-width:1120px;margin:0 auto;padding:0 40px 96px}
+  .masthead{display:flex;align-items:center;justify-content:space-between;padding:22px 0 0;flex-wrap:wrap;gap:10px}
+  .brandmark{display:flex;align-items:center;gap:10px}
+  .dot1{width:13px;height:13px;border-radius:50% 50% 50% 10%;background:var(--carrot);display:inline-block}
+  .dot2{width:13px;height:13px;border-radius:50% 50% 10% 50%;background:var(--gold);display:inline-block;margin-left:-5px}
+  .eyebrow{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--camel)}
+  .hero{padding:48px 0 32px}
+  .pill-tag{display:inline-flex;align-items:center;gap:8px;background:var(--gold-20);color:var(--camel);font-size:13px;font-weight:700;letter-spacing:0.04em;padding:7px 16px;border-radius:100px;margin-bottom:22px}
+  .pill-tag b{color:var(--carrot-acc)}
+  .hero h1{font-size:44px;line-height:1.1;max-width:820px}
+  .hero .sub{font-size:18px;line-height:1.6;color:var(--rust);opacity:0.82;max-width:70ch;margin-top:18px}
+
+  section{padding:40px 0 0}
+  .sec-head{display:flex;gap:18px;align-items:baseline;margin-bottom:18px}
+  .sec-head .tag{font-size:12px;font-weight:700;letter-spacing:0.12em;text-transform:uppercase;color:var(--carrot-acc);white-space:nowrap}
+  .sec-head h2{font-size:26px}
+  .sec-sub{color:var(--camel);max-width:72ch;margin-bottom:18px;font-size:15px}
+
+  figure{margin:0;background:var(--white);border:1px solid var(--rust-10);border-radius:20px;padding:22px;box-shadow:var(--shadow-sm);overflow-x:auto}
+  figure svg{display:block;max-width:100%;height:auto;min-width:760px;font-family:var(--font-body)}
+  figcaption{font-size:13.5px;color:var(--camel);margin-top:14px;max-width:80ch}
+  .legend{display:flex;flex-wrap:wrap;gap:16px;font-size:12.5px;color:var(--camel);margin-top:10px}
+  .legend span{display:inline-flex;align-items:center;gap:6px}
+  .legend i{display:inline-block;width:22px;height:0;border-top:2px solid var(--rust)}
+  .legend i.dash{border-top-style:dashed}
+  .legend i.acc{border-top-color:var(--carrot)}
+  .legend i.gold{border-top-color:var(--gold);border-top-width:3px}
+
+  table{width:100%;border-collapse:collapse;font-size:14px}
+  .table-wrap{overflow-x:auto;background:var(--white);border:1px solid var(--rust-10);border-radius:20px;box-shadow:var(--shadow-sm)}
+  th{text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:0.08em;color:var(--camel);padding:12px 16px;border-bottom:1px solid var(--rust-16);white-space:nowrap}
+  td{padding:11px 16px;border-bottom:1px solid var(--rust-10);vertical-align:top}
+  tr:last-child td{border-bottom:none}
+  td.mono, .mono{font-family:var(--font-mono);font-size:12.5px}
+  .num{font-variant-numeric:tabular-nums}
+  .dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:7px;vertical-align:middle}
+  .dot.on{background:var(--success)} .dot.pend{background:var(--gold)} .dot.off{background:var(--rust-16)}
+
+  .grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+  .grid-2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+  @media(max-width:860px){.grid-3,.grid-2{grid-template-columns:1fr}.page{padding:0 22px 72px}.hero h1{font-size:34px}}
+  .card{background:var(--white);border:1px solid var(--rust-10);border-radius:20px;padding:20px 22px;box-shadow:var(--shadow-sm)}
+  .card h4{font-size:15px;margin-bottom:8px}
+  .card p, .card li{font-size:14px;color:var(--rust);opacity:.88}
+  .card ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:6px}
+  .card .k{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--camel);margin-bottom:6px}
+  .chips{display:flex;flex-wrap:wrap;gap:6px}
+  .chip{font-family:var(--font-mono);font-size:11.5px;padding:3px 9px;border-radius:100px;border:1px solid var(--rust-16);color:var(--camel);background:var(--warm-white)}
+  .callout{border-left:3px solid var(--gold);padding:2px 0 2px 16px;margin-top:18px;color:var(--camel);font-size:14.5px;max-width:78ch}
+  .callout b{color:var(--rust)}
+  .footer{margin-top:56px;border-top:1px solid var(--rust-10);padding-top:18px;font-size:12.5px;color:var(--camel)}
+</style></head><body>
+<div class="topbar"></div>
+<div class="page">
+  <div class="masthead">
+    <div class="brandmark"><span class="dot1"></span><span class="dot2"></span><span class="eyebrow">nymble health &nbsp;&middot;&nbsp; healthcare-rag &middot; production</span></div>
+    <div class="eyebrow">system architecture</div>
+  </div>
+
+  <section class="hero" style="padding-top:44px">
+    <div class="pill-tag">Captured <b>2026-08-26</b> via <code>flyctl</code> &nbsp;&middot;&nbsp; release <b>v25</b> on Fly &nbsp;&middot;&nbsp; org <b>personal</b> &middot; region <b>iad</b></div>
+    <h1>Three Fly apps on one private network, behind a Vercel frontend, with every vendor on a single seam.</h1>
+    <p class="sub">The member never talks to the Agent Server directly: the Next.js app on <code>nymble.site</code> proxies the CopilotKit runtime route to <code>hc-rag-server-prod</code>, which reaches Weaviate and Postgres only over Fly's private 6PN. OpenAI, Supabase and LangSmith are the three remaining rented pieces, each behind one env-overridable layer.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">01 · Runtime topology</span><h2>Where a member request goes</h2></div>
+    <p class="sec-sub">Solid arrows are request paths; dashed arrows are the internal loopback and the opt-in trace export. Only the two boxes on the far right hold durable state.</p>
+    <figure>
+      <svg viewBox="0 0 1160 560" role="img" aria-label="Member browser to nymble.site on Vercel, proxied to hc-rag-server-prod on Fly (two machines in IAD), which talks over the private network to Weaviate and Postgres; OpenAI, Supabase and LangSmith sit outside as vendor seams.">
+        <defs>
+          <marker id="arr" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#631300"/></marker>
+          <marker id="arr-acc" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#ea492a"/></marker>
+        </defs>
+        <g font-size="12" fill="#631300">
+          <!-- Fly private network region -->
+          <rect x="430" y="60" width="700" height="420" rx="18" fill="#fdf8f0" stroke="#eda94f" stroke-width="2" stroke-dasharray="6 5"/>
+          <text x="450" y="86" font-size="11" font-weight="700" letter-spacing="1.5" fill="#9e4d14">FLY.IO · ORG PERSONAL · REGION IAD · PRIVATE 6PN (*.internal)</text>
+
+          <!-- Member -->
+          <rect x="20" y="200" width="130" height="78" rx="14" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="85" y="232" text-anchor="middle" font-weight="700" font-size="13">Member</text>
+          <text x="85" y="250" text-anchor="middle" fill="#9e4d14">browser · Supabase JWT</text>
+
+          <!-- Vercel frontend -->
+          <rect x="200" y="170" width="190" height="138" rx="14" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="295" y="196" text-anchor="middle" font-weight="700" font-size="13">nymble.site</text>
+          <text x="295" y="214" text-anchor="middle" fill="#9e4d14">Next.js 16 · Vercel</text>
+          <text x="295" y="238" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11">/chat · CopilotKitProvider</text>
+          <text x="295" y="256" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11">/api/copilotkit → runtime</text>
+          <text x="295" y="280" text-anchor="middle" fill="#9e4d14" font-size="11">LANGGRAPH_DEPLOYMENT_URL</text>
+
+          <!-- Server app -->
+          <rect x="470" y="150" width="270" height="200" rx="14" fill="#ffffff" stroke="#ea492a" stroke-width="2.5"/>
+          <text x="605" y="176" text-anchor="middle" font-weight="700" font-size="13">hc-rag-server-prod</text>
+          <text x="605" y="194" text-anchor="middle" fill="#9e4d14">OSS Agent Server · server/ · :8000</text>
+          <text x="605" y="216" text-anchor="middle" font-size="11">2 machines · shared-1x · 2048 MB</text>
+          <text x="605" y="232" text-anchor="middle" font-size="11">min_machines_running = 1 · no auto-stop</text>
+          <text x="605" y="256" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11">ghcr.io/…@sha256:&lt;digest&gt;</text>
+          <text x="605" y="274" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11">SERVER_STORAGE=postgres</text>
+          <text x="605" y="292" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11">HC_RAG_MEMBER_STREAM_PERIMETER=v2</text>
+          <text x="605" y="316" text-anchor="middle" fill="#9e4d14" font-size="11">health: GET /ok every 15 s · readiness-gated</text>
+          <text x="605" y="334" text-anchor="middle" fill="#9e4d14" font-size="11">public: hc-rag-server-prod.fly.dev (v4 + v6)</text>
+
+          <!-- loopback (cron wakes call the server's own API) -->
+          <path d="M488 350 C 488 382, 524 382, 524 350" fill="none" stroke="#631300" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+          <text x="478" y="372" font-size="10.5" fill="#9e4d14" text-anchor="end">cron wake loopback</text>
+          <text x="478" y="385" font-size="10.5" fill="#9e4d14" text-anchor="end">127.0.0.1:8000</text>
+
+          <!-- Weaviate -->
+          <rect x="880" y="120" width="230" height="120" rx="14" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="995" y="146" text-anchor="middle" font-weight="700" font-size="13">hc-rag-weaviate-prod</text>
+          <text x="995" y="164" text-anchor="middle" fill="#9e4d14">Weaviate 1.30.2 · 1 machine · 256 MB</text>
+          <text x="995" y="186" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11">hc-rag-weaviate-prod.internal:8080</text>
+          <text x="995" y="206" text-anchor="middle" font-size="11">Lipitor + Metformin chunks · hybrid α 0.65</text>
+          <text x="995" y="226" text-anchor="middle" font-size="11" fill="#2d7d32" font-weight="700">vol weaviate_data · 1 GB · encrypted</text>
+
+          <!-- Postgres -->
+          <rect x="880" y="300" width="230" height="140" rx="14" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="995" y="326" text-anchor="middle" font-weight="700" font-size="13">hc-rag-server-prod-db</text>
+          <text x="995" y="344" text-anchor="middle" fill="#9e4d14">Postgres 17.9 + pgvector 0.8.6 · primary</text>
+          <text x="995" y="366" text-anchor="middle" font-family="ui-monospace,Menlo,monospace" font-size="11">image hc-rag-pgvector:17 (v0.2.0)</text>
+          <text x="995" y="386" text-anchor="middle" font-size="11">checkpointer + store + hc_threads/runs/crons</text>
+          <text x="995" y="406" text-anchor="middle" font-size="11">no public IP · DATABASE_URL via attach</text>
+          <text x="995" y="426" text-anchor="middle" font-size="11" fill="#2d7d32" font-weight="700">vol pg_data · 10 GB · encrypted</text>
+
+          <!-- arrows: member → vercel → server -->
+          <line x1="150" y1="239" x2="198" y2="239" stroke="#631300" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="174" y="226" text-anchor="middle" font-size="10.5" fill="#9e4d14">HTTPS</text>
+          <line x1="390" y1="239" x2="468" y2="239" stroke="#ea492a" stroke-width="2" marker-end="url(#arr-acc)"/>
+          <text x="429" y="226" text-anchor="middle" font-size="10.5" fill="#c2390f" font-weight="700">AG-UI / SSE</text>
+          <text x="429" y="256" text-anchor="middle" font-size="10.5" fill="#9e4d14">member bearer only</text>
+
+          <!-- server → weaviate / postgres -->
+          <line x1="740" y1="200" x2="878" y2="180" stroke="#631300" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="808" y="176" text-anchor="middle" font-size="10.5" fill="#9e4d14">hybrid search · HTTP</text>
+          <line x1="740" y1="280" x2="878" y2="370" stroke="#631300" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="790" y="380" text-anchor="middle" font-size="10.5" fill="#9e4d14">checkpoints · store</text>
+          <text x="790" y="394" text-anchor="middle" font-size="10.5" fill="#9e4d14">threads · runs · crons</text>
+
+          <!-- Vendor seams (outside Fly) -->
+          <rect x="470" y="400" width="130" height="62" rx="12" fill="#faf3e3" stroke="#9e4d14" stroke-width="1.2"/>
+          <text x="535" y="424" text-anchor="middle" font-weight="700" font-size="12">OpenAI</text>
+          <text x="535" y="440" text-anchor="middle" font-size="10.5" fill="#9e4d14">gpt-5.6-luna / -terra</text>
+          <text x="535" y="453" text-anchor="middle" font-size="10.5" fill="#9e4d14">text-embedding-3-small</text>
+          <line x1="560" y1="350" x2="545" y2="398" stroke="#631300" stroke-width="1.5" marker-end="url(#arr)"/>
+
+          <rect x="620" y="400" width="120" height="62" rx="12" fill="#faf3e3" stroke="#9e4d14" stroke-width="1.2"/>
+          <text x="680" y="424" text-anchor="middle" font-weight="700" font-size="12">LangSmith</text>
+          <text x="680" y="440" text-anchor="middle" font-size="10.5" fill="#9e4d14">traces · feedback</text>
+          <text x="680" y="453" text-anchor="middle" font-size="10.5" fill="#9e4d14">opt-in, off by default</text>
+          <line x1="660" y1="350" x2="672" y2="398" stroke="#631300" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+
+          <rect x="200" y="400" width="190" height="62" rx="12" fill="#faf3e3" stroke="#9e4d14" stroke-width="1.2"/>
+          <text x="295" y="424" text-anchor="middle" font-weight="700" font-size="12">Supabase</text>
+          <text x="295" y="440" text-anchor="middle" font-size="10.5" fill="#9e4d14">email + password → JWT</text>
+          <text x="295" y="453" text-anchor="middle" font-size="10.5" fill="#9e4d14">identity for every thread/run/cron</text>
+          <line x1="295" y1="308" x2="295" y2="398" stroke="#631300" stroke-width="1.5" marker-end="url(#arr)"/>
+          <text x="310" y="358" font-size="10.5" fill="#9e4d14">login</text>
+          <line x1="390" y1="431" x2="468" y2="431" stroke="#631300" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr)"/>
+          <text x="429" y="420" text-anchor="middle" font-size="10.5" fill="#9e4d14">JWT verify</text>
+
+          <!-- vendor caption -->
+          <text x="20" y="520" font-size="11" fill="#9e4d14">Rented seams (outside the dashed box): Vercel hosting, Supabase auth, OpenAI models, LangSmith traces. Everything inside the box is a stock image + a Postgres URL + a volume — portable by design.</text>
+        </g>
+      </svg>
+      <div class="legend">
+        <span><i></i> request / write path</span>
+        <span><i class="acc"></i> the member-facing hop (perimeter enforced here)</span>
+        <span><i class="dash"></i> loopback / opt-in</span>
+        <span><i class="gold"></i> Fly private network boundary</span>
+      </div>
+      <figcaption>One public entry point (<code>hc-rag-server-prod.fly.dev</code>, reached only through the Vercel proxy), two private stores, three vendor seams. The Postgres app has no public IP; the server finds Weaviate by <code>*.internal</code> DNS.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">02 · Fly inventory</span><h2>What <code>flyctl</code> reports today</h2></div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>App</th><th>Role</th><th>Machines</th><th>Size</th><th>Image</th><th>Storage</th><th>State</th><th>Last deploy</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">hc-rag-server-prod</td><td>Agent Server (coach + RAG graph)</td><td class="num">2 · iad · v25</td><td>shared-1x · 2048 MB</td><td class="mono">ghcr digest (release v25)</td><td>Postgres via <code>DATABASE_URL</code></td><td><span class="dot on"></span>deployed · 1/1 checks</td><td>2026-08-25 20:58Z</td></tr>
+          <tr><td class="mono">hc-rag-weaviate-prod</td><td>Vector store (hybrid search)</td><td class="num">1 · iad · v3</td><td>shared-1x · 256 MB</td><td class="mono">semitechnologies/weaviate:1.30.2</td><td><code>weaviate_data</code> 1 GB</td><td><span class="dot on"></span>deployed · 1/1 checks</td><td>2026-08-23 13:51Z</td></tr>
+          <tr><td class="mono">hc-rag-server-prod-db</td><td>Postgres primary (checkpointer, store, hc_* tables)</td><td class="num">1 · iad</td><td>10 GB volume</td><td class="mono">hc-rag-pgvector:17 (v0.2.0)</td><td><code>pg_data</code> 10 GB</td><td><span class="dot on"></span>started · 3/3 checks</td><td>2026-08-24 17:45Z</td></tr>
+          <tr><td class="mono">hc-rag-pgvector</td><td>Registry shell for the pgvector-enabled postgres-flex image</td><td class="num">0</td><td>—</td><td class="mono">registry.fly.io/hc-rag-pgvector:17</td><td>—</td><td><span class="dot pend"></span>pending (image host only)</td><td>—</td></tr>
+          <tr><td class="mono">fly-builder-starlit-shell-3256</td><td>Remote builder (unused; CI builds on GitHub)</td><td class="num">0</td><td>—</td><td>—</td><td>—</td><td><span class="dot off"></span>suspended</td><td>—</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="callout"><b>Public surface.</b> Only <code>hc-rag-server-prod</code> has ingress (v4 <code>66.241.124.19</code> shared, v6 dedicated), and it exposes exactly two unauthenticated routes: <code>/ok</code> (503 until the graph is ready) and <code>/info</code>. <code>/ok</code> answered 200 at capture time. Weaviate and Postgres are reachable only over 6PN.</p>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">03 · Inside the server</span><h2>What one run does on <code>hc-rag-server-prod</code></h2></div>
+    <p class="sec-sub">The member perimeter and the coach agent sit in front of the RAG graph; a medical answer only ever comes out of the graph, relayed verbatim by the <code>medical_lookup</code> tool.</p>
+    <figure>
+      <svg viewBox="0 0 1160 300" role="img" aria-label="Request path inside the server: member perimeter, deterministic coach gate, coach agent with tools, medical_lookup relaying into the RAG StateGraph whose nodes run safety gate, clarify and context, decompose, retrieve and merge, evaluate, generate, validate, follow-ups, finalize; checkpointer and store in Postgres, reminders as crons.">
+        <defs><marker id="arr2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#631300"/></marker></defs>
+        <g font-size="12" fill="#631300">
+          <!-- row 1 -->
+          <rect x="20" y="40" width="150" height="66" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="95" y="66" text-anchor="middle" font-weight="700">Member perimeter</text>
+          <text x="95" y="84" text-anchor="middle" font-size="11" fill="#9e4d14">JWT → owner filter</text>
+          <text x="95" y="98" text-anchor="middle" font-size="11" fill="#9e4d14">{question, attachment_id?}</text>
+
+          <rect x="210" y="40" width="150" height="66" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="285" y="66" text-anchor="middle" font-weight="700">Coach gate</text>
+          <text x="285" y="84" text-anchor="middle" font-size="11" fill="#9e4d14">deterministic, no model</text>
+          <text x="285" y="98" text-anchor="middle" font-size="11" fill="#9e4d14">red-flag · injection · erasure</text>
+
+          <rect x="400" y="30" width="210" height="86" rx="12" fill="#ffffff" stroke="#ea492a" stroke-width="2.5"/>
+          <text x="505" y="54" text-anchor="middle" font-weight="700">Coach agent · create_agent</text>
+          <text x="505" y="72" text-anchor="middle" font-size="11" fill="#9e4d14">change_schedule · log_metric · log_injection</text>
+          <text x="505" y="86" text-anchor="middle" font-size="11" fill="#9e4d14">view_schedule · remember_fact · compose_ui</text>
+          <text x="505" y="100" text-anchor="middle" font-size="11" fill="#9e4d14">3 reminder tools · medical_lookup</text>
+
+          <rect x="650" y="40" width="130" height="66" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="715" y="66" text-anchor="middle" font-weight="700">HITL interrupts</text>
+          <text x="715" y="84" text-anchor="middle" font-size="11" fill="#9e4d14">schedule · memory · upload</text>
+          <text x="715" y="98" text-anchor="middle" font-size="11" fill="#9e4d14">resume = {accept, fields?}</text>
+
+          <rect x="820" y="40" width="150" height="66" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="895" y="66" text-anchor="middle" font-weight="700">Reminders → crons</text>
+          <text x="895" y="84" text-anchor="middle" font-size="11" fill="#9e4d14">≤10 active · HMAC wake</text>
+          <text x="895" y="98" text-anchor="middle" font-size="11" fill="#9e4d14">no model, no memory</text>
+
+          <rect x="1010" y="40" width="130" height="66" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="1075" y="66" text-anchor="middle" font-weight="700">Postgres</text>
+          <text x="1075" y="84" text-anchor="middle" font-size="11" fill="#9e4d14">AsyncPostgresSaver</text>
+          <text x="1075" y="98" text-anchor="middle" font-size="11" fill="#9e4d14">AsyncPostgresStore · hc_*</text>
+
+          <line x1="170" y1="73" x2="208" y2="73" stroke="#631300" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="360" y1="73" x2="398" y2="73" stroke="#631300" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="610" y1="73" x2="648" y2="73" stroke="#631300" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="780" y1="73" x2="818" y2="73" stroke="#631300" stroke-width="1.5" marker-end="url(#arr2)"/>
+          <line x1="970" y1="73" x2="1008" y2="73" stroke="#631300" stroke-width="1.5" marker-end="url(#arr2)"/>
+
+          <!-- medical_lookup → RAG graph -->
+          <line x1="505" y1="116" x2="505" y2="158" stroke="#ea492a" stroke-width="2" marker-end="url(#arr2)"/>
+          <text x="515" y="142" font-size="11" fill="#c2390f" font-weight="700">medical_lookup · return_direct</text>
+
+          <!-- row 2: RAG graph -->
+          <rect x="20" y="160" width="1120" height="120" rx="14" fill="#fdf8f0" stroke="#eda94f" stroke-width="2"/>
+          <text x="40" y="184" font-size="11" font-weight="700" letter-spacing="1.5" fill="#9e4d14">RAG STATEGRAPH · healthcare_rag/graph/ · gpt-5.6-luna main · gpt-5.6-terra validator · reasoning effort none</text>
+          <g font-size="11.5">
+            <rect x="40" y="200" width="110" height="52" rx="10" fill="#ffffff" stroke="#ea492a" stroke-width="2"/>
+            <text x="95" y="222" text-anchor="middle" font-weight="700">safety_gate</text><text x="95" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">scrub · classify · refuse</text>
+            <rect x="170" y="200" width="120" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="230" y="222" text-anchor="middle" font-weight="700">clarify + context</text><text x="230" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">parallel</text>
+            <rect x="310" y="200" width="110" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="365" y="222" text-anchor="middle" font-weight="700">decompose</text><text x="365" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">complex only · ≤3</text>
+            <rect x="440" y="200" width="130" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="505" y="222" text-anchor="middle" font-weight="700">retrieve + merge</text><text x="505" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">Weaviate hybrid · dedupe</text>
+            <rect x="590" y="200" width="100" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="640" y="222" text-anchor="middle" font-weight="700">evaluate</text><text x="640" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">one gap-fill</text>
+            <rect x="710" y="200" width="100" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="760" y="222" text-anchor="middle" font-weight="700">generate</text><text x="760" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">once</text>
+            <rect x="830" y="200" width="100" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="880" y="222" text-anchor="middle" font-weight="700">validate</text><text x="880" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">citations · ~90% spend</text>
+            <rect x="950" y="200" width="90" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="995" y="222" text-anchor="middle" font-weight="700">follow-ups</text><text x="995" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">validated only</text>
+            <rect x="1060" y="200" width="70" height="52" rx="10" fill="#ffffff" stroke="#631300" stroke-width="1.2"/>
+            <text x="1095" y="222" text-anchor="middle" font-weight="700">finalize</text><text x="1095" y="238" text-anchor="middle" fill="#9e4d14" font-size="10.5">scrubbed</text>
+            <line x1="150" y1="226" x2="168" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <line x1="290" y1="226" x2="308" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <line x1="420" y1="226" x2="438" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <line x1="570" y1="226" x2="588" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <line x1="690" y1="226" x2="708" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <line x1="810" y1="226" x2="828" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <line x1="930" y1="226" x2="948" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <line x1="1040" y1="226" x2="1058" y2="226" stroke="#631300" stroke-width="1.2" marker-end="url(#arr2)"/>
+            <path d="M95 252 C 95 272, 1095 272, 1095 252" fill="none" stroke="#ea492a" stroke-width="1.5" stroke-dasharray="4 4" marker-end="url(#arr2)"/>
+            <text x="595" y="270" text-anchor="middle" font-size="10.5" fill="#c2390f">short-circuit: refusal template, no retrieval, no LLM · persisted refusal boundary replays it</text>
+          </g>
+        </g>
+      </svg>
+      <figcaption>Every hop before the graph is deterministic or model-mediated by tools; the graph's first node is the safety gate, and a qualifying refusal skips straight to <code>finalize</code>. Checkpoints and the store land in the attached Postgres; reminders become real crons that wake the server through its own loopback URL.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">03b · Privacy sanitizer</span><h2>Presidio runs <em>inside</em> the server process — there is no sidecar</h2></div>
+    <p class="sec-sub">Identifier scrubbing is process-owned: <code>healthcare_rag/processors/privacy.py</code> builds a Presidio <code>AnalyzerEngine</code> over a spaCy NLP engine in the same Python process as the graph, on CPU, from wheels baked into the image. No second container, no network hop, nothing to fail independently.</p>
+    <figure>
+      <svg viewBox="0 0 1160 330" role="img" aria-label="The privacy sanitizer stage inside hc-rag-server-prod: text up to 16 KB enters; deterministic healthcare-identifier patterns and the in-process Presidio analyzer (spaCy en_core_web_sm, seventeen recognizers, threshold 0.40) each produce spans; spans are unioned, clinical codes are preserved, replacements are applied, and the scrubbed text flows to four sinks: the safety gate, the history, every model-authored query, and the answer at finalize. A readiness state machine gates the first call.">
+        <defs><marker id="arr4" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#631300"/></marker></defs>
+        <g font-size="11.5" fill="#631300">
+          <!-- process boundary -->
+          <rect x="150" y="20" width="800" height="290" rx="16" fill="#fdf8f0" stroke="#ea492a" stroke-width="2"/>
+          <text x="170" y="44" font-size="11" font-weight="700" letter-spacing="1.5" fill="#c2390f">ONE PYTHON PROCESS · hc-rag-server-prod · PRESIDIO_DEVICE=cpu</text>
+
+          <!-- input -->
+          <rect x="20" y="120" width="110" height="60" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="75" y="145" text-anchor="middle" font-weight="700">text in</text>
+          <text x="75" y="162" text-anchor="middle" fill="#9e4d14" font-size="10.5">≤ 16 KB · fail-closed</text>
+          <line x1="130" y1="150" x2="168" y2="150" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+          <!-- two detectors -->
+          <rect x="170" y="70" width="220" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="280" y="92" text-anchor="middle" font-weight="700">deterministic patterns</text>
+          <text x="280" y="108" text-anchor="middle" fill="#9e4d14" font-size="10.5">privacy_patterns.py · CA/US health IDs</text>
+          <text x="280" y="122" text-anchor="middle" fill="#9e4d14" font-size="10.5">cue-bound VIN/plate · regex, no model</text>
+
+          <rect x="170" y="166" width="220" height="94" rx="12" fill="#ffffff" stroke="#ea492a" stroke-width="2.5"/>
+          <text x="280" y="188" text-anchor="middle" font-weight="700">Presidio AnalyzerEngine</text>
+          <text x="280" y="204" text-anchor="middle" fill="#9e4d14" font-size="10.5">presidio-analyzer 2.2.364 · in-process</text>
+          <text x="280" y="218" text-anchor="middle" fill="#9e4d14" font-size="10.5">spaCy 3.8.15 · en_core_web_sm 3.8.0</text>
+          <text x="280" y="232" text-anchor="middle" fill="#9e4d14" font-size="10.5">17 recognizers · NER PERSON, cue-gated</text>
+          <text x="280" y="246" text-anchor="middle" fill="#9e4d14" font-size="10.5">threshold 0.40 · context enhancer ±5</text>
+
+          <line x1="168" y1="150" x2="200" y2="134" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+          <line x1="168" y1="150" x2="200" y2="168" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+          <!-- union / preserve / replace -->
+          <rect x="430" y="118" width="130" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="495" y="141" text-anchor="middle" font-weight="700">span union</text>
+          <text x="495" y="157" text-anchor="middle" fill="#9e4d14" font-size="10.5">either detector wins</text>
+          <text x="495" y="171" text-anchor="middle" fill="#9e4d14" font-size="10.5">spans advise, never edit</text>
+          <line x1="390" y1="102" x2="428" y2="140" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+          <line x1="390" y1="213" x2="428" y2="160" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+          <rect x="600" y="118" width="130" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="665" y="141" text-anchor="middle" font-weight="700">keep clinical codes</text>
+          <text x="665" y="157" text-anchor="middle" fill="#9e4d14" font-size="10.5">RxCUI · NDC · DIN</text>
+          <text x="665" y="171" text-anchor="middle" fill="#9e4d14" font-size="10.5">LOINC · SNOMED intervals</text>
+          <line x1="560" y1="150" x2="598" y2="150" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+          <rect x="770" y="118" width="150" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="845" y="141" text-anchor="middle" font-weight="700">replace</text>
+          <text x="845" y="157" text-anchor="middle" fill="#9e4d14" font-size="10.5">placeholder per entity type</text>
+          <text x="845" y="171" text-anchor="middle" fill="#9e4d14" font-size="10.5">never echoed back</text>
+          <line x1="730" y1="150" x2="768" y2="150" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+
+          <!-- readiness state machine -->
+          <rect x="430" y="204" width="490" height="96" rx="12" fill="#faf3e3" stroke="#9e4d14" stroke-width="1.2"/>
+          <text x="450" y="224" font-weight="700" font-size="11">readiness · built lazily on first use, once per process</text>
+          <text x="450" y="241" font-size="10.5" fill="#9e4d14">UNINITIALIZED → INITIALIZING → READY | FAILED · callers wait on a Condition; FAILED stays failed</text>
+          <text x="450" y="256" font-size="10.5" fill="#9e4d14">build-time checks: exact pins for analyzer, spaCy and model · entity inventory ⊇ 17 types</text>
+          <text x="450" y="271" font-size="10.5" fill="#9e4d14">sentinel probe must find PERSON + IP_ADDRESS in "Alice Johnson used 192.168.10.42."</text>
+          <text x="450" y="286" font-size="10.5" fill="#9e4d14">any miss → PrivacyScanError (VERSION / MODEL / INVENTORY / SENTINEL) · request fails closed</text>
+
+          <!-- sinks -->
+          <rect x="970" y="30" width="170" height="270" rx="14" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="1055" y="54" text-anchor="middle" font-weight="700">scrubbed text sinks</text>
+          <text x="1055" y="84" text-anchor="middle" font-size="11">① safety_gate input</text>
+          <text x="1055" y="98" text-anchor="middle" font-size="10.5" fill="#9e4d14">even when the gate is ablated</text>
+          <text x="1055" y="128" text-anchor="middle" font-size="11">② checkpointed history</text>
+          <text x="1055" y="142" text-anchor="middle" font-size="10.5" fill="#9e4d14">raw question channel cleared</text>
+          <text x="1055" y="172" text-anchor="middle" font-size="11">③ every model-authored query</text>
+          <text x="1055" y="186" text-anchor="middle" font-size="10.5" fill="#9e4d14">sub-queries, clarifications</text>
+          <text x="1055" y="216" text-anchor="middle" font-size="11">④ answer + follow-ups</text>
+          <text x="1055" y="230" text-anchor="middle" font-size="10.5" fill="#9e4d14">scrubbed again at finalize</text>
+          <text x="1055" y="262" text-anchor="middle" font-size="10.5" fill="#2d7d32" font-weight="700">no raw text escapes;</text>
+          <text x="1055" y="276" text-anchor="middle" font-size="10.5" fill="#2d7d32" font-weight="700">errors return raw-free codes</text>
+          <line x1="920" y1="150" x2="968" y2="150" stroke="#631300" stroke-width="1.5" marker-end="url(#arr4)"/>
+        </g>
+      </svg>
+      <figcaption>Two detectors, one union: deterministic healthcare-identifier regexes and the in-process Presidio analyzer each propose spans; either one firing is enough. Clinical codes are carved out so dosing facts stay answerable, and the scrubbed text is what every downstream sink sees. Nothing here crosses a process or network boundary.</figcaption>
+    </figure>
+    <div class="grid-3" style="margin-top:16px">
+      <div class="card">
+        <div class="k">Why "sidecar" is the wrong word here</div>
+        <p>The only sidecar in this project's history is the one that <b>wasn't there</b>: on 2026-08-22 the LangGraph Platform Serverless tier began injecting <code>CORE_API_GRPC_SIDECAR=1</code> and expecting a Go core process on <code>:50051</code> that no repo config could supply — the crash-loop that led to the clean-room <code>server/</code>. Presidio was deliberately kept in-process so the privacy path has no such dependency.</p>
+      </div>
+      <div class="card">
+        <div class="k">What the image carries</div>
+        <ul>
+          <li><code>presidio-analyzer==2.2.364</code>, <code>spacy==3.8.15</code>, <code>en_core_web_sm 3.8.0</code> as a sha256-pinned wheel (<code>pyproject.toml</code>)</li>
+          <li><code>PRESIDIO_DEVICE=cpu</code> set in the Dockerfile and compose; no GPU, no model download at boot</li>
+          <li>Runs as non-root <code>app</code> (uid 10001); compose runs the container read-only with <code>/tmp</code> on tmpfs</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="k">Entity inventory (17)</div>
+        <div class="chips">
+          <span class="chip">PERSON</span><span class="chip">PHONE_NUMBER</span><span class="chip">CA_SIN</span><span class="chip">US_SSN</span><span class="chip">US_ITIN</span><span class="chip">US_MBI</span><span class="chip">US_NPI</span><span class="chip">MEDICAL_LICENSE</span><span class="chip">US_DRIVER_LICENSE</span><span class="chip">US_PASSPORT</span><span class="chip">US_BANK_NUMBER</span><span class="chip">CREDIT_CARD</span><span class="chip">IBAN_CODE</span><span class="chip">CRYPTO</span><span class="chip">IP_ADDRESS</span><span class="chip">MAC_ADDRESS</span><span class="chip">URL</span>
+        </div>
+        <p style="margin-top:10px;font-size:13px;color:var(--camel)">spaCy labels like DATE, GPE, ORG, QUANTITY are deliberately ignored; dates are handled by cue-gated deterministic rules instead (Safe Harbor inventory in <code>docs/safety.md</code>).</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">04 · Release path</span><h2>How a commit becomes a running digest</h2></div>
+    <figure>
+      <svg viewBox="0 0 1160 150" role="img" aria-label="Release pipeline: release.yml refuses anything but green main and cuts a tag; deploy.yml builds and pushes to GHCR by digest, waits for production approval, syncs secrets by name only, deploys the digest to Fly, waits for /ok, then runs the deployed smoke; a red smoke does not auto-rollback.">
+        <defs><marker id="arr3" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#631300"/></marker></defs>
+        <g font-size="11.5" fill="#631300">
+          <rect x="10" y="30" width="130" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="75" y="54" text-anchor="middle" font-weight="700">release.yml</text><text x="75" y="70" text-anchor="middle" fill="#9e4d14" font-size="10.5">green main only</text><text x="75" y="84" text-anchor="middle" fill="#9e4d14" font-size="10.5">cuts tag vX.Y.Z</text>
+          <rect x="170" y="30" width="130" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="235" y="54" text-anchor="middle" font-weight="700">build</text><text x="235" y="70" text-anchor="middle" fill="#9e4d14" font-size="10.5">buildx → GHCR</text><text x="235" y="84" text-anchor="middle" fill="#9e4d14" font-size="10.5">SBOM: no langgraph-api</text>
+          <rect x="330" y="30" width="130" height="64" rx="12" fill="#ffffff" stroke="#eda94f" stroke-width="2.5"/>
+          <text x="395" y="54" text-anchor="middle" font-weight="700">production gate</text><text x="395" y="70" text-anchor="middle" fill="#9e4d14" font-size="10.5">required reviewer</text><text x="395" y="84" text-anchor="middle" fill="#9e4d14" font-size="10.5">verified fail-closed</text>
+          <rect x="490" y="30" width="130" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="555" y="54" text-anchor="middle" font-weight="700">secrets sync</text><text x="555" y="70" text-anchor="middle" fill="#9e4d14" font-size="10.5">GitHub env → Fly</text><text x="555" y="84" text-anchor="middle" fill="#9e4d14" font-size="10.5">verified by name only</text>
+          <rect x="650" y="30" width="130" height="64" rx="12" fill="#ffffff" stroke="#ea492a" stroke-width="2.5"/>
+          <text x="715" y="54" text-anchor="middle" font-weight="700">fly deploy</text><text x="715" y="70" text-anchor="middle" fill="#9e4d14" font-size="10.5">--image @sha256:digest</text><text x="715" y="84" text-anchor="middle" fill="#9e4d14" font-size="10.5">rejects mutable tags</text>
+          <rect x="810" y="30" width="130" height="64" rx="12" fill="#ffffff" stroke="#631300" stroke-width="1.5"/>
+          <text x="875" y="54" text-anchor="middle" font-weight="700">wait /ok</text><text x="875" y="70" text-anchor="middle" fill="#9e4d14" font-size="10.5">readiness-gated</text><text x="875" y="84" text-anchor="middle" fill="#9e4d14" font-size="10.5">then deployed smoke</text>
+          <rect x="970" y="30" width="180" height="64" rx="12" fill="#faf3e3" stroke="#9e4d14" stroke-width="1.2"/>
+          <text x="1060" y="54" text-anchor="middle" font-weight="700">red smoke = stop</text><text x="1060" y="70" text-anchor="middle" fill="#9e4d14" font-size="10.5">no auto-rollback by policy</text><text x="1060" y="84" text-anchor="middle" fill="#9e4d14" font-size="10.5">make rollback TAG=… by digest</text>
+          <line x1="140" y1="62" x2="168" y2="62" stroke="#631300" stroke-width="1.5" marker-end="url(#arr3)"/>
+          <line x1="300" y1="62" x2="328" y2="62" stroke="#631300" stroke-width="1.5" marker-end="url(#arr3)"/>
+          <line x1="460" y1="62" x2="488" y2="62" stroke="#631300" stroke-width="1.5" marker-end="url(#arr3)"/>
+          <line x1="620" y1="62" x2="648" y2="62" stroke="#631300" stroke-width="1.5" marker-end="url(#arr3)"/>
+          <line x1="780" y1="62" x2="808" y2="62" stroke="#631300" stroke-width="1.5" marker-end="url(#arr3)"/>
+          <line x1="940" y1="62" x2="968" y2="62" stroke="#631300" stroke-width="1.5" marker-end="url(#arr3)"/>
+          <text x="10" y="128" font-size="11" fill="#9e4d14">A release is the triple (git tag, image digest, fly.prod.toml at that tag). 25 releases so far on hc-rag-server-prod; latest tag on main v1.4.1 (v1.5.0 merged, tag cut by the release workflow). Postgres persistence live since v1.0.7.</text>
+        </g>
+      </svg>
+      <figcaption>The per-job <code>concurrency</code> on <code>deploy-prod</code> is the real production lock; rollback shares it, deliberately skips secret resync, and re-runs the smoke against the rollback target.</figcaption>
+    </figure>
+  </section>
+
+  <section>
+    <div class="sec-head"><span class="tag">05 · Configuration seams</span><h2>What is injected, and from where</h2></div>
+    <div class="grid-3">
+      <div class="card">
+        <div class="k">Fly secrets on hc-rag-server-prod · names only</div>
+        <div class="chips">
+          <span class="chip">OPENAI_API_KEY</span><span class="chip">DATABASE_URL</span><span class="chip">WEAVIATE_URL</span><span class="chip">WEAVIATE_API_KEY</span><span class="chip">WEAVIATE_COLLECTION</span>
+          <span class="chip">SUPABASE_URL</span><span class="chip">SUPABASE_SERVICE_KEY</span><span class="chip">NEXT_PUBLIC_SUPABASE_URL</span><span class="chip">NEXT_PUBLIC_SUPABASE_ANON_KEY</span>
+          <span class="chip">COACH_INTERNAL_TOKEN</span><span class="chip">COACH_ALLOWED_ORIGINS</span><span class="chip">CORS_ALLOW_ORIGINS</span>
+          <span class="chip">LANGSMITH_TRACING</span><span class="chip">LANGSMITH_API_KEY</span><span class="chip">LANGSMITH_PROJECT</span><span class="chip">LANGSMITH_FEEDBACK_PROJECT_ID</span><span class="chip">PINECONE_API_KEY</span>
+        </div>
+        <p style="margin-top:10px;font-size:13px;color:var(--camel)">17 secrets. <code>DATABASE_URL</code> is set by <code>fly postgres attach</code>, never by hand. <code>PINECONE_API_KEY</code> serves the rejected A/B arm only (default off).</p>
+      </div>
+      <div class="card">
+        <div class="k">Plain env in fly.prod.toml</div>
+        <ul>
+          <li><code>WEAVIATE_HOST=hc-rag-weaviate-prod.internal</code> · <code>WEAVIATE_PORT=8080</code></li>
+          <li><code>SERVER_STORAGE=postgres</code> (flipped v1.0.7)</li>
+          <li><code>HC_RAG_MEMBER_STREAM_PERIMETER=v2</code> (flipped 2026-08-25, frontend rebuilt with the same value)</li>
+          <li><code>SERVER_PORT=8000</code> · <code>LANGGRAPH_API_URL=http://127.0.0.1:8000</code></li>
+          <li><code>SERVER_LOCAL_DEV=0</code> baked into the image — no credential-less Studio principal in prod</li>
+        </ul>
+      </div>
+      <div class="card">
+        <div class="k">Portability — what moving takes</div>
+        <ul>
+          <li>Run the same GHCR image (python-slim + uv, non-root <code>app</code> user, Presidio on CPU).</li>
+          <li>Restore <code>pg_data</code> into any PG 17 with pgvector; point <code>DATABASE_URL</code>.</li>
+          <li>Run <code>weaviate:1.30.2</code> with the <code>weaviate_data</code> volume, or re-run <code>make ingest</code> from <code>data/chunks_*.json</code> shipped in the image.</li>
+          <li>Three env vars move the frontend: Supabase URL/anon key and <code>LANGGRAPH_DEPLOYMENT_URL</code>.</li>
+        </ul>
+      </div>
+    </div>
+    <p class="callout"><b>Not on Fly.</b> The member frontend is a standard Next.js build served by Vercel at <code>nymble.site</code>; MCP and A2A stay unmounted (404/405), and the LangGraph Platform was left on 2026-08-22 with the diagnosis on record — the clean-room <code>server/</code> is what runs here.</p>
+  </section>
+
+  <div class="footer">Sources: <code>fly apps list</code>, <code>fly status</code>, <code>fly scale show</code>, <code>fly volumes list</code>, <code>fly ips list</code>, <code>fly releases</code>, <code>fly secrets list</code> (names only), captured 2026-08-26 · <code>deploy/fly.prod.toml</code>, <code>deploy/fly.weaviate-prod.toml</code>, <code>docs/deploy.md</code> §0b/§1.2b/§3, <code>.github/workflows/{release,deploy}.yml</code>, <code>Dockerfile</code>, <code>healthcare_rag/services/models.py</code>. No secret values were read or printed.</div>
+</div>
+</body></html>

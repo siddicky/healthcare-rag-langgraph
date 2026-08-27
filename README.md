@@ -1,5 +1,5 @@
-# Hybrid RAG agent with answer validation
-[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/siddicky/healthcare-rag-langgraph)](https://github.com/siddicky/healthcare-rag-langgraph/commits)
+# Hybrid RAG Agent with Answer Validation
+[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![GitHub last commit](https://img.shields.io/github/last-commit/siddicky/healthcare-rag-langgraph)](https://github.com/siddicky/healthcare-rag-langgraph/commits) [![Release](https://img.shields.io/github/v/tag/siddicky/healthcare-rag-langgraph?label=release)](https://github.com/siddicky/healthcare-rag-langgraph/tags)
 
 This project answers questions grounded in the Lipitor and Metformin product monographs. A LangGraph `StateGraph` runs the safety gate, retrieval, generation, and citation validation pipeline.
 
@@ -13,17 +13,44 @@ Instead of a rigid sequential pipeline (or racing multiple answer paths), the gr
 
 The runtime has per-thread conversation memory and streams `GraphEngine` updates. LangGraph Studio and Agent Server remain development surfaces for non-sensitive synthetic input.
 
-## Table of contents
-- [Core pipeline components](#core-pipeline-components)
-- [Technology stack](#technology-stack)
-- [Conditional pipeline orchestration](#conditional-pipeline-orchestration)
-- [Coach agent platform](#coach-agent-platform)
-- [Retrieval engine details](#retrieval-engine-details)
-- [Setup and execution](#setup-and-execution)
+The RAG graph is one of two graphs in this repo. The second, the **coach agent** (`healthcare_rag/agent/`), is the member-facing product on [nymble.site](https://www.nymble.site/chat): it wraps the whole RAG graph as its `medical_lookup` tool, so a drug question is answered only by the grounded pipeline and relayed verbatim, while schedules, reminders, metrics, document intake and erasure stay useful around it.
+
+## Submission record and evidence
+
+Everything measurable in this repo is written down and linked from one place:
+
+*   **Submission record** — an eight-tab artifact (submission page, findings deep-dive, production architecture, vendor-access evidence, live coach, Fly metrics, LangSmith, the repo wiki): [claude.ai/code/artifact/c3176b99](https://claude.ai/code/artifact/c3176b99-18fc-4e7d-8e20-de1365613c03). Sources and build live in [`artifacts/take-home-record/`](artifacts/take-home-record/).
+*   **Technical write-up** — [`docs/writeup.md`](docs/writeup.md): what was inherited, what changed, the measured trade-offs, and a day-by-day appendix. Every number comes from a committed report under `evals/results/` (73 of them, each with per-query raw JSON) or a decision record under `docs/decisions/`.
+*   **Safety posture** — [`docs/safety.md`](docs/safety.md). **Deploy runbook** — [`docs/deploy.md`](docs/deploy.md). **Security policy** — [`SECURITY.md`](SECURITY.md).
+
+Headline deltas against the inherited baseline (`baseline-gpt4o-mini-25edbd33`, Aug 18, before any change), all on the same frontier judge:
+
+| metric | baseline | now | note |
+|---|---|---|---|
+| `safe_redirect` (refuse-expected) | 0.00 | 0.64 | safety gate, D09 |
+| `numeric_advice_leak` (lower is better) | 0.52 | 0.04 | no number with a clinical unit in any refusal |
+| correctness (all 86) | 0.75 | 0.86 | synthesis + graph port, D08/D10; 4 of 59 answerable questions now refused |
+| cost per query | $0.028 | $0.017 | validation is ~90% of it and stays (D15) |
+| multi-turn `safety_drift` | 0.45 | 0.36 | refusal boundary persisted as thread state |
+| PII persistence (27 conversations) | 0.31 | 0.10 | Presidio + deterministic scrub before every sink |
+
+Three alternative retrievers (PageIndex, Pinecone hybrid, bge reranker) were built as opt-in arms and all lost to the Weaviate hybrid on a frozen two-stage paired gate ([`docs/retrieval-experiments.md`](docs/retrieval-experiments.md)). Run-to-run judge noise is ±0.05 on this set, so nothing here claims a smaller delta than that.
+
+## Table of Contents
+- [Submission record and evidence](#submission-record-and-evidence)
+- [Core Pipeline Components](#core-pipeline-components)
+- [Technology Stack](#technology-stack)
+- [Conditional Pipeline Orchestration (LangGraph)](#conditional-pipeline-orchestration-langgraph)
+- [Coach Agent Platform](#coach-agent-platform)
+- [Privacy Sanitizer](#privacy-sanitizer)
+- [Retrieval Engine Details](#retrieval-engine-details)
+- [Setup & Execution](#setup--execution)
 - [Deploying](#deploying)
-- [Routing experiment status](#routing-experiment-status)
-- [Example query flow](#example-query-flow)
-- [Answer validation and hallucination handling](#answer-validation-and-hallucination-handling)
+- [Production Architecture](#production-architecture)
+- [Tests and Evals](#tests-and-evals)
+- [Routing Experiment Status](#routing-experiment-status)
+- [Example Query Flow](#example-query-flow)
+- [Detailed Answer Validation and Hallucination Handling](#detailed-answer-validation-and-hallucination-handling)
 
 ---
 
@@ -146,6 +173,21 @@ renders approval requests. Member run inputs contain `question` and, for an
 upload turn, an optional `attachment_id`. Interrupt resumes contain `accept`
 and optional `fields`.
 
+```mermaid
+graph TD;
+    __start__([__start__]) --> coach_gate;
+    coach_gate -.->|valid cron wake| reminder_delivery;
+    coach_gate -.->|attachment| claim_document;
+    coach_gate -.->|red flag, injection, identifier recall| short_circuit;
+    coach_gate -.->|erasure request| erase_my_data;
+    coach_gate -.->|everything else| coach_agent;
+    claim_document -.-> review_document;
+    reminder_delivery --> finalize; short_circuit --> finalize; erase_my_data --> finalize; coach_agent --> finalize; review_document --> finalize;
+    finalize --> __end__([__end__]);
+```
+
+The coach gate is deterministic and model-free. It deliberately does **not** carry the RAG graph's refusal mechanics (no LLM classifier, no persisted refusal boundary on the thread): a member who has just been refused a dosing question can still log an injection or move a reminder. The medical surface stays as strict as the RAG graph makes it because the only way a drug answer leaves the coach is `medical_lookup`, which runs the full safety gate and boundary, `return_direct`, output relayed verbatim. The failure mode to watch is the model answering a drug question from its own knowledge instead of calling the tool (`make eval-agent`, multi-turn `safety_drift`).
+
 Generative UI is data-bound rather than prose-bound. Tools emit DATA envelopes,
 `compose_ui` may emit only the catalog tree, and every fact-bearing component prop
 must be a `{__ref: {turn_scope_id, block_id, pointer}}` object. The frontend
@@ -181,7 +223,19 @@ privacy boundaries, residuals, and data-handling posture are documented in the
 
 ---
 
-## Retrieval engine details
+## Privacy Sanitizer
+
+Identifier scrubbing is in-process, not a sidecar. `healthcare_rag/processors/privacy.py` builds one Presidio `AnalyzerEngine` over `SpacyNlpEngine(en_core_web_sm)` per process (`presidio-analyzer==2.2.364`, spaCy 3.8.15, model 3.8.0, all exact-pinned) and unions its spans with deterministic healthcare-identifier patterns (`privacy_patterns.py`: health card, MRN, DOB, postal code, phone, email, vehicle id). Either detector firing is enough; clinical codes (RxCUI, NDC, DIN, LOINC, SNOMED) are carved out so dosing facts stay answerable.
+
+*   **Sinks:** the safety-gate input (even when the gate is ablated), the checkpointed history, every model-authored query at its next sink, and the answer plus follow-ups at `finalize`.
+*   **Fail-closed readiness:** `UNINITIALIZED → INITIALIZING → READY | FAILED`; startup validates the version pins, that the recognizer inventory covers all 17 entity types, and a sentinel probe. A mismatch raises a `PrivacyScanError` with a raw-free code (`PRIVACY_VERSION_MISMATCH`, `MODEL_MISMATCH`, `INVENTORY_MISMATCH`, `SENTINEL_FAILED`) rather than degrading. Input is capped at 16 KB.
+*   **Image:** the model ships as a sha256-pinned wheel, `PRESIDIO_DEVICE=cpu`, no download at boot, non-root, read-only container.
+
+HIPAA Safe Harbor is used as a coverage inventory (15 of 18 categories covered or deliberately diverged, documented in `docs/safety.md`). It is not a compliance claim; the app is Canadian-context and says so.
+
+---
+
+## Retrieval Engine Details
 
 **Weaviate Hybrid Retrieval:** Document chunks are indexed in Weaviate collections (e.g., `Lipitor`, `Metformin`). Each chunk includes:
 *   An OpenAI embedding vector (dense vector) used for semantic search, compared using cosine similarity.
@@ -270,11 +324,16 @@ no staging. Releases are tag-driven with a human approval click:
    protocols; tracing off; redacted log artifact). The full ten-check acceptance
    smoke runs on demand.
 
-Rollback is manual by design (a red pipeline leaves the running version in
-place): `fly deploy --image ghcr.io/<repo>@sha256:<previous-digest>` then re-run
-the smoke — full runbook in [`docs/deploy.md`](docs/deploy.md), including the
-one-time bootstrap, secret seeding, ingest, and the post-first-deploy rollback
-exercise.
+Rollback is human-approved by design (a red post-deploy smoke leaves the
+running version in place, pinned by a test): `make rollback TAG=vX.Y.Z
+REASON=...` validates the tag and prints the dispatch that redeploys that
+release's digest and `fly.prod.toml` together, shares the deploy concurrency
+lock, skips secret resync, and re-runs the smoke against the rollback target.
+Tag taxonomy and the rollback contract are in
+[`docs/decisions/release-tags-and-rollback.md`](docs/decisions/release-tags-and-rollback.md);
+the full runbook in [`docs/deploy.md`](docs/deploy.md) covers the one-time
+bootstrap, secret seeding, ingest, and the post-first-deploy rollback exercise
+(designed and implemented, not yet exercised end to end in production).
 
 Caveats: server state (threads/store/runs/crons) is persisted in an unmanaged,
 single-node Fly Postgres deployment with no automatic backups. Infrastructure
@@ -285,7 +344,35 @@ it is provably off in the Fly image and production environments.
 
 ---
 
-## Routing experiment status
+## Production Architecture
+
+Captured from `flyctl` on 2026-08-26 (release v25). The member never talks to the Agent Server directly; the Next.js app proxies the CopilotKit runtime route, and the server reaches its stores only over Fly's private 6PN.
+
+| piece | where | what |
+|---|---|---|
+| member frontend | Vercel, `nymble.site` | Next.js 16, Supabase login, CopilotKit v2 headless `useAgent` over `/api/copilotkit` → `LANGGRAPH_DEPLOYMENT_URL` |
+| `hc-rag-server-prod` | Fly `iad`, 2 × shared-1x 2 GB | the clean-room Agent Server (`server/`), digest-deployed from GHCR, `/ok` readiness, `SERVER_STORAGE=postgres`, Presidio in-process |
+| `hc-rag-weaviate-prod` | Fly `iad`, 1 × 256 MB, 1 GB volume | Weaviate 1.30.2, `hc-rag-weaviate-prod.internal:8080`, anonymous access on the private network only |
+| `hc-rag-server-prod-db` | Fly `iad`, 10 GB volume, no public IP | Postgres 17.9 + pgvector 0.8.6 (`hc-rag-pgvector:17`), checkpointer, store and `hc_threads`/`hc_runs`/`hc_crons` |
+| OpenAI, Supabase, LangSmith | rented | one env-overridable seam each (`services/models.py`, the JWT verifier, opt-in tracing) |
+
+Only the server has a public address. Weaviate and Postgres are reachable solely over `*.internal`. Secrets sync from the GitHub `production` environment by name; nothing here prints a value. The interactive version of this table, with the request path inside the server and the sanitizer figure, is the Architecture tab of the [submission record](https://claude.ai/code/artifact/c3176b99-18fc-4e7d-8e20-de1365613c03).
+
+---
+
+## Tests and Evals
+
+*   **Unit and contract:** `make test` collects 1,956 backend tests (169 server-parity, 414 agent, 625 graph) and runs them in CI without any API key. `make parity` holds `server/` to the LangGraph platform contract through a pinned 0.12.6 oracle and ten characterised fixtures; CI also proves by SBOM that the vendor's `langgraph-api` package is absent from the production image. The frontend has 313 unit tests across 31 files plus a hermetic e2e spec; those run locally and are not yet in CI.
+*   **Behaviour:** `make eval PREFIX=<change>` (86 golden examples, 45 core + 41 held out, eight categories) and `make eval-multiturn` (27 conversations, 131 turns: drift, carry-over, PII persistence). A calibrated `gpt-5.6-sol` judge must pass 21 hand-labelled cases; deterministic checks (`numeric_advice_leak`, `forbidden_content`, chunk and page recall) need no model. `make compare` diffs two reports.
+*   **Coach:** `make eval-agent` and `make eval-agent-multiturn` run the coach graph in-process, offline.
+*   **Retrieval changes:** judge them with `evals/pageindex_gate.py` (paired, two-stage, frozen thresholds) against a fresh reference, never against a historical number; the unchanged reference drifts ±0.02 page recall run to run.
+*   **Production:** `make deployed-smoke` runs the ten-check acceptance suite; the LLM-free four-check gate runs after every deploy and rollback in about seven seconds.
+
+Every report in `evals/results/` records the git SHA it ran at, and a seal script refuses to trust one produced from a dirty checkout.
+
+---
+
+## Routing Experiment Status
 
 The query-response and safety-classifier controls are experimental and do not
 change the production defaults: `HC_RAG_QUERY_RESPONSE_ARM=current` and
@@ -355,3 +442,11 @@ To ensure the generated answers are factually grounded in the provided documents
 5.  **Statement Filtering:** If the quote verification fails for a statement (i.e., the provided quote is not found in the referenced document chunk, indicating a potential hallucination or mis-citation), that specific statement may be removed from the list. *(Filtering logic within `AnswerValidator`)*
 
 6.  **Final Validated Output:** The final output consists of the remaining, verified statements, ensuring that the answer presented to the user is directly supported by evidence found within the source documents.
+
+## Contact
+
+For questions or support, contact Abdullah Siddique at [abdullah.siddique94@gmail.com](mailto:abdullah.siddique94@gmail.com).
+
+You can also find me on [LinkedIn](https://www.linkedin.com/in/a-sdq/).
+
+---

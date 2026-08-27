@@ -1,0 +1,9 @@
+<!doctype html><meta charset=utf-8><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Nunito+Sans:wght@400;600;700&display=swap"><body style="font-family:Nunito Sans">
+<script type=module>
+import mermaid from "https://cdn.jsdelivr.net/npm/mermaid@11/dist/mermaid.esm.min.mjs";
+mermaid.initialize({startOnLoad:false,htmlLabels:false,flowchart:{htmlLabels:false,padding:12},theme:'base',securityLevel:'loose',fontFamily:'Nunito Sans, sans-serif',
+ themeVariables:{primaryColor:'#faf3e3',primaryTextColor:'#631300',primaryBorderColor:'#9e4d14',lineColor:'#631300',secondaryColor:'#fdf8f0',tertiaryColor:'#fff7e8',fontSize:'14px',clusterBkg:'#fdf8f0',clusterBorder:'#eda94f',edgeLabelBackground:'#fdf8f0',noteBkgColor:'#fff7e8',noteBorderColor:'#eda94f',actorBkg:'#faf3e3',actorBorder:'#9e4d14',signalColor:'#631300',labelBoxBkgColor:'#faf3e3'}});
+await document.fonts.load("14px Nunito Sans"); await document.fonts.ready; const items=await (await fetch('cache/mermaid-src.json')).json(); const out={};
+for(const it of items){ try{ const {svg}=await mermaid.render('m'+Math.random().toString(36).slice(2), it.src); out[it.id]=svg; }catch(e){ out[it.id]='ERR '+e.message; } }
+window.__OUT=out; document.title='done';
+</script>
