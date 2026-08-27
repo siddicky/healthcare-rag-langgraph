@@ -23,8 +23,7 @@ openwiki:
 - **`validation_citations.py`** — `resolve_citation_ids` replaces each temporary `doc_N` with its original document UUID using `prompt_id_map`; `validate_citations_and_build_answer` runs per-statement fuzzy/exact quote verification (`_FuzzyProcess` wraps `fuzzywuzzy.process.extractOne`) and renders the final answer string.
 - **`validation_rendering.py`** — pure text helpers: `format_statement` (strip old `[doc_N]` markers, append sorted/deduplicated valid ones), `convert_linebreaks`, `join_statements`, and the `FALLBACK_MESSAGE` constant shared by every failure path.
 
-<!-- openwiki: mermaid parse failed and this diagram was converted to a text fence so it does not break rendering. Fix the diagram source and restore the mermaid fence. Parser error: Heuristic: an unescaped angle bracket inside a label breaks rendering; rephrase the label. -->
-```text
+```mermaid
 flowchart TD
   P["plain answer plus formatted docs"] --> S["LLM structure -> CitedAnswerResult"]
   S --> F1{"find_source_citations(plain_answer)"}
@@ -32,15 +31,17 @@ flowchart TD
   F1 -->|"no markers"| FB
   F1 -->|"SourceCitations"| R["reconstruct_source_answer: raw text markers must match structured citation IDs"]
   R -->|"mismatch"| FB
-  R -->|"match"| M["resolve_citation_ids: doc_N -> Weaviate UUID"]
+  R -->|"match"| M["resolve_citation_ids: doc_N to Weaviate UUID"]
   M --> C["find retrieved document"]
-  C --> Q["exact quote or fuzzy score >= 85"]
+  C --> Q["exact quote or fuzzy score at least 85"]
   Q -->|"one valid citation"| K["keep statement, append valid doc_N markers"]
   Q -->|"all citations invalid"| D["drop statement"]
   K --> O["join kept statements"]
   D --> O
   O -->|"none kept"| FB
 ```
+
+Fuzzy citation verification: statements survive only when at least one citation quote is confirmed against the retrieved documents; every failure path converges on `FALLBACK_MESSAGE`.
 
 This is the implemented transformation; it does not assess medical truth beyond quote-to-retrieved-document support.
 
