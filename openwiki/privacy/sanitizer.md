@@ -60,7 +60,7 @@ stateDiagram-v2
 ```
 
 - `GraphEngine._initialize` calls `privacy.initialize()` before compiling the
-  graph (`graph/engine.py#L128-L142`), and every `scan` lazily initializes too.
+  graph (`graph/engine.py#L100-L116`), and every `scan` lazily initializes too.
 - Initialization is guarded by a condition variable (concurrent initializers
   wait), and `_validate` pins exact versions: `presidio-analyzer==2.2.364`,
   `spacy==3.8.15`, `en_core-web-sm==3.8.0`, full entity inventory, plus a

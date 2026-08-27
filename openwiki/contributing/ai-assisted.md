@@ -43,6 +43,7 @@ This ladder narrows the edit first and widens verification only when the changed
 - PageIndex trees in `data/pageindex_tree_*.json` and material under `evals/results/` are generated artifacts. Regenerate reports rather than editing them, and rescore comparison runs when evaluator semantics change.
 - `frontend/src/design/` is copied verbatim from the design system. Use its classes or update its owning process; do not patch the copied surface directly.
 - `make wiki-update` runs `openwiki code --update -p`. The scheduled workflow performs a full-history checkout, executes `openwiki code --update --print`, and opens a documentation PR. This automation is a refresh mechanism, not evidence that a particular update was accepted as accurate.
+- `make next-version`, `make release TAG=...`, `make release-digest TAG=...`, and `make rollback TAG=... REASON=...` are hermetic previews: they only print commands or resolve a digest, and dispatching the printed `gh workflow run` command is a separate, human-gated action. `make release-prep BUMP=...` is the one release command that writes locally (bumps `pyproject.toml`/`uv.lock`); land it as a reviewed PR rather than committing it unreviewed. See [deployment: release identity, version bumps, and rollback](../operations/deploy.md#release-identity-version-bumps-and-rollback).
 
 ## Invariants to preserve
 
