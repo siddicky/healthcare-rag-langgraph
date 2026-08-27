@@ -1,3 +1,3 @@
 # Files
 
-- [AI-assisted contributor workflow](ai-assisted.md) - An operational, source-first workflow for safely changing the healthcare RAG, coach, frontend, and clean-room server. It identifies repository-reading order, protected artifacts, invariants, and escalating verification paths.
+- [AI-assisted contributor workflow](ai-assisted.md) - A source-first operating procedure for safely changing the healthcare RAG, coach, frontend, and clean-room server. It defines reading order, protected artifacts, runtime invariants, verification layers, and an evidence-based review handoff.

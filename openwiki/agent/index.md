@@ -1,7 +1,7 @@
 # Files
 
 - [openwiki/agent/](AGENTS.md) - Directory guide to the LangGraph Agent Server 'coach' graph and its HTTP perimeter: routing, safety-gate reuse, member-data tools, reminders, file uploads, feedback capture, and self-erasure, deployed separately from the healthcare RAG graph.
-- [Coach graph routing and safe catalog output](coach-routing.md) - How the coach LangGraph selects safety, RAG relay, Route B tools, document, reminder, and erasure paths while constraining renderable model output.
-- [Coach agent service](coach.md) - The LangGraph Agent Server "coach" graph and HTTP perimeter - routing, safety gate reuse, member data tools, reminders, uploads, feedback, and self-erase - deployed separately from the healthcare RAG graph.
-- [Member data, documents, reminders, and erasure](member-data-lifecycle.md) - Namespaced scrubbed member records and the failure-aware lifecycles for uploads, review interrupts, reminder cron delivery, cleanup, and self-erasure.
-- [Member authentication and API perimeter](member-perimeter.md) - The authentication principals, strict member route/envelope allowlist, ownership checks, and state projection that protect coach threads and actions.
+- [Coach decision routing and data-bound UI](coach-routing.md) - Deterministic dispatch for the coach graph, model-driven Route B tool use, medical relay constraints, and the validated catalog contract for member UI.
+- [Coach agent architecture and medical relay](coach.md) - The separately deployed coach graph uses deterministic operational routing, constrained member tools, a medical lookup relay into the healthcare RAG graph, and validated data-bound UI composition. Offline evaluation exercises this boundary with in-process fakes rather than certifying a deployment.
+- [Member data lifecycle, reminders, uploads, and erasure](member-data-lifecycle.md) - Member-scoped persistence, upload review, remote reminder scheduling, cleanup, and two-phase self-erasure. Explains ownership checks, privacy controls, and failure behavior without exposing member records or document contents.
+- [Member authorization perimeter](member-perimeter.md) - Authentication, ownership scoping, request-shape validation, and response projection around the member-facing coach API. Covers the versioned streaming contract, custom routes, development exceptions, and failure-closed behavior.
