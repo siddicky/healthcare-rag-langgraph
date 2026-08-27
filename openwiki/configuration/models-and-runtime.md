@@ -1,57 +1,114 @@
 ---
-type: configuration
-title: Models, environment, and runtime state
-description: Model selection, reasoning-compatible sampling parameters, stage ablations, connection settings, and conversation persistence.
-tags: [configuration, models, runtime]
+type: runtime configuration
+title: Model configuration, runtime controls, and cost boundaries
+description: Environment-derived controls for model selection, compatible sampling, graph stages, retrieval, checkpointing, and resource lifecycle in the Healthcare RAG runtime. Use this page to change runtime behavior safely and evaluate—not assume—cost or quality effects.
+tags: [configuration, models, runtime, operations]
+verified:
+  - by: openwiki/0.4.0
+    at: 2026-08-26T20:21:43.477Z
 ---
 
-# Models, environment, and runtime state
+# Model configuration, runtime controls, and cost boundaries
 
-## Model policy
+`GraphSettings.from_env()` is the configuration boundary for a graph run. It creates an immutable environment snapshot; `GraphEngine`, `Resources`, and the model gateway retain the snapshot with which they were constructed. Set variables before creating the runtime and reconstruct or restart it after a change—editing the process environment does not update an existing settings object.
 
-`healthcare_rag/services/models.py` centralizes selected models so processors do not hard-code incompatible sampling options.
+```mermaid
+flowchart TD
+    Env["Environment variables"] --> Settings["GraphSettings snapshot"]
+    Settings --> Engine["GraphEngine"]
+    Settings --> Resources["Resources"]
+    Resources --> Gateway["LangChainLLMGateway"]
+    Gateway --> Models["default and validator models"]
+    Resources --> Retrieval["retrieval arm and reranker"]
+    Engine --> Saver["memory or SQLite checkpointer"]
+```
 
-| Variable | Default | Owner |
-|---|---|---|
-| `HC_RAG_SAFETY_GATE` | `true` | when true, every query passes the [runtime safety gate](../safety/gate.md) before the pipeline: PHI is scrubbed and personal-advice/emergency/out-of-scope/injection messages get templated refusals; `false` (or `safety` in `HC_RAG_DISABLE_STAGES`) runs un-gated for before/after ablations. `safety_gate_enabled()` reads both (`services/models.py#L173-L179`) |
-| `HC_RAG_REFUSAL_BOUNDARY` | `true` | persist qualifying gate refusals per thread and replay them deterministically on matching re-asks ([safety gate](../safety/gate.md)); the settings snapshot is telemetry only — the runtime reads this flag live each turn |
-| `HC_RAG_LLM_MODEL` | `gpt-5.6-luna` | router, preprocessing, context, retrieval evaluation, generation, follow-ups, and the safety gate's classification call |
-| `HC_RAG_VALIDATOR_MODEL` | `gpt-5.6-terra` | answer structuring and citation validation |
-| `HC_RAG_REASONING_EFFORT` | `none` | GPT-5.x / o-series `reasoning_effort` |
-| `HC_RAG_DISABLE_STAGES` | empty | ablation of safety, clarify, decompose, evaluate, validate, followups (`VALID_STAGES` in `services/models.py#L104`) |
-| `HC_RAG_MAX_SUBQUERIES` | `3` | hard cap on sub-query fan-out per decomposition; extras dropped. `max_subqueries()` rejects non-integers and values < 1; `route_after_decompose` slices `sub_queries` with this cap directly — there is no separate router-side fan-out constant (`graph/routers.py`) |
-| `HC_RAG_DECOMPOSE_ONLY_COMPLEX` | `true` | decompose only when the decomposer labelled `query_complexity == "complex"` |
-| `HC_RAG_RETRIEVER` | `weaviate` | retrieval arm: `weaviate` (default), `pageindex`, or `pinecone` — see [retrieval arms and reranking](../retrieval/arms-and-reranking.md); only the per-collection search callable changes |
-| `HC_RAG_RERANKER` / `HC_RAG_RERANK_*` | `none` | rerank stage: `none` or `pinecone` (`bge-reranker-v2-m3`), `HC_RAG_RERANK_CANDIDATES=12` fetched, `HC_RAG_RERANK_TOP_K=4` kept, fail-soft |
-| `HC_RAG_PINECONE_*` / `PINECONE_API_KEY` | — | pinecone arm: index `healthcare-rag`, sparse model `pinecone-sparse-english-v0`, dense/sparse convex-scaling `HC_RAG_PINECONE_ALPHA=0.65`, embeddings `text-embedding-3-small`; `PINECONE_API_KEY` is a secret kept in `.env` |
-| `HC_RAG_PAGEINDEX_*` | — | pageindex arm: `MAX_NODES=4`, `MAX_CHUNKS=8`, tree/chunk dir `HC_RAG_PAGEINDEX_DIR=data` |
-| `HC_RAG_HISTORY_MAX_TOKENS` | `4000` | token cap when trimming checkpointed history for prompts (`GraphSettings.from_env`; must be an integer) |
-| `HC_RAG_STRUCTURED_STRICT` | `false` | passes `strict=True` to structured-output calls (`HC_RAG_STRUCTURED_STRICT` must be a boolean) |
-| `HC_RAG_CHECKPOINT` | empty | `sqlite:<path>` enables durable per-thread history via `AsyncSqliteSaver` (needs the `graph-sqlite` extra); empty means in-memory checkpointing (`graph/engine.py`) |
-| `HC_RAG_RETRIEVER` | `weaviate` | retrieval arm: `weaviate`, `pageindex` (LLM tree-search), or `pinecone` (serverless hybrid). Swaps only the per-collection search callable — see [retrieval arms](../retrieval/arms-and-reranking.md) |
-| `HC_RAG_RERANKER` | `none` | `pinecone` enables cross-encoder reranking over the retrieved candidates (part of the retrieval stage; fail-soft) |
-| `HC_RAG_RERANK_CANDIDATES` / `HC_RAG_RERANK_TOP_K` / `HC_RAG_RERANK_MODEL` | `12` / `4` / `bge-reranker-v2-m3` | candidates fetched per collection when reranking / survivors per collection (default keeps top-k into generation constant) / Pinecone Inference rerank model |
-| `HC_RAG_PINECONE_INDEX` / `HC_RAG_PINECONE_SPARSE_MODEL` / `HC_RAG_PINECONE_ALPHA` / `HC_RAG_EMBEDDING_MODEL` | `healthcare-rag` / `pinecone-sparse-english-v0` / `0.65` / `text-embedding-3-small` | pinecone arm: index name (one namespace per lower-cased collection), sparse embedding model, convex-scaling dense weight (must be 0.0–1.0), dense embedding model |
-| `HC_RAG_PAGEINDEX_MAX_NODES` / `HC_RAG_PAGEINDEX_MAX_CHUNKS` / `HC_RAG_PAGEINDEX_DIR` | `4` / `8` / `data` | pageindex arm: tree nodes the selection call may keep / chunk cap / directory holding `pageindex_tree_*.json` and `chunks_*.json` |
-| `HC_RAG_QUERY_RESPONSE_ARM` | `current` | how a turn is answered: `current` (pipeline/refusals), `deterministic` (hard-coded benign-social direct text), `tool` (model query-or-respond decision gated by the direct-output policy) — see [safety gate](../safety/gate.md) |
-| `HC_RAG_SAFETY_CLASSIFIER` | `llm` | safety classification backend; `semantic_router` was never installed or exercised — `semantic-router==0.1.16` is unsatisfiable under the unchanged `openai>=1.76,<2` / `python-dotenv>=1.1` bounds, so that lane is dependency-INCONCLUSIVE — see [routing evaluations](../observability/routing-evals.md) |
+This shows ownership: settings select behavior, resources lazily own external clients, and the engine owns graph compilation and checkpoint lifecycle.
 
-`PINECONE_API_KEY` (secret, `.env`) is required by the pinecone arm and the reranker; `PINECONE_CLOUD`/`PINECONE_REGION` override serverless placement. The model defaults and `sampling_params` live in `services/model_sampling.py` (re-exported by `services/models.py`, which keeps the env-var policy above); `tests/test_model_sampling.py` pins the reasoning-vs-chat sampling rules.
+## Settings, entry points, and lifecycle
 
-The three retrieval/rerank groups exist for A/B experiments: the snapshot lives in `GraphSettings` (`graph/settings.py`) and the docstring of `services/models.py` is their authoritative description; behavior is covered in [retrieval arms and reranking](../retrieval/arms-and-reranking.md).
+`GraphEngine` is the in-process entry point: its first use initializes the privacy sanitizer, selects and initializes a checkpointer, and compiles the graph. Use `async with GraphEngine(...)` or call `await engine.aclose()`; closing exits an engine-owned SQLite context and closes resources held by the process-wide `Resources` owner. `Resources.get()` returns that singleton, while `override()` replaces it for test injection. Constructing resources does not connect to Weaviate, Pinecone, or OpenAI.
 
-The decomposition settings implement journey findings F06/F07 (see [architecture](../architecture/overview.md)): `gpt-5.6-luna` emits up to 8 sub-queries even for simple or out-of-scope questions. Boolean parsing via `_env_bool` accepts `1/true/yes/on` and `0/false/no/off` and raises `ValueError` on anything else (`healthcare_rag/services/models.py#L125-L136`). The former `HC_RAG_SYNTHESIS` flag is gone: in the graph runtime, decomposed sub-queries only retrieve and their documents are always merged for a single answer to the original query.
+`GraphEngine.describe()` reports effective safety, model, sampling, retrieval/reranking, structured-output, and routing choices. Record this output with an experiment or rollout so a result can be attributed to the actual snapshot rather than an assumed environment.
 
-`sampling_params(model, temperature, reasoning_effort)` exists because GPT-5.x reasoning models reject `temperature`/`top_p` except when `reasoning_effort="none"`, whereas chat models accept temperature. It emits `reasoning_effort` for `gpt-5`, `o1`, `o3`, and `o4`; with effort `none`, it also includes supplied temperature. o-series upgrades `none` to `low`; non-reasoning models receive temperature only (`healthcare_rag/services/model_sampling.py`). Every LLM call goes through `LangChainLLMGateway.chat_model`, which caches `ChatOpenAI` clients per `(tier, model, temperature, reasoning_effort)` (`healthcare_rag/graph/llm.py`). Do not add direct LLM calls that bypass it.
+## Models and sampling compatibility
 
-Stage disabling is experiment machinery, not a production safety setting. Unknown stage names raise `ValueError`; disabled validation returns the raw answer, disabled follow-ups return `[]` (see [processors](../processors/overview.md)). Record it in eval metadata and do not compare an ablation against a normal baseline without matching configuration.
+| Variable | Default | Effect |
+|---|---:|---|
+| `HC_RAG_LLM_MODEL` | `gpt-5.6-luna` | Default tier for routing, preprocessing, retrieval evaluation, generation, and follow-ups. |
+| `HC_RAG_VALIDATOR_MODEL` | `gpt-5.6-terra` | Validator tier used for the `validate_answer` structured stage. |
+| `HC_RAG_REASONING_EFFORT` | `none` | Reasoning control supplied for recognized GPT-5.x and o-series names. |
+| `HC_RAG_STRUCTURED_STRICT` | `false` | Enables `strict=True` for JSON-schema structured output. |
 
-## Required runtime settings
+The model getters trim whitespace and fall back on blank values. `LangChainLLMGateway` centralizes client construction, selects default versus validator tier, uses three retries, and caches each `ChatOpenAI` client by tier, model, requested temperature, and reasoning effort. Structured stages fail soft: exceptions log a stage warning and return their supplied default rather than escaping from the gateway.
 
-`OPENAI_API_KEY` is required — `Resources.weaviate()` raises without it, and Weaviate's OpenAI vectorizer needs it in the `X-OpenAI-Api-Key` header. The app loads `.env` at import time but documentation must never expose its values. Weaviate connection defaults are `WEAVIATE_HOST=127.0.0.1`, `WEAVIATE_PORT=8080`, and `WEAVIATE_GRPC_PORT=50051`; `GraphSettings.from_env` snapshots all of these plus collection names (default `Lipitor`, `Metformin`) (`healthcare_rag/graph/settings.py`). Optional LangSmith variables belong in [observability](../observability/evaluations.md).
+### GPT-5.x reasoning controls are not temperature
 
-## State and lifecycle
+`reasoning_effort` and `temperature` are distinct inputs. `sampling_params(model, temperature, reasoning_effort)` recognizes case-insensitive names starting `gpt-5`, `o1`, `o3`, or `o4` as reasoning models. For a GPT-5.x reasoning model it sends `reasoning_effort`, and sends a supplied temperature only when the effective effort is `none`. For o-series models, `none` is converted to `low`, so temperature is not sent. A non-reasoning model receives a supplied temperature and no reasoning parameter.
 
-Conversation history is now LangGraph checkpoint state, not files: `finalize` appends a scrubbed Human/AI message pair per answered turn, and `GraphEngine` compiles the graph with an `InMemorySaver` or, when `HC_RAG_CHECKPOINT=sqlite:...`, a durable `AsyncSqliteSaver` (`graph/engine.py`; `graph/nodes/safety.py`). Engine entry also initializes the process-wide [PrivacySanitizer](../privacy/sanitizer.md) (`GraphEngine._initialize`), and a `PrivacyScanError` during a turn fails that turn closed — no answer is produced (`graph/engine.py`). History views scrub every message when the gate is on, trim to `HC_RAG_HISTORY_MAX_TOKENS` keeping the last messages, expose the five most recent turns (newest-first) and render the last three as clarification context (`graph/history.py`). Since the [safety gate](../safety/gate.md), persisted queries and answers are scrubbed on write, but SQLite checkpoints still have no encryption, access control, expiry, user-ID validation, or deletion API. Treat user IDs and questions/answers as sensitive and see [safety posture](../safety/posture.md).
+Do not bypass the gateway with a direct `ChatOpenAI` construction or hard-code a sampling combination. The compatibility rules protect a model-name swap from an unsupported parameter combination; they do **not** establish a quality, latency, or cost improvement. Measure any such effect with the [evaluation workflow](../observability/evaluations.md).
 
-The CLI closes the engine (and with it the Weaviate client) on exit (`engine.aclose()`); embedding callers should do the same (`healthcare_rag/cli/interactive.py`). For setup and operations, use [runbook](../operations/runbook.md); for server/frontend/deployed topology and configuration precedence, use [deployment](../operations/deploy.md) and the [clean-room agent server](../server/agent-server.md).
+## Stage switches, routing choices, and fan-out boundaries
+
+`HC_RAG_DISABLE_STAGES` is an ablation switch, not a production safety or cost control. It is a comma-separated, case-normalized list limited to `safety`, `clarify`, `decompose`, `evaluate`, `validate`, and `followups`; an unknown stage raises `ValueError` while settings are built. Each switch short-circuits its corresponding work: clarification returns no change, decomposition uses the parent query default, and evaluation proceeds without gap fill. Disabling `safety` also disables the gate; do not use it as a production safety bypass.
+
+| Variable | Default | Validation and behavior |
+|---|---:|---|
+| `HC_RAG_SAFETY_GATE` | `true` | Enabled only when this boolean is true and `safety` is not disabled. |
+| `HC_RAG_REFUSAL_BOUNDARY` | `true` | Allows matching safety refusals to be persisted and replayed per thread; the safety node reads this flag live each turn. |
+| `HC_RAG_MAX_SUBQUERIES` | `3` | Integer at least 1; decomposition always retrieves the parent and can add at most this many subquery branches. |
+| `HC_RAG_DECOMPOSE_ONLY_COMPLEX` | `true` | Requires at least two proposals and a `complex` label unless disabled. |
+| `HC_RAG_HISTORY_MAX_TOKENS` | `4000` | Integer token cap for history-aware gateway calls and history views. |
+| `HC_RAG_QUERY_RESPONSE_ARM` | `current` | Exact, case-sensitive choice: `current`, `deterministic`, or `tool`. |
+| `HC_RAG_SAFETY_CLASSIFIER` | `llm` | Exact choice: `llm` or `semantic_router`; this build rejects the latter at engine construction. |
+
+Boolean controls accept case-insensitive `1`, `true`, `yes`, `on`, `0`, `false`, `no`, or `off`; blank values use their default and other values fail parsing. `HC_RAG_STRUCTURED_STRICT` follows the same token rule. The two routing enums do not normalize whitespace or case: blank, differently cased, and unknown values are errors. Although `semantic_router` parses, it cannot execute in this build and raises `SafetyClassifierUnavailableError`; use `llm`.
+
+The graph has two explicit fan-out limits. Decomposition sends the parent query plus the capped subqueries. Retrieval evaluation can request only one gap-fill round: it requires `gap_round == 0`, retains at most three additional queries, marks the round used before routing, and the merge after gap fill routes directly to generation. These are behavioral bounds, not evidence of a measured saving.
+
+## Retrieval and reranking
+
+| Variable(s) | Default | Effect |
+|---|---:|---|
+| `HC_RAG_RETRIEVER` | `weaviate` | Selects `weaviate`, `pageindex`, or `pinecone`; invalid values fail parsing. |
+| `HC_RAG_PAGEINDEX_DIR` | `data` | Directory containing cached PageIndex trees and chunks. |
+| `HC_RAG_PAGEINDEX_MAX_NODES` / `HC_RAG_PAGEINDEX_MAX_CHUNKS` | `4` / `8` | Positive limits for PageIndex selection and chunk expansion. |
+| `HC_RAG_RERANKER` | `none` | Selects `none` or `pinecone`; invalid values fail parsing. |
+| `HC_RAG_RERANK_CANDIDATES` / `HC_RAG_RERANK_TOP_K` | `12` / `4` | Positive candidate-fetch and survivor limits when reranking is selected. |
+| `HC_RAG_RERANK_MODEL` | `bge-reranker-v2-m3` | Pinecone Inference rerank model. |
+| `HC_RAG_PINECONE_INDEX` / `HC_RAG_PINECONE_SPARSE_MODEL` | `healthcare-rag` / `pinecone-sparse-english-v0` | Pinecone index and sparse embedding model. |
+| `HC_RAG_PINECONE_ALPHA` | `0.65` | Dense hybrid weight, inclusive range 0.0–1.0. |
+| `HC_RAG_EMBEDDING_MODEL` | `text-embedding-3-small` | Dense embedding model for the Pinecone arm. |
+
+The arm changes only the per-collection search callable; routing, merging, and downstream graph stages remain shared. Weaviate and Pinecone open their clients only when selected. PageIndex reads cached JSON and opens no retrieval client, but requires its tree and chunk files; missing files instruct the operator to run `make index-pageindex`.
+
+Reranking is part of retrieval. When `HC_RAG_RERANKER=pinecone`, a limit-aware search fetches `rerank_candidates`, then Pinecone reranks each result to `rerank_top_k`. A rerank failure or empty ranking falls back to the search order truncated to `top_k`, preserving turn availability. See [retrieval arms and reranking](../retrieval/arms-and-reranking.md) for arm-specific behavior and evaluation gates.
+
+### Credentials and lazy connections
+
+`OPENAI_API_KEY` is required by Weaviate on first use and is supplied as `X-OpenAI-Api-Key`; the Pinecone arm also needs it when it creates query embeddings. `PINECONE_API_KEY` is required when a Pinecone client is first needed—either for the Pinecone retrieval arm or a Pinecone reranker on another arm. Missing credentials fail at that lazy boundary. A failed Weaviate connection is not cached, so a subsequent request can retry. `Resources.aclose()` closes only clients it owns, including gateway HTTP clients, a connected Weaviate client, and closeable Pinecone handles.
+
+## Checkpoints and conversation history
+
+`HC_RAG_CHECKPOINT` selects an engine-owned saver at initialization:
+
+* Empty or any value not beginning `sqlite:` selects `InMemorySaver`.
+* `sqlite:<path>` enters an `AsyncSqliteSaver` context using the suffix path and runs schema setup.
+* SQLite requires `pip install healthcare-rag[graph-sqlite]`; otherwise initialization raises `RuntimeError` with that instruction.
+
+The compiled graph keys state by `thread_id`. `seed_history()` writes scrubbed legacy turns as `HumanMessage`/`AIMessage` checkpoint state. For each new turn, history views scrub messages, token-trim them to `HC_RAG_HISTORY_MAX_TOKENS`, retain at most five completed pairs newest-first, and render the latest three exchanges oldest-first for context. Choose SQLite storage deliberately for durable history and close the engine so its context is released.
+
+The LangGraph deployment reads `.env`, exposes the `healthcare_rag` graph, and separately configures an `openai:text-embedding-3-small` store index with 1,536 dimensions. That deployment store configuration is not a replacement for the engine's `HC_RAG_CHECKPOINT` choice.
+
+## Safe model or runtime change procedure
+
+1. **State scope and rollback.** Identify the single intended model/configuration change, retain the previous environment, and distinguish a production change from an ablation. Never make `HC_RAG_DISABLE_STAGES=safety` a production rollout.
+2. **Validate a fresh snapshot.** Check enum spelling and case, boolean/numeric bounds, selected-arm prerequisites, required credentials, PageIndex artifacts if applicable, and the `graph-sqlite` extra for SQLite. Construct a new engine and capture `GraphEngine.describe()`.
+3. **Preserve sampling compatibility.** Keep calls behind `LangChainLLMGateway`; do not conflate GPT-5.x reasoning effort with temperature. Run `uv run pytest tests/test_model_sampling.py` after changing model-family or sampling logic.
+4. **Exercise the changed path.** Run `uv run pytest tests/test_routing_settings.py tests/graph/test_settings.py` for routing/settings changes, plus focused graph, retrieval, reranking, resource, or history tests for the modified control.
+5. **Evaluate before asserting outcomes.** Compare a baseline and treatment that differ only in the intended setting. Use smoke/deterministic checks and, for behavior or model changes, the relevant judge and multi-turn evaluations from [evaluations](../observability/evaluations.md). Review safety, correctness, groundedness, latency, usage, and cost only where the harness records them. Do not assert savings without a measured comparison.
+6. **Roll out and observe.** Monitor initialization and lazy credential/connection failures, retrieval and rerank warnings, and outcome telemetry; keep the tested rollback configuration. See the [runbook](../operations/runbook.md) for setup, commands, and service recovery.
+
+## Focused tests
+
+`tests/test_model_sampling.py` fixes model defaults/blank fallback, case-insensitive reasoning-family detection, the sampling matrix, environment fallback, and the identity-preserving `services.models` facade. `tests/test_routing_settings.py` locks default and malformed routing settings and the early `semantic_router` rejection. Resource tests verify lazy connection retry and that closing resources permits fresh model and Weaviate clients. These are configuration contracts, not replacements for an end-to-end evaluation of a model or retrieval change.

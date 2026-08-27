@@ -204,6 +204,44 @@ def test_copilotkit_locked_adapter_default_envelope_is_admitted() -> None:
         (
             "POST",
             f"/threads/{THREAD_ID}/runs/stream",
+            {**COPILOTKIT_RUN, "config": "yes"},
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {**COPILOTKIT_RUN, "config": {"bogus": True}},
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {
+                **COPILOTKIT_RUN,
+                "config": {"configurable": {"thread_id": THREAD_ID}},
+            },
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {
+                **COPILOTKIT_RUN,
+                "config": {
+                    "configurable": {"copilotkit_forwarded_headers": {"x-a": 1}}
+                },
+            },
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {**COPILOTKIT_RUN, "config": {"recursion_limit": 0}},
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
+            {**COPILOTKIT_RUN, "config": {"recursion_limit": True}},
+        ),
+        (
+            "POST",
+            f"/threads/{THREAD_ID}/runs/stream",
             {
                 **COPILOTKIT_RUN,
                 "input": {"question": "hi", "cron_wake": {}},
@@ -254,6 +292,58 @@ def test_copilotkit_shapes_outside_the_captured_contract_are_denied(
 
     with pytest.raises(PerimeterDenied):
         validate_member_request(method, path, "", body)
+
+
+def test_copilotkit_forwarded_header_config_envelope_is_admitted() -> None:
+    """The locked adapter lifts incoming x-* request headers (every Vercel
+    request carries x-vercel-*) into config.configurable.copilotkit_forwarded_headers
+    and streams with its default modes plus stream_subgraphs=True. Captured
+    from the live runtime on 2026-08-26; the shape 403'd as 'Invalid run
+    envelope' before the perimeter learned it (local/e2e requests carry no
+    x- headers, so only production ever produced the key)."""
+    from healthcare_rag.agent.perimeter import validate_member_request
+
+    captured: dict[str, JSONValue] = {
+        "assistant_id": "coach",
+        "input": {
+            "question": "Log today's weight",
+            "messages": [
+                {"id": "m-1", "role": "user", "content": "Log today's weight"}
+            ],
+            "tools": [],
+            "ag-ui": {"tools": [], "context": []},
+            "copilotkit": {"actions": [], "context": []},
+        },
+        "config": {
+            "configurable": {
+                "copilotkit_forwarded_headers": {
+                    "x-vercel-id": "iad1::abc-123",
+                    "x-matched-path": "/api/copilotkit/[[...slug]]",
+                }
+            }
+        },
+        "stream_mode": ["events", "values", "updates", "messages-tuple"],
+        "stream_subgraphs": True,
+        "stream_resumable": True,
+        "multitask_strategy": "enqueue",
+        "if_not_exists": "reject",
+        "durability": "exit",
+    }
+    validate_member_request(
+        "POST", f"/threads/{THREAD_ID}/runs/stream", "", captured
+    )
+    validate_member_request(
+        "POST",
+        f"/threads/{THREAD_ID}/runs/stream",
+        "",
+        {**captured, "config": {"recursion_limit": 100}},
+    )
+    validate_member_request(
+        "POST",
+        f"/threads/{THREAD_ID}/runs/stream",
+        "",
+        {**captured, "command": {"resume": {"accept": True}}},
+    )
 
 
 def test_v1_member_run_envelope_is_unchanged_by_copilotkit_admission() -> None:

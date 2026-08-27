@@ -290,6 +290,90 @@ async def test_stream_endpoint_accepts_resumable_flag(harness: Harness) -> None:
 
 
 @pytest.mark.anyio
+async def test_stream_endpoint_accepts_locked_adapter_envelope(harness: Harness) -> None:
+    """The @ag-ui/langgraph 0.0.42 adapter (CopilotKit runtime 1.69.1) streams
+    with stream_subgraphs=True, its default mode list including 'events', and
+    — behind Vercel's x-* request headers — config.configurable.
+    copilotkit_forwarded_headers. Captured from the live runtime 2026-08-26."""
+    async with aconnect_sse(
+        harness.client,
+        "POST",
+        "/threads/thread-1/runs/stream",
+        json=body(
+            {"value": 6},
+            stream_mode=["events", "values", "updates", "messages-tuple"],
+            stream_subgraphs=True,
+            stream_resumable=True,
+            multitask_strategy="enqueue",
+            config={
+                "configurable": {
+                    "copilotkit_forwarded_headers": {
+                        "x-vercel-id": "iad1::abc-123",
+                        "x-matched-path": "/api/copilotkit/[[...slug]]",
+                    }
+                }
+            },
+        ),
+    ) as source:
+        events = [(event.event, event.json()) async for event in source.aiter_sse()]
+
+    assert ("updates", {"step": {"value": 7}}) in events
+    assert {kind for kind, _ in events} <= {
+        "events", "values", "updates", "messages"
+    }
+
+
+@pytest.mark.anyio
+async def test_stream_endpoint_accepts_locked_adapter_resume_envelope(
+    harness: Harness,
+) -> None:
+    """The adapter resume (CopilotKit runtime 1.69.1) carries the merged
+    conversation input ALONGSIDE command.resume, echoes the pending
+    interrupt back as command.interruptEvent, and re-sends the x-* header
+    config. Before the RunRequest fix this 422'd on both counts and no
+    interrupt card action ever reached the graph."""
+    interrupted = await create(harness, body({"mode": "interrupt"}))
+    _ = await wait_status(harness, interrupted.json()["run_id"], "interrupted")
+
+    async with aconnect_sse(
+        harness.client,
+        "POST",
+        "/threads/thread-1/runs/stream",
+        json=body(
+            {
+                "question": "Please review this document.",
+                "messages": [
+                    {
+                        "id": "m-1",
+                        "role": "user",
+                        "content": "Please review this document.",
+                    }
+                ],
+                "tools": [],
+                "ag-ui": {"tools": [], "context": []},
+                "copilotkit": {"actions": [], "context": []},
+            },
+            stream_mode=["events", "values", "updates", "messages-tuple"],
+            stream_subgraphs=True,
+            stream_resumable=True,
+            multitask_strategy="enqueue",
+            config={
+                "configurable": {
+                    "copilotkit_forwarded_headers": {"x-vercel-id": "iad1::abc"}
+                }
+            },
+            command={
+                "resume": {"accept": True},
+                "interruptEvent": {"kind": "approval"},
+            },
+        ),
+    ) as source:
+        events = [(event.event, event.json()) async for event in source.aiter_sse()]
+
+    assert ("updates", {"step": {"resumed": True}}) in events
+
+
+@pytest.mark.anyio
 async def test_history_checkpoint_forks_stream_run_with_selected_parent(
     harness: Harness,
 ) -> None:
@@ -586,3 +670,12 @@ async def test_state_surfaces_pending_interrupts(harness: Harness) -> None:
     assert isinstance(entry, dict)
     assert isinstance(entry.get("id"), str) and entry["id"]
     assert entry.get("value") == {"kind": "approval"}
+    # The CopilotKit/AG-UI adapter reads pending interrupts EXCLUSIVELY from
+    # tasks[].interrupts (ThreadTask wire shape) — without this key the
+    # document-review and calendar-change interrupt cards never render.
+    tasks = state.json().get("tasks")
+    assert isinstance(tasks, list) and len(tasks) == 1
+    task = tasks[0]
+    assert isinstance(task.get("id"), str) and isinstance(task.get("name"), str)
+    assert task.get("error") is None
+    assert task.get("interrupts") == interrupts

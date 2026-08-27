@@ -523,8 +523,12 @@ class DeployedSmoke:
             self.settings.u2_token, thread_id, question="What is Lipitor used for?"
         )
         state = await self.state(self.settings.u2_token, thread_id)
+        # Member projection contract since d0ad959 (CopilotKit transport):
+        # values + interrupts + tasks + next. tasks[].interrupts is what the
+        # AG-UI adapter reads for pending interrupt cards; `next` parks the
+        # client-side run state. Both stay swept by the perimeter projection.
         require(
-            set(state) == {"values", "interrupts"},
+            set(state) == {"values", "interrupts", "tasks", "next"},
             "latest-state response was not projected",
         )
         values = state.get("values")

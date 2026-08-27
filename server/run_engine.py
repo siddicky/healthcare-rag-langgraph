@@ -81,6 +81,11 @@ def _to_jsonable(obj: object) -> JSONValue:
 class ResumeCommand(BaseModel):
     model_config: ClassVar[ConfigDict] = ConfigDict(frozen=True, extra="forbid")
     resume: JSONValue
+    # The locked CopilotKit runtime echoes the pending interrupt payload back
+    # alongside the resume (interruptEvent); the graph never reads it — the
+    # engine only consumes `resume`. Tolerated for wire parity; every other
+    # key still fails closed via extra="forbid".
+    interruptEvent: JSONValue | None = Field(default=None)  # wire name
 
 
 class RunRequest(BaseModel):
@@ -90,9 +95,18 @@ class RunRequest(BaseModel):
     command: ResumeCommand | None = None
     config: dict[str, JSONValue] = Field(default_factory=dict)
     stream_mode: list[
-        Literal["updates", "custom", "values", "messages", "messages-tuple"]
+        Literal[
+            "updates", "custom", "values", "messages", "messages-tuple", "events"
+        ]
     ] = Field(default_factory=lambda: ["updates", "custom"])  # type: ignore[assignment]
-    stream_subgraphs: Literal[False] = False
+    # The locked CopilotKit adapter (@ag-ui/langgraph 0.0.42) always streams
+    # with stream_subgraphs=True. Accepted for wire parity; not forwarded
+    # into graph.astream, whose subgraph tuples ((ns, (mode, data))) would
+    # change the engine's (mode, data) unpacking — member frames stay
+    # root-scoped. langgraph itself ignores unknown extra modes like
+    # "events" (verified against the pinned runtime), so the adapter's
+    # default mode list passes through harmlessly.
+    stream_subgraphs: bool = False
     stream_resumable: bool = False
     durability: Literal["exit"] = "exit"
     if_not_exists: Literal["reject"] = "reject"
@@ -139,7 +153,11 @@ class RunRequest(BaseModel):
 
     @model_validator(mode="after")
     def exactly_one_payload(self) -> RunRequest:
-        if (self.input is None) == (self.command is None):
+        # The CopilotKit adapter's resume carries the merged conversation
+        # input alongside the command (measured from the locked runtime);
+        # the engine resumes from the command and ignores that input. Only
+        # a body with neither payload is invalid.
+        if self.input is None and self.command is None:
             raise ValueError("exactly one of input or command is required")
         configurable = self.config.get("configurable")
         if isinstance(configurable, dict) and "checkpoint_id" in configurable:
