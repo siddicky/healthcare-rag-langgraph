@@ -81,8 +81,16 @@ _COPILOTKIT_RUN_FIXED_KEYS: Final = frozenset(
 )
 _COPILOTKIT_RUN_OPTIONAL_KEYS: Final = frozenset(
     {"stream_subgraphs", "stream_resumable", "durability", "if_not_exists",
-     "multitask_strategy"}
+     "multitask_strategy", "config"}
 )
+# The runtime forwards incoming x-* request headers onto the agent and the
+# locked @ag-ui/langgraph adapter (0.0.42) lifts them into
+# config.configurable.copilotkit_forwarded_headers; a recursion_limit int
+# appears when the runtime carries an assistantConfig. Measured behind
+# Vercel's x-vercel-* request headers on 2026-08-26 — requests without x-
+# headers (local dev, hermetic e2e) never produce the key, which is why the
+# shape stayed invisible until production returned "Invalid run envelope".
+_COPILOTKIT_RUN_CONFIG_KEYS: Final = frozenset({"configurable", "recursion_limit"})
 # The engine forwards the member run-envelope options through AG-UI
 # forwardedProps; the SDK serializes them into the upstream envelope. Values
 # mirror the member envelope's fixed posture (_RUN_FIXED / _RUN_V1_FIXED).
@@ -298,6 +306,37 @@ def _validate_copilotkit_command(command: JSONValue) -> None:
     _validate_resume({"resume": command["resume"]})
 
 
+def _validate_copilotkit_config(config: JSONValue) -> None:
+    if (
+        not isinstance(config, dict)
+        or frozenset(config) - _COPILOTKIT_RUN_CONFIG_KEYS
+    ):
+        _deny("Invalid run envelope")
+    recursion_limit = config.get("recursion_limit")
+    if recursion_limit is not None and (
+        not isinstance(recursion_limit, int)
+        or isinstance(recursion_limit, bool)
+        or recursion_limit < 1
+    ):
+        _deny("Invalid run envelope")
+    configurable = config.get("configurable")
+    if configurable is None:
+        return
+    if not isinstance(configurable, dict) or frozenset(configurable) - {
+        "copilotkit_forwarded_headers"
+    }:
+        _deny("Invalid run envelope")
+    forwarded = configurable.get("copilotkit_forwarded_headers")
+    if forwarded is not None and (
+        not isinstance(forwarded, dict)
+        or any(
+            not isinstance(name, str) or not isinstance(item, str)
+            for name, item in forwarded.items()
+        )
+    ):
+        _deny("Invalid run envelope")
+
+
 def _validate_copilotkit_run(body: JSONBody) -> None:
     value = _require_body_mapping(body)
     expected = _COPILOTKIT_RUN_FIXED_KEYS | _COPILOTKIT_RUN_OPTIONAL_KEYS
@@ -337,6 +376,8 @@ def _validate_copilotkit_run(body: JSONBody) -> None:
         and value["multitask_strategy"] not in _COPILOTKIT_RUN_CONFLICT
     ):
         _deny("Invalid run envelope")
+    if "config" in value:
+        _validate_copilotkit_config(value["config"])
     if "command" in value:
         _validate_copilotkit_command(value["command"])
         if "input" not in value:
