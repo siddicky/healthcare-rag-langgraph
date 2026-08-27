@@ -15,7 +15,7 @@ Configuration has several owners: `pyproject.toml` + `uv.lock` define the Python
 
 1. Install `uv`, Docker, and Docker Compose. Use Python **3.11 or newer**; the project metadata requires `>=3.11` because models use `typing.Self` (`pyproject.toml#L1-L16`).
 2. Put only required values in local `.env`: `OPENAI_API_KEY` is required. Optionally set `WEAVIATE_HOST`, `WEAVIATE_PORT`, `WEAVIATE_GRPC_PORT`, model variables, LangSmith variables, and `PINECONE_API_KEY` (needed only for the [pinecone arm and reranker](../retrieval/arms-and-reranking.md)). Never commit or document secret values.
-3. Run `make venv`. It intentionally creates Python 3.12 and installs `.[evals,dev,graph-sqlite]` via uv (`Makefile#L11-L13`).
+3. Run `make venv`. It intentionally creates Python 3.12 and installs `.[evals,dev,graph-sqlite]` via uv (`Makefile#L23-L25`).
 4. Run `make weaviate`; it starts Compose and polls `http://127.0.0.1:8080/v1/.well-known/ready`.
 5. Run `make ingest`, then `make run` for `python -m healthcare_rag`.
 
@@ -50,12 +50,15 @@ The CLI shows a raw preliminary response after up to 30 seconds and later a veri
 | `make routing-gate-query-smoke` / `make routing-gate-safety-smoke` | fixture smoke of the routing A/B gates ([routing evaluations](../observability/routing-evals.md)) |
 | `make journey` | rebuild `docs/journey.html` from `docs/journey.json` |
 | `make wiki-init` / `make wiki-update` | regenerate / refresh these OpenWiki docs |
+| `make next-version` / `make release-prep BUMP=...` | preview the next release version / bump `pyproject.toml`+`uv.lock` to it (reviewed PR, not a tag) |
+| `make release TAG=vX.Y.Z` / `make release-digest TAG=vX.Y.Z` | print the tag-push commands / resolve a released tag to its immutable image digest (both hermetic, read-only) |
+| `make rollback TAG=vX.Y.Z REASON=...` | print the exact `workflow_dispatch` command for a production rollback (hermetic; the actual rollback still requires the gated dispatch) — see [deployment](deploy.md#release-identity-version-bumps-and-rollback) |
 
 ## Weaviate hazards and recovery
 
 Compose exposes HTTP 8080 and gRPC 50051, stores data in named `weaviate_data`, allows anonymous access, and has `restart: on-failure:0`—that policy means **no automatic retry** after a failure (`docker-compose.yml#L3-L25`). Diagnose/start it explicitly with `make weaviate` or `docker compose up -d`.
 
-`make ingest` passes `--delete-all`: it erases every collection in the persistent volume before loading `Lipitor` and `Metformin` (`Makefile#L18-L21`). Use it only when that scope is intended. Loader batches 100 rows, skips rows without `text`, stops after more than ten errors, and gives an approximate success count. A non-crashing command is not proof of complete ingestion. If ingestion fails/partially loads: capture the error, correct chunk/schema/service issue, delete the affected collection (or intentionally all), reingest, then run a narrow retrieval eval. Full schema/ID/routing rules are in [retrieval and ingestion](../retrieval/weaviate-and-ingestion.md).
+`make ingest` passes `--delete-all`: it erases every collection in the persistent volume before loading `Lipitor` and `Metformin` (`Makefile#L31-L35`). Use it only when that scope is intended. Loader batches 100 rows, skips rows without `text`, stops after more than ten errors, and gives an approximate success count. A non-crashing command is not proof of complete ingestion. If ingestion fails/partially loads: capture the error, correct chunk/schema/service issue, delete the affected collection (or intentionally all), reingest, then run a narrow retrieval eval. Full schema/ID/routing rules are in [retrieval and ingestion](../retrieval/weaviate-and-ingestion.md).
 
 For PDF rechunking, install the `ingest` extra and run `uv run python healthcare_rag/processors/pdf_chunker.py --source <allowed-pdf-path>` or the ingestion CLI. Regeneration changes expected chunk IDs/pages, so update the golden dataset/evals in the same change; do not inspect or copy PDF contents into documentation.
 

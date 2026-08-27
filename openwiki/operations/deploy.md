@@ -21,6 +21,14 @@ Production also runs the [member stream perimeter](../agent/member-perimeter.md)
 
 `.github/workflows/deploy.yml` is tag-triggered (`v*.*.*`). It verifies tag ancestry/HEAD, requires production policy checks, builds GHCR, mirrors and deploys an immutable Fly Registry digest, stages required secrets before deployment, polls `/ok`, then executes deployed smoke with tracing off. Smoke failure fails the deployment; there is no automatic rollback. `make release TAG=vX.Y.Z` only validates and prints tag commands; it does not push.
 
+## Release identity, version bumps, and rollback
+
+`docs/decisions/release-tags-and-rollback.md` records the taxonomy a release depends on: the git tag is the immutable release identity, the immutable `{{version}}` GHCR image tag is the ledger mapping a tag to a digest, and only a validated `sha256:...` digest is ever deployed — never `latest` or a rolling tag. A release is the triple `(git tag, image digest, that tag's deploy/fly.prod.toml)`; rolling back re-deploys the whole triple so an old image never runs against a newer storage configuration.
+
+- `.github/workflows/release.yml` (dispatch-only) cuts a tag. `scripts/next_version.py` derives the bump from Conventional Commit subjects since the last tag (`feat!`/`BREAKING CHANGE:` → major, `feat` → minor, else patch; a `0.x` breaking change bumps minor, not major) and is shared by CI and `make next-version --explain` so the local preview matches what CI will pick. The workflow requires the tag to be cut from `main`, to not already exist, and `pyproject.toml`'s version to already match — `make release-prep BUMP=auto|patch|minor|major` writes that bump into `pyproject.toml`/`uv.lock` and re-locks so a human reviews it as an ordinary PR before the tag exists.
+- `make rollback TAG=vX.Y.Z REASON='why'` and `make release-digest TAG=vX.Y.Z` are hermetic previews (validate/print or resolve-a-digest only); they do not dispatch or mutate anything. The actual rollback is a `workflow_dispatch` on `deploy.yml` with a required `version` and `reason`, gated by the `production` GitHub Environment and the same `deploy-production` concurrency group as a tag deploy, so the two paths serialize instead of racing. It deliberately does not re-sync secrets — a rollback must be able to recover from a bad secret sync — and it is never automatic: a red deployed smoke leaves the last-good version live for a human to decide.
+- `tests/test_release_pipeline.py` asserts these invariants directly against `deploy.yml` (digest-only deploys, no rebuild on rollback, environment/concurrency gating, no secret resync, tag-ancestry checks); `tests/test_next_version.py` pins the bump derivation against real git repositories. Changing `deploy.yml`, `release.yml`, or `scripts/next_version.py` without updating these tests is the main way this contract silently breaks.
+
 ```mermaid
 flowchart TD
   T["release tag"] --> V["verify tag and production policy"]

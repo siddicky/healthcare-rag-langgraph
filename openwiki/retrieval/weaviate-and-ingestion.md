@@ -33,7 +33,7 @@ Checked-in `data/chunks_lipitor.json` and `data/chunks_metformin.json` are the d
 
 ## Operational invariants and recovery
 
-Docker persists `/var/lib/weaviate` in `weaviate_data` (`docker-compose.yml#L15-L16`), so collections survive container recreation. `make ingest` calls loader `--delete-all`, which deletes **all collections**, not just Lipitor/Metformin (`Makefile#L18-L21`; `vector_store.py#L379-L409`). `ingest_json_to_collection(delete_existing=True)` is narrower and deletes only its named collection (`#L273-L327`). Confirm scope before either operation.
+Docker persists `/var/lib/weaviate` in `weaviate_data` (`docker-compose.yml#L15-L16`), so collections survive container recreation. `make ingest` calls loader `--delete-all`, which deletes **all collections**, not just Lipitor/Metformin (`Makefile#L31-L35`; `vector_store.py#L379-L409`). `ingest_json_to_collection(delete_existing=True)` is narrower and deletes only its named collection (`#L273-L327`). Confirm scope before either operation.
 
 Import validates only nonempty `text`, batches at 100, stops after **more than 10** batch errors, and reports an *approximate* successful count. It can therefore leave a partially loaded collection without failing loudly (`#L187-L234`). Recovery: inspect loader errors, fix the artifact/schema/network issue, delete the affected collection (or intentionally use whole-store `--delete-all`), then reingest; do not assume a rerun repairs duplicates or partial state. After rebuild, issue a narrow known-drug query/eval and verify collection routing plus expected chunk/page recall.
 
