@@ -1,0 +1,102 @@
+{
+  "banner": "Numbers re-validated against the repo · 2026-08-26",
+  "submission": [
+    [
+      "Aug 18&ndash;25, 2026 &nbsp;&middot;&nbsp; 227 commits &middot; 38 PRs merged to <code>main</code>",
+      "Aug 18&ndash;25, 2026 &nbsp;&middot;&nbsp; 304 commits &middot; 50 PRs merged to <code>main</code> &nbsp;&middot;&nbsp; <span style=\"opacity:.7\">counts re-validated 2026-08-26</span>"
+    ],
+    [
+      "<div class=\"stat\"><div class=\"v\">38</div><div class=\"l\">pull requests merged to main</div></div>",
+      "<div class=\"stat\"><div class=\"v\">50</div><div class=\"l\">pull requests merged to main</div></div>"
+    ],
+    [
+      "<div class=\"stat\"><div class=\"v\">67</div><div class=\"l\">eval reports committed, each with its per-query raw outputs</div>",
+      "<div class=\"stat\"><div class=\"v\">73</div><div class=\"l\">eval reports committed, each with its per-query raw outputs</div>"
+    ],
+    [
+      "<span class=\"artifact-tag\"><b>67</b> eval reports with raw per-query outputs</span>",
+      "<span class=\"artifact-tag\"><b>73</b> eval reports with raw per-query outputs</span>"
+    ],
+    [
+      "ruff-clean on everything touched; 1,816 backend tests collected, run in CI without API keys by design.",
+      "ruff-clean on everything touched; 1,956 backend tests collected, run in CI without API keys by design."
+    ],
+    [
+      "<b>Unit:</b> 1,816 backend tests collected (155 server-parity, 288 agent), offline and deterministic.",
+      "<b>Unit:</b> 1,956 backend tests collected (169 server-parity, 414 agent, 625 graph), offline and deterministic."
+    ],
+    [
+      "the 143 frontend unit tests and the e2e spec aren't wired into CI yet;",
+      "the 313 frontend unit tests (31 files) and the e2e spec aren't wired into CI yet;"
+    ],
+    [
+      "chatting over the LangGraph streaming SDK &mdash; not the CLI demo.",
+      "chatting over the CopilotKit v2 headless transport (<code>useAgent</code>, AG-UI over SSE; the earlier <code>@langchain/react</code> transport was removed in v1.5.0) &mdash; not the CLI demo."
+    ],
+    [
+      "<code>remember_fact</code>, three reminder tools, and <code>compose_ui</code>.</p>",
+      "<code>remember_fact</code>, three reminder tools, <code>compose_ui</code>, and <code>copy_to_clipboard</code> (client-side, added 2026-08-25) &mdash; eleven in all.</p>"
+    ],
+    [
+      "<a class=\"tbd\" href=\"#\">[ Google Doc ]",
+      "<a href=\"https://docs.google.com/document/d/1QXmw_XKJLSb8GnRa3Uu4tgpW5nmHbuUA5l5StSLbt1w/edit?usp=sharing\" target=\"_blank\" rel=\"noopener\">Google Doc &#8599;"
+    ],
+    [
+      ".btn-ghost{background:transparent;color:var(--camel);border:2px dashed var(--camel);opacity:0.85}",
+      ".btn-ghost{background:transparent;color:var(--camel);border:2px dashed var(--camel);opacity:0.85}\n    .btn-outline{background:transparent;color:var(--rust);border:2px solid var(--rust)}\n    .btn-outline:hover{background:var(--rust);color:var(--white)}"
+    ],
+    [
+      "<a class=\"btn btn-ghost\" href=\"#\">[ Google Doc write-up &mdash; add link ]",
+      "<a class=\"btn btn-outline\" href=\"https://docs.google.com/document/d/1QXmw_XKJLSb8GnRa3Uu4tgpW5nmHbuUA5l5StSLbt1w/edit?usp=sharing\" target=\"_blank\" rel=\"noopener\">Google Doc write-up &#8599;"
+    ]
+  ],
+  "findings": [
+    [
+      "safety-pregraph-full-b46acc33",
+      "safety-luna-terra-e9214cbf",
+      "all"
+    ],
+    [
+      "graph-parity-a733f3d0",
+      "graph-luna-terra-888a223d",
+      "all"
+    ],
+    [
+      "synth-full-f7ca9e15",
+      "synth-luna-terra-0b106b95",
+      "all"
+    ],
+    [
+      "<div class=\"multi-metric\"><strong>0.125</strong><span>PII persistence · was 0.19 · lower is better</span>",
+      "<div class=\"multi-metric\"><strong>0.10</strong><span>PII persistence on all 27 conversations · unchanged at 0.19 on the original 22 · lower is better</span>"
+    ],
+    [
+      "PII persistence 0.19 → 0.125, replay precision clean,",
+      "PII persistence 0.19 on the original 22 (0.10 across all 27), replay precision clean,"
+    ],
+    [
+      "<div class=\"multi-metric\"><strong>0.80</strong><span>Turn correctness · within the 0.05 non-regression bar of 0.807</span>",
+      "<div class=\"multi-metric\"><strong>0.78</strong><span>Turn correctness (0.777) · within the 0.05 non-regression bar of 0.807, floor 0.757</span>"
+    ],
+    [
+      "<div class=\"multi-metric\"><strong>259</strong><span>tests green at the end of the cut</span>",
+      "<div class=\"multi-metric\"><strong>215</strong><span>tests green at the end of the cut (236 → 215 per the commit message; 1,956 collected today)</span>"
+    ],
+    [
+      "safety_gate branching to clarify_query, extract_conversation_context, answer_addendum and finalize; decompose_query to retrieve_documents; merge_retrievals to evaluate_retrieval or generate_answer; evaluate_retrieval looping back to retrieve_documents; generate_answer, validate_answer, generate_follow_ups, finalize, end.",
+      "safety_gate to generate_query_or_respond, branching to clarify_query, extract_conversation_context or finalize; decompose_query to retrieve_documents; merge_retrievals to evaluate_retrieval or generate_answer; evaluate_retrieval looping back to retrieve_documents; generate_answer, validate_answer, generate_follow_ups, finalize, end."
+    ],
+    [
+      "<strong>The graph as Studio draws it</strong> from the running server (<code>make dev</code>, then Studio pointed at <code>127.0.0.1:2024</code>), captured 2026-08-20.",
+      "<strong>The RAG graph as Studio draws it</strong> from the production server (<code>healthcare_rag</code> assistant, Studio connected to <code>hc-rag-server-prod</code>), captured 2026-08-26. <code>generate_query_or_respond</code> replaced the earlier <code>answer_addendum</code> branch."
+    ],
+    [
+      "alt=\"LangGraph Studio thread view after one run: the step rail lists clarify_query and extract_conversation_context, three parallel retrieve_documents sends, merge_retrievals, evaluate_retrieval, a second round of three retrieve_documents sends, merge_retrievals, generate_answer, validate_answer, generate_follow_ups and finalize with the answer state expanded.\"",
+      "alt=\"LangGraph Studio showing the coach graph: coach_gate fans out to claim_document, review_document, reminder_delivery, short_circuit, coach_agent and erase_my_data, all converging on finalize then end; the thread panel shows coach_agent calling the medical_lookup tool with a sister-sharing-atorvastatin question and the tool returning a refusal that redirects to a prescriber.\""
+    ],
+    [
+      "<strong>One real run, step by step.</strong> A metformin dosing question submitted from Studio: the parent query plus two sub-queries fan out to <code>retrieve_documents</code>, the evaluator asks for one gap-fill round, then one generation, validation, follow-ups and <code>finalize</code> with the cited answer in state. 16 seconds end to end. This per-node view, plus thread history and cancel/rollback, is the developer experience that decision D10 bought.",
+      "<strong>The coach graph wraps it.</strong> The <code>coach</code> assistant, captured 2026-08-26: a deterministic <code>coach_gate</code> routes to <code>short_circuit</code>, document/reminder nodes, erasure, or the single <code>coach_agent</code>. The whole RAG StateGraph on the left lives inside that agent as its <code>medical_lookup</code> tool (<code>return_direct</code>) &mdash; here a &ldquo;can my sister take my atorvastatin&rdquo; question is relayed into it and the gate&rsquo;s personal-advice refusal comes straight back through <code>finalize</code>, unparaphrased, with <code>follow_ups []</code>. This per-node view, plus thread history and cancel/rollback, is the developer experience that decision D10 bought."
+    ]
+  ]
+}
