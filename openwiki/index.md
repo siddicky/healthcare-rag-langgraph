@@ -6,7 +6,6 @@ okf_version: "0.1"
 
 - [Completed documentation plan](_skeleton.md) - Temporary planning artifact retained because the filesystem interface cannot delete files.
 - [openwiki/](AGENTS.md) - Directory guide to the generated OpenWiki knowledge base for the healthcare RAG repository: architecture, processors, retrieval, safety, observability, operations, privacy, agent server, and frontend, kept short-and-linky rather than long prose.
-- [CLAUDE](CLAUDE.md)
 - [Healthcare RAG engineering guide](quickstart.md) - Source-grounded navigation for the healthcare RAG, coach product, server, safety controls, evaluations, and operations.
 
 # Directories
@@ -18,7 +17,6 @@ okf_version: "0.1"
 - [decisions](decisions/)
 - [frontend](frontend/)
 - [observability](observability/)
-- [openwiki](openwiki/)
 - [operations](operations/)
 - [privacy](privacy/)
 - [processors](processors/)
