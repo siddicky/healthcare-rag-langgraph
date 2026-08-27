@@ -1,7 +1,7 @@
 # Hybrid RAG Agent with Answer Validation
-[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Tests](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml/badge.svg)](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Abdullah_Siddique-blue.svg?logo=linkedin)](https://linkedin.com/in/a-sdq)
+[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Tests](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml/badge.svg)](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml)
 
-This project answers questions grounded in the Lipitor and Metformin product monographs. A LangGraph `StateGraph` runs the safety gate, retrieval, generation, and citation validation pipeline.
+This project answers questions grounded in the Lipitor and Metformin product monographs. A LangGraph `StateGraph` runs the safety gate, retrieval, generation, and citation validation pipeline
 
 Instead of a rigid sequential pipeline (or racing multiple answer paths), the graph branches at runtime: every query is first classified by a safety gate, then conditionally clarified, decomposed into parallel retrieval fan-outs, and merged into a single validated answer. Key capabilities include:
 
@@ -447,6 +447,6 @@ To ensure the generated answers are factually grounded in the provided documents
 
 For questions or support, contact Abdullah Siddique at [abdullah.siddique94@gmail.com](mailto:abdullah.siddique94@gmail.com).
 
-You can also find me on [LinkedIn](https://www.linkedin.com/in/a-sdq/).
+You can also find me on  [![LinkedIn](https://img.shields.io/badge/LinkedIn-Abdullah_Siddique-blue.svg?logo=linkedin)](https://linkedin.com/in/a-sdq)
 
 ---
