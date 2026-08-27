@@ -1,5 +1,5 @@
 # Hybrid RAG Agent with Answer Validation
-[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Tests](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml/badge.svg)](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml)
+[![Python Version](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://www.python.org/downloads/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE) [![Tests](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml/badge.svg)](https://github.com/siddicky/healthcare-rag-langgraph/actions/workflows/tests.yml) [![LinkedIn](https://img.shields.io/badge/LinkedIn-Abdullah_Siddique-blue.svg?logo=linkedin)](https://linkedin.com/in/a-sdq)
 
 This project answers questions grounded in the Lipitor and Metformin product monographs. A LangGraph `StateGraph` runs the safety gate, retrieval, generation, and citation validation pipeline.
 
