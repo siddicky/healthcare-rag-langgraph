@@ -358,7 +358,7 @@ describe("reload during a pending interrupt (fixture)", () => {
 });
 
 describe("document upload flow", () => {
-  it("drives the ingest card from status polling and stops after done; next turn carries attachment_id + sentinel", async () => {
+  it("auto-reviews a completed upload: status polling stops after done and the review turn carries attachment_id + sentinel without a manual send", async () => {
     const postUpload = vi.fn(async () => ({ stage: "uploading" }));
     const statusStages = ["scanning", "extracting", "done"];
     let statusIndex = 0;
@@ -376,22 +376,16 @@ describe("document upload flow", () => {
     const file = new File(["%PDF-1.4 fixture"], "intake-form.pdf", { type: "application/pdf" });
     await user.upload(input, file);
 
-    expect(await screen.findByTestId("document-ingest")).toBeInTheDocument();
-    await waitFor(() => expect(screen.getByText("Ready to review")).toBeInTheDocument());
-    expect(getUploadStatus).toHaveBeenCalledTimes(3);
+    await waitFor(() => expect(postUpload).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(getUploadStatus).toHaveBeenCalledTimes(3));
     const pollsAfterDone = getUploadStatus.mock.calls.length;
-    await settled();
-    await settled();
-    expect(getUploadStatus.mock.calls.length).toBe(pollsAfterDone);
-
-    const sendButton = screen.getByRole("button", { name: "Send" });
-    expect(sendButton).toBeEnabled();
-    await user.click(sendButton);
     await waitFor(() => expect(stream.calls).toHaveLength(1));
     const call = stream.calls[0] as StreamCall;
     expect(call.payload).toEqual({
       input: { question: "Please review this document.", attachment_id: "00000000-0000-4000-8000-000000000001" },
     });
+    await settled();
+    expect(getUploadStatus.mock.calls.length).toBe(pollsAfterDone);
   });
 
   it("renders upload errors as plain text, not the card", async () => {
