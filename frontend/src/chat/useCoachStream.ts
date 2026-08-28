@@ -1195,6 +1195,16 @@ export function useCoachStream(deps: CoachStreamDeps) {
     }
   }, [busy, stream.isLoading, queue, ensureThread, runStream]);
 
+  const autoReviewedUploadIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const upload = uploadRef.current;
+    if (upload.phase !== "staged" || upload.stage !== "done") return;
+    if (upload.info.threadId !== activeThreadRef.current) return;
+    if (autoReviewedUploadIdRef.current === upload.info.uploadId) return;
+    autoReviewedUploadIdRef.current = upload.info.uploadId;
+    void send("");
+  }, [upload, activeThreadId, send]);
+
   const cancelQueued = useCallback((id: string): void => {
     setQueue((q) => q.filter((e) => e.id !== id));
   }, []);

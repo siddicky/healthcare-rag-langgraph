@@ -385,13 +385,11 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
     const ingest = page.getByTestId("document-ingest");
     await expect(ingest).toBeVisible();
     await expect(ingest).toContainText("intake.pdf");
-    await expect(ingest).toContainText("Ready to review", { timeout: 30_000 });
-    await expect(page.getByText("Document ready to review")).toBeVisible();
 
-    const reviewSend = page.getByRole("button", { name: "Send" });
-    await expect(reviewSend).toBeEnabled();
-    await reviewSend.click();
     const review = page.getByTestId("interrupt-card");
+    await expect(page.getByText("Please review this document.").first()).toBeVisible({
+      timeout: 30_000,
+    });
     await expect(review).toBeVisible({ timeout: 60_000 });
     await expect(review).toContainText("Found in");
     await expect(review).toContainText("Lipitor");
