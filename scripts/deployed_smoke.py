@@ -428,6 +428,26 @@ class DeployedSmoke:
             for item in await self.messages(self.settings.u1_token, thread_id)
         )
         require(fact in rendered, "remember_fact did not round-trip through chat")
+
+        # New thread: checkpoint history can't satisfy this, only store-backed recall.
+        cross_thread = await self.create_thread(self.settings.u1_token)
+        self.u1_threads.append(cross_thread)
+        surfaced = False
+        for _ in range(2):
+            _ = await self.run_turn(
+                self.settings.u1_token,
+                cross_thread,
+                question="What coaching label did I ask you to remember?",
+            )
+            rendered_cross = "\n".join(
+                message_text(item)
+                for item in await self.messages(self.settings.u1_token, cross_thread)
+            )
+            if fact in rendered_cross:
+                surfaced = True
+                break
+        require(surfaced, "saved memory did not surface in a new thread")
+
         _ = await self.request(
             "PUT",
             "/store/items",
@@ -439,7 +459,7 @@ class DeployedSmoke:
             },
             expected={401, 403, 404, 405},
         )
-        print("PASS 1: memory round-trip; direct member store put denied")
+        print("PASS 1: memory round-trip; cross-thread recall; direct member store put denied")
 
     async def check_isolation(self) -> None:
         u1_thread = self.u1_threads[-1]
