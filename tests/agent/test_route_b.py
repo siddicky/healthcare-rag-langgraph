@@ -873,3 +873,123 @@ async def test_memory_segment_still_appended_after_base_prompt() -> None:
         assert prompt.startswith(BASE_PROMPT)
         assert "## Saved user memories" in prompt
         assert "- prefers morning workouts" in prompt
+
+
+def _named_context(name: str | None) -> AgentContext:
+    return AgentContext(
+        user_id="user-1",
+        thread_id="thread-1",
+        human_msg_id="human-1",
+        display_name=name,
+    )
+
+
+@pytest.mark.asyncio
+async def test_memory_segment_renders_member_name_without_saved_memories() -> None:
+    # Given: a display name on the context and an empty memory store.
+    store = InMemoryStore()
+    model = PromptCapturingFakeModel(responses=[AIMessage(content="Hi.")])
+
+    # When
+    result = await build_route_b_agent(model, store).ainvoke(
+        {"messages": [HumanMessage(id="human-1", content="hello")]},
+        _config(),
+        context=_named_context("Dana"),
+    )
+
+    # Then: the name renders as its own section; no memory section appears.
+    assert result["messages"][-1].content == "Hi."
+    assert model.seen_system_prompts
+    for prompt in model.seen_system_prompts:
+        assert prompt.startswith(BASE_PROMPT)
+        assert "## Member context" in prompt
+        assert "Dana" in prompt
+        assert "## Saved user memories" not in prompt
+
+
+@pytest.mark.asyncio
+async def test_memory_segment_renders_name_and_facts_as_separate_sections() -> None:
+    # Given: a stored profile fact and a display name on the context.
+    store = InMemoryStore()
+    await store.aput(
+        ("users", "user-1", "profile"),
+        "pref-1",
+        {"fact": "prefers morning workouts"},
+    )
+    model = PromptCapturingFakeModel(responses=[AIMessage(content="Noted.")])
+
+    # When
+    result = await build_route_b_agent(model, store).ainvoke(
+        {"messages": [HumanMessage(id="human-1", content="hello")]},
+        _config(),
+        context=_named_context("Dana"),
+    )
+
+    # Then: both sections render, member context first, facts unchanged.
+    assert result["messages"][-1].content == "Noted."
+    assert model.seen_system_prompts
+    for prompt in model.seen_system_prompts:
+        assert prompt.startswith(BASE_PROMPT)
+        assert prompt.index("## Member context") < prompt.index(
+            "## Saved user memories"
+        )
+        assert "Dana" in prompt
+        assert "- prefers morning workouts" in prompt
+
+
+@pytest.mark.asyncio
+async def test_memory_segment_without_name_or_facts_is_exactly_base_prompt() -> None:
+    # Given: no display name and an empty store (the pre-change context shape).
+    store = InMemoryStore()
+    model = PromptCapturingFakeModel(responses=[AIMessage(content="Hello!")])
+
+    # When
+    result = await build_route_b_agent(model, store).ainvoke(
+        {"messages": [HumanMessage(id="human-1", content="hello")]},
+        _config(),
+        context=_context(),
+    )
+
+    # Then: every model call sees exactly BASE_PROMPT -- byte-identical to before.
+    assert result["messages"][-1].content == "Hello!"
+    assert model.seen_system_prompts
+    for prompt in model.seen_system_prompts:
+        assert prompt == BASE_PROMPT
+
+
+@pytest.mark.asyncio
+async def test_coach_agent_threads_display_name_from_principal_into_system_prompt(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    # Given: the full coach graph with a stub gateway capturing prompts.
+    model = PromptCapturingFakeModel(responses=[AIMessage(content="Hi.")])
+
+    class _StubGateway:
+        def chat_model(self, *_args: object, **_kwargs: object) -> PromptCapturingFakeModel:
+            return model
+
+    class _StubResources:
+        gateway = _StubGateway()
+
+    monkeypatch.setattr(
+        "healthcare_rag.agent.coach_agent.get_resources", lambda: _StubResources()
+    )
+    graph = build_coach_graph().compile(checkpointer=InMemorySaver())
+    config: RunnableConfig = {
+        "configurable": {
+            "thread_id": "thread-a",
+            "langgraph_auth_user": {
+                "identity": "user-1",
+                "member_display_name": "Dana",
+            },
+        }
+    }
+
+    # When
+    _ = await graph.ainvoke({"question": "hello"}, config)
+
+    # Then: the principal's display name reached the model's system prompt.
+    assert model.seen_system_prompts
+    for prompt in model.seen_system_prompts:
+        assert "## Member context" in prompt
+        assert "Dana" in prompt

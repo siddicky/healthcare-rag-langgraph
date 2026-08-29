@@ -16,6 +16,7 @@ from pydantic import BaseModel, ConfigDict, ValidationError
 from healthcare_rag.graph.resources import get as get_resources
 from healthcare_rag.processors.privacy import PrivacyScanError
 
+from .auth import clean_display_name
 from .store_data import put_user_record
 
 MemoryKind = Literal["profile", "episodic"]
@@ -58,6 +59,9 @@ def principal_mapping(principal: object) -> Mapping[str, object] | None:
     role = getattr(principal, "role", None)
     if role is not None:
         attributes["role"] = role
+    display_name = getattr(principal, "member_display_name", None)
+    if isinstance(display_name, str) and display_name:
+        attributes["member_display_name"] = display_name
     return attributes
 
 
@@ -74,6 +78,25 @@ def authenticated_user_id(config: RunnableConfig) -> str:
     if not identity:
         raise MemoryIdentityError
     return identity
+
+
+def authenticated_display_name(config: RunnableConfig) -> str | None:
+    """Read the member's display name from the authenticated principal, if any.
+
+    Fail-open to None: the name is cosmetic personalization, not identity --
+    identity itself stays fail-closed in ``authenticated_user_id``. The value
+    is re-validated by ``auth.clean_display_name`` so a malformed principal
+    cannot inject structural content (newlines) into the system prompt.
+    """
+    principal = principal_mapping(
+        config.get("configurable", {}).get("langgraph_auth_user")
+    )
+    if principal is None:
+        return None
+    raw = principal.get("member_display_name")
+    if not isinstance(raw, str):
+        return None
+    return clean_display_name(raw)
 def sanitize_memory_field(value: str) -> str | None:
     """Apply the single scrub-then-rescan policy shared by every memory writer."""
     privacy = get_resources().privacy
@@ -130,6 +153,7 @@ async def dynamic_prompt(config: RunnableConfig, store: BaseStore) -> str:
 
 __all__ = [
     "MemoryIdentityError",
+    "authenticated_display_name",
     "authenticated_user_id",
     "dynamic_prompt",
     "principal_mapping",

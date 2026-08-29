@@ -35,7 +35,11 @@ from typing_extensions import override
 from healthcare_rag.graph.resources import get as get_resources
 
 from .compose_ui import compose_ui, validate_composition
-from .memory import authenticated_user_id, remember_fact
+from .memory import (
+    authenticated_display_name,
+    authenticated_user_id,
+    remember_fact,
+)
 from .reminders import cancel_reminder, create_reminder, edit_reminder
 from .safe_message import to_safe_message
 from .state import CoachState
@@ -61,6 +65,7 @@ class AgentContext:
     user_id: str
     thread_id: str
     human_msg_id: str
+    display_name: str | None = None
 
 
 class RouteBInput(TypedDict):
@@ -220,27 +225,34 @@ class RouteBCopilotKitMiddleware(CopilotKitMiddleware):
 
 @dynamic_prompt
 async def memory_segment(request: ModelRequest[AgentContext | None]) -> str:
-    """Append auth-scoped memory to the fixed Route-B system contract."""
+    """Append identity and auth-scoped memory to the fixed Route-B system contract."""
     runtime = request.runtime
     context = runtime.context
     if context is None:
         raise ValueError("AgentContext is required")
-    if runtime.store is None:
+    segments: list[str] = []
+    if context.display_name:
+        segments.append(
+            "## Member context\n"
+            f"- The member's display name is {context.display_name}. "
+            "Address them by name when natural, not every turn."
+        )
+    if runtime.store is not None:
+        profile = await runtime.store.asearch(
+            ("users", context.user_id, "profile"), limit=100
+        )
+        episodic = await runtime.store.asearch(
+            ("users", context.user_id, "episodic"), limit=100
+        )
+        facts = [item.value.get("fact") for item in (*profile, *episodic)]
+        clean = [fact for fact in facts if isinstance(fact, str)]
+        if clean:
+            segments.append(
+                "## Saved user memories\n" + "\n".join(f"- {fact}" for fact in clean)
+            )
+    if not segments:
         return BASE_PROMPT
-    profile = await runtime.store.asearch(
-        ("users", context.user_id, "profile"), limit=100
-    )
-    episodic = await runtime.store.asearch(
-        ("users", context.user_id, "episodic"), limit=100
-    )
-    facts = [item.value.get("fact") for item in (*profile, *episodic)]
-    clean = [fact for fact in facts if isinstance(fact, str)]
-    segment = (
-        "## Saved user memories\n" + "\n".join(f"- {fact}" for fact in clean)
-        if clean
-        else ""
-    )
-    return f"{BASE_PROMPT}\n\n{segment}" if segment else BASE_PROMPT
+    return BASE_PROMPT + "\n\n" + "\n\n".join(segments)
 
 
 @after_agent
@@ -328,6 +340,7 @@ async def coach_agent(
     configurable["coach_human_msg_id"] = human.id
     child_config: RunnableConfig = {**config, "configurable": configurable}
     user_id = authenticated_user_id(config)
+    display_name = authenticated_display_name(config)
     model = get_resources().gateway.chat_model("default", temperature=0.0)
     result = await build_route_b_agent(model, store).ainvoke(
         {"messages": messages},
@@ -336,6 +349,7 @@ async def coach_agent(
             user_id=user_id,
             thread_id=str(configurable.get("thread_id", "")),
             human_msg_id=human.id,
+            display_name=display_name,
         ),
     )
     return {
