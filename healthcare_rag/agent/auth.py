@@ -64,6 +64,14 @@ def _bag(payload: Mapping[str, object], name: str) -> Mapping[str, object]:
     return bag if isinstance(bag, Mapping) else {}
 
 
+def clean_display_name(value: str) -> str | None:
+    """Validate a service-supplied display name; None when malformed."""
+    name = value.strip()
+    if not name or len(name) > _MAX_DISPLAY_NAME:
+        return None
+    return name if _DISPLAY_NAME_CHARSET.fullmatch(name) else None
+
+
 def _display_name(payload: Mapping[str, object]) -> str | None:
     """Read the service-role-written given name; drop it rather than fail.
 
@@ -75,10 +83,7 @@ def _display_name(payload: Mapping[str, object]) -> str | None:
     value = _bag(payload, "app_metadata").get("display_name")
     if not isinstance(value, str):
         return None
-    name = value.strip()
-    if not name or len(name) > _MAX_DISPLAY_NAME:
-        return None
-    return name if _DISPLAY_NAME_CHARSET.fullmatch(name) else None
+    return clean_display_name(value)
 
 
 def _unauthorized() -> Auth.exceptions.HTTPException:
@@ -346,4 +351,4 @@ auth.on.crons.update(_cron_scope)
 auth.on.crons.delete(_cron_scope)
 
 
-__all__ = ["SUPABASE_TRANSPORT", "Auth", "auth", "supabase_bearer"]
+__all__ = ["SUPABASE_TRANSPORT", "Auth", "auth", "clean_display_name", "supabase_bearer"]
