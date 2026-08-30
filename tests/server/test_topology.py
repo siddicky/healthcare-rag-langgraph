@@ -62,10 +62,7 @@ def _config() -> ServerConfig:
 @asynccontextmanager
 async def _client(
     monkeypatch: pytest.MonkeyPatch,
-    *,
-    feedback_error: RuntimeError | None = None,
 ) -> AsyncGenerator[tuple[httpx.AsyncClient, Any], None]:
-    import healthcare_rag.agent.http_app as custom
     import server.app as app_module
 
     # Topology is not about embeddings: with any OPENAI_API_KEY present (a
@@ -74,14 +71,6 @@ async def _client(
     # these suites take the documented index=None fallback and stay offline.
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
-    if feedback_error is None:
-        monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
-    else:
-        monkeypatch.setattr(
-            custom,
-            "validate_feedback_project",
-            lambda: (_ for _ in ()).throw(feedback_error),
-        )
     app = app_module.create_app(_config())
     transport = httpx.ASGITransport(app=app)
     async with (
@@ -171,17 +160,6 @@ async def test_native_cors_allows_only_configured_origin(
 
 
 @pytest.mark.anyio
-async def test_custom_lifespan_failure_aborts_startup(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    with pytest.raises(RuntimeError, match="invalid feedback project"):
-        async with _client(
-            monkeypatch, feedback_error=RuntimeError("invalid feedback project")
-        ):
-            pass
-
-
-@pytest.mark.anyio
 async def test_fallback_shim_exposes_version_and_shared_store(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -239,11 +217,9 @@ def test_upload_reservation_uses_shared_shim_store(
 def test_custom_routes_retain_priority_before_native_catch_all(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import healthcare_rag.agent.http_app as custom
     import server.app as app_module
 
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
     app = app_module.create_app(_config())
     paths = [getattr(route, "path", "") for route in app.routes]
     assert paths.index("/coach/internal/version") < paths.index("/{path:path}")

@@ -59,7 +59,6 @@ def _config() -> ServerConfig:
 def verify_upload_reservation_uses_shared_shim_store(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    import healthcare_rag.agent.http_app as custom
     import server.app as app_module
     from healthcare_rag.agent import uploads
     from healthcare_rag.agent.documents import DocumentProposal
@@ -69,7 +68,6 @@ def verify_upload_reservation_uses_shared_shim_store(
         return DocumentProposal()
 
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
     monkeypatch.setattr(uploads, "DOCUMENT_EXTRACTOR", extract)
     monkeypatch.setenv("LANGSMITH_API_KEY", "platform-secret")
     monkeypatch.setenv("COACH_INTERNAL_TOKEN", "internal-secret")

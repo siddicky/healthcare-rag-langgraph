@@ -35,6 +35,7 @@ from typing_extensions import override
 from healthcare_rag.graph.resources import get as get_resources
 
 from .compose_ui import compose_ui, validate_composition
+from .feedback import LC_RUN_ID_PREFIX
 from .memory import (
     authenticated_display_name,
     authenticated_user_id,
@@ -265,7 +266,14 @@ async def relay_medical_answer(
     last = messages[-1] if messages else None
     if not (isinstance(last, ToolMessage) and last.name == "medical_lookup"):
         return None
-    return {"messages": [AIMessage(id=str(uuid4()), content=str(last.content))]}
+    artifact = last.artifact if isinstance(last.artifact, dict) else {}
+    source_run_id = artifact.get("source_run_id")
+    relayed_id = (
+        f"{LC_RUN_ID_PREFIX}{source_run_id}"
+        if isinstance(source_run_id, str) and source_run_id
+        else str(uuid4())
+    )
+    return {"messages": [AIMessage(id=relayed_id, content=str(last.content))]}
 
 
 def build_route_b_agent(

@@ -26,7 +26,7 @@ from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Final, TypeAlias, override
 from urllib.parse import urlparse
-from uuid import UUID, uuid4
+from uuid import uuid4
 
 import anyio
 import httpx
@@ -163,7 +163,6 @@ class SmokeSettings:
     u2_token: str
     platform_key: str
     internal_token: str
-    feedback_project_id: str
 
     @classmethod
     def from_environment(
@@ -180,9 +179,6 @@ class SmokeSettings:
             "LANGGRAPH_U2_TOKEN": environment.get("LANGGRAPH_U2_TOKEN", ""),
             "LANGSMITH_API_KEY": environment.get("LANGSMITH_API_KEY", ""),
             "COACH_INTERNAL_TOKEN": environment.get("COACH_INTERNAL_TOKEN", ""),
-            "LANGSMITH_FEEDBACK_PROJECT_ID": environment.get(
-                "LANGSMITH_FEEDBACK_PROJECT_ID", ""
-            ),
         }
         missing = [
             name
@@ -208,19 +204,12 @@ class SmokeSettings:
                 "--url must be a deployed HTTPS URL, never langgraph dev; "
                 "use --allow-insecure-staging only for an isolated staging deployment"
             )
-        try:
-            feedback_id = str(UUID(values["LANGSMITH_FEEDBACK_PROJECT_ID"]))
-        except ValueError:
-            raise SmokeConfigurationError(
-                "LANGSMITH_FEEDBACK_PROJECT_ID must be a UUID"
-            ) from None
         return cls(
             url=values["LANGGRAPH_DEPLOYMENT_URL"].rstrip("/"),
             u1_token=u1_token,
             u2_token=u2_token,
             platform_key=values["LANGSMITH_API_KEY"],
             internal_token=values["COACH_INTERNAL_TOKEN"],
-            feedback_project_id=feedback_id,
         )
 
 
@@ -1075,48 +1064,57 @@ class DeployedSmoke:
         message_id = assistant.get("id")
         require(isinstance(message_id, str), "feedback target omitted message id")
 
-        def read_feedback() -> list[JSONValue]:
-            client = LangSmithClient(api_key=self.settings.platform_key)
-            records: list[JSONValue] = []
-            for feedback in client.list_feedback(
-                feedback_key=["member_feedback"],
-                session=[self.settings.feedback_project_id],
-            ):
-                # The current LangSmith API strips custom create_feedback
-                # extras (verified 2026-08-23: extras land as {"error":
-                # False}), so thread/message correlation is no longer
-                # possible; the count-delta below carries the assertion.
-                require(
-                    str(feedback.session_id) == self.settings.feedback_project_id,
-                    "feedback session id mismatch",
-                )
-                require(
-                    feedback.run_id is None,
-                    "run-less feedback unexpectedly has run_id",
-                )
-                records.append({"id": str(feedback.id)})
-            return records
-
-        before_count = len(await to_thread.run_sync(read_feedback))
-        _ = await self.request(
+        feedback_response = await self.request(
             "POST",
             "/coach/feedback",
             headers=self.member_headers(self.settings.u2_token),
             json_value={"thread_id": thread_id, "message_id": message_id, "score": 1},
             expected=201,
         )
+        feedback_body = mapping_body(feedback_response)
+        require(feedback_body.get("ok") is True, "feedback post did not return ok")
+        attached = feedback_body.get("attached")
+        require(isinstance(attached, bool), "feedback response omitted attached flag")
+        trace_id = feedback_body.get("trace_id")
+
+        if not message_id.startswith("lc_run--"):
+            # Template/relayed messages carry no model run id: the click is
+            # store-only by design and must say so.
+            require(
+                attached is False and trace_id is None,
+                "untraceable message reported an attached trace",
+            )
+            print(
+                "PASS 10: document lifecycle, byte-artifact checks, and "
+                "store-only feedback path held"
+            )
+            return
+
+        require(attached is True, "traceable message did not attach feedback")
+        require(
+            isinstance(trace_id, str) and bool(trace_id),
+            "attached feedback omitted its trace id",
+        )
+        assert isinstance(trace_id, str)
+        langsmith_client = LangSmithClient(api_key=self.settings.platform_key)
+
+        def read_trace_feedback() -> list[tuple[str, float | None]]:
+            return [
+                (feedback.key, feedback.score)
+                for feedback in langsmith_client.list_feedback(run_ids=[trace_id])
+            ]
 
         # Real LangSmith ingestion is eventually consistent: a read
-        # immediately after the 201 can legitimately see the old count.
-        feedback: list[JSONValue] = []
+        # immediately after the 201 can legitimately see nothing yet.
+        records: list[tuple[str, float | None]] = []
         for _ in range(12):
-            feedback = await to_thread.run_sync(read_feedback)
-            if len(feedback) > before_count:
+            records = await to_thread.run_sync(read_trace_feedback)
+            if ("member_feedback", 1.0) in records:
                 break
             await anyio.sleep(5.0)
         require(
-            len(feedback) == before_count + 1,
-            "feedback post did not create exactly one new record",
+            ("member_feedback", 1.0) in records,
+            "feedback post did not land on the message trace",
         )
         print(
             "PASS 10: document lifecycle, byte-artifact checks, and feedback read-back held"

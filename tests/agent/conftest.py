@@ -16,9 +16,13 @@ import pytest
 
 ROOT: Final = Path(__file__).parents[2]
 
+FIXTURE_TRACE_ID: Final = "00000000-0000-4000-8000-000000007fac"
+FIXTURE_SESSION_ID: Final = "00000000-0000-4000-8000-000000005e55"
+
 
 class _FixtureHandler(BaseHTTPRequestHandler):
     feedback_requests: ClassVar[list[tuple[dict[str, str], dict[str, object]]]] = []
+    run_lookups: ClassVar[list[str]] = []
     extraction_calls: ClassVar[int] = 0
 
     @override
@@ -34,13 +38,24 @@ class _FixtureHandler(BaseHTTPRequestHandler):
         self.wfile.write(encoded)
 
     def do_GET(self) -> None:
-        if self.path.startswith("/feedback?"):
-            encoded = b"[]"
-            self.send_response(200)
-            self.send_header("content-type", "application/json")
-            self.send_header("content-length", str(len(encoded)))
-            self.end_headers()
-            self.wfile.write(encoded)
+        if self.path.startswith("/runs/"):
+            run_id = self.path.removeprefix("/runs/").split("?")[0]
+            type(self).run_lookups.append(run_id)
+            self._json(
+                200,
+                {
+                    "id": run_id,
+                    "name": "ChatOpenAI",
+                    "run_type": "llm",
+                    "start_time": "2026-01-01T00:00:00Z",
+                    "end_time": "2026-01-01T00:00:01Z",
+                    "trace_id": FIXTURE_TRACE_ID,
+                    "session_id": FIXTURE_SESSION_ID,
+                    "inputs": {},
+                    "outputs": {},
+                    "error": None,
+                },
+            )
             return
         if self.path == "/auth/v1/user":
             authorization = self.headers.get("authorization", "")
@@ -131,12 +146,19 @@ def agent_server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
     graph_path = log_path.parent / "fixture_graphs.py"
     graph_path.write_text(
         "from typing import Annotated, TypedDict\n"
-        "from langchain_core.messages import AIMessage, AnyMessage\n"
+        "from uuid import uuid4\n"
+        "from langchain_core.messages import AIMessage, AnyMessage, HumanMessage\n"
         "from langgraph.graph import END, START, StateGraph, add_messages\n\n"
         "class State(TypedDict, total=False):\n"
         "    messages: Annotated[list[AnyMessage], add_messages]\n\n"
         "def respond(state: State) -> State:\n"
-        "    return {'messages': [AIMessage(content='fixture response')]}\n\n"
+        "    # Mirror the real coach shapes: a gate-built HumanMessage (plain\n"
+        "    # uuid id) and a model-authored reply whose id carries the model\n"
+        "    # run id (langchain-core lc_run--<run_id> convention).\n"
+        "    return {'messages': [HumanMessage(id=str(uuid4()),"
+        " content='fixture response'),"
+        " AIMessage(id=f'lc_run--{uuid4()}',"
+        " content='fixture response')]}\n\n"
         "builder = StateGraph(State)\n"
         "builder.add_node('respond', respond)\n"
         "builder.add_edge(START, 'respond')\n"
@@ -176,7 +198,6 @@ def agent_server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
         "CORS_ALLOW_ORIGINS": "https://coach.test",
         "HC_RAG_LLM_MODEL": "gpt-4o-mini",
         "HC_RAG_VALIDATOR_MODEL": "gpt-4o-mini",
-        "LANGSMITH_FEEDBACK_PROJECT_ID": "00000000-0000-4000-8000-000000000fee",
         "COACH_SOCKET_GUARD_MARKER": str(marker_path),
         "PYTHONPATH": f"{log_path.parent}{os.pathsep}{os.environ.get('PYTHONPATH', '')}",
     }
@@ -204,7 +225,6 @@ def agent_server(tmp_path_factory: pytest.TempPathFactory) -> Iterator[str]:
             "CORS_ALLOW_ORIGINS",
             "HC_RAG_LLM_MODEL",
             "HC_RAG_VALIDATOR_MODEL",
-            "LANGSMITH_FEEDBACK_PROJECT_ID",
             "COACH_SOCKET_GUARD_MARKER",
         )
     }

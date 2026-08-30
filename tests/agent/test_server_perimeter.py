@@ -500,11 +500,13 @@ def test_attachment_is_thread_bound_and_single_use(
         assert consumed.status_code == 403
 
 
-def test_feedback_targets_owned_latest_state_message_and_uses_langsmith_only_key(
+def test_feedback_targets_owned_latest_state_message_and_attaches_to_its_trace(
     agent_server: str,
     member_headers: dict[str, str],
     feedback_requests: list[tuple[dict[str, str], dict[str, object]]],
 ) -> None:
+    from tests.agent.conftest import FIXTURE_SESSION_ID, FIXTURE_TRACE_ID
+
     with httpx.Client(base_url=agent_server, headers=member_headers) as client:
         thread_id = client.post("/threads", json={}).json()["thread_id"]
         run = client.post(
@@ -535,13 +537,24 @@ def test_feedback_targets_owned_latest_state_message_and_uses_langsmith_only_key
             },
         )
         assert feedback.status_code == 201, feedback.text
+        assert feedback.json() == {
+            "ok": True,
+            "attached": True,
+            "trace_id": FIXTURE_TRACE_ID,
+        }
 
     assert len(feedback_requests) == 1
     headers, payload = feedback_requests[0]
     assert headers["x-api-key"] == "platform-secret"
     assert "x-internal-token" not in {key.lower() for key in headers}
-    assert payload["session_id"] == "00000000-0000-4000-8000-000000000fee"
-    assert payload.get("run_id") is None
+    assert message_id.startswith("lc_run--")
+    assert payload["trace_id"] == FIXTURE_TRACE_ID
+    assert payload["session_id"] == FIXTURE_SESSION_ID
+    assert payload["key"] == "member_feedback"
+    assert payload["score"] == 1
+    assert payload["comment"] == "helpful"
+    # Trace-level feedback: the SDK posts the root trace id as run_id.
+    assert payload["run_id"] == FIXTURE_TRACE_ID
 
 
 def test_feedback_rejects_absent_message_and_other_users_thread(
@@ -563,3 +576,59 @@ def test_feedback_rejects_absent_message_and_other_users_thread(
         json={"thread_id": thread_id, "message_id": "absent", "score": -1},
     )
     assert other.status_code == 403
+
+
+def test_feedback_without_a_traceable_run_id_degrades_to_store_only(
+    agent_server: str,
+    member_headers: dict[str, str],
+    feedback_requests: list[tuple[dict[str, str], dict[str, object]]],
+) -> None:
+    with httpx.Client(base_url=agent_server, headers=member_headers) as client:
+        thread_id = client.post("/threads", json={}).json()["thread_id"]
+        run = client.post(
+            f"/threads/{thread_id}/runs/stream",
+            json={
+                "assistant_id": "coach",
+                "input": {"question": "fixture question"},
+                "stream_mode": ["updates"],
+                "stream_subgraphs": False,
+                "stream_resumable": False,
+                "durability": "exit",
+                "if_not_exists": "reject",
+                "multitask_strategy": "reject",
+            },
+            timeout=30,
+        )
+        assert run.status_code == 200, run.text
+        state = client.get(f"/threads/{thread_id}/state")
+        assert state.status_code == 200
+        human_id = state.json()["values"]["messages"][0]["id"]
+        feedback = client.post(
+            "/coach/feedback",
+            json={"thread_id": thread_id, "message_id": human_id, "score": -1},
+        )
+        assert feedback.status_code == 201, feedback.text
+        assert feedback.json() == {"ok": True, "attached": False}
+
+    assert not human_id.startswith("lc_run--")
+    assert feedback_requests == []
+
+
+def test_model_run_id_prefers_metadata_then_parses_lc_run_message_id() -> None:
+    from uuid import uuid4
+
+    from healthcare_rag.agent.feedback import _model_run_id
+
+    metadata_run = str(uuid4())
+    assert (
+        _model_run_id(
+            {"response_metadata": {"run_id": metadata_run}}, str(uuid4())
+        )
+        == metadata_run
+    )
+    stamped = str(uuid4())
+    assert _model_run_id({}, f"lc_run--{stamped}") == stamped
+    assert _model_run_id({}, "lc_run--not-a-uuid") is None
+    assert _model_run_id({}, "lc_run--") is None
+    assert _model_run_id({}, str(uuid4())) is None
+    assert _model_run_id({"response_metadata": {}}, f"lc_run--{stamped}") == stamped
