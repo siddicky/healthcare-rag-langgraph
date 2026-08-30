@@ -69,7 +69,7 @@ async def _client(
     monkeypatch.setenv("COACH_ALLOWED_ORIGINS", coach_origins)
 
     # Reload custom app so its inner CORSMiddleware captures current COACH_ALLOWED_ORIGINS
-    import healthcare_rag.agent.http_app as custom
+    import healthcare_rag.agent.http_app as custom  # noqa: F401 — reloaded below
     import server.app as app_module
 
     # Ensure reload picks up new env
@@ -78,7 +78,6 @@ async def _client(
     else:
         importlib.import_module("healthcare_rag.agent.http_app")
 
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _p: _stub_auth())
     app = app_module.create_app(_cfg())
     transport = httpx.ASGITransport(app=app)

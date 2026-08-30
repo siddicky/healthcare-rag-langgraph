@@ -56,11 +56,9 @@ def _cfg() -> ServerConfig:
 
 @asynccontextmanager
 async def _client(monkeypatch: pytest.MonkeyPatch):
-    import healthcare_rag.agent.http_app as custom
     import server.app as app_module
 
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _p: _stub_auth())
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
     app = app_module.create_app(_cfg())
     transport = httpx.ASGITransport(app=app)
     async with app.router.lifespan_context(app), httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:

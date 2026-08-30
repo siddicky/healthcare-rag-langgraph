@@ -17,6 +17,8 @@ from __future__ import annotations
 
 import inspect
 import os
+from contextlib import asynccontextmanager
+from collections.abc import AsyncIterator
 
 import pytest
 
@@ -351,9 +353,6 @@ async def test_storage_readiness_gates_ok(monkeypatch: pytest.MonkeyPatch) -> No
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
-    import healthcare_rag.agent.http_app as custom
-
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
 
     cfg = ServerConfig(
         graphs={},
@@ -413,9 +412,6 @@ async def test_storage_setup_failure_propagates_and_closes_pool(monkeypatch: pyt
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
-    import healthcare_rag.agent.http_app as custom
-
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
 
     # Fake storage whose saver setup will raise
     events: list[str] = []
@@ -537,8 +533,12 @@ async def test_storage_aclose_called_on_custom_app_startup_failure(monkeypatch: 
 
     import healthcare_rag.agent.http_app as custom
 
-    # Make validate_feedback_project raise — mirrors test_topology fixture
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: (_ for _ in ()).throw(RuntimeError("invalid feedback project")))
+    @asynccontextmanager
+    async def _failing_lifespan(_app: object) -> AsyncIterator[None]:
+        raise RuntimeError("custom app startup failure")
+        yield  # pragma: no cover
+
+    monkeypatch.setattr(custom.app.router, "lifespan_context", _failing_lifespan)
 
     cfg = _Cfg(
         graphs={},
@@ -552,7 +552,7 @@ async def test_storage_aclose_called_on_custom_app_startup_failure(monkeypatch: 
 
     import pytest as _pytest
 
-    with _pytest.raises(RuntimeError, match="invalid feedback project"):
+    with _pytest.raises(RuntimeError, match="custom app startup failure"):
         async with app.router.lifespan_context(app):
             _pytest.fail("should not enter")
 
@@ -587,9 +587,6 @@ async def test_lifespan_shutdown_order_is_five_steps(monkeypatch: pytest.MonkeyP
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
-    import healthcare_rag.agent.http_app as custom
-
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
 
     events: list[str] = []
 
@@ -746,9 +743,6 @@ async def test_boot_reconciliation_via_lifespan(monkeypatch: pytest.MonkeyPatch)
 
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.setattr(app_module, "load_auth_instance", lambda _path: _auth())
-    import healthcare_rag.agent.http_app as custom
-
-    monkeypatch.setattr(custom, "validate_feedback_project", lambda: "fixture")
 
     dsn = _postgres_dsn()
     assert dsn is not None
