@@ -3,14 +3,10 @@ from __future__ import annotations
 import json
 from pathlib import Path
 from types import SimpleNamespace
-from typing import Final
 
 import httpx
 import pytest
 from starlette.requests import Request
-
-PROJECT_ID: Final = "00000000-0000-4000-8000-000000000fee"
-
 
 def test_deploy_config_pins_runtime_and_privacy_dependencies() -> None:
     config = json.loads(Path("langgraph.json").read_text())
@@ -31,7 +27,7 @@ def test_deploy_config_pins_runtime_and_privacy_dependencies() -> None:
     assert "en_core_web_sm-3.8.0" in docker
 
 
-def test_example_environment_declares_deployment_and_feedback_projects() -> None:
+def test_example_environment_declares_deployment_url_without_feedback_project() -> None:
     values = {
         line.split("=", 1)[0]
         for line in Path(".env.example").read_text().splitlines()
@@ -39,86 +35,9 @@ def test_example_environment_declares_deployment_and_feedback_projects() -> None
     }
 
     assert "LANGGRAPH_DEPLOYMENT_URL" in values
-    assert "LANGSMITH_FEEDBACK_PROJECT_ID" in values
-
-
-@pytest.mark.parametrize("value", [None, "", "not-a-uuid"])
-def test_feedback_startup_validation_names_missing_or_invalid_var(
-    monkeypatch: pytest.MonkeyPatch, value: str | None
-) -> None:
-    from healthcare_rag.agent.http_app import (
-        FeedbackProjectConfigurationError,
-        validate_feedback_project,
-    )
-
-    if value is None:
-        monkeypatch.delenv("LANGSMITH_FEEDBACK_PROJECT_ID", raising=False)
-    else:
-        monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", value)
-
-    with pytest.raises(
-        FeedbackProjectConfigurationError, match="LANGSMITH_FEEDBACK_PROJECT_ID"
-    ):
-        validate_feedback_project(lambda _project_id: None)
-
-
-def test_feedback_startup_validation_probes_dedicated_project(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    from healthcare_rag.agent.http_app import validate_feedback_project
-
-    calls: list[dict[str, list[str]]] = []
-    monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", PROJECT_ID)
-
-    def probe(project_id: str) -> None:
-        calls.append({"feedback_key": ["member_feedback"], "session": [project_id]})
-
-    assert validate_feedback_project(probe) == PROJECT_ID
-    assert calls == [{"feedback_key": ["member_feedback"], "session": [PROJECT_ID]}]
-
-
-def test_feedback_startup_validation_skips_probe_without_platform_key(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """No LANGSMITH_API_KEY means no client to probe with; shape check still runs."""
-    from healthcare_rag.agent import http_app
-
-    monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", PROJECT_ID)
-    monkeypatch.delenv("LANGSMITH_API_KEY", raising=False)
-
-    def _forbidden(*_args: object, **_kwargs: object) -> object:
-        raise AssertionError("built a LangSmith client without a platform key")
-
-    monkeypatch.setattr(http_app, "Client", _forbidden)
-
-    assert http_app.validate_feedback_project() == PROJECT_ID
-
-
-def test_feedback_startup_validation_still_fails_closed_with_platform_key(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """With a credential configured the probe runs and a bad project is fatal."""
-    from langsmith.utils import LangSmithError
-
-    from healthcare_rag.agent import http_app
-
-    monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", PROJECT_ID)
-    monkeypatch.setenv("LANGSMITH_API_KEY", "lsv2_test")
-    calls: list[dict[str, list[str]]] = []
-
-    class _RejectingClient:
-        def list_feedback(self, **kwargs: list[str]) -> object:
-            calls.append(kwargs)
-            raise LangSmithError("403 Forbidden")
-
-    monkeypatch.setattr(http_app, "Client", _RejectingClient)
-
-    with pytest.raises(
-        http_app.FeedbackProjectConfigurationError,
-        match="project existence probe failed",
-    ):
-        _ = http_app.validate_feedback_project()
-    assert calls == [{"feedback_key": ["member_feedback"], "session": [PROJECT_ID]}]
+    # Feedback attaches to the trace's own LangSmith project via the run id
+    # embedded in the message id; no dedicated feedback project is configured.
+    assert "LANGSMITH_FEEDBACK_PROJECT_ID" not in values
 
 
 @pytest.mark.anyio
@@ -178,7 +97,6 @@ def _smoke_environment() -> dict[str, str]:
         "LANGGRAPH_U2_TOKEN": "u2-token",
         "LANGSMITH_API_KEY": "platform-key",
         "COACH_INTERNAL_TOKEN": "internal-token",
-        "LANGSMITH_FEEDBACK_PROJECT_ID": PROJECT_ID,
     }
 
 
@@ -409,7 +327,6 @@ def test_smoke_main_passes_profile_through_to_run(monkeypatch: pytest.MonkeyPatc
     )
     monkeypatch.setenv("LANGSMITH_API_KEY", "platform-key")
     monkeypatch.setenv("COACH_INTERNAL_TOKEN", "internal-token")
-    monkeypatch.setenv("LANGSMITH_FEEDBACK_PROJECT_ID", "00000000-0000-4000-8000-000000000fed")
     monkeypatch.setenv("LANGGRAPH_U1_TOKEN", "u1")
     monkeypatch.setenv("LANGGRAPH_U2_TOKEN", "u2")
     rc = smoke.main(
