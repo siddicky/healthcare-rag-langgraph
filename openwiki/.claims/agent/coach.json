@@ -1,0 +1,270 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:240bc37647a7ade3e098746920cd0824eb5a8a8011785b13516ec6c2ef6d59b3",
+  "claims": [
+    {
+      "id": "claim_0da4593d52774b659464266d0a08b131",
+      "statement": "The coach graph is a separate LangGraph StateGraph from the healthcare_rag graph: it defines its own CoachState/CoachInput/CoachOutput contract, is built by build_coach_graph(), and is compiled and named 'coach', not a variant of the healthcare RAG graph.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/build.py#L1-L56",
+          "version": "repo-lines-v1:sha256:9bb47ffde06b3dd04c503fc609a3590017809b452dd98759460e35c816afe883:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0YjQ5ZjRhYjA3M2E0NzRiMGUzYWEzYzZjYTMxNmY4NzQ0ZWEwYjZlNWM2MTc2YmFkZDFkYzEzZmM2ZjIwM2IifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/state.py#L1-L36",
+          "version": "repo-lines-v1:sha256:dcc7bca6e53e6da6c29104ed89abec8455469b19f66e42551adea68bfde75e7f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZDZhNTQ5ZGI3OTJkNGU2MTg2ZTEyNjk5OTE3OTdmNzhiYjlkM2RmYWFjYzNjZjk4NWY5MzBlOWIxZjkwNDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cbb7201c42234271b2e1abf67f027dda",
+      "statement": "langgraph.json registers 'healthcare_rag' and 'coach' as two independent top-level graphs (./healthcare_rag/graph/__init__.py:graph and ./healthcare_rag/agent/__init__.py:coach respectively), so they are deployed and versioned separately even though the coach process invokes the healthcare graph in-process for medical answers.",
+      "evidence": [
+        {
+          "resource": "repo://langgraph.json#L1-L6",
+          "version": "repo-lines-v1:sha256:b4a482b402c242d259b769678d2b840c8c106ae8082f1e74ac048bca7f106690:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZmYjA4ZmRhMWFjYjk1N2I2MTE2YmQzNzgxMWExZmU0MWEwMTYxMWMwNjMxZWRiZjc4NmQ2ODg5YTI3YTU1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTM5ZDE5ODY4NGQ2NTUyMDRkM2RjNGZiYzZiMGI3MTVhNzhiNGNiYzFlYjliYjE4NGZhYmI4OTY3OWYwMzAwYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_24aced8897884d959c72b8f45b53cf09",
+      "statement": "CoachState keeps question, attachment_id, cron_wake, and reminder_wake as untracked-value fields, while the public CoachOutput exposes only messages and follow_ups.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/state.py#L1-L36",
+          "version": "repo-lines-v1:sha256:dcc7bca6e53e6da6c29104ed89abec8455469b19f66e42551adea68bfde75e7f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZDZhNTQ5ZGI3OTJkNGU2MTg2ZTEyNjk5OTE3OTdmNzhiYjlkM2RmYWFjYzNjZjk4NWY5MzBlOWIxZjkwNDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e549b2bd64d48d9b417297647ef7301",
+      "statement": "finalize_coach() re-projects the entire message channel through to_safe_message() and clears pending_document_op_id at the terminal node before state is returned.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/build.py#L44-L53",
+          "version": "repo-lines-v1:sha256:988aa2ef8dfb6b52cf6d54026813b1761231662b35e5182c5611fadb17378fdc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzZWE0YTU0ZTk1NTM4NWM2NzljMjZiZWYzYzFiYWI4OWNiOGE3ZjNiMDU3YzY4NjA3NjMzNDJmMjk4MjBkZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NTY4ZmNhZDg5NjJjNGMwOWFkZDc4MWYwYmUwOTBlMzkxNjkzYzA0MmY3M2Y3NTNiMTQxMjk2YWRhOTI3NTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiMmQ3YjMxMDBlZWIyNTViMzRkNjBmOGI0NGUxODVlMjlmM2RjODc1ODI5MmQxMjZjMzM2OTU5ZDkwNjAyYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlMGQxMjVjYWNkYjM2OTVlOWYwNDAxYmI0N2E5OTgwNjk0OTJlYThkNDM3MzZjNzc1ZjNmOTNhZTg2ZGNmOGEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/finalize.py#L1-L16",
+          "version": "repo-lines-v1:sha256:4db589fd7467971753ae09173de3bb14deaa3e489914956618262309b24483ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyYThlYmYyMGYyNjhkMmI2YjFiNGRiNjVmYTRhZDhiOTdkZmEwYWVhNjMxN2Y2YWFiZWQzNWZiNWIxNDcyMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ccfd56b366c24df4955b082bf7384289",
+      "statement": "The coach graph's terminal safe-message projection recursively PHI-scrubs content and tool arguments, preserves message/tool correlation and tool error status, and drops provider metadata.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/finalize.py#L1-L16",
+          "version": "repo-lines-v1:sha256:4db589fd7467971753ae09173de3bb14deaa3e489914956618262309b24483ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyYThlYmYyMGYyNjhkMmI2YjFiNGRiNjVmYTRhZDhiOTdkZmEwYWVhNjMxN2Y2YWFiZWQzNWZiNWIxNDcyMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_467243d561344bc6a8e10e6887717c58",
+      "statement": "coach_gate() is a fixed, non-LLM precedence list that first scrubs the incoming question into a HumanMessage, clears the raw question, resets follow-ups, then routes in order: cron wake, attachment presence, deterministic red-flag/injection/identifier-recall signals, erase phrasing, and otherwise coach_agent for every remaining turn including medical questions.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/gate.py#L32-L89",
+          "version": "repo-lines-v1:sha256:853b872a6addc9e10981f26ee42889e5a37e3de6f9bc9441957177cefefc78ce:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyMzdmNDYwMzM3Yjk2NDFiZjZkY2YxN2ExYjFkZGQ4Y2U1ZDhlMDUxMmRkYmZmM2EwMTlmNTE5YWVjYWY1MzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1M2Q2NDA3MWI5NzlmYTVhMzQ0N2FlY2IwNGQxNTQwNWJiZjczZDNjOWFlYzYzYzQzZDlhYTE2MTU1NzRhOTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZDE3MWRlNzU0MzFhMDIxYTBkOTRmYTc2ZmFiZjBkNzEzOWM4OThjMWEwYjQ0YjQzY2E2MDkwM2ZhMWI4NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/agent/test_coach_gate.py#L1-L96",
+          "version": "repo-lines-v1:sha256:93f885a8ad5c966cd73c63180b0698e781d8eea13f3bbcd6fd87c59d591b1074:eyJzZWxlY3RlZExpbmVDb3VudCI6OTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2MThhNTliMmQ4NTcxYmQ2ZTU1MmEzNzJiN2IxOTMwNzNjNGZhNDJiNjcwMzEzZjJmODQwYzQxZTE2NDg3YTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_184cd1fdf57d47a99ceab4462aed350d",
+      "statement": "A cron wake is only routed to reminder_delivery if the store holds an active reminder matching reminder_id, user_id, and thread_id, and the wake_token compares equal via a constant-time hmac.compare_digest; otherwise it is routed to short_circuit and the cron_wake payload is cleared in either outcome.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/gate.py#L45-L74",
+          "version": "repo-lines-v1:sha256:f19476b4a487bbb99411b5083e877489a5e0c878405487a7ac98ce7beea4b757:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkOGZlOGIzYzQ2ZTlkMjQ5NTM2OGI2YjU1MmZkZWQ3ZGJiMmNlMWYzOGVmNGIyMDY0MjI1OTgxOGZiZDJmY2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4MWZjOTY3NmM0MjgwOTFiOWQzZjU3MzgzOTZjMzY1YjI0ZGRmZDE2ZjZmOTdhYWNiYmYwMGRhZTU3ODg4YTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2YjNmZTZiZTJkM2Y2ZmMwYmMxZGM4ZWExYjVkYWNmN2Q4ZWE2YTE2MDgxYjc3ZDg1YjA5MDZlNzBkMDBmZjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_24083e56148443d492255369c7eafc57",
+      "statement": "The gate skips the reminder store lookup entirely whenever the calling configuration's principal resolves to an authenticated member role, so a member-authenticated session can never produce a valid cron wake and is always routed to short_circuit for that path; only the scheduler's trusted, non-member call path can pass validation.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/gate.py#L45-L74",
+          "version": "repo-lines-v1:sha256:f19476b4a487bbb99411b5083e877489a5e0c878405487a7ac98ce7beea4b757:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkOGZlOGIzYzQ2ZTlkMjQ5NTM2OGI2YjU1MmZkZWQ3ZGJiMmNlMWYzOGVmNGIyMDY0MjI1OTgxOGZiZDJmY2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4MWZjOTY3NmM0MjgwOTFiOWQzZjU3MzgzOTZjMzY1YjI0ZGRmZDE2ZjZmOTdhYWNiYmYwMGRhZTU3ODg4YTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2YjNmZTZiZTJkM2Y2ZmMwYmMxZGM4ZWExYjVkYWNmN2Q4ZWE2YTE2MDgxYjc3ZDg1YjA5MDZlNzBkMDBmZjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ac6276b9154f474e8cb11497a79ccf56",
+      "statement": "The coach graph wires review_document, reminder_delivery, short_circuit, coach_agent, and erase_my_data nodes all into a shared finalize node before END, while claim_document routes into review_document as a separate document-review subflow, and short_circuit selects a fixed emergency/injection/identifier-recall/out-of-scope response without any model call or follow-ups.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/build.py#L36-L54",
+          "version": "repo-lines-v1:sha256:6eeb6aacf385acb2e5eb513aa7924fb1f180a888f95c9a29cefb9b6a27dd98b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlY2ExZWJkY2VmYmRkZDBjOTQwYzFkMTU1Yzg0OTc1NWU2NTY5OWZiOTE1MzlmN2RlMWUwMjU5ZDMyODg3MmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkNDMzMmE1YzUzMTA3MDFiMjE0NjZhNzM3ZWE0ZjkxOWM3ODUyOWM4ZGJjMTVhOTUyYmZhZTQxMjE1MDNlYTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmNzAzNjU2ZTNlOWMyMTcyYThmOWJmZGRkYzFlNDg5ZDVjYTc5YTdiZmIyNTQ0NzU5YThjMjUwYjhiMTRjMTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5MGM5ZDlmNWQ0ZjhhZjVjZjViOWVkZjg4N2ZmYTYwZjI3NjJiODYxZmEwZjk1MTcxMjQ5N2Y5OTE0MmQ3ZDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f77c73cec3134d7dac49369496aecaa0",
+      "statement": "coach_agent() builds a fresh, checkpointer-free LangChain agent per turn using only safe-projected messages, deriving a server-side AgentContext(user_id, thread_id, human_msg_id) from authenticated configuration (generating a human_msg_id if missing), and its dynamic prompt reads saved profile/episodic memory only from store namespaces scoped to that authenticated user_id.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L227-L256",
+          "version": "repo-lines-v1:sha256:26c776e4a05055f4e01f78f587e0b9633f9542ffb047a96c71533a6a94e87d9a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4Y2U5NWE5MmZjYTQyNDk1NmIwY2IzY2Q1ZDJlN2I1ZmE2NmVjZWQ5ZGE4MzYzNzRjZWRhM2JhMWRjNDUyNmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhN2UzMGJhMTE0YmNlYzY1MjMzOGMyZDBhMDUwNThiM2UzMTUzNmU4ZDdjMDM1YjhiMzM5OGViODczMGI1MmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE2M2E4NGRkYmUwYmYzNzYyYWMwNDg1MWY2MDM5NzNhYmNmNDQwMDUzN2M2YjhhNjU4MGM4ZmU2MDUyODQzOWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjNDYzYmM2ZWY4MDY3MjcwOTFhODJkNTViYzQzOGRmMjI3MDliOTMwZTg5N2RmZTA3MzEwMzBjMGMwZWE2YTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L64-L86",
+          "version": "repo-lines-v1:sha256:ed0e00a89b0553372521a92f902b872fd9eee10250ba3485847c4e119b52dd0e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlM2ZiMWU1OGZiYzkwNDc5NGQ1MDczMTRmYTkxYzlmMmYxOThjODhkM2ZmMzk1ZTAwODI4OTAxYzM3ZGM5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MTE2ZTNiY2ZjMDJiMThmOTJjODNhN2MzNmE5YzM4MDhhYTYxMzYxMmQ3MGE1ODYxYzUzMTE1YjZkMTFhODUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmN2U5Njg2ZjBjOGYxNGNlODJjZTZhOGIyYzhkNDMyN2UxOTJlMzY0MzQ4ZjcwNzMwNmYzMGI3YWI1YzU4OTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlMzMwZTgxODE1MjMyZGM4YmM0YzdmYWFmOTczOTAwNmExOTJkYWEyODQzYTZmYTljZWE2YTVjY2FmN2E1ZWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_05fa29fbc5714191894a861ca6d9db52",
+      "statement": "Route B's fixed tool catalog includes remember_fact, log_metric, log_injection, view_schedule, change_schedule, create_reminder, edit_reminder, cancel_reminder, compose_ui, medical_lookup, and copy_to_clipboard, and the base system prompt forbids self-generated medical answers, diagnoses, or personal dosing advice, requiring medical turns to call medical_lookup alone.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L303-L318",
+          "version": "repo-lines-v1:sha256:7870aee97d0a551d520f5e6dd0d6a1ba095cd509c0a3c8fdc0a21885f047b7ab:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiZWNmZDJkZDRmMGJiNmI1NWM3MDA3ZWU3MGZjMjA0NGE3OGU0ZjdkMjg3ZTM0YmRhMTJhYjY2NTEzOWQyNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkYmRjZTJiYzQ0YWM3ODBkOGQ5ZTc2YWYwNmEwYjA5NmQ2MGZjMDA2OWRiYjZmNWRhNjRmYmMzMDNhMTUzNzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlNDBhYzI5MjgyOTU3NTk2MTZhNWIzNTY3MzJkYWVhYTBhMDkyMDNhMTJhMDRjMzU1YTFmZDRhN2UwNmExZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxYmE1YjdhMTYzZDJkNDc0ZDBjODU2Mjg4Mjg3YmUyNTRiNWVjNGFlZTE0MjExODg0MjFmYmJjNDQ1NjVjZWEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L55-L61",
+          "version": "repo-lines-v1:sha256:15b5949680278f55230a5648eb3b553e5c38ce6e09cbe3cea57aec70e2914f50:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzlkN2M2MTlkZTk0YTQ2NTRmYmJkM2I4ZWRhNTI5N2JhNzM1MGQ1ZTAxNDEyMmU1NTUxM2YzMGExNTU0MjEyYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjdkYWY4YjZjNDEyZmQxMTA4OGJjYzNlZDYxZTc3ZTE0NTI0NzE4NDFiYWEyODBkMDIxNzY2YTA2MmY2MDc5ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDQzODJhNDM2Y2Y5N2M5ZWExOTRiY2ExYjRiMDMzYzVjMDg4MWJkMmU5NGE5NzA0OTdkMTdjYTZmNjE3NTZlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWE4YjljYzBmYmZkZTZjZmUwZGI2MWUxMGM4YWZhOTM3ODg0OTFlNjllZWJkZGEyMmQ1ZmM5ZTM4OTE4M2UzNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_178d6134099547908050b3c3a88690b0",
+      "statement": "SafeModelResponseMiddleware (awrap_model_call/_safe_model_response) projects every model response through to_safe_message, and whenever the resulting AIMessage includes a medical_lookup tool call it blanks any assistant content and drops all sibling tool calls, so no preamble text or concurrent member-data mutation can accompany a medical_lookup invocation in the same step.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L106-L141",
+          "version": "repo-lines-v1:sha256:86d6fb4eec13248593f0845db82af9b87db6616e0cd56f07e9e188d0029376a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMDk1ZjczZGM4MDAyNzc0NWRhYjc1YmVjYTc4Yjk4YTY0MGYzMTVhNTgyOGI4M2NhNTZhZWI4OWU3MGMxOWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzOThkMGExOGNjODBhZTQ4ODgwMmQyNjgyZGRjODEwY2VhZjVjNWIzZDIwMzMxMDQ5NTcxZjVkODkyZjQ3ODAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwNGRhOTI3MWZlYzY4NDc0MWVmYzk0NWMyMjljZjc4ZmM0YTdjYmQ5MGZmNWZiZGMyNzBiNDMyNDI3OTM2YjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b1369d5a7564bdf96be787c22fac793",
+      "statement": "A ToolCallLimitMiddleware bound to change_schedule with run_limit=1 restricts the agent to at most one change_schedule invocation per run, bounding how many times its interrupt-producing behavior can fire in a single turn.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L297-L301",
+          "version": "repo-lines-v1:sha256:0177c7710c779a857abde684fdc48bdb0f44bb7a346e88b33ce4658a686cf127:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTEzNmJlMTQzM2ExMjU2NTY0ZmI1NTFhYjgxZTRmZTU2MjllNGEyYjI4NWVhYmE5YjgxM2VhODM5ZGY2NGE0MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTQzM2QwZWE5ZWNmMmYzOWM5YTUwNDA3Mzk1ZWU0MTE3MmZlNjgyYzljODg1YTM1MDhmNzViZGVlMTUxZWZmZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTMzNDAxN2E5OTU2ODJmNTIxNWRjYzEwNGIxY2Q3MzA5NjEzYjA1MzkyMWU3Mjc1MjBmZWY4YjgxZjc0M2EzZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGQ0MTAyZjQwNjNiYWRiNGNjNDIxNTliZjYxYzg1MmQyY2NmNzQ2NDE4MzEwNjYwNmY4MTc0MTY3NGZhZmEyNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9fa1ad103152478992683eb22c7f8735",
+      "statement": "The after_agent hook relay_medical_answer() converts a terminal medical_lookup ToolMessage into an AIMessage carrying exactly that tool content (reusing the tool artifact's source_run_id as the message id when present), which is how the agent surfaces the medical answer and how downstream follow-up extraction is scoped to the tool artifact.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L259-L276",
+          "version": "repo-lines-v1:sha256:629d5b779a623b7a55ca131fd2704d5e09652e6fc375f50567f00f950c7078ef:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmOWViYmYzMTNhM2NiYmY2MGM0ODhmZDNhZTJjNzA3ZGUxNTc4NzNhM2NlNmU5NWIwMGRiNTBkYTc3MzlmODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyZDA4NTc1NTVhYzI3ZmY2OTA2MTczZmQ2ZTNmOGY1MDZjNTcxOWZjMjdjNTdlYzI3YzA0YjY2NTI0M2FhMDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1ODY2Y2Y3NDgzNDA5MTJkZWE2MGJkYTU5NzUzMTljYzgwNTk2OGY5ZDEwNmMyZDk0ODQyZjRiZDc5N2YxMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmZjZjODM0ZThlZDE3MjIzOTFiZmNiZWQ4ZmQ0NzU3ZjNkMmYyMmE0NzI3ZjllMGY3NWQ3MmMyNjUzMDlmZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d5649e2cb0324d909ec4fb82dadc1c3a",
+      "statement": "medical_lookup is a return_direct tool that delegates to relay_question(), which invokes a fully compiled healthcare_rag child graph (module-level `child`, compiled with checkpointer=True) using the caller's own RunnableConfig by default, so healthcare conversation history and refusal boundaries persist inside the coach thread under the tool's checkpoint namespace.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/rag_relay.py#L1-L36",
+          "version": "repo-lines-v1:sha256:69a6e3dd2f1455f08a8ea852fbd11e4aedd2d0e01a31beaab30cbfda9463c6a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlY2YwYzg3YWY0Njk1YzYzNjhiNDc3ZDIyY2E1OWVkMmU3ZTQzMzUzMGViMzc3NjBmYjM4MTE1MDE1NWU3MWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1Y2M1MDc3NzFkZTA1MGJhMGU2ZjI2ZGYyNWI0Y2RhNmUzNTM1ODU3NzM5YjFmZjExYjM2YWE5NjU3YWVjYmYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/rag_relay.py#L64-L93",
+          "version": "repo-lines-v1:sha256:0784cfd746f4519a1a6766d06663e555e7cbde12a8bfa0b1ad977e39369d617e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNjgxMWFlNGJhMGIzZmM5YTViOWMwODI5MzYxOGU1NDBiOGY5MDIwNTljZmUyODE3ZDRmOTUyNDk1MGJkNTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkMjViYTI3M2NiZTdmNWM0OTZjNjdlZTQ1ZmE4NTAxZDE3Y2U1ZTUzMDEyMzZiNjhiOWFkOTM1YmU3Y2FjMWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzZTdmYWJhNWI1NTlmYTg4NjE3ODEzMTk0YWFiM2JiNjJiOTNmNGUzNjRiYTE4YWJmMWQzYmE3ZWYxN2FhYzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fc03973707124ce3ba46d4de762e9bac",
+      "statement": "relay_question()'s _assemble step prefixes a validated answer with a fixed monograph introduction (and PHI notice/follow-up bullets when present), returns a healthcare-child safety short circuit answer completely unchanged with no framing or follow-ups, and converts any child error, missing answer, or raised exception into a fixed retrieval-failure message rather than exposing internal error detail.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/rag_relay.py#L38-L92",
+          "version": "repo-lines-v1:sha256:6a66ef9367e7f1de68e68a0fe9d7936e227011bd60bf7c54a515bfe83b569407:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyNDI0NGJkMDk1NWY1YjVmYjA5OTFjODkyNWRmYmRmYjc3NmQ1M2U4N2YyMmUzNDBhM2RmMzdkNjI2MmNlOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlMDVmNjdkY2QwMWRhZjJkNmNiZmQ2N2VjN2UxY2I4NzQwOWI2NTNkMDAyZGYwZTdiOTQyODJlYWM0MjcxZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhYzczNDEwOTE5MjIxODFjNjdkMTg5NzQ0MDBkNDFhZDhjZjk0ODAyMzFhNzMwZWUwNjFiNzk2YWYxYWY0MjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiMjM2N2JkMGRmMGE2MmRmYzNkMTIxOTkxYjI5OGZlNGU5YzNkMzI2NzUyZTY5ODU1OTQzYjZjZjRiMjQ4M2QifQ"
+        },
+        {
+          "resource": "repo://tests/agent/test_rag_relay.py#L61-L100",
+          "version": "repo-lines-v1:sha256:0f2c56cd76f5e54992767363b7d7f202dae092469e14a26ae1fea4c8b943f39a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOTk0MmRlYjdkYmFiYzExNGIxYzQ4ZDAyZGE0NjM4NmU5YWNhNTE1YTUyZmI3YjNjNDEyZGM2Mjc5MjFiMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0YjdkMzFmZTVmOTdmMmQzN2U4YzY4OGJmODVlZDQyNTc3YzBiZWRiNDhkMzYyZmIyNWQ3OTU0ZDQ5YWE2ZmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2MDc5NzM1ZmJhMjAyM2YwZWVkZTI5MzliYzc1MDVkZGYzNDQxOTcxZjgzZDIzMTU5MDA0NjU0MmI4NzNhOTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fe3d794526954230a40a9ca0adde01e5",
+      "statement": "Setting HC_RAG_RELAY_MODE=pipeline makes relay_question() compile a brand-new healthcare_rag graph with a fresh InMemorySaver and a new UUID thread for every single lookup, preserving the child's safety and validation stages but discarding cross-turn medical memory; this mode is a deliberate continuity trade-off, not a safety bypass.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/rag_relay.py#L64-L81",
+          "version": "repo-lines-v1:sha256:3a0d4c82e466f1dab16cfc7728dbd91788e52d1687e72f3c0742936271970d1a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNjgxMWFlNGJhMGIzZmM5YTViOWMwODI5MzYxOGU1NDBiOGY5MDIwNTljZmUyODE3ZDRmOTUyNDk1MGJkNTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkMjViYTI3M2NiZTdmNWM0OTZjNjdlZTQ1ZmE4NTAxZDE3Y2U1ZTUzMDEyMzZiNjhiOWFkOTM1YmU3Y2FjMWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhMTBkYmFkZTdjZWExOTBmYmQxNjkzNGMzNGM4NDE4OTJjNTk2YzFmNmEyZjMxYjdmNWM2YzAwZjg3NWViNGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0d6bcc15e4264fd6a8eca75534a8aa35",
+      "statement": "compose_ui is only an acknowledgement tool call; the actual enforcement point is validate_composition(), invoked before model output enters state, which accepts only a closed catalog of components and each component's exact allow-listed fact-bearing and static prop names.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L141-L148",
+          "version": "repo-lines-v1:sha256:52a93f380c7d38be406cb4d7bca36428cc4d3d0c465e684c22ba0d1d8dd4787f:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTM5OGQwYTE4Y2M4MGFlNDg4ODAyZDI2ODJkZGM4MTBjZWFmNWM1YjNkMjAzMzEwNDk1NzFmNWQ4OTJmNDc4MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWRkMjQ0NTgyYjZmYjAzZDIzYjg0MTVhYmVjZDM0NmIwYzlmNDY2YjZmNzUyYjA2ODE4OWNlN2U5YTJkYzM1MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGZmYTdiMjM5Y2E4MDQ5MmE4NDUyODgyMjVjM2U1YTM0YzE3MDY5NmUyNTczZmY0YjYxNzY5YTQzNTA4ZDVhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODQ2NmQzNzNlNDIwN2Q4ZjE2ZGU1NTFlMzY4MWU4ZGFlYzNlZjE2MmEzMWI1YTc3MzdlMDE5MTBkMWQ4YmVhMyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/compose_ui.py#L1-L98",
+          "version": "repo-lines-v1:sha256:1704e7e8556e80178c489d5bde883aa21a1082b197eebe2ca2c9c400c2dfa22c:eyJzZWxlY3RlZExpbmVDb3VudCI6OTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiMjNhNTQzMzFlMmYyMjA4NDBiMzM3ZDJjYzViMWMyYWVkYzFhNGFmY2U5ZGFjMjU0OTMzNjVmY2JkMGI3MDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1YTg2M2U0YTM1MDZjOTA5MDhhMzE0NWVmNjUyZDVmNzNjZmE2OTNjMDI0MjZmZDIwNmQwNTlkODQ4MzdmZGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e9f0152602644c4083f1a705b6279df7",
+      "statement": "Fact-bearing compose_ui props must be __ref objects naming a turn_scope_id, block_id, and RFC-6901-style pointer that resolve within the current turn's tool DATA envelopes; validation rejects unknown components/props, malformed or cross-turn references, missing blocks/pointers, and JSON-type mismatches, while static props are restricted to an allowlist of copy, dispatch ids, and enums so literal numeric or clinical-looking values cannot be injected as static text.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L80-L94",
+          "version": "repo-lines-v1:sha256:c20f4e1f77226c81a4fcfdf0fb59ad21e22489af79aeace0ff0ac3c1092c2f18:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4NTY0NjgxODIxMmMwZjBhYmIyMTNkOGM3M2E4NDU5YWRkYjY1NTdiNjc5NDY3NmVjZGRmYzA2MjAwYmQwMTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDI0NDU4MmI2ZmIwM2QyM2I4NDE1YWJlY2QzNDZiMGM5ZjQ2NmI2Zjc1MmIwNjgxODljZTdlOWEyZGMzNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzMGQ3Y2JkZjlhNTdmMDcwYTM1NzhmMWFmZGM2NTJlN2Y0ODhiNzY3NGIzMTc3MDBhMGY1ZDcwNDBiMzNmNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwMzM3NGYzNzA0MzIxNDk5YjYxOWQ1MzhlYjQyMWZjMGZjNGI5YTgzZDA4ZTQxZDhmOWZlZTU4NzI3MGIyYTYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/compose_ui.py#L15-L98",
+          "version": "repo-lines-v1:sha256:25062dc478797ae29af1a6472006562b4d26ef6f163a3cb4d95cec72b9fd4dad:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjOWQyMDZlZTlkNTk1YjllNWZkYzBkYzJlM2IxOWVjZWViMjQ0MTRjNjAyZWE0YWE1NjRmN2YwMjY0YWQ2ZjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiMjNhNTQzMzFlMmYyMjA4NDBiMzM3ZDJjYzViMWMyYWVkYzFhNGFmY2U5ZGFjMjU0OTMzNjVmY2JkMGI3MDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxM2U0YWZjYTE3YjZlMGQyNDdlN2U3YTgwN2Q4NDQ0NDFhNjZmYzRmNmY5MTQyNmExZWJjODIyMzU0NTNmMzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1YTg2M2U0YTM1MDZjOTA5MDhhMzE0NWVmNjUyZDVmNzNjZmE2OTNjMDI0MjZmZDIwNmQwNTlkODQ4MzdmZGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1f5d31b0782d46f6b2738e03df3ab067",
+      "statement": "On the first invalid compose_ui composition in an agent run, SafeModelResponseMiddleware rewrites the offending tool call to an empty tree and returns an error ToolMessage so the model can retry or answer in plain text; a second invalid cycle in the same run instead forces a terminal SAFE_FALLBACK AIMessage with no tool calls.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L141-L188",
+          "version": "repo-lines-v1:sha256:a764b4a194f59362591a3eca4c6690bac8894cd98a1a406e7b3520a66e5fcb63:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzOThkMGExOGNjODBhZTQ4ODgwMmQyNjgyZGRjODEwY2VhZjVjNWIzZDIwMzMxMDQ5NTcxZjVkODkyZjQ3ODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmZmE3YjIzOWNhODA0OTJhODQ1Mjg4MjI1YzNlNWEzNGMxNzA2OTZlMjU3M2ZmNGI2MTc2OWE0MzUwOGQ1YTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY2ZDdiNDEwZWM5MDNjMDc4NjFlMTUyZDQ4M2Q0YTRkZGY0Zjc4OTI0MjRlYTI5YmQxNGE0ODc5MDI4MWYwNDQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d3593f70391b41529fd418ee60138e96",
+      "statement": "CoachEngine (evals/coach_engine.py) builds the real coach graph topology with an InMemorySaver and InMemoryStore, monkeypatches coach_build.coach_agent to an offline Route B agent only during graph construction, and drives graph turns to assert routing, healthcare-child lineage via checkpoint records, document/reminder handling, and catalog reference resolution without a deployed service or live model.",
+      "evidence": [
+        {
+          "resource": "repo://evals/coach_engine.py#L56-L100",
+          "version": "repo-lines-v1:sha256:652d39e11e490a796de2f01da5daecbc40602281a9cce56116f3e63a8867e69a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiMThjYzU3YWVkNzJlMmI1NmRkNTcyMzNhZWJlZjk0NjAwNjFkMWZhYmI5MDViNDhlYWY2ZTU4YzY0NzI0NmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkMzRhOWRmNzc5Yjk1NjZiMDRhZDJiOWU2Y2RkZTNiMWQ1ZTZjMWE4YzhiOTdhYjdjMjhhN2IxM2EzM2JkNmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzZGYyYWNmMDZlOGMzZjAzYzcxMzVjNmU4YWM1YTljYTU0MzJhYmUwNmE3NGFjYTBmZGQ5YTUzYTAwOGY5ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUxNTAzODk5ZjcxNWE4ZmJiNWE2NjNkODA3OWEzYjNmZjI5YmVhYTU4YTk3ZmIyMzM0MjY0ZGI4NjUwNDUxYzMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_27b25c389e4d4f759534efa8e9e0a823",
+      "statement": "The make eval-agent and make eval-agent-multiturn offline evaluations exercise the coach/healthcare-graph boundary using deterministic in-process fakes (fake gateway, search, and checkpoint inspection) and in-memory persistence; they are behavioral regression gates, not certification of a live deployment, and must be paired with focused unit tests and deployment/perimeter testing for changes to real credentials, persistence, or HTTP integration.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L1-L1",
+          "version": "repo-lines-v1:sha256:d59099284a3a13150f7c5085172f1e56c484b91b4a0da7617f4f0084ffceed17:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDU5MDk5Mjg0YTNhMTMxNTBmN2M1MDg1MTcyZjFlNTZjNDg0YjkxYjRhMGRhNzYxN2Y0ZjAwODRmZmNlZWQxNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDU5MDk5Mjg0YTNhMTMxNTBmN2M1MDg1MTcyZjFlNTZjNDg0YjkxYjRhMGRhNzYxN2Y0ZjAwODRmZmNlZWQxNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjljYjAwODY2OTI5NjBlOTU3N2M2MmNkNTRjMTg1YWM4NTY0ZjQzZjU5YzA4ODYxNmU4MDQ4YzUyYWUxNTVmOCJ9"
+        },
+        {
+          "resource": "repo://evals/coach_engine.py#L1-L30",
+          "version": "repo-lines-v1:sha256:4883f702c632aad9cc504cab8918a1df4486f7776848a62f96fb7c4ccef44bc8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU2MGFhZjBjOTkwMWIzYzk0OGQ5NzIzODdmYmQyY2ZhNWNkYmJlZjNjODcwZjRmMDFiMWEzOTllNTA0ZGZjZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlMTI0ZDg5MmJlMWIzYjA4ZDAwZjFlZDhhN2VlNDcyMDI0YTM1ODQxM2M3N2EwNTJjZmVmMGE1MjZmM2E4YWIifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

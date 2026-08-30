@@ -4,8 +4,35 @@ title: Member data lifecycle, reminders, uploads, and erasure
 description: Member-scoped persistence, upload review, remote reminder scheduling, cleanup, and two-phase self-erasure. Explains ownership checks, privacy controls, and failure behavior without exposing member records or document contents.
 tags: [data-lifecycle, member-data, uploads, reminders, erasure, privacy]
 verified:
-  - by: openwiki/0.4.0
-    at: 2026-08-26T20:21:43.477Z
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-faa079c1bbcbbd7fc775792b
+    resource: repo://healthcare_rag/agent/cleanup.py
+  - id: openwiki-source-5e0755c8ff6a8e85e09445f9
+    resource: repo://healthcare_rag/agent/documents.py
+  - id: openwiki-source-bf327bb05cc45ef40a866d7d
+    resource: repo://healthcare_rag/agent/erase.py
+  - id: openwiki-source-2f29eb2ee6c317e5dc414836
+    resource: repo://healthcare_rag/agent/gate.py
+  - id: openwiki-source-30483fa66cb7139c87f3fc8a
+    resource: repo://healthcare_rag/agent/perimeter_middleware.py
+  - id: openwiki-source-cb7ba7ed3ec280ec465c45f1
+    resource: repo://healthcare_rag/agent/reminders.py
+  - id: openwiki-source-930dd98b4086e917d1922504
+    resource: repo://healthcare_rag/agent/store_data.py
+  - id: openwiki-source-d8db4a9191137d5f500b3381
+    resource: repo://healthcare_rag/agent/uploads.py
+  - id: openwiki-source-3d57b619c01e53697b4a3392
+    resource: repo://scripts/forget_member.py
+  - id: openwiki-source-c70608235131d10003b8921c
+    resource: repo://tests/agent/test_documents.py
+  - id: openwiki-source-7b98e37b0c09a39ace9819e4
+    resource: repo://tests/agent/test_reminders.py
+  - id: openwiki-source-2102db5321555a172ff8c886
+    resource: repo://tests/agent/test_store_data.py
+  - id: openwiki-source-c57c4d160e1183c60543228b
+    resource: repo://tests/test_forget_member.py
 ---
 
 # Member data lifecycle, reminders, uploads, and erasure

@@ -3,11 +3,62 @@ type: wiki entrypoint
 title: Healthcare RAG engineering guide
 description: Source-grounded navigation for the healthcare RAG, coach product, server, safety controls, evaluations, and operations.
 tags: [overview, navigation, rag]
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-4d1d392666be6dfdd7a91a2e
+    resource: repo://.github/workflows/release.yml
+  - id: openwiki-source-8037e2358a2c4f9b2c722a11
+    resource: repo://AGENTS.md
+  - id: openwiki-source-d6dbe2ca06d9e4feabdcde4d
+    resource: repo://docs/decisions/dependabot-requirements-txt.md
+  - id: openwiki-source-e2d8cb6620de3b4c16f6eab6
+    resource: repo://docs/journey.json
+  - id: openwiki-source-32b0d84a28d0c3a9400c33f6
+    resource: repo://healthcare_rag/agent/coach_agent.py
+  - id: openwiki-source-d29afe87b08650650d8273b0
+    resource: repo://healthcare_rag/agent/rag_relay.py
+  - id: openwiki-source-029ad9418d65d39851d3f024
+    resource: repo://healthcare_rag/agent/tools/medical_lookup.py
+  - id: openwiki-source-4637324e6e32c034a6095a28
+    resource: repo://healthcare_rag/graph/build.py
+  - id: openwiki-source-7772f43efa9811bd36483e17
+    resource: repo://healthcare_rag/graph/llm.py
+  - id: openwiki-source-56b79b6d8262f2037cd8bd60
+    resource: repo://healthcare_rag/graph/nodes/retrieve.py
+  - id: openwiki-source-aa698cddb837b0369bcb12cb
+    resource: repo://healthcare_rag/graph/prompts.py
+  - id: openwiki-source-84feefce1f4b71f9befa5c23
+    resource: repo://healthcare_rag/processors/privacy.py
+  - id: openwiki-source-87f98f33716569ae6b45609f
+    resource: repo://healthcare_rag/processors/refusal_boundary.py
+  - id: openwiki-source-6716f82708e52a00841d5c61
+    resource: repo://healthcare_rag/processors/retrieval.py
+  - id: openwiki-source-2548c11a25976cb64a4edf59
+    resource: repo://healthcare_rag/processors/safety.py
+  - id: openwiki-source-5bfd2a59ff90e1d4a18105f7
+    resource: repo://healthcare_rag/processors/validation.py
+  - id: openwiki-source-05c6c517a6da00d1f78ecc7d
+    resource: repo://healthcare_rag/services/model_sampling.py
+  - id: openwiki-source-5bbba7b2a8ea8360ff233d63
+    resource: repo://langgraph.json
+  - id: openwiki-source-012f2c78e3b1446dfc35803f
+    resource: repo://Makefile
+  - id: openwiki-source-23775c3de52f3ab95a13cb8b
+    resource: repo://README.md
+  - id: openwiki-source-bf90e16d0f806741d36c310e
+    resource: repo://scripts/next_version.py
+  - id: openwiki-source-a7c96560a75972959888e56a
+    resource: repo://server/registries.py
+  - id: openwiki-source-d8bf193a74d78ce706478aa9
+    resource: repo://server/storage.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
 ---
 
 # Healthcare RAG engineering guide
 
-This repository contains two related LangGraph products: a healthcare RAG over Lipitor and Metformin monographs, and a member-facing coach application with a protected HTTP perimeter. The RAG graph is the runtime; Weaviate provides default hybrid retrieval and OpenAI powers configured model stages. Start with [RAG architecture](architecture/overview.md), then route work using this map.
+This repository contains two related LangGraph products: a healthcare RAG over Lipitor and Metformin monographs, and a separately deployed member-facing coach graph with a protected HTTP perimeter. The public `StateGraph` built in `healthcare_rag/graph/build.py` is the only RAG runtime; the pre-port speculative-execution orchestrator that once lived under `healthcare_rag/orch/` was deleted in commit `3435caf` and is not part of the current architecture — do not plan changes against it or restore it. Weaviate provides default hybrid retrieval and OpenAI powers configured model stages. Start with [RAG architecture](architecture/overview.md), then route work using this map.
 
 ## System map
 
@@ -17,7 +68,7 @@ This repository contains two related LangGraph products: a healthcare RAG over L
 - [Weaviate ingestion](retrieval/weaviate-and-ingestion.md) and [retrieval arms](retrieval/arms-and-reranking.md) — corpus/search and experimental alternatives.
 - [Models and runtime](configuration/models-and-runtime.md) — environment-driven tiers, sampling, caps, and persistence.
 - [Tracing and evaluations](observability/evaluations.md), [evaluation governance](observability/evaluation-governance.md), and [routing gates](observability/routing-evals.md) — experiments, calibration, reporting, and independent routing records.
-- [Coach routing and catalog](agent/coach-routing.md), [member perimeter](agent/member-perimeter.md), and [member data lifecycle](agent/member-data-lifecycle.md) — coach behavior, authorization, member records, uploads, reminders, and erasure.
+- [Coach agent architecture](agent/coach.md), [coach routing and catalog](agent/coach-routing.md), [member perimeter](agent/member-perimeter.md), and [member data lifecycle](agent/member-data-lifecycle.md) — the separately deployed coach graph, its medical relay, authorization, member records, uploads, reminders, and erasure.
 - [Member frontend](frontend/member-frontend.md) and [clean-room agent server](server/agent-server.md) — browser protocol and service runtime.
 - [Runbook](operations/runbook.md) and [deployment](operations/deploy.md) — local setup, topology, release, readiness, and smoke acceptance.
 - [AI-assisted workflow](contributing/ai-assisted.md) and [scope and decisions](decisions/submission-scope.md) — inherited rules, verification loops, and evidence boundaries.
@@ -34,6 +85,7 @@ This repository contains two related LangGraph products: a healthcare RAG over L
 | Evaluation dataset, evaluator, comparison, or routing gate | [Tracing and evaluations](observability/evaluations.md), [evaluation governance](observability/evaluation-governance.md), [routing gates](observability/routing-evals.md) | `evals/dataset.py`, `evals/evaluators.py`, `evals/run_baseline.py`, `evals/routing_gate.py` | `run_one`, `EVALUATOR_KEYS`, `run_gate`, `Lane`, `ArmName` | `tests/test_evaluator_calibration.py`, `tests/test_routing_gate.py`, `tests/test_parity_gate.py` | `.venv/bin/python -m pytest -q tests/test_evaluator_calibration.py` |
 | Trace enablement or trace privacy | [Tracing and evaluations](observability/evaluations.md), [privacy sanitizer](privacy/sanitizer.md) | `healthcare_rag/services/tracing.py`, `healthcare_rag/graph/engine.py` | `enforce_input_hiding`, `traceable`, `rag_stage`, `_redact_root_inputs` | `tests/test_tracing_privacy.py`, `tests/test_redact_smoke_log.py` | `.venv/bin/python -m pytest -q tests/test_tracing_privacy.py tests/test_redact_smoke_log.py` |
 | Coach routing or generated UI | [Coach routing](agent/coach-routing.md) | `healthcare_rag/agent/`, `evals/coach_engine.py` | `coach_gate`, `rag_relay`, `compose_ui` | `tests/agent/test_coach_gate.py`, `tests/agent/test_route_b.py`, `tests/agent/test_rag_relay.py` | `.venv/bin/python -m pytest -q tests/agent/test_coach_gate.py tests/agent/test_route_b.py tests/agent/test_rag_relay.py` |
+| Coach model/tool behavior or the medical-lookup relay into the RAG graph | [Coach agent architecture](agent/coach.md) | `healthcare_rag/agent/coach_agent.py`, `healthcare_rag/agent/tools/medical_lookup.py`, `healthcare_rag/agent/rag_relay.py` | `build_route_b_agent`, `medical_lookup`, `relay_question`, `relay_medical_answer` | `tests/agent/test_route_b.py`, `tests/agent/test_rag_relay.py` | `.venv/bin/python -m pytest -q tests/agent/test_route_b.py tests/agent/test_rag_relay.py` |
 | Member auth, threads, attachments, or the stream perimeter version | [Member perimeter](agent/member-perimeter.md) | `healthcare_rag/agent/perimeter.py`, `healthcare_rag/agent/perimeter_middleware.py`, `server/` | `validate_member_request`, `MemberPerimeterMiddleware`, `HC_RAG_MEMBER_STREAM_PERIMETER` | `tests/agent/test_auth.py`, `tests/agent/test_perimeter_composed.py`, `tests/agent/test_perimeter_v2.py` | `.venv/bin/python -m pytest -q tests/agent/test_auth.py tests/agent/test_perimeter_composed.py tests/agent/test_perimeter_v2.py` |
 | Upload, review, reminders, or erasure | [Member lifecycle](agent/member-data-lifecycle.md) | `healthcare_rag/agent/` | documents, store, reminders, erase | `tests/agent/test_documents.py`, `tests/agent/test_reminders.py`, `tests/test_forget_member.py` | `.venv/bin/python -m pytest -q tests/agent/test_documents.py tests/agent/test_reminders.py` |
 | Browser protocol or catalog | [Member frontend](frontend/member-frontend.md) | `frontend/` | `coachApi`, stream reducer, catalog | frontend Vitest tests | `cd frontend && bun test` |

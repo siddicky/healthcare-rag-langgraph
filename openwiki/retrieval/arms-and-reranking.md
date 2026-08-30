@@ -11,6 +11,32 @@ openwiki:
   test_paths: [tests/test_pageindex_retrieval.py, tests/test_pinecone_retrieval.py, tests/test_rerank.py, tests/test_pageindex_gate.py]
   invariants: [Every arm mirrors hybrid_search's signature and returns QueryResultList over the same contextualized chunks, so routing, merge, citations, and chunk_recall are arm-independent., Reranking is fail-soft: an outage keeps the search's own order truncated to top_k., Pinecone calls are synchronous and must cross anyio.to_thread because Resources outlives event loops.]
   validation_commands: [".venv/bin/python -m pytest -q tests/test_pageindex_retrieval.py tests/test_pinecone_retrieval.py tests/test_rerank.py"]
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-e4f40bc684af84b8c0154ef5
+    resource: repo://docs/decisions/pageindex-vs-weaviate.md
+  - id: openwiki-source-088572982f1247ba9c5044ef
+    resource: repo://docs/decisions/pinecone-rerank.md
+  - id: openwiki-source-9726898680412a9b1bb443eb
+    resource: repo://docs/retrieval-experiments.md
+  - id: openwiki-source-ecf0edb1c2eccb1acbf7bcd1
+    resource: repo://evals/pageindex_gate.py
+  - id: openwiki-source-7bd2de2912eb4a7c184e2bae
+    resource: repo://evals/routing_gate.py
+  - id: openwiki-source-56b79b6d8262f2037cd8bd60
+    resource: repo://healthcare_rag/graph/nodes/retrieve.py
+  - id: openwiki-source-a1c36fb49ae5d8b6fd64679d
+    resource: repo://healthcare_rag/processors/pageindex_retrieval.py
+  - id: openwiki-source-eb12b248fadc2592f8d4be97
+    resource: repo://healthcare_rag/processors/pinecone_retrieval.py
+  - id: openwiki-source-14eb8c170ae2e0101879d93a
+    resource: repo://healthcare_rag/processors/rerank.py
+  - id: openwiki-source-320deda35bfb254e093b2f0b
+    resource: repo://healthcare_rag/storage/pageindex_index.py
+  - id: openwiki-source-55679ceb02bc1b025222658f
+    resource: repo://healthcare_rag/storage/pinecone_store.py
 ---
 
 # Retrieval arms and reranking

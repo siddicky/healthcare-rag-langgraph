@@ -11,6 +11,37 @@ openwiki:
   test_paths: [tests/test_safety_gate.py, tests/test_refusal_boundary.py, tests/graph/test_graph_safety.py, tests/graph/test_boundary_durability.py]
   invariants: [Deterministic pre-checks can only escalate a decision, never relax it., A refusal template never contains a number with a clinical unit., The scrubbed query is what reaches retrieval, prompts, and history persistence.]
   validation_commands: [make test]
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-184fc99d49c5faae867575f7
+    resource: repo://healthcare_rag/graph/engine.py
+  - id: openwiki-source-f8cdb45cf6f7dd792cf3acde
+    resource: repo://healthcare_rag/graph/nodes/safety_classifier.py
+  - id: openwiki-source-c5d69417d4934f69d93f6fa3
+    resource: repo://healthcare_rag/graph/nodes/safety_finalize.py
+  - id: openwiki-source-a3f4c9fe3b0f460eb4fda084
+    resource: repo://healthcare_rag/graph/nodes/safety.py
+  - id: openwiki-source-79e3c2efaf3672b844c6bb77
+    resource: repo://healthcare_rag/models/safety.py
+  - id: openwiki-source-87f98f33716569ae6b45609f
+    resource: repo://healthcare_rag/processors/refusal_boundary.py
+  - id: openwiki-source-5387b3e1fb464034f89a2501
+    resource: repo://healthcare_rag/processors/safety_patterns.py
+  - id: openwiki-source-a8c7c2de9e013419b93642a3
+    resource: repo://healthcare_rag/processors/safety_responses.py
+  - id: openwiki-source-c9b384e326ba47b847ae3f5c
+    resource: repo://healthcare_rag/processors/safety_signals.py
+  - id: openwiki-source-2548c11a25976cb64a4edf59
+    resource: repo://healthcare_rag/processors/safety.py
+  - id: openwiki-source-5dac0d93eedc2d38a0fc6eaf
+    resource: repo://healthcare_rag/services/models.py
+  - id: openwiki-source-d56354bf354b811563e085a8
+    resource: repo://tests/graph/test_graph_safety.py
+  - id: openwiki-source-b34f91069d13fb538ebfbd6f
+    resource: repo://tests/test_safety_gate.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
 ---
 
 # Runtime safety gate
@@ -20,7 +51,9 @@ Every query passes the `safety_gate` graph node **before** retrieval or generati
 ## Design: two layers, OR-ed
 
 1. **Deterministic pre-checks** (no network, split across `healthcare_rag/processors/safety_patterns.py` and `safety_signals.py`, composed by `safety.py`): PHI detection (`contains_phi`, `scrub_phi`, `safety_signals.py`) delegates to the Presidio-backed [PrivacySanitizer](../privacy/sanitizer.md) for identifiers; `safety_patterns.py` holds the regexes for instruction-override attempts (`injection_flags`, `strip_injection`) and `safety_signals.py` holds requests to recite identifiers back (`identifier_recall_requested`) and first-person emergency red flags (`red_flag_terms`) — it imports `injection_flags`/`strip_injection` from `safety_patterns.py` in turn. These are a **floor** — they can only escalate an outcome (force `emergency_red_flag`/`prompt_injection`, set `contains_phi`), never downgrade what the model chose.
-2. **One LLM classification call** (`prompts/safety_gate.yaml.j2` → `SafetyAssessment` in `healthcare_rag/models/safety.py`, temperature 0, default model): one of `in_scope_informational`, `personal_medical_advice`, `emergency_red_flag`, `out_of_scope`, `prompt_injection`, `ambiguous`, plus `phi_spans` and `drug_mentioned`. If this call fails, the deterministic layer still decides (fail-open only for classification, exactly what the pre-gate pipeline did).
+2. **One LLM classification call** (`prompts/safety_gate.yaml.j2` → `SafetyAssessment` in `healthcare_rag/models/safety.py`, temperature 0, default model): one of `in_scope_informational`, `personal_medical_advice`, `emergency_red_flag`, `out_of_scope`, `prompt_injection`, `ambiguous`, plus `phi_spans` and `drug_mentioned`.
+
+**Exact fallback on LLM failure or uncertainty:** the adapter (`graph/nodes/safety.py#L158-L176`) wraps the structured call in `suppress(Exception)`; any exception logs `SAFETY_CLASSIFICATION_FAILED` and returns a fixed default `SafetyAssessment(category="ambiguous", contains_phi=False, phi_spans=[], drug_mentioned="none", rationale="safety-gate LLM call failed; deterministic checks only")` (`processors/safety.py::SafetyGate._llm_assess`, mirrored in `graph/nodes/safety_classifier.py::LangChainSafetyGate._llm_assess`). `category="ambiguous"` is **not** a refusal category — `SafetyGate._evaluate` falls through it to "run the normal pipeline" (`short_circuit=False`, `kind="none"`) exactly like a genuinely ambiguous question. This means an LLM-call failure is **fail-open for the model layer**: only the deterministic pre-checks can still force a refusal that turn (`red_flag_terms`/`injection_flags` still escalate `category` to `emergency_red_flag`/`prompt_injection` in `SafetyGate.assess`, `processors/safety.py#L161-L186`). PHI scrubbing is unaffected either way because it never depends on the LLM call. This exact path — gateway raises, category becomes `ambiguous`, question state is still cleared, no short-circuit — is pinned by `tests/graph/test_graph_safety.py::test_gate_gateway_failure_uses_ambiguous_default_and_clears_question` and `tests/graph/test_safety_node_exports.py::test_classifier_without_llm_uses_ambiguous_fail_soft_assessment`.
 
 `SafetyGate.assess` merges both; `SafetyGate.evaluate` returns a `SafetyDecision` carrying the scrubbed query, template choice, and one-line notices.
 
@@ -35,6 +68,8 @@ flowchart TD
   C -->|emergency / personal advice / out-of-scope / injection| T["templated refusal + redirect, follow-ups = []"]
   C -->|in scope / ambiguous| N["pipeline on the SCRUBBED query"]
 ```
+
+*Control flow of one turn through the safety gate: deterministic pre-checks and the single `SafetyAssessment` call are merged, the message is scrubbed regardless of category, and only the merged category decides whether the turn short-circuits to a template or continues into the pipeline.*
 
 ## Scrubbing and short-circuit wiring
 
@@ -51,11 +86,21 @@ The gate's `SafetyAssessment` now carries `benign_social` + `social_intent` (`gr
 - `deterministic` — the hard-coded `social_response(intent)` text from `processors/social_responses.py` becomes the `direct_response` and finalizes immediately;
 - `tool` — the turn routes to `generate_query_or_respond` (see [architecture](../architecture/overview.md)); benign-social fallbacks still use the deterministic text, and any model direct answer must pass the [direct-output policy](../privacy/sanitizer.md).
 
-`HC_RAG_SAFETY_CLASSIFIER` (`llm` default | `semantic_router`) selects the classification backend. The `semantic_router` backend was **never installed, imported, or exercised**: `semantic-router==0.1.16` is unsatisfiable with the unchanged `openai>=1.76,<2` and `python-dotenv>=1.1` bounds, so the semantic lane is dependency-INCONCLUSIVE — a dependency fact, not a runtime or quality result (see [routing evaluations](../observability/routing-evals.md)). Production defaults remain `current`/`llm`.
+`HC_RAG_SAFETY_CLASSIFIER` (`llm` default | `semantic_router`, `services/models.py::safety_classifier_backend`) selects the classification backend. The `semantic_router` backend was **never installed, imported, or exercised**: `semantic-router==0.1.16` is unsatisfiable with the unchanged `openai>=1.76,<2` and `python-dotenv>=1.1` bounds, so the semantic lane is dependency-INCONCLUSIVE — a dependency fact, not a runtime or quality result (see [routing evaluations](../observability/routing-evals.md)). It is also **fail-hard, not fail-open, at process start**: `GraphEngine.__init__` raises `SafetyClassifierUnavailableError` immediately if `settings.safety_classifier == "semantic_router"`, so a misconfigured deployment cannot silently run without a classifier — it refuses to start (`healthcare_rag/graph/engine.py#L40-L86`). Production defaults remain `current`/`llm`.
 
 ## Templates and the no-numbers rule
 
-Responses are plain strings in `healthcare_rag/processors/safety_responses.py` — no LLM, no retrieval: `emergency_response` (urgent-care redirect, optionally poison control; no monograph content), `personal_advice_response`, `out_of_scope_response`, `identifier_recall_response`, plus `PHI_NOTICE`/`INJECTION_NOTICE` prefixes. Hard rule: **no template contains a specific number with a clinical unit** — `tests/test_safety_gate.py::test_no_template_contains_a_specific_dose` asserts this over every template, mirroring the `evals.evaluators.numeric_advice_leak` grader.
+Responses are plain Python strings in `healthcare_rag/processors/safety_responses.py` — no LLM, no retrieval — and are rendered verbatim as `decision.response`/`safety_response`, joined with any notices by `graph/nodes/safety_finalize.py::finalize` into the final `answer`. Exact bodies:
+
+- `emergency_response(*, overdose=False)` (`safety_responses.py#L32-L54`) opens with `"What you're describing needs to be assessed by a person, not by a document assistant."`, always includes `"Please seek urgent medical care now: call your local emergency number (911 in Canada and the US) or go to your nearest emergency department."`, and when `overdose=True` inserts `"If you think you have taken too much of a medicine, call your local poison control centre on your way — they can advise while you travel."` It deliberately contains **no monograph content**.
+- `personal_advice_response()` (`safety_responses.py#L57-L69`) opens with `"I can't tell you what to do with your own dose or treatment."` and redirects to `"the person who prescribed it — your doctor or nurse practitioner, your pharmacist, or your diabetes nurse"`.
+- `out_of_scope_response()` (`safety_responses.py#L72-L82`) opens with `"I can only answer from two documents: the Lipitor (atorvastatin) and metformin product monographs."`
+- `identifier_recall_response()` (`safety_responses.py#L85-L95`) opens with `"I don't hold personal identifiers."` and states identifiers are `"stripped out of a message before it is used and are not kept in this conversation"`.
+- `injection_response()` (`safety_responses.py#L98-L105`) opens with `"I can't change the instructions I operate under, adopt a different persona, or print those instructions for you"`.
+- `PHI_NOTICE` (`safety_responses.py#L22-L24`): `"I've disregarded the personal identifiers in your message; please don't share them here."` — prefixed as its own line whenever `scrub_phi` finds an identifier.
+- `INJECTION_NOTICE` (`safety_responses.py#L27-L30`): `"I can't change the instructions I operate under or take on a different persona, so I'll answer your question as the monograph assistant."` — prefixed only on a salvaged `ignore_instructions` pass.
+
+Hard rule: **no template contains a specific number with a clinical unit**. `NUMERIC_DOSE` (`safety_patterns.py#L66-L70`) matches numbers with clinical units (`mg`, `mcg`, `ml`, `mmol/L`, `%`, `tablets`, `times a day`, `hours`, `days`, `weeks`); `tests/test_safety_gate.py::test_no_template_contains_a_specific_dose` and `tests/graph/test_graph_safety.py::test_refusal_templates_never_contain_a_numeric_clinical_unit` both assert it against every string in `ALL_TEMPLATES` (`safety_responses.py#L108-L118`), mirroring the `evals.evaluators.numeric_advice_leak` grader.
 
 ## Terminal refusals and informational follow-ups
 

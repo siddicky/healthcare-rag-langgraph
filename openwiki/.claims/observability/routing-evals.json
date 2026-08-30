@@ -1,0 +1,236 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4c09af31966def1239f900738d1a36baaefb86377f629a7e92555abe2744fa88",
+  "claims": [
+    {
+      "id": "claim_727681a854a1452baff696a47b6c652e",
+      "statement": "evals/routing_gate.py builds two independent paired go/no-go gates selected via --lane query|safety: the query lane compares reference current+llm, control deterministic+llm, and candidate tool+llm; the safety lane compares reference current+llm and candidate current+semantic_router.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate.py#L39-L46",
+          "version": "repo-lines-v1:sha256:1d545be988545403aeaddb1d5e2761bd4bc2e8d8ffe77ab5e9fbc396c00219f8:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzY3NDg3ZGEyN2UyNWMwNjEwODJiYWJkN2Y1MGYwY2RiNzhiNjBlMjg5YWYxZDVmNjhmYzRiOTJlYzM3YmFmNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmFhNTczN2MyNTkyNjVlOGFmMGM2ZDVhNmEzOWJkNDBiOGYxM2E1ZGM4MjM5OThjNmU2YWFlMzlkOThlMDc5MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmNmNGUxZDgyMTk4ZTkzOTM5ZjUxNTI4MDI3MmRlMmI5ODFjNjhjZmNlNjFiNTU2MzI0YTBjMmYwMGU1YzVlMSJ9"
+        },
+        {
+          "resource": "repo://evals/routing_gate_runner.py#L72-L79",
+          "version": "repo-lines-v1:sha256:deae629de8f0937e9dbdccbfedb9abaa71ee7019dd918ec2cef73c0809ee2998:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWM4Yzc4NzkyNzRiZjA0YjBiYWRlMjMzYWQxNjY3ZmI5MjE5MjhhZDY2MzBkOTE3M2NjOGZjOGFjNDg2MWVjMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTQ5NGMyZGJmMDc1MDliYThhNDlkNGIyNTBjMGExMjMzMzA3MGZkMjM2NTQ0ZWNiMmRiMTk2YzU3Yjk1YmRiYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTI2ZDlmMGJkZTE0NWNmZDlkMDczNDJjOTY4Yzc1ZjY2ODkyZDkwYjE0NGY3NTgxMDNiZTM1Yzc4YTUwODliYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2UzOTNhNDVjNTMzMmExYmQ2OTNhOGZlYzQ3MjI5YzJlZDZhOGVjYTliNjVhZjIyZjhhNmUyNTExMDIxNDcxZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0c0d9fe2315949578b97f25bb223334e",
+      "statement": "The arm identity used for gating is reconstructed from the environment manifest (HC_RAG_QUERY_RESPONSE_ARM x HC_RAG_SAFETY_CLASSIFIER) via binding_from_manifest rather than trusted from the report, and a combined or lane-contaminated arm combination is treated as a hard error.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate_runner.py#L20-L27",
+          "version": "repo-lines-v1:sha256:05e3f4cea844d30c120169cadd2ff67fe87fcd89036da63f48f2e53ef5ddc8ee:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjY4NDJkNTAzNTYxZWQ1MGUxYTE5Zjg5YjAyZmMyNDcwMDZkMmIyNGMwMmZiM2U5OGU4NzQ4NzIxZmUxMjExNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjlhYjFhYmFlZjY2YmZjYTBlYjVhYzFkODFkYzY0ZWEwMjMyN2EzZWYyOGYzNzEwZjkwOTgxN2QxYTM1ZmZjYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjNiNDEzMmFmODUzYjYyYmRlMjEwZTk1YzJiNGQwNjEyNzA0YWQyYWQyZjYxNzU2ZTljODU1OTU5NmUyMzdkNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGI4NmE5MDVjNWY4YzA2ZDM3NDkyOTY1MDIyMjFkYzdhNGRmOTYxNjMyYWQyYzgxMGViODFmM2FkYzU3YjU2YiJ9"
+        },
+        {
+          "resource": "repo://evals/routing_gate_runner.py#L82-L99",
+          "version": "repo-lines-v1:sha256:0455cf3713ae4ad3fb8a9ce6586beef9b54ae36127a6706306585dd416fe30e5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NGZmYjg5MDE4MWJhNjg0MWQ1YzM4MTU5ZmY0YmU0ZDIxNjI3NTFlZWYyOGZhYTRjZDdkNzVkZTllYzk0MzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNmM0MTM0MDVhYzA0NDk5YTdmMGE4NWE0ZGZiMGNlYTAxYTg1ZmNhNjI1MTVlZmUwOWQyNmJkNDY2NTBmMDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2YTU2ZGUxYTZiZmE4MzU4YzJmMWY4MWFhZGY4MDU0ODAzMmY4NWQ0Y2VjMzQ2MzllZDk0YjNiYWYyYmQyNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmM2IyNjU3Yjg0MTE0YjMzM2U2ZDkzZjZmZDdiNDUwYzJiNzIxNTZjMGRiMGQ1MzBjZWFmZjUxM2I1OTQwMTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5580593445894fb4a6015cb8626c98b5",
+      "statement": "evals/routing_arm_runner.py runs a single fresh routing arm via a pluggable adapter resolved from the HC_RAG_ROUTING_ARM_ADAPTER environment variable (default evals.routing_arm_runtime:run_arm); this adapter-loading mechanism is an implemented capability and is not itself evidence that any arm has been executed.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_arm_runner.py#L72-L92",
+          "version": "repo-lines-v1:sha256:086542776c2a7e226000a6b5483648de027627aa0a0adcd7d0dd28956ec3fd73:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMWZmMDhjZWU1MWM2M2VmODg2NDYwY2I2MjI5MDQwYzliZWI1NDg1N2M1N2IxMDNhOTk3Nzc3NDZlNzg1M2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMjkyZTc2N2EwYzc4YTJhOWYxNTRjZDEzNTJiNDJjMThiMjE3OTcyNTllM2IxMmFmYzIwM2ZiNTQ2MTU2YzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkZGM4OTM3NTAxN2YxODU1OWFmNDA4Njc2MzUyZDYyYWI0MDY1ODQxM2JhMTAyZWM1MmNmYTlkNjVkMWJjOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZWQ3MGQzNmExYTc2ZDA5MDlmNmM5MmQzYjAzZTQ4MTcwZGI1ZTI5NzFkNzcwMWQxNzVlODQ3MWZjMDMwZGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bfcf163c7ff4490fa1ea1083b68759df",
+      "statement": "The gate verdict process is two-stage: stage 1 applies deterministic/operational checks (including binding integrity) and stage 2 adds LLM-judged full metrics, running only when stage 1 passes without a conclusive terminal decision; required arm execution order is fixed per lane (query: current+llm, deterministic+llm, tool+llm; safety: current+llm, current+semantic_router).",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate_runner.py#L72-L79",
+          "version": "repo-lines-v1:sha256:deae629de8f0937e9dbdccbfedb9abaa71ee7019dd918ec2cef73c0809ee2998:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWM4Yzc4NzkyNzRiZjA0YjBiYWRlMjMzYWQxNjY3ZmI5MjE5MjhhZDY2MzBkOTE3M2NjOGZjOGFjNDg2MWVjMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTQ5NGMyZGJmMDc1MDliYThhNDlkNGIyNTBjMGExMjMzMzA3MGZkMjM2NTQ0ZWNiMmRiMTk2YzU3Yjk1YmRiYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTI2ZDlmMGJkZTE0NWNmZDlkMDczNDJjOTY4Yzc1ZjY2ODkyZDkwYjE0NGY3NTgxMDNiZTM1Yzc4YTUwODliYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2UzOTNhNDVjNTMzMmExYmQ2OTNhOGZlYzQ3MjI5YzJlZDZhOGVjYTliNjVhZjIyZjhhNmUyNTExMDIxNDcxZSJ9"
+        },
+        {
+          "resource": "repo://evals/routing_gate_verdicts.py#L28-L76",
+          "version": "repo-lines-v1:sha256:2d82e1431621722ca95b29ed527ccadef0ccc9b91388bf5f8c69c97d5ba73c93:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0ZmMzMmY4ZGUzMTY0Mzg5ZGM3YjJiN2E3NmY1MDkzYTZkYTE2Y2Y0ZGI1YWU0ZjdjYmNjM2IwZjJlMDYxZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMzMGQ3NjhlZWE2Y2Y3MDRiYTZkYTYwMDlhNmE1OGVjNGNhMzQ4Y2Q5MGE4MTUzYjQxZTc4MWI2OWU1MzQ5MjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwYTIwMDk4ZmQ1NzQ1M2YzZTQ3Y2E0OGZkN2U2NmM3Zjg2ZjE1ODg5MzZlMTVkMTZjYjQwM2ZjOWU3MTFiODUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8647df93de1842a2b91b2714ed19bddf",
+      "statement": "Stage 1 query checks require the candidate to have zero forbidden_direct/safety_bypass counts, medical effective-retrieval recall >= 1.0, medical tool-decision recall >= 0.95 (MIN_TOOL_RECALL), benign-direct recall >= 0.90 (MIN_DIRECT_RECALL), and effective-action accuracy not below the control arm.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate_verdicts.py#L20-L63",
+          "version": "repo-lines-v1:sha256:22e364d110c20ef2662c470a1b893f75b0609b4297b885d6d0b65baeb0585d7d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1N2VkNzI0YWZjYzJlZWRkY2VjZDA3ZjZlYzIzODdhOGI5ZjM4Y2FhOTYyNWU5YTgwY2I2MzAxOGJkOTllYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NWZmZWNjNTcxODk3ODhjN2E4ODUzOGQwNWIxZjk3NTczYTI3ZmI0N2M2MTc4NjQ1M2ZiOTUzZmUwZWYyYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkMTlmYjE4MjM0NTgzODgxOTljOGM5ODJmNGIyZWQzZDA3NWM4YTY2ZjZhNzg5Nzg0ZjljM2EyZDI1NmVjNWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_85333c898986462db04424a57ce6fe17",
+      "statement": "Stage 2 query checks require behavior_match and chit_chat_quality to each improve by at least 0.03 (MIN_QUERY_BENEFIT) over reference/control, and whole-cost and whole-latency p50 ratios to stay at or below 1.25x reference (MAX_WHOLE_RATIO); stage 2 safety checks require a safety benefit of at least 0.03 (MIN_SAFETY_BENEFIT) and a classifier cost ratio at or below 0.80 (MAX_CLASSIFIER_RATIO).",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate_verdicts.py#L20-L25",
+          "version": "repo-lines-v1:sha256:45618262d14a9131ce7913998f39ace3ffeff619036a6bf5dd9983a51620f7c1:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzU3ZWQ3MjRhZmNjMmVlZGRjZWNkMDdmNmVjMjM4N2E4YjlmMzhjYWE5NjI1ZTlhODBjYjYzMDE4YmQ5OWViYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDliYzkzNWMzYzQ2YzRmZTg1YWFkMWJkMTk4Y2ZmZGUzOWE2NTNjNzAzYjAzMDkyNmU1YTM2YjQ4ODc1MzUwOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzc1ZmZlY2M1NzE4OTc4OGM3YTg4NTM4ZDA1YjFmOTc1NzNhMjdmYjQ3YzYxNzg2NDUzZmI5NTNmZTBlZjJhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjAzMGY0NzM5NjQ5YmJkMGZlY2FkYjI3MzQyMzliZjY1MzBkYTZhYzMzZDhkZGVhNGJmZGRiOTYxMjJkMGNlMiJ9"
+        },
+        {
+          "resource": "repo://evals/routing_gate_verdicts.py#L84-L101",
+          "version": "repo-lines-v1:sha256:1bb5c64e497af5727d858a395cefa25f19982e74ef3bf39246ccb578cbf16b57:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiMmJlZWNiZGNjYjdhOTIyYjU1YTk4NTVhYjhmMTc1OWNhMWFlZDhmMzQ3N2ExZWJiZDQwNDVmMWJmM2ZiYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkMjNkOTE1ZGY0ZWRhNDZmODdmZTNmZTUxZjdmMzY2ZmY2YTgxYjAyNmZjZDdkMDM5ZDMwZWM5YTI0YTc0NGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlZTkzZTE1ZmY5ODIwZDJhMjBkNWM3MDZiYWYyMzcyNDgyYmQxNGE3Yzk5MDY2MTk1MWFkZWNiODA4NGZlYjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjODc3ZmI0MWFjZmVjOWRhMDUxNzMyMmUyYWVlYzViNmUxM2QxMjJlMjNhMDYwZGM1MTQ1MDExYzlhYjlhMzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bd30306883d74c29b1796b606941cfce",
+      "statement": "Binding-integrity invariant: all arms in one gate run must share the same git SHA, artifact hash, row-ID population, repetitions, and concurrency, or the run is rejected as an ERROR verdict via routing_gate_checks.binding_failures before any stage-1 or stage-2 evaluation is trusted.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate_checks.py#L25-L44",
+          "version": "repo-lines-v1:sha256:43710414d0e970f23a7ab8d1761d35b90b44cb84c2c875d36892a0376fd68442:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjOTgxYzkwZTU0OTlkNjMzNzliYmFkODc3MGE2NWNiNzZjYmU5ZTQ2ZWNjYThjMGQ1YzhiMTlhYmUxNmIzOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2MmVkOTkwNWE5ODA3NGU0MjBjNDA0YTM5MzlmZGQ4YzkxZDI4OTUwMmU0Yjk4MDU5YjBkMzFhMTBiODNlZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjODJmYzAwNTc4Yzg1YjUwNjg5YzE0MzgwZTlmNzkxMWNjODg2N2VkOTQzZDFmYWUyZDg2YTllYzlkNzkyYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg0NDlkYzEzODNlY2ZjOGY4N2MwZTllYTVmZjI3YTY5OWVjMDcwNWQ5ZjAzMzFiMzkyMjhkZGVmNGVmNDdjOGMifQ"
+        },
+        {
+          "resource": "repo://evals/routing_gate_verdicts.py#L28-L37",
+          "version": "repo-lines-v1:sha256:6bb2e0922d594310a45a3bcfb327afcb47fab69bf0a39166377ead11b9715e50:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0ZmMzMmY4ZGUzMTY0Mzg5ZGM3YjJiN2E3NmY1MDkzYTZkYTE2Y2Y0ZGI1YWU0ZjdjYmNjM2IwZjJlMDYxZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5MmFkYzQ0YTQ5ZmY5ZGQ2ZDM4YzRiZTcwOWIwZTdjZjVjOGJhOWRjMDEwYjE2NzQxZjY3ZjE2NzIxNzRkYjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMzMGQ3NjhlZWE2Y2Y3MDRiYTZkYTYwMDlhNmE1OGVjNGNhMzQ4Y2Q5MGE4MTUzYjQxZTc4MWI2OWU1MzQ5MjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYxZjIxZmEwMGI5NzNmNmYyOTY0MzAwNzJjMmNiNjdhODUyNjFjODFlZWVmZmJkY2I4OTliZDFhN2Q1ZDZlMWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f6686613d5c41a988ffb6ec7b196cb4",
+      "statement": "Gate failures are typed as error, quality, or operational, and error-typed failures (including runner/fallback failures and binding mismatches) take precedence over quality and operational failures in the final verdict.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate_checks.py#L17-L22",
+          "version": "repo-lines-v1:sha256:30dc914d0a6bb8519865c752dad634a9eb095ca66aa4c91ed32cbf621b723023:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGI3OTg4YTI4YTUzN2FlYTgwNDMyNDc4Y2NlYWRlZWRjZWJiMzU1MWEwZjc1MmE5NjMxZGE0Zjk0YzQ5YjE3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODVlOTYwMjMzMjgzMzE2ZTNlZGQ1ZjZhOTBlYmE1NTBiMmI4NTRlYzI0YjkzZTU5YTY5Mzk2ODAzZTQyMzQwMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjFhMDYyMGIxZmQ3NzYzZTI1ZWMxZDE1NDg5NDAzMjZjNGJhN2M4OWE0YTVlZjgwNmU5Y2MyMTM0N2U4YWQyZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2JjZjYyMDZkZDkzMDUxZWU3ZDc3MDU0MzJmYjQyZmNhN2UxMzA1YTY0OTMwNjlkNGVhMzk2NWU1MDAzYzcyZiJ9"
+        },
+        {
+          "resource": "repo://tests/test_routing_gate.py#L129-L168",
+          "version": "repo-lines-v1:sha256:091440d2ffa4a68a102179e202c8b0a024f34c57122aa32537bb412a351a177f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZDU1OGM5NGRhMDEwYjdkZWZmNDAwNjA5MjQ3YTk4NzYzNzQ4MTIwYzcwMzgwMTFkZTExM2FjMWNmNGU0NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1M2VkMDFkODA5ODA5Mjg3ZjAwOTU1YmJkY2I4MGQ4Y2RlNTMyNWRhZGMzMWQ2MDZiYzVjODc3YWNmZjYwZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4N2VjNjM2NzNkYjJkZTIwZjI2ZTNlNDgwY2NhMTI4N2Y1NTFjNDI2NGU5NmM5NGQ4Y2UzMDJkNWQxZTJhY2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fd250a62ef4942e0860af5cc55bd17fd",
+      "statement": "The query-response routing lane is a measured calibration observation, not a quality result: the authored query-judge calibration passed 22 of 24 fixtures, with the two acceptable-greeting fixtures chat-greeting-ok-1 and chat-greeting-ok-2 scoring 0.78 and 0.72 against the required 0.80 CHITCHAT_ACCEPTABLE_MIN minimum, so no paired or paid measurement of current+llm, deterministic+llm, or tool+llm was attempted.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/query-or-respond-vs-current.md#L10-L28",
+          "version": "repo-lines-v1:sha256:66dbfe005064208b8aa0e3139d42df526020a9947a944b1342412c4cf287c94d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkNmQzYWFjNzIxMTZlODFjNjlkOTNjNmFhN2Y1NWJkOGY4MjViMzhlYWY2MTRiNmY5NTg3NzI3ODc1NWE0M2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2Nzc2YTQ4M2MxZjRjNzM2ZjllN2UyY2NkZjk0NmZkODU3MGVhZDdjZjgyZmQwNDA5MGY5YzMwZmQyNGRhOGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5NzkxNzE5MTNjOTFjZWVjNDdjMjExZWRmODdhOTFhYzg5MWM1YzI4NTZmY2Q4MDM2MjE5YWE2ZDNmYWM5ZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkMWFmOTgyZjMzNDZkYjFkMGVhOTlhNzNhZDYxMWU2YjcxNzRhYjM2MDFiMTk2OTI3NTkyZTZjODE0M2QzZTgifQ"
+        },
+        {
+          "resource": "repo://evals/results/query-or-respond.md#L13-L31",
+          "version": "repo-lines-v1:sha256:af430e23c1b8ab99883ee99c2a5537b83a45f68a07a11c6fd14d9bd241d36a0b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4OTJiOTVlNGU0NmVjMDQ2MTIyMmQwYTY5NmQxMTU0N2QyNWMwNWY4MzZkYzYzZDhmMjUxNDk0NjQzNzE4NDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZWZjMTEwZjg4MDcxMDVjNjJkYWIwYzA2MDAyYzEyZDBmZmE5ZjQyMzZmOTliOWE4MDMxYjEyZjRhZTRiZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3YTA2MjU4Y2ZjNDNmZjgzZTVlNTM1NWVjNzNjYTQ1OTkwNWY4ZWFmMzJiMGMwMzIyYzk2ZjNhNTkwNmNmMjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjZjgyYTI3NTMwOTlmYTQ0MmFlOGVkZDMyNDY4YmFhNTE2ZWJlYTM5N2FkNjMyNjk5OTRmNDI1YzE5YzA0NmQifQ"
+        },
+        {
+          "resource": "repo://evals/routing_calibration.py#L86-L87",
+          "version": "repo-lines-v1:sha256:0ab01340286ef02cb4930e2a4ecef46f217ce38bb617ff7ddd17396cf052bcde:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWFlYmMxMjkxZDkzMGMxMTBjZDEwODczZDMxNDFjYTY1NzhiYTlhM2FiODY3Zjg1OTMzOGU1NjRhMDI0NTk3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGMzYmU4MTRiM2QyNzUwOTc1NTM0MjZkMTczMWQxODhjYWFhZjllZjMwYTYyM2M1MmIyN2NjMTc3MDdlNGQ5OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTU0YzY0Yjg2MDFhN2I2ZWUyYzQ3NjBmZmRhNDljNGQ3OTE3MjFmOTgxZTdmMjQ3ZDFkMWE4MmMzYmJjYjBlZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTU4ZjQwNzQyZGY5NjE1N2IyZDBmNGE5ODYzMzkyZjY3Y2E4OGE1ZTcxMGIwYzRiNzAzY2E5ZWNhMTQ0MjViMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a359da4de47340e1b77e433b8fa2d2d3",
+      "statement": "The semantic-safety routing lane is a dependency fact, not a runtime or quality result: semantic-router==0.1.16 cannot resolve against the unchanged project bounds openai>=1.76,<2 and python-dotenv>=1.1 because its litellm>=1.83.7 dependency has no stable release satisfying both, so no adapter was implemented and no calibration, stage 1, stage 2, or paid measurement was attempted.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/semantic-router-vs-llm-safety.md#L1-L20",
+          "version": "repo-lines-v1:sha256:6c9a5dfe223eb979128457452e56d21d343ba6c874887ef6955abd969a9ba764:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYThjNjhiMjZlNmUzODE0MjBmMGMxNDIyNjIxMTA5YmYwNGY2OTU1YTgxM2NhZmQwYzhjOWUyOTU1MzljNzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZDU4MDYwNDZmMWJiNWMxYWI4NDhkMWU3OTY3ZjRjNzZiMDE5Y2I2YzA1OGU4OWU4Y2FmOThiNWI5ODIxZjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4ZjYzNjc1ZTAxMDJlMDQyYzM0M2Q2NzgwNTlkZWRjNzMyNTg3M2IwMzEyNjkxZjE0NWY1MTIzNzFhMWVkNDYifQ"
+        },
+        {
+          "resource": "repo://evals/results/semantic-safety.md#L1-L16",
+          "version": "repo-lines-v1:sha256:a4cc2a9a89f9d6cac3117e8fc9a1fd34f959609c2f4a390c9e96dc51e8ed75b2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwMmI1MTA4MDNlYmU3NGYyZTExOGYwMTRkNjM0ZWYwMTU0MmNhMTlhNzhlZWFmNjgxZjJhMmVhYjcxODNhZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlNjRlN2JkMjZiNDQ0OTA2ZTkyYzc2OWU0MGVjNGQxZmRkYzU1OTc0NmZkMjI2ZThmNmUxN2M3OWU3NWMzZjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4ZjYzNjc1ZTAxMDJlMDQyYzM0M2Q2NzgwNTlkZWRjNzMyNTg3M2IwMzEyNjkxZjE0NWY1MTIzNzFhMWVkNDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d847ca94834042cda9ae78d8d997e4ad",
+      "statement": "Production defaults remain HC_RAG_QUERY_RESPONSE_ARM=current and HC_RAG_SAFETY_CLASSIFIER=llm; neither the query-response nor the semantic-safety lane outcome has changed these defaults.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/query-or-respond-vs-current.md#L1-L8",
+          "version": "repo-lines-v1:sha256:11c69c40170dd31ab515bb1ff79dc49e5d5904cec309d4fe319575c0277e4951:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjkxYWU4YjZkMGQwZmY4ZjkzNzhhY2M5MmQ4MDMzMDRiMGNhZmQ1MzM0NjU3NDIyZTIzYTlmY2UxNzYyOTcxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTY5MGIzOGNmZTA2ZGFhYjE3OGI0NTM5NjA1MDExNzdmM2NiOTA5NjYyMWIwZDYzZWI4MTRjZTFjYTFmMWYyZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzEzMjJhOTcyZTdiODU0NTBlMDhhZTE1OGQzNDllMzljNTNlMmQ1NGQ2MmQ0ZjhlNWNmZWM4MTkyMTFhNDJjYiJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/semantic-router-vs-llm-safety.md#L10-L11",
+          "version": "repo-lines-v1:sha256:70e77d8221ff6c3764e6cd993accd9a0181ac692a48a083af0cf4efc0a65361e:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmVhN2QwOTAwMWE2ZGViMmYxMzA0MWIyZDdlY2IzYjViZTE1ZTUyZjNiYjEwY2I2NTc2ZTVkYzY2ZmZjODY1MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTY5MGIzOGNmZTA2ZGFhYjE3OGI0NTM5NjA1MDExNzdmM2NiOTA5NjYyMWIwZDYzZWI4MTRjZTFjYTFmMWYyZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTdjMjVlZThjNmQ5NmYwY2M1NDVjNTJhMTE2M2Y2YWIyZTQ3NzY2MjMyMGMwNzI0YmE3MGJiOGJkYjBhYjlhMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGFjZmFmMjgwNzYwZTE5MGI5NGYxMGMzMzhjZDcwYjk5MmIwMWE0Njc1ZDgzYTZjYWY4MDMxODExNzBiMzdhMiJ9"
+        },
+        {
+          "resource": "repo://docs/routing-experiments.md#L1-L7",
+          "version": "repo-lines-v1:sha256:38fd7747a084097ab390bd640842384694fe207d6675b026b6c98aa1c3439959:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGQxZjRlN2FmYzdlNjRhZTMyMjc1YThiODQ5OTNiYmU5MWJiZTlkODY0YTEyOWNjM2FmOTJhYmU5N2UzMjMxZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjFhNmVjOGRlZGRkMzBiNDdhNWRiNWQzZGUxYzJkZGJhZWRmMmQxZTYwZWIwYzBlN2U1OTM0YzhjOGJjM2Q2NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzRiNTEzZWNjOGY5YzNjMGQ1YjNkNGQ0MGM1MWUxMjllNjMxYjExZGM3MjNlZWMwYTRiMGU5NzIxMDZhZWRhYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c190479642249269ebdbf80d11157d3",
+      "statement": "Because fewer than two lanes produced a completed, fully-populated measurement collection, the routing-experiment summary treats the set of actual measured comparison stems as empty, making the make compare target not applicable to either lane.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/routing-experiment-summary.md#L23-L52",
+          "version": "repo-lines-v1:sha256:841380c9e9c8c4a993f3e0a021a3e37e5f58f647dae730c906532d861795aa67:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlM2Q2NmY4MDljNmFkNTQ4MzFiZGI4ZDllZGQ1ODkwMTgwZDczZDZkNjVhYjRjNDE2ZTFhZjg2ODI3NjVjMWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmZDE3MDU0NTQ5YTAxNzg3ODY1Mzc2NDE5ZjA5MjRmMmRjNDUxZjlhZTJmMzc0ZWRmNjM4OTU5YjNmMTcxMTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyODBkMGFiYTE3ZjFkMDI0M2RhYTEyNzYwMzRlYmE3NTAwYmQ0NjNhODE4OTE1ZTAyNzdiZDM2ODJkOTljMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxYmY3OGMwZDYxYmRhMjM5ZGVhN2M2ZDE0ZGI1ZDcyMDU4YjE4NjU1YmI1YzhiZDlmMzMzMjRiMWYwYzJkYmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_83ce39149fc247408c30b904a79fa688",
+      "statement": "evals/routing_dataset.py loads and validates frozen RoutingRow, Prototype, and RoutingConversation collections into a RoutingBundle with a content hash, and computes a dataset name from that hash for syncing to LangSmith.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_dataset.py#L51-L79",
+          "version": "repo-lines-v1:sha256:b2305c97482f169517749cdfea3cd4e3c8de8045dd1b40aee136ea1edd9c0b1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NTU5N2FiYTJkNGYwYThkYjc4OTc1YTA2MjFhMzUxZGIwMWQ0NGU5Nzk5ODUwYTU4ZmQyMDkzZjg5YjQzYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjYjQ0NzA3ZTE1YTFjNDk2YWQyOTc2N2RiYzYzZjM1OWJiODkzM2ZhNmFmMWNjMGQ3ZmZlMTIwZWMxN2U3YTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI0YzMyNzhmNjUwNTI3NDFiMmYxY2YzZTVkYmVmNGZjYzE5YTdjYjg4MGIxODM1MDUxZTNmODc1NWI5NDlhMDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2MDJjNjYwNGNjMDU5MmI4N2I2YmZmZmM4MmQ0OWRhMzU5MjE5ZjczYmFiZWMxZDA4MDk2ZjVhYjVhMzU4M2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c03cd40f33dc461a805760b94b1b67f3",
+      "statement": "evals/routing_judges.py defines chitchat_quality (which grades only rows whose expected action is direct, capping irrelevant/unsafe replies at 0.4) and a calibration safety_drift auditor, both built on the shared untraced routing_judge client from evals/evaluators.py.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_judges.py#L1-L94",
+          "version": "repo-lines-v1:sha256:47b7ff93f7c4f22ebe58c0f16271c371d7d45702f040361f921ff5aeec35f7d4:eyJzZWxlY3RlZExpbmVDb3VudCI6OTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0NDIyMGRjODljMThkNTVhN2U2YWUxYjU5NjUwMzI1MjZkYjEzNjllYjFlMzEzN2RjYzNhYmM5NDYwMzYyZWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkYTc5MjU0OWNlYTE4ZGRiZDBjMTA2ZmE3MmFiNjQ0YzYyYjUwZDgyOWM0OTRmYTAwZWUyMWZkYTYyN2QwOTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fc476e92379e4cac98abf79148f5f214",
+      "statement": "evals/calibrate.py is the single CLI entrypoint (uv run python -m evals.calibrate) that calibrates both the general answer-quality judges against evals/judge_calibration.json and the routing evaluators against the routing calibration fixtures via routing_calibration.summarize_calibration, and its run_routing_fixtures function is what produces the PASS/INCONCLUSIVE routing calibration statuses.",
+      "evidence": [
+        {
+          "resource": "repo://evals/calibrate.py#L125-L175",
+          "version": "repo-lines-v1:sha256:3fc4dce2e6e8e917ee4c2d7c5bd8771f0d68e8bd160a44ae6c60f15ab8994ac9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxZTBmNTBmY2I5MjI4YjU2MjlmNzA5MjRmNGZkZDVlODgwMjIyNzViZmY0Y2NkNTgyNjM0OTQyNWZlNWU4MjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxOTg2NzlhYTFmYjcxNWRkMWZiODY5YzNiOTZjMjcyOTlmYTk5YzkzY2JmN2NjNWVlN2VjMGQ0ODk5NDgyZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlNzA3MWNiMGU5OTNmZmZlZTljZTNkOTIyYjY0NmEwYjdhMDU2NWEyMmIwMjdiYTVlMDIzOWVhNmQyMGUzYjkifQ"
+        },
+        {
+          "resource": "repo://evals/calibrate.py#L37-L53",
+          "version": "repo-lines-v1:sha256:addc862df41edfb193bfa1fc59ef21fbe46c66671f0a7bcdaa8260dfce04eaaf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhY2U2ZDI2MWM3OWNkMzdhMWM3MjNmYWQ1YmRhODA3ZjUyNWE0ODU4ZjU2M2Q0MTQyOTc5ZTgzNTIyNTI5OWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNjg5NjU2MmI5ODI0ODE2NDU4NDZkOTJlMWRiZDA2ZDYyY2NkMmNmY2NiZDQ1OWMwNzNjZjk4OGUwYmZkNjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlMmEwYjY0ODNiOGMyN2RkZmUyZjIzMTcwOTNlODZjNzg4MjZmZjVkNjdjYzJkYzU4ZGQwN2Q5MzI4MWExNzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmNGZkZDhhYzM1OWFkNzliNzhkNzVjNjAwYTM3NmRkYWVlYjgxZDhkN2JiNWE4MTVkNzIxZTlmYjFkNDA1ZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6a6a8406f4e44d0c86ab4d9a188f5602",
+      "statement": "Passing gate runs publish a per-arm JSON+Markdown report pair via routing_report_io.publish_report_batch under a report_name constrained to ^[A-Za-z0-9][A-Za-z0-9._-]*$, and cross-arm provenance manifests are compared via routing_provenance.compare_manifests so that deltas are attributable to a specific measured run.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate_runner.py#L20-L27",
+          "version": "repo-lines-v1:sha256:05e3f4cea844d30c120169cadd2ff67fe87fcd89036da63f48f2e53ef5ddc8ee:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjY4NDJkNTAzNTYxZWQ1MGUxYTE5Zjg5YjAyZmMyNDcwMDZkMmIyNGMwMmZiM2U5OGU4NzQ4NzIxZmUxMjExNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjlhYjFhYmFlZjY2YmZjYTBlYjVhYzFkODFkYzY0ZWEwMjMyN2EzZWYyOGYzNzEwZjkwOTgxN2QxYTM1ZmZjYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjNiNDEzMmFmODUzYjYyYmRlMjEwZTk1YzJiNGQwNjEyNzA0YWQyYWQyZjYxNzU2ZTljODU1OTU5NmUyMzdkNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGI4NmE5MDVjNWY4YzA2ZDM3NDkyOTY1MDIyMjFkYzdhNGRmOTYxNjMyYWQyYzgxMGViODFmM2FkYzU3YjU2YiJ9"
+        },
+        {
+          "resource": "repo://tests/test_routing_gate_runtime.py#L36-L48",
+          "version": "repo-lines-v1:sha256:7a5a19a5209b6295d8011dd7d4a990bbcad437bf1e140e911a01c9e55346db57:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxNDBhNmQ0NWZhZTQ2M2JmMzc0MmMzNmYzYmJmZGM3MGU1NGJlYjlmNzkzNzk0ODIzNmMxOTlkNmRkODI2ZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxYjU3N2QyNzY0NzhkODAzNzhlZjc3Mzk5ZjE4NjE3MTFjMTljNDg2MjRiNGVmYzMzYTUwOGI2Nzk1MDNmYTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MTRiNGM5NGUzYzA5ZjVmNTMyYzg1NGJjMWRhM2FkMmZhZTUwNzUyY2E3ZWQ4MGU3M2IxYjI5Njk0MDY5ODkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_07cdd7cc51ed48428612813a8dccf197",
+      "statement": "Only the --smoke (canned evidence via _smoke_query/_smoke_safety) and --fixture invocation paths currently exercise the gate's verdict logic end to end; make routing-gate-query-smoke and make routing-gate-safety-smoke run these as cheap contract checks.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_gate.py#L49-L57",
+          "version": "repo-lines-v1:sha256:a6091389235cedc5b16525a3386b9b0c4f2e11959e7eadec2b675e0420e5ba31:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDZmNTA3MGJiZjM0YTViNWJjOGU0ZjI1Y2I3M2JlYTAxOTkwMzQ1Y2Q2NWQzOTliN2I4NzA1ZDcyZTUxM2M0NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTk4YjA2M2Q5YjQ3ZTY1Mzc5NjI1NTcyY2NlMTk3NjY5ZDU3NjdlMTJjMThiZTA3NTY1MmI4Y2Q5ODFjZThkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2FkYTQ5YWUyMjRhOTc5YTc2YjI3NDNiM2RiOTAwOWViM2ExMmUxZWNmNzM1NmQxZDU5Y2Q2N2I5MjM3NTVhZiJ9"
+        },
+        {
+          "resource": "repo://tests/test_routing_gate_runtime.py#L13-L14",
+          "version": "repo-lines-v1:sha256:e5dbaca4e149bc56edfbaff23b69c1cda70a2f0e13ab224f255074195b0b841a:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2QzOTM3ZDIwZGNmZTAzMTJjNGQ1YmI3NmUxNzQ1NTNlMGYxZjcyMzFmZjcwMjc2Y2NiOTk5MDljMjY1YzZlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGIwZDkwODNlMGQ5ZGI0N2U3M2Y4YjQ0N2Y1MDc2YTExZWIyMzRiODJjMmRhOTVkYTA0ODFiZjE5ZjQwYTMxZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjc3M2ZlZTU3Y2YxODYyZmU3NWU0OTIyNDgzNTdkZmY3YmY4MTUxMWIxZWM0N2EzMWM5NmRmOGQ0MGJkYzQ4NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTY4MGIwZjI5MjhhYzBkYmYzZGQ0YTMxZDVjMTZlOTE5OGEyOWE2MDg2ZDM5Y2ZiNTdjMjBmNjBiZTMzYTY1ZCJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

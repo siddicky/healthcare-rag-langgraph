@@ -1,0 +1,442 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:53e07aeea7bd66bca179c100090eed4a8053241e6b55ca5cdbfcdc6b028ec4ea",
+  "claims": [
+    {
+      "id": "claim_f1b1b4f0b7424062a0e8d35d34a475c1",
+      "statement": "langgraph.json wires the LangGraph auth object and a custom Starlette app, sets middleware_order to auth_first, enables custom-route authentication, and disables MCP and A2A mounting.",
+      "evidence": [
+        {
+          "resource": "repo://langgraph.json",
+          "version": "repo-file-v1:sha256:edc19183e919a8a0e015dd62f264c85e4975ebf6acc521875c44d73147abde42"
+        }
+      ]
+    },
+    {
+      "id": "claim_739c8d412cbf4dccada4ce534bfb9f2a",
+      "statement": "The custom Starlette app (healthcare_rag/agent/http_app.py) installs MemberPerimeterMiddleware, which validates the member-facing HTTP contract before dispatch and applies response checks afterward.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/http_app.py#L30-L40",
+          "version": "repo-lines-v1:sha256:1b82cf2e658232caaf3d6177f0fcc230859f22d9e7e2945513eeccea217acc0b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2MmFjYWNhNDBhY2M3NjVmMWVkMzFhM2VlMmFhMTdjODMzMTM4NGUxYjUyYjhjMTUyYjgyMjdmZDhjMTE0ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0NTA5ZWIyYWQ2ZDA4ZmE2Y2FhY2I0N2IxZTdlNTBhODJkYWVkNTczMThjNmRjZDBjNjhkY2EyNGNlOTFkZTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlZWM4MWIxNzgxZmM2MWY1ZGU4NDI1NmRkN2ViYTI1MDc4MDVlNzRiZWQxYWY5MmI1M2IyODBiZDY2YTc4ZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzNDg3ZmM4NGVkY2QwOGRhZmRlYTJmYTI1ZGI1OWUwMzU2ZDUwMjY3ZTMyNDgwMWMxOGE5NzkzMDBhY2Q2OWUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L99-L133",
+          "version": "repo-lines-v1:sha256:68670925283d26baf89adf333275d6c0d3d78e3dbe1b3418100df70428b27114:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNDg2NDk1NzdkYzlkMjUxMjY0OWU2NWVjZjVlODAxZDZjMjQwYjkzMWVmMGE0NTAwM2Q2N2NmZWM0NjNlNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyYWJlMzFhNTkwM2MxNTExYWRmYjQ0MDA5NmE2OGY0MTFjYjNmY2U5YzYwZDQ4ZjM1OGU4OWI4ZmNmMWMzOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjMDQzYzA1MmE4Nzg3OTFmY2MwZmY0NzZlNzE1YjljZWJiZWUyMjk3OTNiMjIzZDMzYTRkZTY2ZWQ4ZDkzMTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFhODk4NDVlNjk1NjBiMDI3ZjYzNDE2NjcyMjI2YmQ0YTg0NTBkNWI2YTE4MDllYjhjOGQwNTg5NWNlMGI1N2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_13833650dbe34331a65a24ad5e41ae56",
+      "statement": "supabase_bearer() verifies a Bearer member request against the configured Supabase user endpoint, sets identity to the returned user id and role to member, copies a bounded control-character-free display name only from the service-writable app_metadata (never user_metadata), and raises 401 on missing configuration, malformed identity, HTTP failure, or invalid JSON.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L67-L162",
+          "version": "repo-lines-v1:sha256:a7bca260936677ca7c3e04f024826d4acde7f101e800e97380e1eb113a31b492:eyJzZWxlY3RlZExpbmVDb3VudCI6OTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiMzNiYTBjMTY5YWJkOWEzYmE4ZTY2OTE2NTg3Y2MxNzJmNzA5YTk1ZmU1MGQxZjE3MWM1ZjYxYmI2M2YwNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0NTBkNjFhZmU2ZTBiZDlkYWQ4MzYzMTZmYWI3NDYwNGQzYWJkZjg5MTcwNjg2ZTA4NDlkOGU2MmEzMDZiZWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhOGQ1NmQwZTcxMTJiZDUyOTdhNDRmMTkzNzQxYTE3YzA0OWU4NzdlY2NjMzAyZWEzNzlkMDc1MTI4Njc5ZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlMTQwNDBkYjQzZWU3MDFjMmY5MWE3Y2RhNGNiODBjNmE4M2FkYWQyNGU2Yzk2NTkxYjU5MDQzZjNkZDIzOTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_afc8c03b3972404f815c00392d7e4dda",
+      "statement": "Internal-service authentication requires both the platform key (x-api-key against LANGSMITH_API_KEY) and the internal token (x-internal-token against COACH_INTERNAL_TOKEN) to match via constant-time comparison; the request's method/path derive a reservation or cron_ops sub-role; reservation traffic supplying x-internal-owner is rejected with 403, and cron_ops principals carry the internal owner only when the header is present.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L106-L130",
+          "version": "repo-lines-v1:sha256:c88611293f64e3c5ba5565df971d33756b07c38bb106c01d997b36bd2cf651c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiMDg5ODIxYWMxYTZhOGIyNTRiMDA0OWM4MzE1MTdiODQ2OTNlN2ZmNTk5MjRmNzZjM2U5NjZkZWFhZmEzM2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxODk4ZmM0ODdlN2NlMzAxZWE1NmI2NDhhYjM0MjEwMjExYThjNmJlNzBmZGUyNGRlMzRmZjY5MWUwNjkyZmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3NzQyNDZkOTg4YmNkYjJiNDE2MGY4ZjFhNTA0NzQ0YzY3YmJkZjVkNzgxZGI1ZmM5NTFlZjhiNjZiNzQ0YTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkNTYwMmY2OGE5YzQ5MTNjMDY3MTAwMjFlNzkyY2ZkNWM0ZTRhMjZhMTllOTViODY4YjhjNGQwOGZiZWNkMGYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L41-L59",
+          "version": "repo-lines-v1:sha256:de8ae7704eb249468e7a2fa7df4841080fbc086c8547a0831fa6041057ebba55:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5MTg1ZmFmY2M0NWIyNDA1OTI1MDZhMDdlN2JmMDA4Zjg2OTg3M2U4YzQ0Njg5NTAzOWFiMzQ2ZDA0OTQyZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxMmQxMTg1NGYxZWU3OTM4NDExZDM1YzAzNjA5ZGNmOTViNGM1Y2E0YWY2M2I5NTVmMTczNmZiN2I1YWFmOGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3MTM3NmI3NWI1NDlkMTQ0ZmZmNDQ1YjBlNTIzMjQyYWViY2FlZTFmNDUwMjVkOTQ5NzRlNDA2NDA2MzA3YTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9a7fe6582c2a494ba31b930608153f68",
+      "statement": "An OPTIONS request receives an authenticated CORS-preflight principal (role preflight) so the CORS middleware can answer without member credentials.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L99-L105",
+          "version": "repo-lines-v1:sha256:65489c8e2a87e791883ec477e72ee7a642e0ae3e8a3b3296aad795c6e0fcced2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODQ4NGQ0YjVkY2FjZDc0MjdjZWU2M2MwYjY2ZWNmMjlkMDY4ZDM5MDY0MDI0M2RiMzk1NTZkYTA1NzE4YmUxOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTZiMDQ0OTE0Njk3MjJlODM2M2E5NGU0MDQ0NTM4ZTAxM2EyYTIxN2UzNmIxZTU2OGJhNjBhY2I3YjRjOGYyZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzZmNzU1YTY3NmUxMDZkZWJhMDZhYjQzNDc2MGY0YWQxYWZjMGI4M2IyYzAwNjg0MDJhOWZmNTY4MDEzMmRjOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWNkYTE3NTIzYTBiMTBlYWFhZWVhMTk1ZjNhYTYwNGNiYThmN2RjOGIzY2I3NTdjNzBmMjg0MzQ0ZjE4NzY4YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fcbf6dc1ddea48fb8a1bc7440ce5d741",
+      "statement": "Authorization handlers scope member data access independently of request-shape validation: thread creation overwrites metadata with the authenticated user_id; thread read, search, and delete are scoped to that user_id; members cannot submit a cron_wake run input; run cancellation is scoped to the owning member; internal reservation access is limited to upload-reservation threads; and an internal cron-wake run is admitted only in its exact shape with matching thread and user scope.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L189-L271",
+          "version": "repo-lines-v1:sha256:bc3052ab636690c5bab28ff6f66afa7108173f0abc8b3c7d1fc6c968886b51f5:eyJzZWxlY3RlZExpbmVDb3VudCI6ODMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyZDFhOTkwYWU1N2Y1ZThjYmJhODg4NmM3YmZiZTFhYmQ1NWM1OWQyMjBhNjU0NGIxM2I5ZWM4NmY3MTZkMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyNWUwYTM0YWMxYTZmNTRkNWViZWQ0YjlkZGY4OTRiOGQ4ZTExYTgwMTdkMmRkZDM3MDMyMmM1YjUwMWUzZWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkMWQwYjdkMzRkMmZjNmIyYWM1NTUwZTkwMGMzMTU1ZmQ1MDFhZGE4MjljODRjMTY0NzNiMTEyMWU2Y2JkNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmYWJkNWI2OTI4NmJhZDhkNjFkMWZhNDVkZTFhYTVjOWZmYzA5MDc1NWNhODMyZjc3ODdkMGE4NDhlMjZkMDMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L231-L243",
+          "version": "repo-lines-v1:sha256:b6910a7e7badd10f2d5387b14af2a6729f883bffc5ece5581dad35f51bec5e81:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkYTA2YmM2MDdlNTE5NzEyMmVhYTRiMzMwYTE0ZDk5NTIxYzk4OGE3MzI1ZWY4YmUxNDYwYzFkZmRiNzI2MGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY1NmVmMDJkOTY2NTNhY2QwODM4OTM3NTc1OTVmYTNhODRlZGE2MTI4ZTg0MGZmYjNiMDE1N2E5YzBlMGNhNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlYjJkMTYxMGNjMDY2OTU4ZTUxNWU2OWQzMDY3YWE4MWMxZmZiMjY2NGUzYTJjMTAwYTNmYjIzMTA4MWM1MmMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L274-L281",
+          "version": "repo-lines-v1:sha256:c8dec6bbcbfe5ff53194593b10db3d610dd10c8c490b2ea30cdcb5778dfd21b3:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzllZTM2MzMxMWFiNGRhMzQyZTNmNjExY2Q2N2Y4MzUyMTI4ZTZlOWYyY2JiOTRjMmE1N2VlNjY4YzMxOWMyMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTA1Y2MzYzlkMjBiOGUxNDUzOWJkNjU2MGRkNWI2YTQ4NTEzMDMxOTc4MzlmYzlmN2I4MzViOWEyMzJjOTVjMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjk5MWFjMjdmM2JmOTI4ZWI0ODQ1NTNlYzViZmE4Mjc3MGQ2MGMxNTZhNjk2ZWIzZTRjZTBjNGRhYjMxZTI0ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDNhM2EzN2RkYzI3ZjhlOTJkZThiMWE5NWY5YTE0Zjk4NjlmMTBjNjVmYzI0MWNjMDkyMDM2M2I5YTA1Mzg0YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b957f96159314b7d98c8deb13611a4c6",
+      "statement": "Assistant read/search authorization returns an empty scope filter because assistant records carry no member-identifying metadata; the member request-shape perimeter compensates by restricting assistant search bodies to graph_id == \"coach\", preventing a member from selecting a different graph despite the metadata-only platform filter.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L284-L306",
+          "version": "repo-lines-v1:sha256:0a48c4e5a7e2090e9c3e76e699c80a686355c72aa82b68e84175e2e25456e4fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1OTE4MWI4MjA1MDZlYzI1MTM0Y2FiMzg3YjYyY2U3YzM4NmM3ZmEyNzdlNDI3ZGRjOGE4OWUzMGFkMjYwMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3YWM4NjllMDJlNmI4MjE5Njg4NzJiODEwYTA4M2Q4NTlkODZjNzY5YWJjMTgzZjcyNTA5MGJiMDg5ZDk3ZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3YWFmMTAxMDg2Mjc0MTk2MjU5YzMwNmI5MTdmNGFkOWViOWY2OGRhODI4ZGQyMmI3NGI4ZWFkYmU3MDcwYWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3YjRiNjZjYTZkOTNjZDVlYTdkOTM5Y2RmNzA3ZDIyNzhjMTdhY2QwNTU1OTU3MjY2ZTgxN2JkYjI5MjAxY2IifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L282-L293",
+          "version": "repo-lines-v1:sha256:61a4be79ff968bc8dd55c6cd9fc56d08a14ad6b895d78f4d72803f0312f91658:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0MjRlY2UzYjBjMzE5MGE0YWQ4YjlmZjQ4YzMxYTk2MmRiYjE4OTU2ZmRmYzg0MDJkMTNkMjBhM2M1Mzk0MzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMDYyMzk5YTkwOThjZjkyZWViYmI4ZGViMmY2MzE2MDY0ZjRmZWZiODUyZjM2MDAwMTVhMzEwZmEzMWFmZTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhNTQ3M2M3M2NlMzllYjFlMTAxNjUyOGM1NWJkNTgzOTIwNjZkODgyYTM2MDE4ODA5OTFiMTgyNDBjZDRlNWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bde8225624aa4b3c8128295c17b72fc3",
+      "statement": "Cron create/read/search/update/delete authorization is scoped to the internal_owner carried by a cron_ops sub-role principal; create additionally requires the cron payload's metadata.user_id to equal that owner.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L309-L351",
+          "version": "repo-lines-v1:sha256:4b759a032d2ed44ca1af554bc03958e107a6c90265c7366c37ffce8dd8e4c420:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyODliMWFhZjc3Yjc4MWYzYjFhYTg5NjUzYjRhNzAxOGZhZDVhMDU2YjM5NGMwNTQ0YzcyNDQyYTQzM2QxM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjYjlmZjNmZDQzM2FjZWRlN2I1ZjgzYjU5Yjk2MDUzNmM5MTVhMzE5YWQyYjM0MmJhYTExN2ZjM2JmNjdiYzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjliOGNiZjRkNWU4MGJiZTVlNDhjNTdmNGZjYjczNTY3M2Q2MDc3NDBiNDJhN2FiNmM5MjM2ZTM3MmE5ZjUzZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjYzk2MzBkMmJiODE3YmUwYjdjMWM2OGU1ZTJiNWU1NzRjMDUwNTRhYjgxZTAyMjNjNmY2OTczNTc4ZTA1YzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_852d97a7432041219600ad05efdeb65a",
+      "statement": "Every authorization handler treats a StudioUser context as an unconditional allow (_is_studio short-circuits to None); this principal is only ever issued while langgraph.json leaves disable_studio_auth false.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/auth.py#L173-L176",
+          "version": "repo-lines-v1:sha256:11ad8772a9430c801d5300c9fe15eb65e46c7e48a256b6950313e5e36b7cf255:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmM0ZmM1Y2JmYWE1MjcwYzJiZDYzNjZiMjhkOGI2MGUyZTRlMTQ4ZDlkZjI3M2ZhYWMxZmZmNmEyZjk4Y2Q5YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWJjNTAzOGVjYzM0NzJkMGM3MWY1NjI5MTk0MjllZDJjNmNjMTVhNmM3YzcxNGVkYWRkNzBjZDJmNDQzMzFiOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2ZjNzIyY2VjOThlYzMxMGYwMjkyMWIyNTVjNTE3NDllYjBhMjFkNTA2MmYwMzcwMWM2NjE3NjFlNDU4ZDFiNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGFlODNhODQwMDU5NDIxNWQ3Y2M0ZjgxNjQxZjQ5ZmJjMzA2YWE3YTliOWFhZmE1MmY1NjY1ODI1OTc0YjlhMSJ9"
+        },
+        {
+          "resource": "repo://langgraph.json#L14-L17",
+          "version": "repo-lines-v1:sha256:6cac89d21d9fef63cf5446eb7967da18bf1380e2a03e23378621b70783bf03cd:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmU2ZTYzOTY4N2EzZjNlYTdmZDdlOWJlZDZlZGM3ODkzMGEyMGZjMzI0NWZjMDA3ZGYwZmE5OGQyYjVkYmMxMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTFkZWM1YWJjYWY0MTU0YTI5YmJhNjY3N2I4M2Q5ZWYxZTNmNDZiZDQwNDdlZjZkNTRjOTc3ZjQ5MTFjMzQ1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTJlNDIwYzIyMzc1NzQwOWE4NWJiYjVjM2NmZTc0ODQ5MGFhNGY5OTkxMTQ2ZmE0N2VlMDU2YjRmYjZiODdkZiJ9"
+        },
+        {
+          "resource": "repo://tests/agent/test_perimeter_studio.py#L43-L56",
+          "version": "repo-lines-v1:sha256:5b2115ea5876d29b4cdcfd6155bf9d516dfb70618848121e702c19a38bc5ab50:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyMTNmNzg3MDhjN2FjZjMwNmQ0N2U3ODZjZDliOGE3MjMzOTdiMGRhNjM0MDhkZjdlNDYwZjNjYjNkZDUxYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxMTk3MGZiYzM0ODAxNDEzM2ZkMWM1YTBmMDlhMGM0N2ExMjRkOGE0NTM2ZjI1YzBlMjc0NWExNzgzNGRjNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhMTE2NWNmYjhhMWVmNmM2YmNhMTY2ODc5MmM5ZmU4NGM0ZjI5OWUzZTYzZmY5YmRmNWZhNGE2YTdkNWFhOTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2ab4f6560b284564a4c79f583f02454e",
+      "statement": "validate_member_request() rejects non-canonical paths (percent-encoding, double slashes, trailing slash) and denies any method/path/query/body combination outside a small enumerated allowlist, returning a 403 'Route is not available' by default.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L598-L696",
+          "version": "repo-lines-v1:sha256:d74e2f401ddc9c2eebbbf9601121a53d5129edbc0842103ee73f02ba7648386a:eyJzZWxlY3RlZExpbmVDb3VudCI6OTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzY2EyZGMyODhmYzFjMDk3OTk2YTNhMGU3NmY3MDU3OTVlOTI4ZGM2ZDRlMTFjODlhZTEwNDAwZjU3NDU1ZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1NmMzOGFhYWFiYWU5MGYyZGM0MGMyZWEwNDE1OTJhMmRlYjFiM2FhMjFkMTg1MzVkNTlhZTEyMGNiYTQ3NjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1OTQyMzk4NGQwNTE0YTc1ZGViOTlkOGEyYjFkZDliN2VhNDM4MmJmODdkYTM4ZTRmNjJhMzc3ZGJjYjk1NTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyZDY4YzQxODM2ZjhjNjA5ZDdjZDZmNThhMjgyZjg1ZWU0ZDcwNzBkOGE1MzE2MzY2ZmMwNTg0ZGExYWJiNjYifQ"
+        },
+        {
+          "resource": "repo://tests/agent/test_perimeter_composed.py#L65-L98",
+          "version": "repo-lines-v1:sha256:0724c41e63d679a57e0a49d91b180b4bd2850886c66a88a34af01c22c9401b01:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmMzQ1ODNhNTk4NzY3YmY1NmFlZmViNjVlMjAzM2ExNjUxY2M0YzhkN2U2ZjBhZjNlNWNmZDMyOTNmOTMzYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZGM2ZTE0NDlhZGMxNDc1NTU0ZDFlYWRlNzI0YjNkYWJlYmE5YjRmYzY0ODM3OTE2YWU1MjRiNzk0YWViODkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyYzc1YjdhZDM2YjgyYjVlZGM1M2Y5NzhiOTc5OGI5YTE1NmQ5MzZhMTA0MjM5ODM1YWM0Mzg5YzA5ZmU1MmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhOWQ5ZDI3MTFjOTZjYzI1ZjgzMWUyNWE0NzFmZWVhOGYyZmEzYWFhN2ZhNzk3MjAzYmVkZmVkZDM3MjYzMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_854eeab0462c46f8802b01c187da8968",
+      "statement": "Thread creation accepts only an empty object or a body of exactly {metadata: {}, thread_id: <uuid>}; the middleware then rewrites the request body to authenticated ownership metadata (and the supplied UUID thread_id, if valid) before the native handler receives it.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L603-L613",
+          "version": "repo-lines-v1:sha256:f97caf44e5a5ab7cb5e3ff4ef351d3dd7cee8249a89c5e08b365adbdd90b5019:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYTUxMzM3NjhmNWI4YzljM2NhOTVkNzFkM2NjYWJhMzFiOWJlNjVmNDJkYTIyNTUxYmUyNDIyMDA1M2MzMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlN2JjZDM2ZWY1M2I0NDUyM2U2NWU5OGQxOTQ0OTkzZTBmZjE3NDZmNTUzNmMxYTUxMTc0NmYzZTAxZTc1NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5MTE4ODgwYjZiYzQyMzY3OTdhMmZmNThjOGRhN2Q2NDVkYjE3NmFlNmQxYWVmZjBiZWFmMzhiNzNjMjFlYzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViMTY5ZTEzMzM3NjVjNTNkOTRkNjhmNWNiMzQ1ZTVjMGJiNmE3OTA3Mjc5NzYxMjYwNDUxNDY2NzhhNjAwNTMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L139-L150",
+          "version": "repo-lines-v1:sha256:65b12c8a15ed37e1fa0841c72a3331290e4558a628bcbdf98ba62d220dcdd0e1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlMGJmYjg3YTVhNGJhODY4NjZmNmQ1NDhkNmRlYzdkOTJhYWIyZDBkYmNkYjJjNmY4ZTA3M2E3Yjc2MDBlY2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1ZWEyNWY5NjgxZDgzYjEwNDU2NjkwZTBjYTJmYzdiOGQ4NmY3NDI0YTBjYzVlNjNkYWJhOTc5MGQwOTZkNjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2NDZhZGQyZDhjMWY5ZDQ5N2FkMDc4YzdmMjE4OGIwZmJjZDZmMWRhZGZhYzlhMjY3OTA0ZTMyMzZiNDhmOTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmNjI0ZDU4OGE0YjJhMDMyNDUzZGZlZjk0MGY2YmQ4YjY2MGYyZWE0YWJhYWVlYjFlZThkNzNlMDU2N2ZmMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_afaf00bc13124ff2b2a114e3b6cd4f7c",
+      "statement": "Thread search bodies are restricted to select/limit/offset/sort_by/sort_order, select must be a non-empty subset of a fixed public field projection, limit must be an integer 1-100, offset a non-negative integer, and sort_by/sort_order must be from fixed enumerations.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L135-L160",
+          "version": "repo-lines-v1:sha256:0f0ee97ea7280cb192f119f9c282beec248ca2aebd0dcd7fe85267212ecdd7f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiYTJiZThjNmZjZTk3YTAwMzAwYWMwNzEzNTNjMzQxZWZlZjA4MTIzMGRmMjRhNzNmNWNkN2EzNDA4OGNjN2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3YWViMWVmMGI1YjQwMDE3MWVhMjBlNDkxZWE0MTAyMWE4Njg2MGQxOWI1MThmNjA0OTk0YTUyZjQwZDVhMzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1N2NiMDJiNjA3NWMxNDEwYWQwOGIzZjQ5YzIyOTdjNTU1MGQ5ODA5NzEyYzg5N2QyM2I5MTU1YTMzNzljMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjMWQ1NWE2MmQ4NmI5MzU4MGIxMDVkNzFlNzI4ZjNlYTFiYjNlZDdmMjEzMjIzM2E3NzNmYTc5YzM2NzUzNDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_139338ba0a38478388900246c3098c38",
+      "statement": "The direct member run envelope fixes assistant_id to coach, stream_subgraphs to false, durability to exit, and if_not_exists to reject, requires exactly one of input or command, and additionally fixes stream_mode/stream_resumable/multitask_strategy per the HC_RAG_MEMBER_STREAM_PERIMETER version.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L242-L279",
+          "version": "repo-lines-v1:sha256:09e73ca937d818c69e068df192d0b066c41b336c1fa0a5e042df0fe58b6e7f80:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3Y2U2MTljMzZkYTdiZDM1NzE5M2Y4ZTk5YjU0MDdjOTQ1YzlhN2FlYjRhZDYyMWU3YjVlMDEwNWY5MjQ2ZGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxNjRkZTQwYWZlZjhhOGIwZTYyNDAzMTkzNjJkODI5OWM5NDQ0ZmEyN2ZjYzRmMDUxZjlmMzQwNjliZGVjNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4YTI1MWY5ZDNhNmY5NjhlNzFmNmVkODk0YzBlM2Q1MmY0YzdkZjliMzJmNjllZThhMTg1M2RiYTc0ZTFlZmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_25c2336f084c46e79cb1e8e7848f0f87",
+      "statement": "Member run input is restricted to question (required unless resuming) and, only alongside the exact document-review question text, an attachment_id; v2 additionally requires attachment_id to be a UUID.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L211-L239",
+          "version": "repo-lines-v1:sha256:6e55def49dc80330a2beb8c25b8fec1735912e25ae5c58daa527d5046c45170f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1NDg1NWRhY2JhMTNkZGZlMDFiYjk4YjcyY2I3NTgzZTE4Y2E2MzQ5M2NkYmI4ZjEwOGZkNWViNmRlZTk4OTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmYjc2MzI3ZjQ2OWFjNWE4NTNhMDdjMDg0ODljMmFlZDFiOTM3ZmI3ODQ5NjE5OGFlNTZkYzA3YmY5Y2JlM2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5MTUxMDU0YzYxYmEyZjc1NzhhNDcxMDg0ODA5MTFkODI2OWE4NDMzMTYyNDgxYzQ3OGJkZjZlMWI1ZTRhYzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhNTkxMTVhODU2NGMxYzkwMTczYzFjN2RmYTRmYmM5MDVkNDQyN2Q0MjJkZDc0NTY3NTA4ZDBmMGRlNzBhNTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2c89b86ee703467a87875a861fd5c17e",
+      "statement": "A resume command must be exactly {resume: {accept: bool, fields?: [{key: str, value: str}, ...]}}; no other shape is accepted.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L163-L185",
+          "version": "repo-lines-v1:sha256:2dec442d27396a0f5a7fa06ffe4c01c90a52524254edfb31228a6224575cc885:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxYTZjZWVlZTc1MGFmZmQzMjQzZWIxMzMzODRmNThiOTQzY2ZjNjYxODQ1M2UzYTg0NzFhZjkyMTBlZjhkMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2N2JjYWU2YWEzNzRkY2Y0NjVlMjY1MzAyMzczMmQ2OTYyNTRhZjBmZmM5OWM5NGY0Y2FhZmRiMmZjNWQxMTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1OTNhOTQ4NzQxZTJhMzczYTdlZWY4NjYzZTQ5NDU2N2JjY2NhM2JmYTk3OGFiYjlkODkzYzgyOTI0YWJmOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmYjU4NWMyNWUyMGE0NjYzZjU3Y2MzZTY2MzZjOWY4MWExZmM2N2NjY2E1Y2ViY2MzODM4NzI4YjgwOGQ2ZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1175a53675274976b4a779eb9abaae65",
+      "statement": "HC_RAG_MEMBER_STREAM_PERIMETER is read once from the environment at import time and defaults to v1; v1 keeps the direct run stream updates-only, non-resumable, and single-task (reject), while v2 requires stream_mode to include updates (optionally plus messages/values), turns on resumability, and enqueues concurrent turns, and v2 additionally admits owned history, run join/join-stream reads, and a constrained cancel query that v1 rejects.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L16-L18",
+          "version": "repo-lines-v1:sha256:785a3d1fda3462d2a077ec6bed04634af2620615d5ee0984530f90041cb95545:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTYyZTQ0MmVjNzU0MGU0ZTg2OTZkODRiYmE4M2E2NDRjYTQ1NWNiYTFkZDdlYTMxZDdiYmY0YjVkOWZkY2QzOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmZjMGI1ZjlhYjZhMmQzMTgwMWYzNTcwNzRhMmZhY2IzYjJmMzkyMTc1MGI3NDJmMzhiNmJiZGIxZjljZmU2ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTIyOWY4OTRhOTliMTc2MzMxNjE0MGZiMTMyNGQ0NzIyZDA0MzA0M2Y2ZDM5OTQ2MTNkM2ZmYmNiMThkYWFiOSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L260-L271",
+          "version": "repo-lines-v1:sha256:9880ef91acfb5c3ec8663891ea20e85d7c32a467ae9b6b2fb5c6ef994392e839:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiMTM3MTIwZjgzN2UzMmI1YTJhNWZlYTIyN2M0OGQ3ZWRhODc3NWE0NWQxZDZmYWQ0MGJlZTcyNjBkYmEzMWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzNDJhMTdjMzA1Y2ZkMzQzNjFhYWE0Y2VmMmZlMWU1ZjhjOTA1ODczYzVhMWYwN2ViZDhiYTljZGIyNTU0OTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiOTE1ZWY3ZTcyN2M0OGU3ZGJhNzUwOGU0YWQ5YTIxMWM1MjE4MTE3MzZkN2Q1ZTUxN2ExMGY0MzFhZDA5ZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5NTg5OGY2MWQ5ODJhZDgwZjZhMzhhMzdkN2NiY2Q4ZDUwY2U0ZTdlYzI2ZGQ4ODczMDJkOTgxOGUzZWE4MTAifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L46-L55",
+          "version": "repo-lines-v1:sha256:d1b3dd9d25c0ec79e951673db0030f64d5d4710623c30e6fb78c34e6b20cbbed:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1MjhkYTk3NzJmYTQ4NDA1OTJjNmQ1YTNmNWMwNjU4NDQ2ZjdmZmI1MzhhZThiMzFiYmY3ZjVmYTJkODRmMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMTc5OGI4ZjFhOWI5ZmQ2MjBlOTU4NjcwZGNjNzIxYjUxZjYyNmM1MjIyY2UzMmJmZjExMDA4M2ZmMjc5ZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwZTBhNTZiNzNkMmU1ZmFhZTI4ZTUyYTA1Y2RmYmRmZGUyNTU1ZDRlZmQ5Nzg1NzUyNDQ1MzljZTFmYjE1ZjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0OTcwMTU1MDU5MjEwZTJmNTQxODBjNDRiMzU3NDFlMTVlOWRjMmU0NDZkYTljY2FiYzE0Y2Q1OGEwYzg5NzAifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L638-L653",
+          "version": "repo-lines-v1:sha256:8e3de88fd3e0d849ca9f715fc37b4ee68f7f061913f2446676a591ab170d0f3f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmOGRkNDEyMzBjNTdkMzhjMTNkMjZiMTBiMDcxNzAxMmMyNmViMmE2NDk4NDI2MzcxMDBhYzdjZmQwYjQ4NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiNWM4MjYzMmZjODJkNGIyYzM0MGY0MjU1OGJhM2RmYTMxYzc2NTVkZjZmY2MxNjhiNGZkY2U1N2ZhYzYwNDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVkMTE1ODNmNDllMmFiZWRiNTM2ZWI2MmNmYzlkN2IyMDEzMGQxMGNjYWQ1YmZlNWRiNGVlYzc0MjRhYWMzNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0OGYwMWQ5MDFkMTkxZTk4ZjQwOWYyODQ3YzgyNjc3ZWI2MmFiNTg0MGQ0M2Q4MjViNjFjZjIxYjQ5MDAzZjcifQ"
+        },
+        {
+          "resource": "repo://tests/agent/test_perimeter_v2.py#L16-L79",
+          "version": "repo-lines-v1:sha256:b0e32a1275b5a0070c34311b9565aea9f5337974f8adefcddb58795d1c822568:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmMzQ1ODNhNTk4NzY3YmY1NmFlZmViNjVlMjAzM2ExNjUxY2M0YzhkN2U2ZjBhZjNlNWNmZDMyOTNmOTMzYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3NGVkOGQyMjY5OWRhNGU2YWY1OTY0MTdkYjQ3OTNkYTZkNjI4Mzg2NjNjYzUwMzJlMzY5ZWU2MjRhY2E5YjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0ZGUxNDE2MWJlNWI0NTNmY2JlMTY1MDA0ZTdiYzY0Y2Q3NjI1ZjEyNzYyNDMyZjQxY2IwY2ExMWNiNDg1N2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1abeb708286e4ed6b216ff2097131a9f",
+      "statement": "The browser build must set NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER to match the server's HC_RAG_MEMBER_STREAM_PERIMETER because the accepted wire contract differs between versions; production deployment configuration selects v2.",
+      "evidence": [
+        {
+          "resource": "repo://deploy/fly.prod.toml#L20-L24",
+          "version": "repo-lines-v1:sha256:264cdb03fa0cfccc7976aa88beb04f1ebb80b8e6d02f8e3cfabc7b3a08f75800:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGJmY2U3YWVmMjE0NjVlYjI1YWMzMmFkOWE5NDM3ZWIyOTc3NjEzNTI2NGZiNTExMzE0ZTI2ZjMzNTBkYjc4ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzkxNTdhNWY1OTg2YzdkOTViMzQ2YTg3MjE5MjkzZWJjYzRkMTU0MDBlNDkxMjU2NGM0ZGZhZTczM2E0M2VlMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDlkZmNhNzkxNjBlNzA3NThmNzY4ODk3NTdkOWFjMGNhMzkwOTJiOWJiMDZkNGE1YjcwYzQ3NDhhMTk0ZWM0NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDE4YjJjODQ4NTYzMzgwNjJlNDJlNWU3ZDMyNmFlMzJlZTM1M2U4ZTQ5ODExMWVmMTA4ZGE1ODQzZmViZTZhYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a6ed53d1d3744619ae2b34d8d0f1ce2",
+      "statement": "V2 adds ThreadStream transport: POST /threads/{id}/stream/events validates a channel/namespace/depth/since subscription, and POST /threads/{id}/commands accepts only run.start, input.respond, state.get, state.listCheckpoints, and state.fork with per-method parameter validation; checkpoint configuration cannot bind a different thread, interrupt responses are restricted to the root namespace, and unknown methods or mutation-oriented fields fail with 400. V1 rejects both routes outright.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L429-L577",
+          "version": "repo-lines-v1:sha256:4f0e5622d907dfdbf5d42b2d102d39b2e526cfbfa399fcfc9ebf6d2ea4eebb5d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkNzA4MTRmNTdhNmY0YmI5ZDBhZGE4OTdkODFlN2VkYmZlZDE3NWNmYzEwMWYzOTJjMzdjMjIzNzg3OTJmNzJhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhOWIyMDViOTZiODg0ZGJiMTJiNGVkNjNiZDc5NTI0YmU2YWQ1Mjg3ZTRkZTEyMTk2MTBiYWFiMGU1NDFjYzA0IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0MzJlOThmYjAzMjNhNDAwYjc0ZWQ3ZjVjNjFmOGFiNDAzYzE4ODBmZGZjY2Q0NDg1Zjk2YTE2N2M2MjBhNjg5In0"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L638-L669",
+          "version": "repo-lines-v1:sha256:cbc713395f6516cc66d586e535222f5b0d7d82b6ab057f712f2467cc6ccf079c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmOGRkNDEyMzBjNTdkMzhjMTNkMjZiMTBiMDcxNzAxMmMyNmViMmE2NDk4NDI2MzcxMDBhYzdjZmQwYjQ4NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiNWM4MjYzMmZjODJkNGIyYzM0MGY0MjU1OGJhM2RmYTMxYzc2NTVkZjZmY2MxNjhiNGZkY2U1N2ZhYzYwNDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVkMTE1ODNmNDllMmFiZWRiNTM2ZWI2MmNmYzlkN2IyMDEzMGQxMGNjYWQ1YmZlNWRiNGVlYzc0MjRhYWMzNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1OGZiOWQ0OGVjNjBiY2Y1NWMyMjJhZjQ1ZGVhN2QzYTA4OTkwNGE3ZjA4M2ExN2I1ZjA3MjVlYzBjY2U0YTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_98e44b25bbc64952b24a98ff96e8a440",
+      "statement": "The v2 run-cancel query string is limited to wait/action/timeout with enumerated values and no duplicate keys, and fails with 400 on malformed query encoding or unrecognized keys/values.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L578-L596",
+          "version": "repo-lines-v1:sha256:0049ce7bb1e0200e35e185567c8e38e4e2a171693d86e64d6f4f0a337bf13be0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2OGE4YThjMzA4MTMzODY5MDgyYTM5YjFiZDhjYmM3OTAyMjkzMTMwMjYxNDFlNzE5Yzg0MThmNjFhNDBjZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzZGI5ZWQ4NTgxZTA2MjBjZTYzMTBkNmI2NGU1NDljYTFjOTM3OWIzNTY1YzBmYTVlNzliNjQ2NDVlMWZiYWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ3NTAzYjQxYTJmOWQ3MjY3MzU2NzAxNDgyMTVlOTY2YmJkYjQyNWQ1OTNhNGU2MzhmNDc5NTFmYzc1YmY0MWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1ff8dae9e7cf4df8b5c26039e084c9f0",
+      "statement": "The perimeter recognizes a measured CopilotKit/AG-UI run shape on the same /runs/stream route, distinguished from the direct member envelope by payload shape (a command field, or an input carrying copilotkit/ag-ui keys), and validates it against its own narrower, adapter-specific allowlist of fields, stream modes, assistant identifiers, and a resume echo tolerance, rather than the general member run contract.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L296-L426",
+          "version": "repo-lines-v1:sha256:6191944e8dd33d554ef2b7a152e6b6b5ff869ce8a7c8a2efa4f3492ca3aac8d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0ZjkyZTg5MDBhNTI3ZDY0MWVhZjBkNDBhZmNiMGZiNDhlYjA2ZjAwNDRhYmEyYTkzNWRiMDQ4ODMzYjM3YjRiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJjMWIyYWNhZDA0ZjUxNTUzYTdjZWM3NTYzN2U4YmNhYjliNmQyYWI3YzY1YTY4Njk3OWMxZTcxZWU0ZmI4M2MyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI4YTI5ZmRhYjIxY2M4YWM3NDg4NTU0MDgwNjc3MGQwMWY0NTA0NjlmYWM1NDhmZWZiZGIzZWRjNWY0MDU3NmRkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI5NTM2YzNmNjY3MjNmMDUxMjFiZGI2MTk1YjVhMDMzZGM2ODI4MDEzM2E5MzU1ZGQ1NmY0YzU4NDIxYTcyZTliIn0"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L670-L686",
+          "version": "repo-lines-v1:sha256:88f1e6c622a57bc0f9145fd5b4de3497c00c903501bd12a45e8571fda8fb8e44:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiZTRmODQ2YTIzMGYyOGUyZjIyNzcyODM2MjNjNTBiZTI0ODE2NDg3OWFlNmNkYTNiMGJkNDc0NzZhMDcxNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiNWM4MjYzMmZjODJkNGIyYzM0MGY0MjU1OGJhM2RmYTMxYzc2NTVkZjZmY2MxNjhiNGZkY2U1N2ZhYzYwNDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2NGYyNWRjNDBlNmIyODI2OGY1NmE0NGM4NGMzODIwMTZkMDVhOGRmNDA1NTI1NDZkNDMwNTJiZDRmYzNlY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzMDExZjQ3MTI2ODA0OWIyN2U5ZDBiZWY2MjIyZDZmNjJlNzU2ODI1ZDVjYzhjZTQ0NmFiMTRkYzU3ZjVjMzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d41f557506c24848bbd129653ff83b01",
+      "statement": "Copy admission first loopbacks to confirm the caller owns the source thread before allowing a copy, and after the native copy response, verifies that the copied thread's metadata.user_id matches the caller, returning 502 if the response is unreadable or ownership does not match.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L151-L154",
+          "version": "repo-lines-v1:sha256:25c30d7ef6c416ff4db54c30bdd452ac7085b2b463aba9502ade3a267d063b51:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmYwYzE2NDU0MDI3NDdhMjU0MTg0NDRiYmZjNDhjY2Q2NmViMmJjMDViMWE4ZjFkNDNmNGFiMWJlZjVkNTYzNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGU2NTZjNjU1M2M2NWFjYjU0ZTJmM2I2NjI0NjM0ZDIxZWY3NWJhZGUyYmFjYThiZWFiNDY5OWZjMGRkYWY4MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjg3NTRjYWY0NGI2NjcyYWMzMTVlNTVjZDc5NDIwOTNhNTI0NmZmNGRiODA0NWQ1YTg0MDUxNWFlMjQzN2QwZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzlkY2Q1NmNmY2IzYmRlNTE0MjM4Mjc4YjIzNDE4MTU1MjU3YTUyNWI3OTlkNjdiYTQ5NjMzMTJkYzdmMzQ0YiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L194-L214",
+          "version": "repo-lines-v1:sha256:a6a883af7927bf16002b02f19170ef65de9ac243d28e24f7a10096cf68e00834:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0MWNiNzc5Njk3MGQ3ODA4MmU3OGI3MDJlMGIwODU2MTU0NGY5MWQzNWI1NDNiOThmMjJkNTNlYjg1NmI0NTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkODdlYTgyMWQzNmFiYWVkNDQ5OTUxNDdmNDJjN2M5Mjc0YzFlMDc1MTEzNjQ5MDM2ZGYwNWQyMmJkOTdmZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjZWU4M2M2MzhiMDdlZGZlZmZiMTRiYjRmNjJjYTIzMzljOWNhYzUyY2QzNjk4ZmIxMmE4MDgxNjA4Nzg3YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiYzRkODdiZjZhZTk2N2Q3MGU2ZGY1NTZkZmZjNTczODUyMTMzNmM0ZDJlMzAyMjM0NjdjZjA3MmZjNTJkMjQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L78-L96",
+          "version": "repo-lines-v1:sha256:c22c127d582c738e78890c571085098e1f33fc465c54a9e981c2d068208b3340:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4NzY1ZmMzNzg3ZGY2ODdhOGZiYmY5NWM3NjUxMWQzOTExNTE3ZTgwNGI5OTVhNDA5YzdkYzI5NTQyZjFlZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZTU1ZmI1NWY3ZjY4MmY1MzFmNjBiZWFkNTEwNmE0ZWQwMDdjMTJkODMxMzk2NDQ0Y2JjOWFjYjRiZGFhZTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4Mzc2NjkwNWViM2EzMTJhY2RiYTZjODI2NTkxZWMyNzI3YzgzNTk2OWJkYThiNjVjODA2OTJmMWNmMTk4Y2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlNGY5ZmQ4NGFmNGFmZjBkYTI5OTc0NTlmZGIzZjNlNzkzN2MzMjljNWI2MDdiMGNlNzFiNTU1ZTRiNDgzNmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b342bf2cc827429dbc6d377187ca303c",
+      "statement": "Thread deletion first confirms via a loopback self-call that the caller still owns the thread and invokes reminder/cron cleanup preparation, returning a retryable 503 if cleanup is not ready; after the native delete call, it re-checks that the thread no longer exists before clearing the cleanup marker and returning 204.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L155-L177",
+          "version": "repo-lines-v1:sha256:4941093b342e443861c5ba4e3c9ff291663af3b6f7a25be2448d5961790b8b19:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhMDQ0YjJhNmVkODVkYjFiZTY4ZjY2ZDZmNzI3MjI5ZDg0NDNjZTYzY2E3ZmNkOWE3ZjQyYjUyZDcxMzNiMWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhOTY1NDI0MDk5NWIxNzA5OTVmNzUzNDMyZGFmM2Q5ZTIxNGJkNWRjYjdhZWRiYjljOWYyN2FkMjQ5NDhlMTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI2NTI1ZmM3ZjAxYWJjMjgxNGQ3NDE3MjY1MTFkNzQ4YTI1ODExYzhmNDMwNjlkMDNjZjNkMmU3M2Y3MzFmNDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY3OTAwNTZlNzE1YmMyOTQ3NGRiYzg1ZWY0MzBlY2Y0OGNiYWFiYzM1MGIzMjg5ZDdjNTNhYWQ1YzBkZWE2MzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a1825ca169d4804af51b069158e85dc",
+      "statement": "An attachment referenced by a stream run must match a completed ('done'), unexpired, caller-owned upload-registry record bound to the URL thread and not already admitted; the middleware marks it admitted before graph execution to prevent a second admission, and rejects the run otherwise.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L41-L75",
+          "version": "repo-lines-v1:sha256:9b77a662ec950893c556e4e56d6a61f33fc27714cef56eb24ea62a3a0ff4ce25:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxNDU3MDAyYmQ2YWUwMmJmY2E0OGQ3NWRiNjEwM2NmNzJlNjVkOTBiNGNiMjVlMGMxMDNlMTk2OWU0NTEzNjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzI3MTFmYjBkYjk3ZjM0MmE0MjJjYjYyNDBiYTA2ODZlZjg1YjZhZDM4MTRlNDY2YWFkYTVmNjlkYWUxZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmNDdhZjEyZGRkNjdlMWMwYjJlZDFmNmQ3ODc2OWEyMzQ2MDczZjczZjMzODgzMDdjZWNjNDRhZmYyMzY4MmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4NmNjNWY2ODJiNDY5ZWQwM2ZhMTQyZGIwMWNkZDZhNjdjMTY4MzI1MGRkZDNjZTdkYjdkNmM1YmUzNDMzMDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_479f773398704012a618bc1a877f2e92",
+      "statement": "A successful GET /threads/{id}/state response is reduced to values, interrupts, tasks, and next; pending_document_op_id is stripped recursively from values; if any private state channel (question, attachment_id, cron_wake, or pending_document_op_id) has a non-null value anywhere in the projected payload, or the underlying response cannot be parsed/buffered, the entire response is replaced with a 500 'Unsafe state response'.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L699-L737",
+          "version": "repo-lines-v1:sha256:9fb3ddaf4551e35b8d987d3ac450994abe87084ddf581a18e544feef30a4de28:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1YWNmZjcxNTlmODRhMzgzZjcxY2ZmZDkyZjE0YzI3OTFlNjgyMGZjZGY5ZTIzYThkNGQ0ZDg3NzViYzAzOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MWI0MGFjNDZmZWMzY2QxNDA3YThhMWJhZGI3YTBiMGEzY2JhYjU3MjMyY2RhODBjYzU5YTMwODdmZWIzNzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjU3MmQyNTk2MzA5NDQwMjZmOTdlODk2Mzg4YTcyM2FiYTdiNjk1NThkMGI1ZWYxYjdkOGU4ZTYzOWZhMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiMjM2N2JkMGRmMGE2MmRmYzNkMTIxOTkxYjI5OGZlNGU5YzNkMzI2NzUyZTY5ODU1OTQzYjZjZjRiMjQ4M2QifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L181-L193",
+          "version": "repo-lines-v1:sha256:200220abd60f9515d03d2e7ebdbdc74cfa6a220fdd9d6e98977cd7e5b97ef2f8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzYzk5ZmMzMDUwYWZhZmY1NzgzNmRiNGM1ZWMzODk4MDc1ZWE2NmY5OWQ4ZDNkYjI2NTJhZmU4YzFiODg0NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmODFkMzU4ODdjZDUxNjg1MTAxMzRlMjEyMDVkNGNmMzBmNTMxMjAxZjkxMmY4YmVlOGRhYWU5NWNmNDY1NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3OTAwNTZlNzE1YmMyOTQ3NGRiYzg1ZWY0MzBlY2Y0OGNiYWFiYzM1MGIzMjg5ZDdjNTNhYWQ1YzBkZWE2MzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI5MTM0ZGYwNjg4NWViMDYyNTlhM2RhNzFlMDQzZmUwODBhOWE4OGJkNTM1ZTQ1Mjg4ZjlhMzFkNWJkYWJiNDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_91094fb31b1348ba868cb5bb40e02597",
+      "statement": "Custom routes (/coach/uploads, /coach/uploads/{id}/status, /coach/feedback, /coach/internal/version) sit inside the authenticated perimeter; upload-status reads the caller's own registry namespace, feedback confirms the caller can read the nominated thread/state before storing feedback in the caller's namespace, and /coach/internal/version is restricted to the internal role.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/http_app.py#L21-L40",
+          "version": "repo-lines-v1:sha256:c6d2db659968960009003442f6022351564cc4aa934ef2d998be63ce7743aa42:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMmM5NGM3ODY4MjMwZDBmNTE0N2ExZjVhYmQ4NmEzNjAzYWVmZWQxNWNmNmZlZmU5YzIzNDZjMDE2MWU0ZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0NTA5ZWIyYWQ2ZDA4ZmE2Y2FhY2I0N2IxZTdlNTBhODJkYWVkNTczMThjNmRjZDBjNjhkY2EyNGNlOTFkZTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzNDg3ZmM4NGVkY2QwOGRhZmRlYTJmYTI1ZGI1OWUwMzU2ZDUwMjY3ZTMyNDgwMWMxOGE5NzkzMDBhY2Q2OWUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L114-L120",
+          "version": "repo-lines-v1:sha256:090228c1199697d351fd1d64c7e262f66349fea1de59d59c9d2b6f7b30fac92f:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2EyOGNiNzA2MWRmOTc4YjNmMDg0N2IwMWU4NGZhYjQ5ZDhiNWRjOGU4NzFjMzFlNjE0MTA4OGZiMzllYTM2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmM5NjE2YzAyZmNmZGM1Y2YxMTZjMTg3MTY3NTY4YTY3NDFkYTIwM2U0MTY5YmU0MDBkNGVmNmJhNzQ1NzY3ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGU1NDJkYzljOGQ0NjVkNWMzNjY4ODg3YjYyZDdlZjhkN2U4MWMwZWQ3NGNiNDVjYjZhNjNjZDRlNGYwZDMyZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDEwMjg3NTFkMWZkMTRiNTAwM2EyYmFjYjU5MTJhZGRlYzUwMjVjNWQzYjY0NzAyMTMzODFjMmE2NDJiNTZlNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3ccbbf4146094a10b9481e0fdfb4d392",
+      "statement": "The custom app's CORS policy permits only COACH_ALLOWED_ORIGINS, credentials, GET/POST/DELETE/OPTIONS methods, and Authorization/Content-Type headers.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/http_app.py#L41-L51",
+          "version": "repo-lines-v1:sha256:5cd312ecc00814b70264476592a766fd8a48ac9db90e0e4b76eef9e0d3093184:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZjkwN2RlYzZmYjI1MWZlOTdkYWI4YTVlYmJiMmJlYjI3OTdhZjQwMTZlZjhmNTVlNDQ0NjJkZGI4NmIxNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU4MjIwNzBjZGY1Yzg1MDYzOWE4ZTRiZGI3ZjFkMTI1NGQ2YzM1NDc3N2U2Mzg0MjE0ZjljMGM3ZjczOWRmM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiMjM2N2JkMGRmMGE2MmRmYzNkMTIxOTkxYjI5OGZlNGU5YzNkMzI2NzUyZTY5ODU1OTQzYjZjZjRiMjQ4M2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_97d1ad60cb3a479b933d1b5ac5693ee2",
+      "statement": "The identical healthcare_rag/agent/auth.py Auth instance is enforced by two independent runtimes: the LangGraph platform deployment applies it via langgraph.json's auth.path and the platform's own SDK middleware, while the clean-room agent server (server/auth.py) independently loads the same instance with load_auth_instance and runs it through its own AuthMiddleware/AuthPolicyEngine.",
+      "evidence": [
+        {
+          "resource": "repo://langgraph.json#L14-L17",
+          "version": "repo-lines-v1:sha256:6cac89d21d9fef63cf5446eb7967da18bf1380e2a03e23378621b70783bf03cd:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmU2ZTYzOTY4N2EzZjNlYTdmZDdlOWJlZDZlZGM3ODkzMGEyMGZjMzI0NWZjMDA3ZGYwZmE5OGQyYjVkYmMxMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTFkZWM1YWJjYWY0MTU0YTI5YmJhNjY3N2I4M2Q5ZWYxZTNmNDZiZDQwNDdlZjZkNTRjOTc3ZjQ5MTFjMzQ1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTJlNDIwYzIyMzc1NzQwOWE4NWJiYjVjM2NmZTc0ODQ5MGFhNGY5OTkxMTQ2ZmE0N2VlMDU2YjRmYjZiODdkZiJ9"
+        },
+        {
+          "resource": "repo://server/auth.py#L177-L282",
+          "version": "repo-lines-v1:sha256:b45bd600e84c45f3994cd6961b430c7b22b71616635e62b8fb5ec68d61a668c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1MWZkMWQxYmJlOWU5YzkwOGQwZjg2ZTE4OGJjZmIyMjI2ZDI1YzFhNWU1NjAxODlkNDY5OTk3OTUxMjJjNDAwIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwODNiMGNmNmVkZWZkMTQ3ZTY4OWExZGJkNzE1ZWQxYzdiMzdkYzk5ZGQzMDgxMTc4NjcyOTk2MzA0NjRiYTkyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlMGIyMWJmODk1ZmFlMmQ3MzkyMGQ5MzE3OGNmZDU4NDFjZGY4Zjk1MjQ1MTZjOGE1NjU4NDM2YTRhYzQ4ZjNiIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d10a4f4788a497b9e4029730a181ee4",
+      "statement": "server/auth.py's AuthPolicyEngine.run_policy invokes the same @auth.authenticate/@auth.on handlers as the platform deployment and translates a handler result of None or True into an allow, False into a 403 Forbidden, and a dict into a scope filter.",
+      "evidence": [
+        {
+          "resource": "repo://server/auth.py#L85-L118",
+          "version": "repo-lines-v1:sha256:7fb02a5681444268dba34124e77a050d234033d2e5bb868b027b28adc8c1d4a3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0YTdkYjg0OGIwMGY3Y2Q4MGYzNmFhNWE3Y2E4NzhlZDFlYzViMWU0N2Y4MGJlNGZkNTAzYjQ3ODYwMmJiNWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5Njg5ODkwMjZlNzJhMzYzZjk0YmM2ZmI3MTU3MDBhYjU0NjE0N2Y3MDk0MDU0N2UwYTE0NTlhNjlmMGVkNGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlMTc5NzA1NTE2ZDA4NDFhZjRlZDBhM2FmMGMyOWNkNjc5ODBiYzUzMDJhNDk5NmI5NDkyMjIwZmVmOTk3YzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRkZmExMTRkNTNkNWMwY2EzM2E1MjY3NTVmODE1MTQ5N2Y3YTIxNDljMzFiMjVlYTA5ZDc3ODNkM2VkN2M2YjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_557084aa2aea481cb02442239dc7bdab",
+      "statement": "In the clean-room server, require_scope_match() compares a specific resource's metadata against an authorization scope filter (supporting $eq and $contains term operators) and raises 404, not 403, on a mismatch, so a member cannot distinguish another member's resource from a nonexistent one; merge_scope_filter() instead folds the scope filter into search/list queries so mismatched items are simply omitted from results rather than erroring.",
+      "evidence": [
+        {
+          "resource": "repo://server/auth.py#L147-L174",
+          "version": "repo-lines-v1:sha256:303859a12abc848585c1c66289cf84a01523b29c2950ea51ce44c7e7b73a4f8f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjNGVlM2ZiOGE4ODU5MmE4MzE3YTA5OTBjNzJkMWE5NDI2MGJiN2QyNGQ5NDg5NjBlZmRiMDBmZDRkMjgwMGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1YmM0NzExZWNjYTA0NTBhZmM4MzI3NzlhODg2NzZhN2M2OTYwZmEzZGE1YWY0MTBlZTAyZDFlMDE1MTU5MWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU0YzAzNDY0NTI1N2IwMzdhYWQ4YWUwMTM2ZGFkMDRmMWY0NmY1N2YxMDY4NjVlOGY4NmI4NDY3YTMxYjJhNzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkODcxNDk5ZTYwYzQ1ZDg0MDlhZmM0OWFlNzI5ZjliMWM3ZjlmYzc0M2M3YzNhNjhiNmUwNjgxZTdlNDY0NTkifQ"
+        },
+        {
+          "resource": "repo://tests/server/contract/fixtures/auth_403_vs_404.json#L15-L20",
+          "version": "repo-lines-v1:sha256:e7d27164c9a23fc064c41376f3294a0299ca4ac50e46d21a6105c9f9779a8121:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDMwMzNiNGJkYWZlZWU2NWM1NmEzNTZiM2UxODk0ZmNhNzQ5OTNjMjcyNmU1YWQxNTZmNTljODVkNWE2MTRlOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDhiY2IyN2MyMGQ0OTM1Yzg5NWYyZjc5MDEyODRjZjIzZTg3ZTRjNGYxYjk1YjU5OTVlMTlmNWE5MGFmOWQwNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzVkNDZkODY3NmU5N2ExYzY4MmVhZmIyMzdkZDZhNDU0MGEyYmIyMGJjNWRkYTJhMDQwZGI1MGJlNjJkZjQ3NyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0311f11374e149c0bf9bb7ec27462151",
+      "statement": "The clean-room server's AuthMiddleware treats /ok and /info as public paths that bypass authentication entirely, matching the native perimeter's exemption of /ok from principal checks.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L104-L105",
+          "version": "repo-lines-v1:sha256:3a355db472501e76e61e2f4a2ca69b836b3deee29b128d77f2d33f49595b6b20:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTMxM2YwZjg4YTkzNWQ5NTk2N2IwY2VmZWU4YzUyNjI5N2ExZTNhMjQ5YTllNzhmODdmOWNkOTNhMWMwMTNhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmM5NjE2YzAyZmNmZGM1Y2YxMTZjMTg3MTY3NTY4YTY3NDFkYTIwM2U0MTY5YmU0MDBkNGVmNmJhNzQ1NzY3ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjcyNjkyNmU1N2FiZjZjN2JmNWExYzk2ZGMzYTIzZDVkYzlhODdkNWUwZjNiODYyYjQwM2MwNTc1ODk2MDg4NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWJhNjMwYTQ4YzUxNzkxNTQ4MmMyMDM5NTY0NGIyNWRlZTRkMTU1N2I4ZmY3OGQ3ZDY3OTQxOGY0YTk2ZTM1NSJ9"
+        },
+        {
+          "resource": "repo://server/auth.py#L189-L192",
+          "version": "repo-lines-v1:sha256:e3503d84b045388a82152a2f57277f1dbf062af0b9163a29563b2e7806462cfd:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDY4YzMwMWJlMTQ2MGJlMzFmMTk1MTc4ZThjYWExMmE4ZmYyYWFjMTdiMzhlMTA1NDM0NzRiNDBmNDJlNWMxZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWU3YmNkMzZlZjUzYjQ0NTIzZTY1ZTk4ZDE5NDQ5OTNlMGZmMTc0NmY1NTM2YzFhNTExNzQ2ZjNlMDFlNzU2ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWZmY2RkYjM1NzYwYTFkZTM4N2I3MjJmMWM5MjZlNzU0Y2E5YmZlYmYzYTZiYjkzZDM3ZWI5ZjZlMzc2MzExMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDVlYmE2ZDA4ZmU5NGJkZGU0OGNhOWFkODNhMDhhZWIzZWRlZDI1MDk2MjE1MjZiNjgxZDZkMDQ3YzI1NWJlNyJ9"
+        },
+        {
+          "resource": "repo://server/auth.py#L30-L31",
+          "version": "repo-lines-v1:sha256:17b9f1ea0f650ca6de853028d91129c1285aa762fb2a172c378d21013a06cc7c:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzNhYjU4Y2Y5ZDJjZDI1ODRkMGQ3MTRjZGI0ZDM1NDAwY2EyNzk0ZTc2Njc4MWIwNmY0M2FiNzY1N2RiMzg2ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjgwZmE2MTgwNzg5ZGZjZmY3OWEwOWVlZGRmYTk4Mzg0NzBmOWFmZDJlZmVjY2I2MTYxZWQ0Y2JmNjc0NDliNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTY4NTNmZThhNjc5ZjE5ZjY0ZjVlMGMwZjljYTIzYzM2MjIwMGJmNjY2YzRhNzdjYTBjOGVlYmM5ZjUxNjU4YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWE4YjljYzBmYmZkZTZjZmUwZGI2MWUxMGM4YWZhOTM3ODg0OTFlNjllZWJkZGEyMmQ1ZmM5ZTM4OTE4M2UzNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_4a850a12ee6d4fd1982fd40a6360c42a",
+      "statement": "SERVER_LOCAL_DEV, read only by the clean-room server's AuthMiddleware and off by default, remaps any 401 raised by the authenticate handler (missing credentials, unrecognized keys, or malformed authorization) into a StudioUser('langgraph-studio-user') principal with full authorization-handler access; production deployment deliberately leaves it unset/0 so a 401 on the deployed server always stays a 401.",
+      "evidence": [
+        {
+          "resource": "repo://deploy/fly.prod.toml#L29-L31",
+          "version": "repo-lines-v1:sha256:3d5a11ee23a8b24e0d340c921e24212daab76bf84c5795fcbd4706996d814fb9:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTk3ZjYwMTU2OGQ2NjRiYTY5N2RjYTA1OWFhMzkxNjdlNWE4NWUwMGJiMjhkNDA2NTg0NDBkNDBhMjZkZGQwYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjgxNzY0MTIwODAwYTRmY2ZiYTY3MWZkNTYwMzIwYjc2MjkxMjNiMmNkYjg0Zjc1YmViY2JkMTZjOGVlMDJmYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjRmOGEyN2UzNGU4ODNjODkxZGQxYThmZjM1MzBlODZiZDk0MzBkM2Y5NjM2YTc1YTg4NzZiNGU5MWIzYjI1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjhhYzc0OTAwNWY5YTNiMjI3NTUzYTA2YjU3MzVlZmJjM2NhMjliNmE0Yjg1ODNjMmU5Yzk5MTZmNjUyMWZmMCJ9"
+        },
+        {
+          "resource": "repo://server/auth.py#L203-L233",
+          "version": "repo-lines-v1:sha256:444dc522db9a08c3d92ad68b8d456d946455678a0690dc06138ffe8a25f1607d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZiMmVmMGNiYjllNmI0NTUxNDczODQ4YmI3MjNkZjUyZThlYjdmYmFiNjZhOTIzMjdjNDM3OTI0NDdiYjE1MTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiNDdiM2JkNTczYTkyYmU3OTRhN2VjYWNlYTllYzk3MzI0NWRkNjcwMTA2YjRlNTNjNDVlNzk5OTFlZmJkNTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxM2M4OTg5MGZkNmU3NzFlYzBmMjA0MjBlYzQ1MTY3NmQzYjExOWFlZmEwNjVkZWQ0N2M2NTQ1NmZmNWViYmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNzgwZTJmZDRlYjlkMjJiM2U5YTg0YmI5MTQ2NDNlOTJiZTZmNmQxMjc2ZWM4MTNkNDdiMWVlMTk4Yjc1ODcifQ"
+        },
+        {
+          "resource": "repo://server/config.py#L75-L92",
+          "version": "repo-lines-v1:sha256:f78e83a0ff4f47b851b0557d7b25e26176e58527ecfb0333c740d4c71268550b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZWE0ZGM5OGM1MTc4YWIwZDAyM2VhNDQ1NDExZjY2MmY4Nzc5ZmZiNGIxMGJmNzA3ZjFhOGRlZmQ3NGU4YTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlZTM0NGNiN2UwZWY4MDNmZGZlYzczYmNmNWM3OWExNTE2ODBkNDJlNGQ5OGJhODc3OTlmMDVhOWQ4NjdkNTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc1Y2FiMjIyOGJmYzM1ODhjOWFkODI0NWM3MmVkYmU3MjJkMDFlYWQ4MGE5MDhlNzUxNzkyYTFhNmVkMjNkOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2ZDZhZjkxMWU3NmQwYzlhMjFhZmRjYzMyYTAyM2U5ZTBlZTVjYWJmYmI3MTViMGI1ZTY1Mjg3Y2EwODljNTQifQ"
+        },
+        {
+          "resource": "repo://tests/server/test_auth_engine.py#L144-L168",
+          "version": "repo-lines-v1:sha256:62735b81baf406fdd3361f68c885c086537ff45e24550bceb0949c7322bf3ebb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3YTgzMWZhNDcyNmZjMjMxNTE0NGY5YTA1NWJmZWMyNWYxYWZkMTI2YWFmZjU3YWZmYmU5NDBlZjVjNmE3MzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1MzdlYzc5N2E2NzFhYmE0ZjZjZWNlZTBkZGUzODkyZWI2YWQ2MjA1NzcyYmI0ZWI0YzZkNGExMDIzYmU5MzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxNmYzMTdiNWE0MzQ3YWU0OTNmZDAwYmQ5ZmI2YjVkYzA4Mjk2OGMzZGRhNjY1MTYxYTU2MTAxOWM4YjM3Y2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlYzJiMTM5NmM4YTFhZDUwZDIxZTQ4MGVmOWIwMTk2ZWVlNjc2NjgxZTY3NTRiYzY0NjRjNzRjYWRiYmE2MTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_150ba5682ab840bfbd9a723d8e7118e7",
+      "statement": "The perimeter's fail-closed status catalogue is: 401 for missing or failed authentication; 403 by default for invalid member routes/envelopes/ownership under the native member perimeter; 400 for malformed JSON and designated stream-protocol validation errors (checkpoint config, stream/events subscriptions, commands, cancel query); 404 for a clean-room server scope mismatch on a specific resource; 500 for unsafe state projection; 503 for a not-yet-ready delete cleanup; and 502 for a corrupted or ownership-mismatched copy response.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L125-L132",
+          "version": "repo-lines-v1:sha256:6df92844d2b52d6262f714ee6787c46cb8bec76f72700f4ac6fe2604942bfc49:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGU5Y2U4OWU3NmZlYThlYjk5YjAwOTc3OTQ4Y2I2MTYxNGQzNWU3MGNlODQ1YjQ0ZWYzY2JkNzAzN2E2MGZhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTJhNDIxMDlkOTIyNzAyOWM4MDExOWI1MTM0YzRkMThiYWMwOWI0YTFiMTgzODMyZjlkYjQ0NzRmYTA0NjU3MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTAzY2JmNTA5ZWFlMDhkZTU4OGE0OWYyZWI4ZGQ2ZGU2YzI4NmFjNmZkMDM4MDQ5Y2UxMTA3ZWIxNDQ1N2Y5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmFjNDdlYzFmZTdhMzE3YWNiMWE2Yzc2ODlhMDVkYjM2ZGI0YjcxYjU5NjdlZWNkMzU2ZTMyZWE2MGVkMDJlNiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L104-L215",
+          "version": "repo-lines-v1:sha256:9a33ccb9719f5a9f68368fa6383bc552d8982f326243ceb3df99e3882a6a0b10:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMzEzZjBmODhhOTM1ZDk1OTY3YjBjZWZlZThjNTI2Mjk3YTFlM2EyNDlhOWU3OGY4N2Y5Y2Q5M2ExYzAxM2FlIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4YTg0OTZlZTk2NDI3MmZjOTExYTJjMjJlZTQxZGEwZmNlN2Y4NDliZmFkZTM0MDY1MTJiZTFkMmM4MTg4Y2VmIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2NzI2OTI2ZTU3YWJmNmM3YmY1YTFjOTZkYzNhMjNkNWRjOWE4N2Q1ZTBmM2I4NjJiNDAzYzA1NzU4OTYwODg2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1MjhhNjI0YTNlMzEwMDAzMGNhNmZmZjM0OTM0N2NkMDNjMjQ5MmFlZjc2YjEyMWFiNTEyNjk0OTVhYjYyYmM0In0"
+        },
+        {
+          "resource": "repo://server/auth.py#L153-L159",
+          "version": "repo-lines-v1:sha256:40eaae5861376780977a6e057fc903edefd830fad66e577c71f5545089e7e8ff:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTk0ZGU0YzAyYjNiZWU4YjUzNDZmZDU4ZDFhOWFhZjhlOTViMDdlZDNhMzRlNzE3Y2YzM2Y5Y2JmMmFhYmZiMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzM5ZjY5YTc5OGMwOTU5NzdmZjU3NzcyYTU2NTJiMjBiZDRlYmY1YWU4ZDMzY2QzOTA3YTA1MWFiMzE1ZDE0NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWUyOTdjMjUyMThjNGMyOTljMzgwNWJhODIyY2NjMjVmODZlZTM4MjU5MTYwZDNlNTU4ODhjY2VhMTYyNmEwNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzMwMTk5YjY3MDMzNDQ5MDYyYTY3ZTc5NDI4YTU1Mzk0NmQzZDA2NmM4NmY3MmI1NzY1MDZiMmM0ODhkMDcxMiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

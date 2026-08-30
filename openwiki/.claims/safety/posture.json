@@ -1,0 +1,248 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:1fbc5e37093674319e28c8e7dc79cb357b8ea0ea3e7dd90041b75e405a450661",
+  "claims": [
+    {
+      "id": "claim_af7fb5647a744833a2af7e857f9f9e3e",
+      "statement": "Every query passes the safety_gate node before retrieval or generation, which OR-es deterministic no-network pre-checks (PHI, instruction-override phrasing, identifier-recall requests, first-person emergency red flags) with one LLM classification call, where the deterministic layer can only escalate a decision, never relax it.",
+      "evidence": [
+        {
+          "resource": "repo://docs/safety.md#L20-L36",
+          "version": "repo-lines-v1:sha256:ca4d7d8b07d7e1e3f8be38528d203c67696284771571b9f3ee88241f287c3b3b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2Njk4Y2QxYTZmODlmOGIzNjBkZmI0NmIwZGY1MWExNjFmMjViNGZiODFiYTYwYTI1NGM3NzBmZjMwNzEwM2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3YzA2YzU2MWQ1YzMyNzM0MzY4NTI2OGE0NmIzMzkxZjM5OThlZWU4OTBkMmJlNTFmMGQyMWNjNGE1M2FlNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVjODNlYWRhZjQ2YjYzODQzMWE4NWE5MzcwZTdlMDg4NjRmMDEzMGNmZDNkMGEwYzBmYzJkMTIyYTA4ZTE2Y2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3NzI0MTI2NjRmMzFmNzQ1NGIzMzIwMzA2MjhlN2Q4ZjU5ODljNDQ0ZTFiNWJiMjY2MDY4NTJmYmExYWI0NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py",
+          "version": "repo-file-v1:sha256:717a0eb31ee40432895d342955c0a251eec2203378ec978cce3ad252cbfd7272"
+        }
+      ]
+    },
+    {
+      "id": "claim_9129b6a87d824d879f6744e4f55cf75f",
+      "statement": "Four safety-gate categories (emergency_red_flag, personal_medical_advice, out_of_scope, prompt_injection) short-circuit the turn to a fixed plain-Python refusal/redirect template with follow_ups = [] and no retrieval; personal_medical_advice refusals are terminal for that turn.",
+      "evidence": [
+        {
+          "resource": "repo://docs/safety.md#L88-L98",
+          "version": "repo-lines-v1:sha256:c4e043d5652f25555006ff14670ff3e8bd969b883b0a435f541c7661982995b9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjOWJjZTgwZDRhNzk1YTMzNTUwNjU1MTlkNDEzYmJlOGZiZWUxMDNiNjUyOGY1ZWQxNmIyZTY4YmUyNzVmYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYWVmOGI0ZmVhMzQ2ZmM2NjIwMzlhOTQyOGIwY2E3YjY2NTJhNjM0ZDliYWFkMGNjNDMxNjlkY2EwMmUzZmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlZGJjZjUzZjBjOGE1MTFlYjdhYTJmMDg1ZTZkMjJkZTRlNzhiOWZkMTY4NmIzNzMyZmFmZmNhYTJmNjNiMzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4YTJjYjYzZTQyOTQ3ZDFlZjc1YjcxOTA2ZDc4NWI1OTJjYWYwN2Y4NGYxYmFlMWZhMjg5MzRjM2Q3MWU0OTQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_responses.py",
+          "version": "repo-file-v1:sha256:c4e216e7da8fd5ad2b4e7eedd3dd72ac63bb32a3f55ea199cc7d704a2c7ae914"
+        }
+      ]
+    },
+    {
+      "id": "claim_cffa87734b3e4012855be6406c528b86",
+      "statement": "Every refusal template is asserted by tests to contain no number with a clinical unit, matching the numeric_advice_leak grader's failure pattern.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety_patterns.py#L66-L70",
+          "version": "repo-lines-v1:sha256:f8482cb0a8af11115fce03037cd440770709967ef40d76d10a11d3ebe475f88c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVmODAxYTc3MjQyM2FlZGRlMWQ1ZWE4Mzg0YzEwOTlkNThkMzJmZjNjNDBlYTk0YmM0M2QxZDU3OGY2ZGY3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWI4MGQ3NGNjMzJmY2RiMDJmYzE4Njc0OTkwMDk1YThjZGYxNzhhNmQxMmQ3YWI2ZjdiMjQ1Y2RkZTMwODg1NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNjNTQxZmUwOTIwYWY0Y2U0MDNlNGUxZjFmYWJjNDYzZjA4MGU4MTA3MTQ4NTIwMmQ2MGNjOTQ4ZjE4MjI5MyJ9"
+        },
+        {
+          "resource": "repo://tests/graph/test_graph_safety.py",
+          "version": "repo-file-v1:sha256:cc345f8f9ffcabe0eb83b70145486d7c8300454e52cec5fa5e23f94afcb0263f"
+        },
+        {
+          "resource": "repo://tests/test_safety_gate.py",
+          "version": "repo-file-v1:sha256:c5466ac04078da981f5242bbedeef258331448a48f0d3ecaa157b4589534c32e"
+        }
+      ]
+    },
+    {
+      "id": "claim_ab8679a9bec145f6b0851689643e8e30",
+      "statement": "Qualifying refusals (personal_advice, emergency, injection) are persisted per checkpointed thread and replayed deterministically without a second LLM call on a matching re-ask, but only for cue-bearing re-asks of the matching topic; a cue-less re-ask is a fresh classifier trial (known limit L4).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py",
+          "version": "repo-file-v1:sha256:5d3047c286ec0cb5f9deb53d0c2b8184596e06d858619287684fcf7ddc8e957a"
+        }
+      ]
+    },
+    {
+      "id": "claim_b6b9d4f7440340d98b4fe1a64b8f2681",
+      "statement": "scrub_phi delegates every call to the single process-wide PrivacySanitizer, which unions a Presidio NER pass, a deterministic clinical-identifier pattern set, and a clinical-code preserve carve-out, replacing matches with [REDACTED_<KIND>] tokens; a scan failure (initialization error, scanner exception, or over-16 KiB input) is fail-closed and aborts the turn rather than passing raw text through.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py",
+          "version": "repo-file-v1:sha256:5cafbe8dabf4e9527b27b4960378982758b7f9c29d434d0c975abcf742d74b56"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_signals.py",
+          "version": "repo-file-v1:sha256:5b9f05e43898e1982b081cf20715b1814f889ccb6adb295803e62e4d7713fe43"
+        }
+      ]
+    },
+    {
+      "id": "claim_192128db2d6741e3b0c8e5f9d86db303",
+      "statement": "PHI/PII scrubbing is applied repeatedly at each processing boundary (graph nodes, engine_record.build_result, CLI monitor, logs) rather than once centrally, and log output is asserted never to carry a PHI/PII canary.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine_record.py",
+          "version": "repo-file-v1:sha256:2a218f9b2b2fc1b92f2982563d809f66d60dc2423d19beb3320ec214aef5d617"
+        },
+        {
+          "resource": "repo://tests/graph/test_graph_privacy.py",
+          "version": "repo-file-v1:sha256:9a20c3d917e439e95a8d828a23073ab779e144a6e3e1839536b2632f98371830"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d5ebde9be454f1393fe6fec2b6f9bf1",
+      "statement": "LangSmith tracing cannot start unless LANGSMITH_HIDE_INPUTS is the exact string \"true\", and the traced root run's recorded input is independently rewritten to a scrubbed question via _redact_root_inputs as defense in depth; however, trace outputs (retrieved chunk text, page numbers, chunk IDs, safety_outcome/usage telemetry) are not scrubbed to the same degree and are copied verbatim.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py",
+          "version": "repo-file-v1:sha256:aeda4d30a134949385617b00f3bbf5a61e62643b317cca5a9852079404e16027"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/tracing.py",
+          "version": "repo-file-v1:sha256:6e4645042e8bf8e1e64d65708b40c0d930df01f89a7e665e63a515d026429907"
+        }
+      ]
+    },
+    {
+      "id": "claim_f4f301cc156f4200a0a5b7a20068d1ce",
+      "statement": "With the default in-memory checkpointer, nothing survives the process; with HC_RAG_CHECKPOINT=sqlite:..., scrubbed queries and answers are written to a local SQLite file with no authentication, tenancy, retention, or deletion controls, and seed_messages scrubs legacy turns on read but does not rewrite already-persisted raw data at rest.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py",
+          "version": "repo-file-v1:sha256:aeda4d30a134949385617b00f3bbf5a61e62643b317cca5a9852079404e16027"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/history.py",
+          "version": "repo-file-v1:sha256:c1f50ef873cd1328c6cdc0e531cd2c02f8f7f3325ceb2b4212774e2eee1f6c27"
+        }
+      ]
+    },
+    {
+      "id": "claim_f9e0fda7f33c4ac189ae5c07eacf8043",
+      "statement": "The Presidio/deterministic recognizer inventory is North-American-centric (e.g. CA SIN, US SSN/ITIN/MBI/NPI, CA/US phone formats) and not exhaustive; model-reported phi_spans from the safety classifier are read for metadata only and never given authority to mutate text.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py",
+          "version": "repo-file-v1:sha256:5cafbe8dabf4e9527b27b4960378982758b7f9c29d434d0c975abcf742d74b56"
+        }
+      ]
+    },
+    {
+      "id": "claim_8b08618fc47b4420ba5ffdb0c96885c8",
+      "statement": "On a safety-gate LLM call failure, the gate falls back to category=\"ambiguous\", which is not a refusal category, so the turn runs the normal pipeline with only the deterministic pre-checks still able to force a refusal that turn; PHI scrubbing is unaffected since it never depends on the LLM call.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py",
+          "version": "repo-file-v1:sha256:717a0eb31ee40432895d342955c0a251eec2203378ec978cce3ad252cbfd7272"
+        },
+        {
+          "resource": "repo://tests/graph/test_graph_safety.py",
+          "version": "repo-file-v1:sha256:cc345f8f9ffcabe0eb83b70145486d7c8300454e52cec5fa5e23f94afcb0263f"
+        }
+      ]
+    },
+    {
+      "id": "claim_90a83790cad344aebd57494823f6e3b5",
+      "statement": "Measured before/after impact from experiment synth-luna-terra-0b106b95 -> safety-luna-terra-e9214cbf (86 golden examples) and multiturn-luna-terra-7ac5b9fb -> multiturn-safety-853f353d (22 conversations) shows safe_redirect rising 0.16->0.64 (core 0.69), numeric_advice_leak falling 0.52->0.04, behavior_match 0.79->0.87, hallucinated 0.51->0.38, multi-turn safety_drift 0.45->0.36 and pii_persistence 0.31->0.19, while correctness fell 0.89->0.81 and chunk_recall fell 0.83->0.65, driven by 4/59 falsely short-circuited answer-expected examples and one missed refuse case (ho-unsafe-001).",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L93-L127",
+          "version": "repo-lines-v1:sha256:8ea755c2a3a170fe429bfdef56116b8fde2c94c16071026259492c1a388cf16b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiOGYyYzdkMWM3NDZkYTg4OWEzOWUyODQyMWUyZThhNzU3OGZkZGFmOWQ5MWFmYjEzMzZhOTU4ZDEzNmNjMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZDZlNDIzZTkyZmI2OGMyYzM5NjFmYWYwOGI3MTc4Y2RhNWIxOTE1Yzg2NTAxOWI1NjAyMTgwOTMxMzgzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZGZjODc1NmY0NjRjM2M5NTA4NjQ1NTE0NWE2MzgzMWJiMDFkOTQ3M2MzNGUyYjczNjA5NzQ2NmFhOWY5N2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmNmYwYjU0OTA0YmQ2M2VkMmE5MjYyM2ZlZjdiYTRiNjM0OWNjYzFhOWRmZTYwZTVhMzZiOGQ4MWRlN2MxZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_12cb1fc3f5cc4fcb9f9cd2cc8b8fbdcd",
+      "statement": "A single before/after gate measurement or calibration result must not be extrapolated into a general safety-quality conclusion: a documented attribution traced a -0.06 aggregate correctness delta entirely to four borderline safety-gate classification flips between two runs of byte-identical code, with safety metrics (safe_redirect, numeric_advice_leak, answered, pipeline_error) exactly flat.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L1-L7",
+          "version": "repo-lines-v1:sha256:83389934282f129af47dc46e643d3bd66dc1863aba12ff16ac22b4d5d18b5b32:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU4MDk3ODYxOTI0NDcxYTAwNmQ5ZTNmYTMyMmM1ZTdiZDUyYmIzMTM3ODIxMmIyNmViZmI0ZGY2MDJjZTVmMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmM5YTQ4NWQ4YjI5MGNkM2NhZmJhM2JjMjc2ODBkNjUzYTY5ZWM2ZTA4ZDMxZjg0YTkzYzc2NWNhMmFiOGE4ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTgyZjkxYmY2ZjFiNTQ4ZWFhY2VhOGI4MzRhZWNhZjdlNmQ0NzMxYjMwOTdkNmMwYmE1NDJmMjZhNThjYTVkMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d04667e013564de7aa97a837298724f7",
+      "statement": "evals/golden_dataset.json contains 86 rows (45 core + 41 holdout) including fixed per-category fixture counts for safety-relevant categories: unsafe_personal_advice 13 (5 core + 8 holdout), out_of_scope 8 (5 + 3), pii_or_phi 6 (3 + 3), and adversarial_hallucination 8 (4 + 4).",
+      "evidence": [
+        {
+          "resource": "repo://evals/golden_dataset.json#L1976-L2370",
+          "version": "repo-lines-v1:sha256:f19949cf4412c27f1380fd6cef9536929d0f5afebea1db2dab26a588a0f5638e:eyJzZWxlY3RlZExpbmVDb3VudCI6Mzk1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0YzhhYjFiNDQ4Mjk4NjA0ZWRiYjllYzMzOWQ0YmUxZjkzNDE1MDZlMDg4YzIwMmQ1Y2YwMDMxNTIwMmI0ZmYxIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI2NGViMmZlNGQ5MjQyYjNmODY1NTkyOTJmMmZhYWJiNjc3NjY3NzNkZWY3NTUzNTVkMWM0YzVlNjRmYTVlZWZkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3Y2E3MjFjZWI5Y2U0MDVjMGFjOWY2MzhkZDYzOGJjMTYwZDhmZDQ1ZmU5YmJmYjM4Mzg1MTM4ODVmMzVkMGY1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjZGM1MzQyZjhjMzFjN2RmOWQwMDBlYjc0ZmU5ZGMyMTBiZmMyNGQ3YzZlN2U0ODhiOTQyMmJmY2E3YzNhMWIxIn0"
+        },
+        {
+          "resource": "repo://evals/golden_dataset.json#L893-L1204",
+          "version": "repo-lines-v1:sha256:92bde9e68a3a55bc2b3e9603a22798197e235135400c303b096d59b965ef9ca0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxZGFmYzc5YTUyN2M1OTM5MjkzYjRiMTQyYzQyNTdkMWI2MDg0MDgwZmYyYTg3ZTJlOWEyMTEyNmJiOTI5YzVjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJmMTVjN2RlNmJiYjliOGFiMjYwZWYwNGVkNWZkYTdjZmJiM2ZkM2IxOGI4OTMwY2Y3NmMwYmQ1Y2NjNTllZGI5IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2MGMxYTk0YTUwMWVkMmQ4OTUxZjU5NWE1Y2FhN2M3MDlmMzQ3Y2YwZDI2MzZhYzg2MTMxNDI5YjEwODg3NDc3IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzNzFhOTE4MGIzMjE2MTQ0YWU2ZjM2Nzc2ZDUwMWE4MTRmYTVhYTBjOGQ5OTcyYzU1YTBmYTQyZmUxN2RkZTYyIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_d55705414c214b658f2434b72b6d95c6",
+      "statement": "numeric_advice_leak flags any specific dose/threshold/frequency number in an answer only when expected_behavior == \"refuse\", and forbidden_content flags any must_not_mention phrase (e.g. echoed identifiers) but is skipped (score: None) for adversarial_hallucination rows because the forbidden phrase must be quoted to be refuted.",
+      "evidence": [
+        {
+          "resource": "repo://evals/evaluators.py#L136-L199",
+          "version": "repo-lines-v1:sha256:e8d2adeaa94e4a45ce5415a9bdcee93360167a6d9c048e29c242be3835dc6a3e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmOTFhNzc2ODI2NWU1MGFjNTU2MzZiZDM5ODU2NWNkNmQ2NjYyNGJiZDY2N2NjMTU3MTFlMjk3NzU1YWI2NDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4ZDZmNjY3ZmQzYWEyOTgyMGRlNWIzZWI3OTM0YTYxY2E2OGMwNjVmY2I3ZWQ1YjVhMDU2YjE5NDhkYzk2ZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0423d61110dd40f7ac91ed267b471d43",
+      "statement": "evals/multiturn_dataset.json contains 27 conversations (16 scripted mt-001..016, 6 simulated mt-sim-001..006, and 5 further scripted mt-017..021), including dedicated safety_drift (7 conversations) and pii_persistence (3 conversations) categories scored by evaluators that check whether any later turn gives personal dosing, endorses an unsafe plan, obeys an override, or echoes a previously scrubbed identifier.",
+      "evidence": [
+        {
+          "resource": "repo://evals/multiturn_dataset.json",
+          "version": "repo-file-v1:sha256:d545e82192ddead488d18328d4a33542c3928e89b12bb19d636a4b2276e2fafa"
+        },
+        {
+          "resource": "repo://evals/multiturn_evaluators.py#L1-L26",
+          "version": "repo-lines-v1:sha256:61da356e1e1cc5dfbc749d19c4605086da750079841edb913e6e77349252ef1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlNTMxODdlMDM3YTZjYjQ1NjliMGMxOGVmZGQxNzI4MGQyMGUzZjM4ZGMxYjE2NDNlYjUyM2VkMWI2MTE4YzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYWY3NjM3Y2I2ZTdlNWRiODVkNjM0Mjc0NjAxNGRmMDQxY2NkNTU4YTkyMGIyOWViNmFjNzE5ZDdiYWY1YzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0bb64b32a9a24df9af7978be841f61fc",
+      "statement": "Citation validation does not require every statement in an answer to carry a citation: uncited statements pass, and a statement with multiple citations survives if any single citation validates.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py",
+          "version": "repo-file-v1:sha256:cc1a2dcd87356d3ef137a2e28a8de4c03141a99ec383ef7833d4fa9b9e474c58"
+        }
+      ]
+    },
+    {
+      "id": "claim_2eb52b72993c42b996f1cd3ce714c4be",
+      "statement": "The CLI renders a preliminary, pre-validation raw answer between generation and validation, so any consumer surfacing streamed output inherits this exposure; the gate's short-circuit path still sets the monitor event immediately so refusals do not stall the UI.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/cli/interactive.py",
+          "version": "repo-file-v1:sha256:0c4e2f8eaaf46d360067a295bed8a69dabd98e302026709038b7f36f875e021c"
+        }
+      ]
+    },
+    {
+      "id": "claim_616458b7f6ec406d8023ff09feeb0b27",
+      "statement": "HC_RAG_DISABLE_STAGES=validate and HC_RAG_SAFETY_GATE=false / HC_RAG_DISABLE_STAGES=safety are ablation-only switches (identifier scrubbing remains active regardless of the safety-gate switch) that must never be used in production.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/models.py",
+          "version": "repo-file-v1:sha256:a21ea76cdd8d9bf8943443e473e95f01b1c8b1d58b2523737905259a6cb32afe"
+        }
+      ]
+    },
+    {
+      "id": "claim_a0e1f429a6a4497f8e7e60aee9241bba",
+      "statement": "The semantic_router safety-classifier arm is dependency-INCONCLUSIVE because semantic-router==0.1.16 is unsatisfiable with the project's pinned openai/python-dotenv bounds, so it has never run; requesting it fails hard at process start via SafetyClassifierUnavailableError rather than silently degrading, and production defaults remain HC_RAG_QUERY_RESPONSE_ARM=current and HC_RAG_SAFETY_CLASSIFIER=llm.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L40-L86",
+          "version": "repo-lines-v1:sha256:1257c729659aabdca8139c3c901b555479a3139ea9284238db79c8a60bf9aa76:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjMDM1N2ZmYTA0NDhmZDcxZTBmN2U5ZDkwNzg5MGRhNmZjNWNlZDM2MmM3ZjkwYjk1MGZmNGMyNjFjZDI1YmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhOGI5Y2MwZmJmZGU2Y2ZlMGRiNjFlMTBjOGFmYTkzNzg4NDkxZTY5ZWViZGRhMjJkNWZjOWUzODkxODNlMzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5MDllNjc4ZjAyODkyNDZhMGFiMzcyYTg5NDJmOGU1MjgwY2NjOTg5ZmQ0ZmNmNzQxNzUzYWZmNjM1ZGVmZDgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py",
+          "version": "repo-file-v1:sha256:a21ea76cdd8d9bf8943443e473e95f01b1c8b1d58b2523737905259a6cb32afe"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

@@ -12,13 +12,39 @@ openwiki:
   invariants: [The entry gate routes operational and deterministic safety cases but does not decide medical versus coaching., Medical answers are produced by the healthcare RAG child through medical_lookup rather than by coach prose., Fact-bearing catalog props must resolve from same-turn tool data envelopes.]
   validation_commands: [make test, make eval-agent, make eval-agent-multiturn]
 verified:
-  - by: openwiki/0.4.0
-    at: 2026-08-26T20:21:43.477Z
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-3e9d6cd53f0abe840dc0b8b2
+    resource: repo://evals/coach_engine.py
+  - id: openwiki-source-1023a45f940f1e5eca5e2264
+    resource: repo://healthcare_rag/agent/build.py
+  - id: openwiki-source-32b0d84a28d0c3a9400c33f6
+    resource: repo://healthcare_rag/agent/coach_agent.py
+  - id: openwiki-source-9c5110aad67a3172df0c534c
+    resource: repo://healthcare_rag/agent/compose_ui.py
+  - id: openwiki-source-5af35859605c281ce5d89393
+    resource: repo://healthcare_rag/agent/finalize.py
+  - id: openwiki-source-2f29eb2ee6c317e5dc414836
+    resource: repo://healthcare_rag/agent/gate.py
+  - id: openwiki-source-d29afe87b08650650d8273b0
+    resource: repo://healthcare_rag/agent/rag_relay.py
+  - id: openwiki-source-0c12d6d3f3cb2bdf9aec0686
+    resource: repo://healthcare_rag/agent/state.py
+  - id: openwiki-source-5bbba7b2a8ea8360ff233d63
+    resource: repo://langgraph.json
+  - id: openwiki-source-012f2c78e3b1446dfc35803f
+    resource: repo://Makefile
+  - id: openwiki-source-747fe211c57cda1f480279d1
+    resource: repo://tests/agent/test_coach_gate.py
+  - id: openwiki-source-7f5bd85e9de277b0fdf4042e
+    resource: repo://tests/agent/test_rag_relay.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
 ---
 
 # Coach agent architecture and medical relay
 
-The `coach` graph is the member-facing LangGraph workflow. Its graph builder defines a distinct state/input/output contract and compiles a graph named `coach`; it is not the healthcare RAG graph. The normal coach path is a tool-using agent for planning and member-data interactions. It does **not** own medical-answer safety: medication and monograph content must travel through `medical_lookup` to the complete healthcare RAG child graph, whose safety and validation behavior remains in force.
+The `coach` graph is the member-facing LangGraph workflow. Its graph builder defines a distinct state/input/output contract (`CoachState`/`CoachInput`/`CoachOutput`) and compiles a graph named `coach`; it is a separate `StateGraph` from the `healthcare_rag` graph, not a variant of it. `langgraph.json` registers both graphs independently — `healthcare_rag` at `./healthcare_rag/graph/__init__.py:graph` and `coach` at `./healthcare_rag/agent/__init__.py:coach` — so they are deployed, checkpointed, and versioned as distinct top-level graphs even though the coach process imports and calls the healthcare graph in-process for medical answers. The normal coach path is a tool-using agent for planning and member-data interactions. It does **not** own medical-answer safety: medication and monograph content must travel through `medical_lookup` to the complete healthcare RAG child graph, whose safety and validation behavior remains in force.
 
 For the adjacent authorization, storage, deletion, and browser contracts, see [member perimeter](member-perimeter.md), [member data lifecycle](member-data-lifecycle.md), and [member frontend](../frontend/member-frontend.md). [Coach routing](coach-routing.md) is the detailed routing and catalog reference.
 
@@ -63,7 +89,7 @@ Caption: the coach owns operational dispatch, member tools, and response project
 
 `coach_gate()` is a fixed precedence list, not an LLM classifier and not a medical-intent router. It first scrubs the question, replaces it with a scrubbed `HumanMessage`, clears the raw untracked question, and resets follow-ups. It then selects exactly one target:
 
-1. A cron wake is checked first. A valid wake requires an active stored reminder with matching reminder, user, and configured thread IDs plus a constant-time wake-token comparison. The payload is cleared in either outcome; valid wakes go to `reminder_delivery`, while forged or unresolvable wakes go to `short_circuit`.
+1. A cron wake is checked first. A valid wake requires an active stored reminder with matching reminder, user, and configured thread IDs plus a constant-time wake-token comparison. The store lookup itself is skipped whenever the calling configuration resolves to an authenticated member principal, so a member-authenticated session can never self-serve a valid wake — only the scheduler's own trusted call path can. The payload is cleared in either outcome; valid wakes go to `reminder_delivery`, while forged, unresolvable, or member-submitted wakes go to `short_circuit`.
 2. An attachment goes to `claim_document` before text safety or erasure handling.
 3. Deterministic red-flag, prompt-injection, or identifier-recall signals go to `short_circuit`.
 4. Recognized erase phrasing goes to `erase_my_data`.

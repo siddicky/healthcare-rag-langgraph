@@ -1,0 +1,424 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:91fb91af6f9e221997b1774aeb38857157d155174cf64206b560341091a3498b",
+  "claims": [
+    {
+      "id": "claim_0d02e33e4b2e4b58959785ad2babc3aa",
+      "statement": "Configuration for OpenWiki or an MCP server (e.g. the `openwiki mcp --host claude` server wired in `.mcp.json`) establishes an available integration, not proof that a tool ran successfully or that its output is correct; current source and focused tests remain authoritative over generated OpenWiki content.",
+      "evidence": [
+        {
+          "resource": "repo://.mcp.json",
+          "version": "repo-file-v1:sha256:1217fe8aff83c5e31c83d562c6e21d66cc6745e870d49c737cf8a32df7c39ef3"
+        },
+        {
+          "resource": "repo://AGENTS.md#L216-L226",
+          "version": "repo-lines-v1:sha256:2066111756019639fd4ad6a1c6bd7323a3db5fdcf9d2b66a57aa9fac5e0ba943:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmMTgwZjljMTI2OTAzYmNjMzMxYWE5NTQ1NmU0OTQ0NGE3ZDRkMDExZThhMmE4M2Y1ZGM4NzAyMzkxODEyZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2YmZhMmQ2YjJlOTc5ZTBkN2I4ZjYxOGNiNjM4MTJmODZlMWM5ODcxNThmYTI1MDg3NGU5NTQxMzdlYzkyNjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5Zjc4NzE0ODkzYWE3Nzk0MmNlYTFjNGEyZTAyMzFkYmI3ZmEyYTQxYTcwYzgxNDYwYTNjNjc1NjJkYTNhYWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_188270d1b4c54a9ab8eeac2b8e598888",
+      "statement": "The contributor reading order is root AGENTS.md first, then the nearest applicable nested AGENTS.md (healthcare_rag/, graph/, processors/, evals/, tests/, agent/, frontend/, server/), tracing the change through its caller, state owner, public boundary, and focused tests rather than only the touched file.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L1-L23",
+          "version": "repo-lines-v1:sha256:71f632fae0affaa72895c4cdc3e0543824b529c960e91db9f39f03c5d3f3a646:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmNTVkNDU1ZWI2OTEyMzc5MTA2MmI2OTlhNjE5MTU2OGE1NGFkNmJjZGNiMzVlMDc2MDYwZDg4OWQ4NGFiNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2NmE5ZjVhMzI1YTU2ZmEyY2IwYWVmZjAxMDQxZWIzOWMzMzBmY2YyOGEzMTM1MDMwYmNmOWM5ODU0YmEyZjAifQ"
+        },
+        {
+          "resource": "repo://evals/AGENTS.md#L97-L100",
+          "version": "repo-lines-v1:sha256:e1ed3b641bcf163acc5e98518db86b2a02c64f0e544e5a1b32c13953ec577c95:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDRhMmI2MWZjMjE2NGI4Y2M1ZjNiODQ0YTQwNTNlZDRkNGY5YzE3MWRkMmI2YjBkZWM2MjJmYmYyNDNjYWIzNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmEzOWQzODlhNWE5MzhmZjdhYmYzMGFkZjkwYjI3NjYwZTczZmMzNjljMGE5Zjc2ZjdhZGVmZDc1MjQzNDYzYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWFhNGRmNDA5MmM2ZWFmMzU3OTk4ZDQ0NDU2YWVhN2ZkZTRkNjBmMmEyYzRmNmY3NzcyNmViNzBkYjRjZjA1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTBkZjIyMzc2NGIzOWMwODdlYTRmNGU0Y2ZmNzk1OWE5OWQ3YzAwM2ZiYzgxMmIxYTU0ZTg5YjgwODJhMWI1ZSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/AGENTS.md#L39-L57",
+          "version": "repo-lines-v1:sha256:cedb349d9aa3fdc824ed6b3cbbba85ca85a5ae9605b2e5b88e2d3e041257973f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwZjVhNWZhYjEwMmNmOTIxMzY1ZmYzZDEwNjFkMjVhZDYwN2RjMmFjYmVlM2ZiZmIwZjgyYTM0YzdhYzEyNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzMDJlMjM4MjRmNjg4MzZiZjkzOTE3NjUzMDQzOWUwYzY4YWQ1YzM3NjI0NTllZjBhY2IzYTViNzliZTBjNTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBkNjhmZWEyMTkzYjQ5ODUzNGVlMTU4NmZkMmY5YmUyMjBmNWQzOGZhZWNhOGZiYTQxNGYzNzQ5NGYxNmQ5NWMifQ"
+        },
+        {
+          "resource": "repo://tests/AGENTS.md#L59-L65",
+          "version": "repo-lines-v1:sha256:a26ae4ce27c297523dbda61aabfedbffbefaddbfe5e7134c6b6b0a64a72d12e6:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDRhMmI2MWZjMjE2NGI4Y2M1ZjNiODQ0YTQwNTNlZDRkNGY5YzE3MWRkMmI2YjBkZWM2MjJmYmYyNDNjYWIzNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmIyN2FmNWE2NTVjOWUzZTc0NGUxZTE3YmU3ZDJjNjEzODYzNGNkMTdjNWI3ZWUzOTUzMmI2YzQ3MTQ3ZGJhMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmMxYWRjZThiZTVhYTA4NjM1M2RjMzBlNGIyZjJhNzdiZWJkYWE5NWRiZDI2ZjNkMjljOTI0YTc1YjY1ZmI3MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2QwM2Y2NGYzNjgwOGViNDAxNmFiMGYzOTM5YmVhZjBlYmI0MTBhNGUzMDcwMTkxNTQ5MDQyMjA0NzA5OTJlMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9f6a7332261c4e35b1861960a72096ad",
+      "statement": "The repository has distinct runtimes: the LangGraph StateGraph in healthcare_rag/graph/ owns the RAG request pipeline, a separate coach graph in healthcare_rag/agent/ owns member-facing routing and reaches RAG only through its medical_lookup relay, and the frontend plus clean-room server/ are integration boundaries that must preserve rather than replace RAG safety and member-authorization contracts.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L6-L11",
+          "version": "repo-lines-v1:sha256:a852687a65c4b700719648d349efa6c65302e025f2bc037d3e5809d897a1926c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjIwNmJkOWUwZTIyYzQ1Yjc5MjdmZjdiODJjYjViZDJkYTMwNWMxODAxMjFhNDcyMmFjNzY4MWRhMzY5ZmUxNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWQzODQ0YjAxYzg2M2U0Nzg3NDljMTQwYWRiZjcwOGZlMDg2ZWZjNGE3N2ViMmU0ODljZDYzYjFkZWJlNTkzNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmM0N2E4NDZkM2I1ZjBjYjEwZmZmNmE5OTAwMjI3MWNlYmE3ODVmMDk2NmViNDcyNzk0OTAxMGJiMmEwM2I4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzQ2OTBjYmYyNDNlYTVhOGE3ZDA4M2QyZjAxM2E3ZGFmOGRlMWE3M2JmYzlmNWQ5OTY4M2YwNWEzYTg0NTJlZSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/AGENTS.md#L21-L34",
+          "version": "repo-lines-v1:sha256:ac73adaccb2fabdc9a1d57cba0ff1b483613c41764a296e75e25d325c6f6802e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyNWZkZmRiMjVkYTU4OTI5MjE3NWViOWRiMTU3NjA0NThlMjRlYjNkNTM4N2ZiNTYyMDNkY2Q2NjAwYjZmMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwMzQ0ZjZjYzI5NzAyNDlkOThhYmNiMWZlNjIxYjUxNmVjYTg1NzlkN2YwOTVhMzg2OGEyYTA5NjM2NTkwNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExODk4NDhlNGJkODEzZTQxMDc4MzllM2UzZjZkNzU4MDI4MjJmMWQ2YzE1NGFjY2JhMTE2ODJjYjkwZjA5MjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_045c1b1e281c435b88fbae43645ec4f3",
+      "statement": "evals/golden_dataset.json and evals/multiturn_dataset.json are hand-written source-of-truth datasets synced to LangSmith via stable uuid5 IDs, so an edited local row updates rather than duplicates a remote example; they should be edited deliberately as authored regressions, not casual fixtures.",
+      "evidence": [
+        {
+          "resource": "repo://evals/AGENTS.md#L18-L23",
+          "version": "repo-lines-v1:sha256:d6209e84343eb5bf737d59fe31f546e37a2c69877a1cb81f2d31fe616e62a5cf:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTJhYWI1MWZkZDg3MjVjOGQ2MzZjZjYwYWE2YWYwNjRkNjRhNThhNGZiMjk2MTQ4N2M3MmU4NDc1OWJmOWY4MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGRkNTNkMTY2MTY3YjVjODRiNWEzMDRiYTM2NGZiZWUzNjdjYjc0NDExOTUzMDQ0YTRhMTBjMzQ2M2Y1MDE5YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmU0MWQzNGFiOTgyZjdiMjJmMzJhMWRiMjg5MDBmZTM2NGM0OWY3MzhjYmE3ODQ2NDNjMjgwYjFmOTAxZTUzMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTZkOTM4Y2RhNDcxNjcwOWI3ZTFiOTVmYTkzZGU3YmM0MzZkYjJhN2VkZGYzZWI4ZTkyZDRmZDA2YTc3YzdhNSJ9"
+        },
+        {
+          "resource": "repo://evals/AGENTS.md#L40-L45",
+          "version": "repo-lines-v1:sha256:e299cb90d6ba3ada97fee30974f8081da29087195c738c7c08b63a5446e21996:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTI4ZDZlODY2NDQzMjM2NDNkZGFkNTIwMmM4YzVkNjMxZjVkYWI4Zjc5NzdlOGZiODM4NTNmMDE3ZWI4YTkzZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjE2ZWU3MDk1ODAxYmIwZWNmYjQ0ZjhkZDJlMmRiN2JjYzgxOGNmM2RmZGQ4OTQ0MTMzZmFlNGNiYjZjYjg4YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjE2MGQwMmVjODE1Mzk3NzAyNzg1ZjA2OWU4Nzg1ZDk4NTQ1NDBkNWRmYmZkN2VjMDkzZjUyYmVlYTMwNzk5MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjQ2OTMyMmU1ODZlMjdkZDZhZGJjZDBhMjY2NjExOTA2NzM4ZDBiYWU0MDNmZWVmYzI4YjMwYWViMmQ3M2JmZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e1b7694f01c41c0918984aae098c946",
+      "statement": "evals/results/ is generated output (committed per-experiment .md/.json reports, per-question detail, and watcher logs) with no local AGENTS.md, and is treated as read-only evidence: regenerate a report by re-running the producing command rather than hand-editing it into an apparent result.",
+      "evidence": [
+        {
+          "resource": "repo://evals/AGENTS.md#L91-L96",
+          "version": "repo-lines-v1:sha256:40c6b9760de16064dd5288b20fd4afb04e47fc34d8ff3cd2f2e8b8a3ae652b6a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDI1ZmRmZGIyNWRhNTg5MjkyMTc1ZWI5ZGIxNTc2MDQ1OGUyNGViM2Q1Mzg3ZmI1NjIwM2RjZDY2MDBiNmYwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWZkNzUyOTU5YWIyOTllNzEzYzYxYTBhNWY2MmIyZjE5NjNkMzJiOTFjY2I1MDJiZjUxMTZjOGRhYWIyNDI1MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTE4OTg0OGU0YmQ4MTNlNDEwNzgzOWUzZTNmNmQ3NTgwMjgyMmYxZDZjMTU0YWNjYmExMTY4MmNiOTBmMDkyNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c9aa0d71dc2e455b9e5b6ca34300f29f",
+      "statement": "data/pageindex_tree_*.json is a generated artifact built by `make index-pageindex` in an isolated ephemeral environment, and `make ingest` / `make ingest-pinecone` both pass --delete-all to their storage loaders, so corpus rebuilding via the checked-in chunk data files is destructive and should be followed by a retrieval check.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L39-L40",
+          "version": "repo-lines-v1:sha256:66783bdb96f49d9b52bb8a7d0541055e8590ddbc71a30a4c938277c5c007cb16:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQ3ZTMxYjgwNzI0Mzg0ZTliYzYzNTIzMDJlZDMzOGI2N2M3OTgyZDgyNTA0YzNjYzE2NGJhYjliMzNiYmI0YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTM0NDVlZjEzMzdjOTYwMmZlMjFjN2I1Njc4MjcwNWE5YTI4N2Y0MjQ5NmY1ZmFlMTQwNmJlZmNlMTViOGRkMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjY4NzU3YTJlNTZlMjI3MGZlMzNlNDA5NjE1OWFmYTFjZmYxZTAwOTMwN2M5YWVmMmVjMjI4NzZjY2I3YmYxMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWQwMGUyMmQ2YTUyMGRlMzRhMTNjYThiMWZjOWQ3Mjg2NDk1OWFhNjdiMTgwNjBiMmUyNGFkMTc1Yzg3ZWQ1NSJ9"
+        },
+        {
+          "resource": "repo://Makefile#L31-L43",
+          "version": "repo-lines-v1:sha256:9d34cd524d9f91b9a10b1551869021822497346885bd6469a69bf440879570f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzZGJkZjY5MzIwMjBmYzYwNWYwOGJkYmE4ZmFkM2JjOWRiMGFmY2QxYzdhMGUzZDZmM2IxN2Y4OWE4YmVmY2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyYTRjYmQzNzIxNDlkYmM4ODY0ODFhZTczNzg3NmI0YTI3ZmY5NWM3NTk1Njg1NTZhZDZlNzZjOWM5ZGU0ZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwOGY1MTExYmE1Njg2ZTFlYTZiZWIwZjdlYTU4YmZkMjA4YjVlNmQyOTY3YWM2ZjY5YjI2Nzc0MDg5MmJkNTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4NGJmM2UwYzE0NjY1Nzk0ZjE4MDM1YzgyZmJiMDNiZGZhN2NhM2Q5NzA0YWEzMGI5ODczMWVmNTU0Nzc5NDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0734b634dcc248b08d84c19df03ffec3",
+      "statement": "frontend/src/design/ is copied verbatim from the design system and must not be patched directly; changes should use its classes or update its owning process instead.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L41-L41",
+          "version": "repo-lines-v1:sha256:ac92d1b091b25afced4265ab8cc2f40af0ad8ffa13d3ba560710a1caa14bfa06:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWM5MmQxYjA5MWIyNWFmY2VkNDI2NWFiOGNjMmY0MGFmMGFkOGZmYTEzZDNiYTU2MDcxMGExY2FhMTRiZmEwNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWM5MmQxYjA5MWIyNWFmY2VkNDI2NWFiOGNjMmY0MGFmMGFkOGZmYTEzZDNiYTU2MDcxMGExY2FhMTRiZmEwNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI5MWZkOWViMmU2ODc2OWU2OWFlN2FkNmQ3Yzc3YzQxZTU0ZDA3MWExYWNlYTY5ODIzZGYyNDE3NjRhMTJlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWFlMDBkMjVkN2NjMTA3ODQ3MzJiYWM5MWEzYmIxNDNjMzJjNDFlYWQzN2YxOTRlY2M0MGNhMDI4NTUyODdlZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4f6e2326c264cf1aaed31bfcb0fa368",
+      "statement": "docs/decisions/*.md decision records are one-directional pointers into evals/results/ and docs/experiments/ that never duplicate a metrics table and must not have hand-written numbers; the evaluator that produced a linked report is the only source of truth for its numbers.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/AGENTS.md#L27-L28",
+          "version": "repo-lines-v1:sha256:588fe0de100f086c622064e39604349ef685edb35e44617bb9af6f95e38a0c64:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzIyNDRkZDkxYzVkMDE5Y2JiNzM0YmU0NGQ2MTFjYzdhMjZmOWQ1NDM3OGFkM2M3ZjQxYzZiOGJjNzM1MTQ3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQxY2RiOTM2MTk1Y2E5NzMzNzZlMTYwODE3YjgwM2UxMTAxZmFlODNhYWJiZTc0N2EyOWZmYTczZTc4ODU3ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2NkMWY4ZTY2M2Y5ZTNlZjQwZGM5Y2Q5NmQxZjQyNjkwYjQ1YzUwYWRjMzYwNjg0MjBkZjhlOTI1ZmExM2EzMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDhiMzdhNmE4YTJhOTQ4ZDBkMTEzMzkxNDcxOTZiZjY4YWY1ZTcyMGJjOGYyMTk5YzNjYTU1MjhjNmIxYTgyYyJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/AGENTS.md#L38-L40",
+          "version": "repo-lines-v1:sha256:f24028f6bbb89393b6bc74669e8c757d3ffe75e3d5fffb8df98fc5a5816023a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWY2NTE4M2MzOTQ2NTYyOTM2ZTg3NTJmZWJiOGJkZTYzZjBhN2NmZmU5NmIwOWNlYzMzMzhhZTlkMDhhNGE1NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDY3MWM1Y2ExM2IxNzFiMDA5NWVhMTA4NjFmYjMwMWI4NGJiYjg4Y2I0NjYzODBlYmE2ZGUyYzE0ZWY0Nzk3NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGQ2OGZlYTIxOTNiNDk4NTM0ZWUxNTg2ZmQyZjliZTIyMGY1ZDM4ZmFlY2E4ZmJhNDE0ZjM3NDk0ZjE2ZDk1YyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_617016325514493e8b385f78c3b4e08d",
+      "statement": "Secrets belong only in the gitignored .env file; pyproject.toml and uv.lock own Python dependency resolution and their impact must be understood before either changes.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L38-L38",
+          "version": "repo-lines-v1:sha256:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmVmNTIzNDBjZWY0ZGM3YWI4MjM5MGViNzlkNTQ2MzIyYzU1YjNlMzc1ZTAxNDg3MDcxNjc0Y2RiMGVlNDRiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjAxZTM5ZjgyMmIzMGZlMGI3NzJlMmEwYTg3OGY4ZDgyMzk1NDViNjE4NzJlMGIwNDdiMDQzZWZkODVjMTYzOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d4fb22686b1440bf8e5df23c6d7dec9d",
+      "statement": "`make wiki-update` runs `openwiki code --update -p`, and the scheduled GitHub Actions workflow performs a full-history checkout, runs `openwiki code --update --print`, and opens a documentation PR; this automation is a refresh mechanism, not evidence that a specific update was accepted as accurate, so generated OpenWiki pages should not be hand-edited without explicit request.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L216-L226",
+          "version": "repo-lines-v1:sha256:2066111756019639fd4ad6a1c6bd7323a3db5fdcf9d2b66a57aa9fac5e0ba943:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmMTgwZjljMTI2OTAzYmNjMzMxYWE5NTQ1NmU0OTQ0NGE3ZDRkMDExZThhMmE4M2Y1ZGM4NzAyMzkxODEyZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2YmZhMmQ2YjJlOTc5ZTBkN2I4ZjYxOGNiNjM4MTJmODZlMWM5ODcxNThmYTI1MDg3NGU5NTQxMzdlYzkyNjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5Zjc4NzE0ODkzYWE3Nzk0MmNlYTFjNGEyZTAyMzFkYmI3ZmEyYTQxYTcwYzgxNDYwYTNjNjc1NjJkYTNhYWEifQ"
+        },
+        {
+          "resource": "repo://AGENTS.md#L42-L42",
+          "version": "repo-lines-v1:sha256:eefe66c884e556e4164201f003fb76020bb0b854f3fe76d2aa41d0c8f1a4e6c1:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWVmZTY2Yzg4NGU1NTZlNDE2NDIwMWYwMDNmYjc2MDIwYmIwYjg1NGYzZmU3NmQyYWE0MWQwYzhmMWE0ZTZjMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWVmZTY2Yzg4NGU1NTZlNDE2NDIwMWYwMDNmYjc2MDIwYmIwYjg1NGYzZmU3NmQyYWE0MWQwYzhmMWE0ZTZjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjAxZTM5ZjgyMmIzMGZlMGI3NzJlMmEwYTg3OGY4ZDgyMzk1NDViNjE4NzJlMGIwNDdiMDQzZWZkODVjMTYzOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWI1Mzc3YjFkYjMwMjg0ZGYzNGFkYmE3ZDczNDAyODNiMjViZjNmZjNhN2U5ZDExMTM0ODNiMjY3MDkxN2Q5ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0b89acb670754649854e1458a9b2fc1e",
+      "statement": "`make next-version`, `make release TAG=...`, `make release-digest TAG=...`, and `make rollback TAG=... REASON=...` are hermetic previews that only print commands or resolve a digest; dispatching the printed `gh workflow run` command is a separate human-gated action, while `make release-prep BUMP=...` is the one release command that writes locally (bumping pyproject.toml/uv.lock) and should land as a reviewed PR.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L43-L43",
+          "version": "repo-lines-v1:sha256:706d1c48678bcc7375ca7e26deea438ee53477f48b4d483970436c58720141b4:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzA2ZDFjNDg2NzhiY2M3Mzc1Y2E3ZTI2ZGVlYTQzOGVlNTM0NzdmNDhiNGQ0ODM5NzA0MzZjNTg3MjAxNDFiNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzA2ZDFjNDg2NzhiY2M3Mzc1Y2E3ZTI2ZGVlYTQzOGVlNTM0NzdmNDhiNGQ0ODM5NzA0MzZjNTg3MjAxNDFiNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzNiODU2MjYxZmE2ZGY4YjExNzdiNGUwNTVhZDYyNjRkYWUwNmU2Zjk4YzZkOTExNDMxNjIwZjllZmU5MjFkOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2QxMmNmNzEzNTIyYjE4ZGQxNDBiMjlhZDc4NDk2NTA1MjE3MmY2ZDFhODE3YjcwZWY5NTJhZDRhYTJiZDlkNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_338afd63550440be9bbf2e81122fb4ce",
+      "statement": "The public RAG graph starts with safety_gate, derives scrubbed history views and resets downstream per-turn channels before routing on each turn to prevent retrieval/generation/validation/route/error state from leaking through a reused checkpoint; safety uses the scrubbed question as its working query, deterministic signals may only escalate never relax classification, terminal routes proceed straight to finalization, and refusal templates must not pair a number with a clinical unit.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L70-L97",
+          "version": "repo-lines-v1:sha256:beba071a176db280495ffa7dd50f9ad647af37cbb6bcdef69990e3e5b6f413dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwNjdlZTZkMjMwNTY0MzMyMmU3ZjI4YzRhZDk5N2MxYmQ3ODkyMzRkNTMzMzhkOThlMTA4ZTJjMjVmMjM2NTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5MTVhNGJkNjcwNDM3OWUzODM1NWY2YzgxYWYzZTQ4MDg5NGI1Y2YyM2ViMmVmZDA1MWM4MDY1YTM4YTYzMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0MjZhYWJmMDk0YTY2MjcxZWY2YThmMWM0MDFlOTc2NTNjYjBmOTVjOTYyN2UyYWM1NmFmNWNlYTFmZTI1MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3NjI2MGVhMGFiMDZjZWNlOWQxY2ExMmE1MzJiYzQwZDUxNmE3MjQ3MTM4ODIwYzE5ZDMwZmQyNTFkMjA4NmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e240f0d2faa0491bb15ef37e320918d2",
+      "statement": "Graph topology is a typed contract: a node that both updates state and selects its successor returns Command[Literal[...]] whose literal target must stay aligned with router constants and graph wiring in build.py; a X | Y union of Literals inside Command[...] renders no edges and must be nested instead, and this is pinned by tests/graph/test_router_typing.py.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L118-L125",
+          "version": "repo-lines-v1:sha256:42231c582b94783c2abc71a8f59e03a1ed21942975c1de971e69f0084730ce2b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGFmZGZlODk0ZGQ1MTRiZTgzYTFhOTBkYzEyMDQ0YmVjZTBkM2RlOGUzOWE5NjgyNGNkNzM5NzY1MGQwNzUzMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODQ3OGFhNWMxMGYwNGM3ZDUyN2YwMDQ4OGJkMjQ4ZTFlYmVjYjk1OGFlMzM3OTZkOWFiYWFjNjdmZGVjMGVlYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGQ5ZjU4MjNlYmQ4OGEzNWZmMjJhMzFmZDM4Y2MwOGEwZWI1MDA3MDcwZGUxOTc2YzIxYzYxMDk2NDQwNmUxMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmI0ZWQ0NDNlMWViNmJhMTcxMWFkMjEyM2JkOTliNzQ3MTYxMjA0ZTFjZWEwMjUxZWQ5YjVkYzAyYzY4YzM3OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f04bf713d8b449baacd9fc11bc298fdb",
+      "statement": "Package-shipped Jinja YAML prompt templates in healthcare_rag/prompts/ are rendered through the prompt registry and structured stages map to Pydantic response models, so prompt text, its response model, its registration/wiring, and its prompt-fidelity coverage must be changed together as one coupled unit.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L51-L51",
+          "version": "repo-lines-v1:sha256:b117223a17ca1e148fd3d2ac7f2f5348b89d09d8e0631f5091bcb914a70aa36b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjExNzIyM2ExN2NhMWUxNDhmZDNkMmFjN2YyZjUzNDhiODlkMDlkOGUwNjMxZjUwOTFiY2I5MTRhNzBhYTM2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjExNzIyM2ExN2NhMWUxNDhmZDNkMmFjN2YyZjUzNDhiODlkMDlkOGUwNjMxZjUwOTFiY2I5MTRhNzBhYTM2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzRiYjgxYjg2YmVlMjQyNTI0NjJjNTJhYThlZTNmNTY3NjQ2MWY0NDgxNzc4MzJhZmY2YzVkNWFiMmQ0MjZlMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjdmNDUzNGE5MWNiMDBkOGUzYzNhMTMxYTIxNjE3MzY1N2RjNjc0YjU5MzdiYjJlZTBhYTA2NmU3ZThmYjM2YyJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L62-L64",
+          "version": "repo-lines-v1:sha256:195af5d34a2ce8d0f8dfd48dc37a01afb996792d5c01b7e7801e5d3a8dc98c98:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2Y2YjM2MTAyMTkzMTFkZmI4ZDg3YWI5YjNiZmZhMTEyNGEwOTNlZGNlYmZiMzNmZGE0ZGQ0NDcyYjQ2ZWQxMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjUyY2MyMThmNTIxYjQ2YTcyMzcxYjlhZTJjNTE0ZGU0NjM3MTczMmY1OGEzM2Q5YWE2YjE0ZGFhYTYyYWQxZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmM1NjljZWEyZWFkMGE0ZDU4MmQzYTQyNjRhNzUzMDhlMmEwZWFkMDRmYWVlOTM4YTI0MDFhY2UwZDEzNmY4MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzg1Y2YyM2RjYzE4NjZjNjQ5YjVjNjY5YWZlZGJiMGQzYmQwNjc2ZGMyNWVjZGNlMmNlMmI1MjFmZGMyODM2MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6b71a8b4f8544102a3e342019dd3c400",
+      "statement": "Answer validation converts an exception into an unvalidated result rather than passing raw model output through, rejects missing merged retrieval data, and is the most expensive runtime stage, so it is the first place to look when optimizing cost.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L129-L132",
+          "version": "repo-lines-v1:sha256:598f2521ec9a88c299a29a1d2f1a83ceb2df8d3e050640529478767d6aa4cedf:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWJiOWRmMWNkMzc3NjcxZDkzY2FjM2Y2MGViMzczM2ZjOWJiYzFmNTJiYmQxY2Q1NGY5YzQxNTgwYzQ3YjNjYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzY5MDRmZTBhNzA0Y2E5YjhhM2NkOWEyM2VmZGRmOTVlZDcyM2YzNGFiNGNmMDg4MGE4ZWI1NzA4MWI2ZmIwZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI0ZWQ0NDNlMWViNmJhMTcxMWFkMjEyM2JkOTliNzQ3MTYxMjA0ZTFjZWEwMjUxZWQ5YjVkYzAyYzY4YzM3OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGU0OTA0ZWNiMDBkZDM2MjYzYTg1YzZiZDI2Y2RhYWU4YjhjNmVhMzAxNjM5MzRiY2ZiNDcyMWZkZjRkNDVhZiJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L53-L53",
+          "version": "repo-lines-v1:sha256:4f701ba0d76e0cf0b1dcc7115f88bc96f8c270a6f99cc60bc37f84d92826339d:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGY3MDFiYTBkNzZlMGNmMGIxZGNjNzExNWY4OGJjOTZmOGMyNzBhNmY5OWNjNjBiYzM3Zjg0ZDkyODI2MzM5ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGY3MDFiYTBkNzZlMGNmMGIxZGNjNzExNWY4OGJjOTZmOGMyNzBhNmY5OWNjNjBiYzM3Zjg0ZDkyODI2MzM5ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjc4MTlmMjE3MWVlYzFjMjVhOWQzZGEwMTU2OTE0ZjU4OWQ1NDVmOTA3ZDg5NjQ1NzY4ZjE0ZTQ1ZDU1N2QyNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzc3YmFjZGRiZjIxNDFkNjBkYTAzYjg2NzM4NmQyNGYwMWZjMWMwOGZiNDkxODI4OTIxM2JhMDMyN2Y5OGJhMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2eead5e437f5498986ccf8013aa5b04d",
+      "statement": "The coach graph runs a deterministic pre-agent gate handling server-originated cron_wake, attachments, safety short circuits, and erasure before other turns reach the coach agent; cron_wake validation includes thread, user, reminder, and token checks and member inputs must never gain this server-originated capability, and medical content is obtained only through the medical_lookup RAG relay, whose default form inherits the calling checkpointer while the explicit pipeline-fallback form uses a fresh in-memory thread that loses inner multi-turn state.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L167-L176",
+          "version": "repo-lines-v1:sha256:d3c955db028c72244a7682a7152e5ff85085cdb65a0c1d09c63dc4f07abc7a64:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxNWZiMDE4MGYwZTZhYjYwZDcwMTQ3MjY0YmNhYWVmMjJmYWRjNWEwNjk5YmEwOWY2NGJkN2RkN2Y0NzZiMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5YmRlOTQ3ZGMzYzczNGQ4MTBjM2NkMDc4ZWM5MTg0N2Q3YzdmNmMyM2JjOGFhYTdkNTViMTYzN2RjMzczM2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVjOWMyZWNjZDQ4NzM4MWRmY2I0MGFiMjAwNDk3MzMyNDc4Yjk2ZDZlZGQxZjdkNzZkZjU4M2IyODNjNWZkNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0ODhlMjEzNDcyODUxODkxMzkwYWNlY2YxMmY2NzQxYmNkYmZiODkwZmI5YzQ4YjQxZmZmMmQ1Y2JjZjA4MjUifQ"
+        },
+        {
+          "resource": "repo://AGENTS.md#L194-L195",
+          "version": "repo-lines-v1:sha256:730134de33abfb2959e21af88cc0cfa1dfbb41a1e2fdebb240d693c2ecb23d5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzY5YjhjYTk1YTQ5ZDRkOTljOTAzODYxNzE4MjE1ODcwOTU1OTQ4M2VkZjJjMzc2Njk1MDc1ODkxMWIzOWJlYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjExMTMzYmIwZTg5YTU5OTc4YTU0ZGM0NjUwMGZiOTgzODIzYTAyYTE3OGVjZGNjMDJiZTUzZDc2MjgzYzUzMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2E5ZWIzYjA2NjQyMmZlMTIzNTIwZTI4NTdlOGUwN2Q5ZTc0OTQzYzkwMDA0NDU0YTNhNGJhMmViYWQwMGRmOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTYwMDM1MWZlZThiOGY4YzQxMzM0ZDY5OGMzODdiYjM3NDY1NzRlODYyNTU2NjljNDdmOWE3YjQ3NDMwZjgxZCJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L55-L57",
+          "version": "repo-lines-v1:sha256:9cc8ea506fdd7b62dd64d1c2c31bf339e10729d2a05c2e8767d9fef786192ff5:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDhlZWVhOGMwOGE3NDdiYmM0NjhlMTYzYjNjN2NkYjIwZjhkMDhhNmU4ZThkNDliZjMxZGE3Yjc2ZDcyNTRlZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjBkNTFjZWM2MDQ5YzQ1ZGQ1NjhkZDY4OWRkZjQ5YTMwN2JhMTI1OGNhNzQ2YmIyNDMwODNjZWMyZDRiZTZhNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjdmNDUzNGE5MWNiMDBkOGUzYzNhMTMxYTIxNjE3MzY1N2RjNjc0YjU5MzdiYjJlZTBhYTA2NmU3ZThmYjM2YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmNkZmJlMzkyNDViNmEwYjhlM2Y5NDA2OTE2ZDEyZGY3ZjVlZjg2YjA2Mzk3YzRmZWJjNjE1MDg2YzE1ZmE5MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b91dd361216e415f8dc55f612cc97db5",
+      "statement": "Catalog claims must stay grounded in same-turn data: the backend composition validator accepts fact-bearing props only as a __ref into a current-turn envelope and literal static copy only through allowlists, the frontend repeats this boundary through wire schemas and a closed dispatch map where unknown action identifiers emit telemetry and do nothing, and network/timer/randomness seams must be injected through CoachChatDeps to keep component tests hermetic.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L187-L188",
+          "version": "repo-lines-v1:sha256:bcd46d39f040e2ba99bc62730911a9586e54cd051e31d88be22df5a9fe945ba7:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmM5YjI3OGI1NGU5MmVjMTNlMTgzM2VlMjE5ZmEzZjVlZDBiOThiZTdlMGI5YjE2MTllMGNiZTkyODFlNzg2MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTVlM2JlZDg0NDVhNDNkZTYxNTI1YmRmYzg0YWQxZGZmYmE3OWYyZWU0NjYxMWRmODU3YmE1YTk2YjExODRhNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmNiZjk2MWU4ZjFjNDc3MmZmMjViMzA5NDhhMzZjMzMyZjJjMjc0ODlkNWI3N2EyMWNmYmYwMGRkNjFiMzI3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWJjNmVlMDU3YTIyNjYzM2MxNmQ1YzFiMDkzOWY1NzAxZGJlNTcyYTkzZjEwZDM5YzcxY2M0N2EyNTkyOWNmMiJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L59-L59",
+          "version": "repo-lines-v1:sha256:eaae3e207df80c04f7e82638e40013c4e07f0474d0a22ec2d9be6e6c9b306d94:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFhZTNlMjA3ZGY4MGMwNGY3ZTgyNjM4ZTQwMDEzYzRlMDdmMDQ3NGQwYTIyZWMyZDliZTZlNmM5YjMwNmQ5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWFhZTNlMjA3ZGY4MGMwNGY3ZTgyNjM4ZTQwMDEzYzRlMDdmMDQ3NGQwYTIyZWMyZDliZTZlNmM5YjMwNmQ5NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjllNWRjNmIzODE3NjYyODI5YjJjOWFiMzdmNDkyYjc0N2MyYjMyMDY4N2Q4MTQzMjQyYzMxZDM0M2VjMmI1MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODAxM2I3ZGJhOTJkYzVmZGZiOTk1MWIxMzQ0NWU2MGM4MzgzYzk1NTUwNTA1M2JhNmI5ZjBkMGZlNzVjYWZlZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e3a13e965ac04be0b5cc9e7304b930c0",
+      "statement": "Member state is authenticated-user namespaced and write-gated during erasure; upload reservation is atomic with a 15-minute TTL, the request buffer clears in a finally block while only a scrubbed proposal persists, and erasure sets the user erasure gate, attempts remote cron/reservation cleanup, deletes owner data through a privileged capability, and emits its marker only after both remote cleanups report success, with the perimeter middleware performing the later thread-deletion protocol under fail-stop/retry semantics.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L196-L204",
+          "version": "repo-lines-v1:sha256:92f34b94a2b5cb436b3d1ae50a85503dac5957df1a5aab72da27754b15725861:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDZhODUxZGQ3ZTUyNjJiMTNkM2FhOTMxYWJlOWY2ZmJjZjFkMmYzZDBiN2IwOWQwMjFmNDU5ZTEwNDc3Y2VmZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDk2ZWU4M2RhY2FlN2Q1ZmFhOTgzN2EzZWU2OTc0NzVhNWZhMTc2ODMwZjc5NGZjNDlmM2Q3M2UyNGEyOWJkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjVjZGZjZDA1ZjA3ZmY0MjgyZDJjZDY5MzA2YWFlYzBiZDIyYzBkNGFkNGNiN2JjNGIwMjQzNzJkNGY2NWNiNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzY2YTBkZmFiNjMwZDI2N2I1NWE1ZGZmZjgxODEwMDY3OTllMTg0NmUzN2E5OGJjNzAzZjA2MjA5YTJiODI5NCJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L61-L61",
+          "version": "repo-lines-v1:sha256:56e0f926f36fb34c1ce040121bac9f8c03c0d7b51fa2280b8e39a672253e137f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZlMGY5MjZmMzZmYjM0YzFjZTA0MDEyMWJhYzlmOGMwM2MwZDdiNTFmYTIyODBiOGUzOWE2NzIyNTNlMTM3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZlMGY5MjZmMzZmYjM0YzFjZTA0MDEyMWJhYzlmOGMwM2MwZDdiNTFmYTIyODBiOGUzOWE2NzIyNTNlMTM3ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmNkZmJlMzkyNDViNmEwYjhlM2Y5NDA2OTE2ZDEyZGY3ZjVlZjg2YjA2Mzk3YzRmZWJjNjE1MDg2YzE1ZmE5MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTk1YWY1ZDM0YTJjZThkMGY4ZGZkNDhkYzM3YTAxYWZiOTk2NzkyZDVjMDFiN2U3ODAxZTVkM2E4ZGM5OGM5OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_7bdd0865e52547739fe93a166a82a433",
+      "statement": "The clean-room server is a behavioral-parity target for LangGraph Agent Server surfaces rather than a redesign target; create_storage() selects memory storage by default or Postgres storage when configured, memory does not promise restart durability while durable Postgres runs redact persisted payloads, and the pinned scripts/langgraph_smoke.py and scripts/deployed_smoke.py must pass unchanged against server/ such that any divergence means the server is wrong, never the smoke.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L205-L214",
+          "version": "repo-lines-v1:sha256:73c6ec44fb08445fd0c7d8fda403fc4750ec5cdb705d641dbd1d4040cd86ee03:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDU5ZThiOTBkZjNhNTJiODkyYzYzYTcxNjM5OTdlMzczN2RhMWRjZjdiZGU4N2Q2NWYwNWQ3NDk2ZjlhOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlMDA0NTUzMDEzZjJmMGJlOGI1MmQ5ZTIxMDBkNDUxMzlkZjljNzEwMDYzOGM4MTRkZDI5YzA3ZjcxZDc2M2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkNDcyMjIxNjZiYWFjZTE1ZTdhM2YwOTE1ZGEwYzMyNTg0Yzg4OGUyMWZiNTUxMzQ1YmFkNjE0ODkzOTllNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImViMWJjNWJjNGEyMzdmNTc4ZTZhZjRhNDE1ZDA2NDdmOTkxMGIwM2IzNjRlMWUyN2MxZjFkYmFhNzQzZDAzYmEifQ"
+        },
+        {
+          "resource": "repo://AGENTS.md#L63-L65",
+          "version": "repo-lines-v1:sha256:b40bd0e8f0c93ae66ba76c9dee9bd22ba146282b44b43561ebfcb17c2cf62c3c:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWI1MTE5OWE4NjIyOGNkOWU3OTM2MDcwZjU3N2IxMjFjNmQwOTJkOTZhMTllODMxZTI3MmY1YmI2MjU1NjhmYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWY0NzY3M2Q3YjEyZjc0NDQ3MzViYzVhMTBjN2JmMmFkNTcxNjAwNmNmZGRiYTE2MGI3OTI5MjVhMTFiOTQ0NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODAxM2I3ZGJhOTJkYzVmZGZiOTk1MWIxMzQ0NWU2MGM4MzgzYzk1NTUwNTA1M2JhNmI5ZjBkMGZlNzVjYWZlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2EyNDAxZjI4OWViNmQ5YTdjNzgzMDc5NDcyZjg3MTcyNjUzZDk0MjZlMTM4MDZjMGUxNzdkNzA3YmNlNzM4NyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5d39e1f7a2cb48f9b67e5b57e6d36645",
+      "statement": "PageIndex tree-search retrieval was measured and rejected against Weaviate hybrid at stage 1 of the paired gate (mean page_recall 0.609 vs 0.681, Δ −0.071 over 71 eligible golden questions), so stage 2 never ran; it remains an opt-in arm via HC_RAG_RETRIEVER=pageindex.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/AGENTS.md#L16-L16",
+          "version": "repo-lines-v1:sha256:2d3787aa9011d8c4df328454bf80f6fa7bbce38478dbf2cf096567379a2d6728:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQzNzg3YWE5MDExZDhjNGRmMzI4NDU0YmY4MGY2ZmE3YmJjZTM4NDc4ZGJmMmNmMDk2NTY3Mzc5YTJkNjcyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQzNzg3YWE5MDExZDhjNGRmMzI4NDU0YmY4MGY2ZmE3YmJjZTM4NDc4ZGJmMmNmMDk2NTY3Mzc5YTJkNjcyOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODRlMDI2NGJkODI3OGI2ZGRmYTZlY2QwYzRmODhkYjMzNDU5MGViYjJhNWEzZjhkNjUzOGEwYTI3NjM5NWFjZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjY3YTk1ZTQyNzFhMjAwNjk1MjE5NjI2ODE4MmE0N2NjNmVmMDQ2NjdiNGVhOWRjOWNjYjI3ZDg1YzM5NTQ3YyJ9"
+        },
+        {
+          "resource": "repo://evals/results/pageindex-vs-weaviate.md#L27-L27",
+          "version": "repo-lines-v1:sha256:656605848b7038175987e9303b1ce727049b8a14b753810b33575acb7c1a7060:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU2NjA1ODQ4YjcwMzgxNzU5ODdlOTMwM2IxY2U3MjcwNDliOGExNGI3NTM4MTBiMzM1NzVhY2I3YzFhNzA2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU2NjA1ODQ4YjcwMzgxNzU5ODdlOTMwM2IxY2U3MjcwNDliOGExNGI3NTM4MTBiMzM1NzVhY2I3YzFhNzA2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDAxN2ZmNWE4YzViNTVlMmQzZTFhMWYxNjYwYjc4NTMxNmMzYTI5NjFjYzAwNTgyNTc5Yjg3NTAzNzQ4MGY4ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjBkZDllYjVhOGFjNWI3NjMxNWI2Y2I1MTRkOTgzY2IwMjczY2YzNGZhOWM0NmE5MzViMGU0NDFlYzhlZDY2NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6c0b85f01e664896b9ec9c69d7850c9a",
+      "statement": "Pinecone hybrid retrieval lost stage 1 of the paired gate against Weaviate hybrid (page_recall 0.463 vs 0.648 reference, and 0.607 vs 0.664 in a later dense-only diagnostic), and a Weaviate+bge-reranker arm that won stage 1 (+0.050 page_recall) failed stage 2 on quality (correctness Δ −0.051 against a required ≥+0.03, holdout correctness Δ −0.091) while passing cost/latency thresholds; both Pinecone-family arms remain opt-in via HC_RAG_RETRIEVER=pinecone and HC_RAG_RERANKER=pinecone.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/AGENTS.md#L17-L17",
+          "version": "repo-lines-v1:sha256:913c9bd887f54eff4564e2d8c7009d85b551e7fb432d08d277d15af14711a32b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTEzYzliZDg4N2Y1NGVmZjQ1NjRlMmQ4YzcwMDlkODViNTUxZTdmYjQzMmQwOGQyNzdkMTVhZjE0NzExYTMyYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTEzYzliZDg4N2Y1NGVmZjQ1NjRlMmQ4YzcwMDlkODViNTUxZTdmYjQzMmQwOGQyNzdkMTVhZjE0NzExYTMyYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWU2NzlhNzJlZmVlNjNmNjBmN2RhYTY4YWVlYmFiZGI1NzU4MWY4ZGE5MTEzYmU4YTk4MGM5YjhhZTNkNWQ2MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTkzYTEwNWJiYjAwZWQ1MDc1NDI1ZTIyMGUzMDMyNjYwYTQ0ZmZkZTRhZmZiMTRjM2U5YmI4ZWFkMTQ1ZWIwYiJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L19-L29",
+          "version": "repo-lines-v1:sha256:e423ed6ab026c9d5d04fcc9b71c2af6d9a335d10b93f05954f640b8f788f93fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3NzU5YTgwOGM5YTgwM2VlMThjYjJkMmY0YTRhZWJhMjk1MjhhZmRlNWE3MTlmMzgyMWU0OGYwY2NjNWQ5MDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ZjYzNjUyMjM3MWY5MWExMjEzNGY3MjRiODI4OTg3ZjljZjgwYzNhNjkyNzU4MmVlZDhmNzU5OGM3NjQ2MDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjMWJlMTM3NDdkNWMxNmIwNWUwMWE4NWIzOWQwYzFjYThhNzdiOTQ5YjBkODlmYTE0NzMzZmFmYzExYmY5YWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQyOTIxOWYwY2UyM2ViNTQxZTkzZWRkMTFhNzNiMDQ3ODllYTRjNGZmNjUyMGJmYjM1MTU5NTU1Mzc1NmQ3ZDUifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L31-L37",
+          "version": "repo-lines-v1:sha256:3d8accc44268995ecde47463733231717bf05d7c2942ab3c56591aed26b217bc:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2E1YThiZGI0MTBkMzc2MWFkOWMzNDY5ZGJkODMxNTE4MDM3ZjA4ZGNmNTNhMjdlZTI5ODFjY2ZjNjQ3ZGQzYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmIwMTg2ZGE5NGM2NjcwMzM5ZjA0NzQyNmJjMmJiOGVlZmQxZGQxNjIwMzgzNWVhMDY5MzM3ZjQzNmMyN2FhMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjc3MmFhM2JlMTA5OWExYTUxMGY5ODlhMTkwMmViYTRmMDE1NGE3YjY3YWExZGFkYTU0NzQxMDBjZjQ2Mzc3OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzQwMGVkOGM4Y2U4YTgwYmM3NTMyZTJmOGVkZTRlYjM3OGNiNDMxYjNiNWU4ZTU3ODJlNGE0Yjc3NWUwNTY4MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5fcaaa902353433a83c4df335d36d8b7",
+      "statement": "The query-or-respond routing candidate and the Semantic Router safety-classifier candidate never reached a paired or paid measurement and must be reported as INCONCLUSIVE, not as evaluated-and-rejected: query-or-respond's authored judge calibration missed its own threshold (22/24 fixtures, two acceptable greetings scored 0.78 and 0.72 against a 0.80 minimum), and Semantic Router is blocked by an unsatisfiable dependency pin (semantic-router==0.1.16 needs a litellm version incompatible with the retained openai<2 bound) with no adapter ever built or run.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/AGENTS.md#L18-L19",
+          "version": "repo-lines-v1:sha256:824d688ac666a131d23a19d2269c80096b46e08aaad2615e085af617c79d9b43:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTRkMDNhM2Q5NGI3OGVhMTA1MzY2NWRjY2U3OTczYWJmNGRkZTE2MTFkOGJkZDRhYjg4Yjg1ODE4ZmNkZmE4NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjc4NDdhMTk0NTFmNDNkNGRmMDE0NWMzNDU1NTZhMjVkMjdkYmQ4YWQxYThlYWNkZGFlNmQ0NmQ0NzlkZGZkYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2YxOTYyOWQ1MTJlNjdjYWM2ZDgxYTAxNmY2NDk2ODZjZGExN2M4OTczMTNmYmJhOTE3NzZmMWMyMTljMTJhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTZkMDgxNDg4ZGRjYTc0MGNlMjc0YmFkODUyNjUyNjUxMzM1N2NkMzI0NTdiZmYwNTkzMGM1NjJkMmEwNWI5YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_57d5324b8bb4475c817cc4357b637855",
+      "statement": "A recorded 86-example comparison shows the safety gate materially changed safety metrics (safe_redirect 0.16 to 0.64, core 0.69) at a headline correctness cost (0.89 to 0.81), and a graph-stage ablation report supports retaining document evaluation, clarification, decomposition, and answer validation while confirming follow-up generation is answer-neutral and therefore a UX feature rather than a scored quality control.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L129-L132",
+          "version": "repo-lines-v1:sha256:598f2521ec9a88c299a29a1d2f1a83ceb2df8d3e050640529478767d6aa4cedf:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWJiOWRmMWNkMzc3NjcxZDkzY2FjM2Y2MGViMzczM2ZjOWJiYzFmNTJiYmQxY2Q1NGY5YzQxNTgwYzQ3YjNjYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzY5MDRmZTBhNzA0Y2E5YjhhM2NkOWEyM2VmZGRmOTVlZDcyM2YzNGFiNGNmMDg4MGE4ZWI1NzA4MWI2ZmIwZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmI0ZWQ0NDNlMWViNmJhMTcxMWFkMjEyM2JkOTliNzQ3MTYxMjA0ZTFjZWEwMjUxZWQ5YjVkYzAyYzY4YzM3OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGU0OTA0ZWNiMDBkZDM2MjYzYTg1YzZiZDI2Y2RhYWU4YjhjNmVhMzAxNjM5MzRiY2ZiNDcyMWZkZjRkNDVhZiJ9"
+        },
+        {
+          "resource": "repo://docs/baseline-report.md#L106-L106",
+          "version": "repo-lines-v1:sha256:221e121e6e5fce700f82482a1213e7fca887b919fde1e2df77ec0a05d2b28b75:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjIxZTEyMWU2ZTVmY2U3MDBmODI0ODJhMTIxM2U3ZmNhODg3YjkxOWZkZTFlMmRmNzdlYzBhMDVkMmIyOGI3NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjIxZTEyMWU2ZTVmY2U3MDBmODI0ODJhMTIxM2U3ZmNhODg3YjkxOWZkZTFlMmRmNzdlYzBhMDVkMmIyOGI3NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTVhNzcwNWYwY2FmZGM1MmFlOTNkMzY0ZjI5YzEzNmMyMDY1YTZhMzQzMmMwYTEyZDkyZTYyZGE5OTdiODliOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmYzMTFhY2QxYWRjZGE3ZmZlNjlmN2E2ZWMwYjRjMzU1OTA1MjliNWY4Y2JmZTM3NGYyODg5MmU4MDMxZDBjMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ed23ef822b2d4a65bf718b6fa25206af",
+      "statement": "`make test` runs `.venv/bin/python -m pytest -q`, the repository's offline pytest command excluding judge-marked tests via the `judge` pytest marker registered in tests/conftest.py, and `make test-judges` runs `-m judge` (LLM calibration tests costing about $0.10); CI runs the frozen-dependency offline suite without an OpenAI key or Weaviate endpoint, and server-relevant pull requests separately run units, OSS contract/license checks, and a pinned langgraph-api 0.12.6 oracle job.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L63-L67",
+          "version": "repo-lines-v1:sha256:ef38ad7c1372026b17aa012b17935e99adcd3a8cc0ef6da964169fce8e94f481:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjE3NjcwOTgxZjA0YjQzYjQzZWFlODczYjFhZGM0MjgxZTg2ZTlhZDNlZDljMzc0YTg4NTliNjE1OWJlOTE3NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4Y2VkZjRiY2NmOWIzMjZjZTRlMzU1MTVhZmM2NzNkYjY3YjQ4MDMwNzFmYzc0N2JiNDNkY2I5OWIwYzIxZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTAxYTZlYWZlMTgzYjEzODcwMDllMjY4MTE1N2MzMmZiMDY3ZTNhMjhhM2MxNDFmZGEwZDA1MmExNzliOTM3NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTEyZTFlY2RlMTVhOTFhN2E5YzY3NjU2Y2YxNGM2ZDY1MjM1OTQ4MjZlNjA4MWQzYTlkMjIyYTU5YmRiYjVhMiJ9"
+        },
+        {
+          "resource": "repo://tests/AGENTS.md#L68-L73",
+          "version": "repo-lines-v1:sha256:44e9bb27a329f26a882d54a0c6d91cca607a348f248ba9c7d484fa7c471e1d50:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdjMDZjNTYxZDVjMzI3MzQzNjg1MjY4YTQ2YjMzOTFmMzk5OGVlZTg5MGQyYmU1MWYwZDIxY2M0YTUzYWU2ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdjMDZjNTYxZDVjMzI3MzQzNjg1MjY4YTQ2YjMzOTFmMzk5OGVlZTg5MGQyYmU1MWYwZDIxY2M0YTUzYWU2ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjc0MzlmZjQ2NWU2NTA4ZmY4ZmVkYzM3OWEyNTgwM2QzMjRiMWU1ZDljMTg5OTIwNDQ4ZjJlYzYyZDU5MTkxNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDkyZTJkYzM0MGQ5NjNjN2RjZGNmZjE5YTliOTA1YzVlYjc0ZjQzZjExMDk3MmM4M2I2MTExNzhkYTFhYmNkNyJ9"
+        },
+        {
+          "resource": "repo://tests/conftest.py#L23-L23",
+          "version": "repo-lines-v1:sha256:6cb94e79a8006c1612dc7d609f7ef2a9f7e078bb111ffee87cb7835a1404d701:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNiOTRlNzlhODAwNmMxNjEyZGM3ZDYwOWY3ZWYyYTlmN2UwNzhiYjExMWZmZWU4N2NiNzgzNWExNDA0ZDcwMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNiOTRlNzlhODAwNmMxNjEyZGM3ZDYwOWY3ZWYyYTlmN2UwNzhiYjExMWZmZWU4N2NiNzgzNWExNDA0ZDcwMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTYzYWQyNGI1YTdiNDUwNWFkM2MyNzllMzA4Zjg0YTIwYTQ1OTU3M2VjOGY0YzQ1NGUzZTdhOWU2MWNmMzNjNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2FlNTE2YjkyMDYxM2Y1YTRiY2E3MWY4Y2NjNTYxNDhhNzcxNTZjNDYyMmNkZGY5ZjU1YWE0NDQxNGE2ZDE3YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c229d2afec5c4e94a47d021c2b9a2b77",
+      "statement": "`make calibrate` runs `python -m evals.calibrate` to print the evaluator-calibration report, `make eval-smoke` runs `evals.run_baseline --prefix smoke --limit 3` as a fast 3-example sanity check, and `make compare EXPS=\"a b c\"` produces a side-by-side report comparison by category.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L69-L96",
+          "version": "repo-lines-v1:sha256:0d79ceab5fa03d7a9ebcb3f7089b93bbc9afaf546db50e9e70d0aeafb3531fb8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhMGVkYTlkNmQ0MjJjYWJjZmNkNjhkMTMxM2I1N2U0NTExOGNjMjY4OTk1YzE0Njc5NDMwMzVjOWNiYjMyZGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkYzQ5ODIxZjk5OGQyZjgwZGIwZWRkYTNkM2Y0YjBlMGQ3NGY3NjcxNTk3MWZhMzA2YjdlOTYxMTcxZGVhYWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3OTg0OTA4NjAzMDRmY2Q4NTFmOGEwZWFjNzUyZjVhYTQ1ZWExMTViZDljZjI5N2Q1YzQ5OGE1ZDdmNWY1MmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1ZTcwMzUzZDI0NzUwZTkzYzYzZDAwNDk2Yzk2MTQ0MGQ5OTVjZGVhMDk2NGM5NTcxOTFjYWYxNDQzODFkMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_394216b0d2a64df6a29eb9dca384d156",
+      "statement": "The safe command ladder maps each change surface to a starting focused test tier and a widened real-evaluation or integration tier: graph/state/router/prompt changes start at tests/graph/ or tests/test_*.py then make test before widening to make eval-smoke and make eval; safety/privacy/refusal changes start at test_safety_gate.py/test_refusal_boundary.py before widening to full or multi-turn evaluation; retrieval changes start at focused retrieval tests before widening to the pageindex_gate adoption decision; coach changes start at tests/agent/ before widening to make eval-agent and make deployed-smoke; frontend changes start at bun test before widening to bun build and Playwright; server changes start at make server-test before widening to make server-test-pg and make parity.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L67-L80",
+          "version": "repo-lines-v1:sha256:fc98574484510d11142d451837d1bb824a5dd214ead7cfcc58343401c8052d05:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlMzljNTg0ZjlkNDA4OTI2ZmQ3MWIxMGJjYmY3YzA5ZjlkNjA2MjMwNWM3ZmI1OTJjZWRkM2NlYmEwNGFlYmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmMTE0MGRhMTFlOWRkN2NiODE4NmY3YmFmY2UyZDAyYjhiNTg5MDBhY2YwOTJhMDBmN2EyZjE1ZTU1NDZkODgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiZmNiN2ZkZGFmNGVmNzRlNGQyNjgxMWQzN2ZjMzVlNjUwYjc2MzljMjU5ZjUwZjJhNjYwZmQ0ZTNkOTdmMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkMDAyMGJjNWZhMmJiZTFmMzM2MzlkNGFiYmZhMTlhZjdiMmFiNzVkOTBjNWUyNGNjZDU4ZTgzNDA2YTU0YTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2456851cd5304ba5804781ac33a70164",
+      "statement": "A retrieval adoption decision requires the paired two-stage gate (evals/pageindex_gate.py): stage 1 compares eligible items' retrieval page recall and only the winner proceeds to stage 2's paired full-pipeline evidence under frozen thresholds; a smoke run or a historical report alone does not meet that decision boundary.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L89-L89",
+          "version": "repo-lines-v1:sha256:c7670000e15d044b8a1f7143ec3715102c63ee0ca081602b348950dc58262d53:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzc2NzAwMDBlMTVkMDQ0YjhhMWY3MTQzZWMzNzE1MTAyYzYzZWUwY2EwODE2MDJiMzQ4OTUwZGM1ODI2MmQ1MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzc2NzAwMDBlMTVkMDQ0YjhhMWY3MTQzZWMzNzE1MTAyYzYzZWUwY2EwODE2MDJiMzQ4OTUwZGM1ODI2MmQ1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTA5YWZlZTA3ZmM1ZjkzYzcwNGMxMjE5YmY0ODA1ZGUxY2NmYzljNGNhMzhjMWU2OTk3MzVkYjYyNDVkYTVkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjg4ODA4MDE2YzE3YWQ5ZDg2ZGU5YjJiYzQ3MTI0ZTQ0NGQ0M2IyYmIwNWMwYzIzYzQ1N2RhNWU2YTQzNjlkOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f3d143d5a9d849ae84fa1712b07074f4",
+      "statement": "Real-path verification differs by integration: base RAG uses make weaviate, make ingest, then make run (ingestion is destructive and the CLI's preliminary streamed answer is not validated final output); coach uses offline harnesses evals/run_agent.py --offline and evals/run_agent_multiturn.py --offline first, then make deployed-smoke against LANGGRAPH_DEPLOYMENT_URL and make forget-member for the deployed self-erasure route; frontend uses hermetic Playwright starting its offline stack, real local graph server, and production Next server; server uses make server-dev for a local development principal (SERVER_LOCAL_DEV, explicitly off in the Fly image and prod) which is not production acceptance.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L212-L214",
+          "version": "repo-lines-v1:sha256:1fa1ebb6ee3ac1106d838ee4597b944a1100e6026eab023ca782c4f427461a94:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTQ5YWJjNWYyYmUwOGI4MTdkY2Y1YzUwNmFmMDUzNDM4MGIzMjY1NjJkNzI5ZTFkYjY4M2FiZTdkOTVhMTc1ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2UwMDQ1NTMwMTNmMmYwYmU4YjUyZDllMjEwMGQ0NTEzOWRmOWM3MTAwNjM4YzgxNGRkMjljMDdmNzFkNzYzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTMwZDdjYTZkNWQ2Y2ViZjliODAyNTI0YmUwYzlhNjk2Y2ViMDIxY2Q1ZmVmOWI3ZDYwYTQ4NjUzZDUxOTE4NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWIxYmM1YmM0YTIzN2Y1NzhlNmFmNGE0MTVkMDY0N2Y5OTEwYjAzYjM2NGUxZTI3YzFmMWRiYWE3NDNkMDNiYSJ9"
+        },
+        {
+          "resource": "repo://AGENTS.md#L91-L96",
+          "version": "repo-lines-v1:sha256:2c0b1350be780037ecffa8c0ac9ee2f225365da7b87dbd2819c9dc6911eac6ea:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTIwMzExYWEzYTk4OGI4ZWVjMmU3NjliOGE5MDliMTc0ZGFhZmIxYjkzNGFjZmZjMDllZDIyMDYxN2ZiZDFhOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDQzMWIzNTU4YmYyZmVlYTlmMjc4ZGVmYTYzNTJjNjE3NDA5YTA0NjljYTBiNTgwYTUyYTM0YTRiOTBkNzdkOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDIxYTdlMTRkMTY2OGQ4ZjM5OWMzMGZlMzU5M2QyM2ViZDc2OWZlYzJkOTU4N2ZkYzU1ZWZkMDRkMTQ2ZjlhYSJ9"
+        },
+        {
+          "resource": "repo://evals/AGENTS.md#L84-L84",
+          "version": "repo-lines-v1:sha256:bcab79e5b6ed0645f73d6f4222968ca8f6530f634eb4344ba29325bea66b3744:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmNhYjc5ZTViNmVkMDY0NWY3M2Q2ZjQyMjI5NjhjYThmNjUzMGY2MzRlYjQzNDRiYTI5MzI1YmVhNjZiMzc0NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmNhYjc5ZTViNmVkMDY0NWY3M2Q2ZjQyMjI5NjhjYThmNjUzMGY2MzRlYjQzNDRiYTI5MzI1YmVhNjZiMzc0NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjU1NTNiM2IwNWVjNWE3OTgzYjI3ZjQ4Y2RiYjgyZTQxMzQ5MjY3MzAyMmQ5YWQyMTI4YjQxODY2MTIyODYxMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzA4NmIwYjI5ODI0MGIyY2Y4ODQwYTcxM2NjZTI3YTU3NmJkZTZhY2E2MDFmMTY1OGFlMmEwZGFjMzE3OWM0YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_37f13e895c2a41b38259d10d58b4533b",
+      "statement": "Any change to prompts, models, retrieval, or orchestration must be checked against the safety categories in evals/golden_dataset.json (unsafe_personal_advice, pii_or_phi, out_of_scope, adversarial_hallucination) and the multi-turn categories (safety_drift, pii_persistence, escalation); an improvement claim requires running make eval PREFIX=<change> or the equivalent and comparing against the previous evals/results/ report rather than asserting it without comparison.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L25-L33",
+          "version": "repo-lines-v1:sha256:4f3822aa51ece7ac331a457e5ac4dc8f2e1cacb917eb69c13c587bc836eb9031:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWU3NmU0OGQ3MzIwODRmYWY0ZTNhZTI1MmRkOTE5MjVmZWFlYzhmYmNmMGViM2VmYmI2OWNkMmY1NmM5YzIzYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjliZDNlNGViZGNhN2MwMGNlY2ZjMjYyOGMzNzE5YjdlZWRhNDJiMGI3NTAyZTBiNGJiZDE1YzE3MmRhMjkzMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGZlNWNlYzJlN2QxMjhiZDUwZmNhMGNlNjcyNGI2ZWQyYzgzMjhkODhiNTQ2ODIyYTdhMzU2MWM0OTdlYzc1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTZiYzBmMTg2NDUyMTJkMDg0ODQ3NDhjNDY1NTEzYTIwZjFjODJjYjYyZTA4NzBlZTU3MWVjYzJiNmVmMDVhYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ae3c29d3e8f148fa95d7352e8f06066b",
+      "statement": ".env.example is asserted by test_tracing_privacy.py and test_deploy_config.py to ship privacy-safe defaults and to declare deployment/feedback project variables, so a secrets/config review should check it stays consistent when environment variables change.",
+      "evidence": [
+        {
+          "resource": "repo://tests/AGENTS.md#L47-L47",
+          "version": "repo-lines-v1:sha256:07b8ac8309c133e7bb1f14b20e1ce10da34858f32ca5b46f1349f8902865735c:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDdiOGFjODMwOWMxMzNlN2JiMWYxNGIyMGUxY2UxMGRhMzQ4NThmMzJjYTViNDZmMTM0OWY4OTAyODY1NzM1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDdiOGFjODMwOWMxMzNlN2JiMWYxNGIyMGUxY2UxMGRhMzQ4NThmMzJjYTViNDZmMTM0OWY4OTAyODY1NzM1YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDdiNmIxMDgyZmY4MmFjZTQyNmEwYjAzZjJlNGY3ZTZjNTkzMzRkNjVjMGY5MGE2OWQ1NjA0MjExMDM4OWU1YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTU0NzI3MmY3MWRkNmUzMGU5MGI0NDExYTNlZWVkMjg3MjczZDFmNzk4MjU0YWJkZWVlMTM2MzRjYjJmNmQwNyJ9"
+        },
+        {
+          "resource": "repo://tests/agent/AGENTS.md#L22-L22",
+          "version": "repo-lines-v1:sha256:90b76d64ccbcdf52e6c995dc8fb2fe04ea7e777aca4d965ea438055c5d334c8b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTBiNzZkNjRjY2JjZGY1MmU2Yzk5NWRjOGZiMmZlMDRlYTdlNzc3YWNhNGQ5NjVlYTQzODA1NWM1ZDMzNGM4YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTBiNzZkNjRjY2JjZGY1MmU2Yzk5NWRjOGZiMmZlMDRlYTdlNzc3YWNhNGQ5NjVlYTQzODA1NWM1ZDMzNGM4YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjdkZGVkMTI0MThmMTQ2YWI0NGEyY2VlNGViZWM2ZjMzYmQ3MDc0MWM5NWE2ZTczMzM1ODRjMTEzOTYxMmQ1MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2I3ZTAzNWYyZGMyYTVmYTYyY2Y3ZWQ4Y2Q4MTgwY2Y5YjgxMmYyN2ZhMjc5ZDE5MmZiMGJmYjFiZTc5OWUyMCJ9"
+        },
+        {
+          "resource": "repo://tests/test_tracing_privacy.py#L80-L80",
+          "version": "repo-lines-v1:sha256:6a593c065621116758e9ab551af28a53c48bc3a36c3f6d580948b1a29a2c43ff:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmE1OTNjMDY1NjIxMTE2NzU4ZTlhYjU1MWFmMjhhNTNjNDhiYzNhMzZjM2Y2ZDU4MDk0OGIxYTI5YTJjNDNmZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmE1OTNjMDY1NjIxMTE2NzU4ZTlhYjU1MWFmMjhhNTNjNDhiYzNhMzZjM2Y2ZDU4MDk0OGIxYTI5YTJjNDNmZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2U5YmMzNTU1ZjRhMTMwZjNmMDkxMGZlYzU3YzEwZTFhNTk4ZWI5YTA2ZWU3NjRiMGMzNjM4ZTc2ZThmMGE3ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWJjY2E3MzA2ODFlZDg5ODc2OWQyMzllYzJmYTliOTFlYjk1MjA3NzE4NzA0OTU4YTQxNjA1ZDNkMDk4MjUxMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_35f60581f7474e85823430db44ad7a10",
+      "statement": "Before requesting review, a contributor should confirm the root and nearest instructions plus behavior owner/caller/boundary/state owner were inspected, inspect the diff for generated files/secrets/destructive corpus changes/lockfile churn/changed defaults, name the focused tests and commands actually run with observed outcomes (never implying a paid, networked, deployed, or destructive command succeeded merely because it is configured), attach comparable evaluation or gate evidence for behavior claims, and refresh OpenWiki with make wiki-update after structural changes while treating source and tests as authoritative over generated documentation.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L98-L106",
+          "version": "repo-lines-v1:sha256:a742ed7d99bbe595012c9a469dd031062265b70ec0e10c064a44f3bb96523f5a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQ3OGQ4ZTc0NmZlMWVkNjg3MmNlYmEwYjdmMjRiNWQxOWM1Njg5NDYxMWMxMGNhYTZmNDEzMTI4ODcyNjFhNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzU3ZDQ3MWFiMDMyZTNjYWFmYTYzNzY1ZjFiOTAwYzJkNWM3YmRlZjFjZTc0MmZmNGY5MWE3ZDVjNWIzNjU5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmFlYjAzOTg4ZDUyNDQzMjZmNjhjZjVkOGYyYzU3Y2I4MzZkYTE2OTgzZTU1OGI3MTdkZTE4MWY4MjUyZTY1NiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

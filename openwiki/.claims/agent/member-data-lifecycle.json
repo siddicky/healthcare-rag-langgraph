@@ -1,0 +1,502 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:86b4ed1dacc6b607da1251a63cde29bd2c878c9c06120d497fac5ca153ed4c03",
+  "claims": [
+    {
+      "id": "claim_65711f5b1a6e49798a1a745a7f698b12",
+      "statement": "The coach persists application-owned member records in the LangGraph BaseStore under the closed namespace (\"users\", user_id, collection); the permitted collections are metrics, injection_log, reminders, feedback, upload_registry, profile, episodic, ops, events, and gate.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L282-L296",
+          "version": "repo-lines-v1:sha256:8527bc8125af6ef2aa4c4f8e294216de7dedc2b527d57034780f6a6b9c84b0dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyNTlmMWJhZjc0Y2M4NjgzOGYxMjlhYTQ3YTFmYmQ5MWFjZjAwZTA3NmYzZGMyMTg1ZTUzNWM4Y2VmZjAwNmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3NDAwMzUzNjZkMzMxMzExZmZiMDBmZjNkZDZiNDUzNDRhYTJiODU4M2I2YTdmOGQ0NjBlOTNmZTcyYjJhOGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzMjcwNTE0ZTRhYTlmMWRjOWNlMjA0Yzk1ZWE3NTUwNzk5NWQ3ZDI5YmExMDJhMjFlODEzMzNhN2U5MjdlNzcifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L35-L48",
+          "version": "repo-lines-v1:sha256:ec9421c52e5e55487ca808074cb4c97cb55a856b67a0517f6cc8c79fc58f256e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0OTU5NTNhMjczOGEwZmIyNGE1YTEzYmQ2ZTkzZGZjNmI0ZTQwN2VmMjk4ODhlYzQxMmEyNmRiMDM1MjNmYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyMGIzMzkwNzAyMTE0YWFlYmYwYmYzYTk2ODhmMTQ4ODM4MWY2ODJmNGVmNjhmZGE1YTE0YWQ1YmE1ODc0MGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1ZDk1ODUwZmYxM2Q5ZmRlMmIxZTg3ZGM5ZWZiZmExYzY0N2QxNTI1ODY4ZjBiYTdkYjY3YjhmZGEwYjNlOWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_169601de472f4b7ab8e2f6fc853afc91",
+      "statement": "validate_user_namespace() binds every store helper to exactly the requesting user's namespace and an allowlisted collection, raising StoreNamespaceError otherwise; persisted values are privacy-scrubbed with _scrub_json(), re-validated against the typed model, and written with index=False.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L282-L296",
+          "version": "repo-lines-v1:sha256:8527bc8125af6ef2aa4c4f8e294216de7dedc2b527d57034780f6a6b9c84b0dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyNTlmMWJhZjc0Y2M4NjgzOGYxMjlhYTQ3YTFmYmQ5MWFjZjAwZTA3NmYzZGMyMTg1ZTUzNWM4Y2VmZjAwNmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3NDAwMzUzNjZkMzMxMzExZmZiMDBmZjNkZDZiNDUzNDRhYTJiODU4M2I2YTdmOGQ0NjBlOTNmZTcyYjJhOGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzMjcwNTE0ZTRhYTlmMWRjOWNlMjA0Yzk1ZWE3NTUwNzk5NWQ3ZDI5YmExMDJhMjFlODEzMzNhN2U5MjdlNzcifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L307-L334",
+          "version": "repo-lines-v1:sha256:524b0ef66d34048976b770bf82e11c65572fe6bd7419038c499e5f8467af4ec0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlNjMwMTI5MjQyMjUyZjBiOWE2ODBjZjgyYzQ0YzRkOTY1MDMwOTJjNmQ1NGFjN2IwNjhhYjcxNGZkNGRhMjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkMWE0Zjc5NDJiOGZiMDU4NjMzY2Y1NWRhNDczMjBkMjFiZGUzNDE5Y2M5MTViZGNhYmE0NjYyMTNmMzA3N2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiZDE2YjQ3ODI5MDFkMzZhMTgyOTE5MGJlZDIwNjU1YThiYTgyYWI1YzRkMjdlYTVmNGViNmEyMzZkMGY4NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyNzFiZDQ0OGNlNTFjNzcxZGFiZTBkNmIyYjEzZTliYjQ0NTMzZTJlZDYxZjkzMjRkMjQxMjIyYTUzY2EwODQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_83298e75ae0948829ed8bd7f2a67e423",
+      "statement": "guard_user_write() rejects ordinary store writes whenever the member's (\"users\", user_id, \"gate\")/\"erasing\" record exists, raising ErasureGateError, which prevents concurrent normal writes during self-erasure.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L298-L301",
+          "version": "repo-lines-v1:sha256:d8a5f08b97d13661d6b203ca20de1817ff71e4b596b647fd447e0eaffc26eee7:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ3ZGEzZTVjZmMxODljMDdhNGUxOWFhYjJiNjQxYWYzZDU5NjZlMjQwZTY3NDg2NWU1NmQ1M2JiYmFhNTY1MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGNjMDY4YzU4MTg3NWZkODgyNGFhYmJmY2JjODkyOGUwMzJmZTI0NTNlNzlkYWMzODdhYWQxZTY5OWQ3ZjliZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGE0ZDUzZDA1OTU3NTE4OWQ2ZGY0NTcxNGQ2NmRjMjBjN2E2N2FiZGRkZGJlZmUzOWIxZWVhZDIyZDMxYjA3YiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L321-L334",
+          "version": "repo-lines-v1:sha256:09920c5c9570bb88554eaa6516636d965b87ba10197a006ac34acc9834e259c1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiNGIyYTk4Mzc0Nzc2NjAxYmZhNWNkOTViOTVkMmVjZTcwMmZlODhhNjZmYzZkZTk0N2Y3Y2VkNTY5MTMyNWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkMWE0Zjc5NDJiOGZiMDU4NjMzY2Y1NWRhNDczMjBkMjFiZGUzNDE5Y2M5MTViZGNhYmE0NjYyMTNmMzA3N2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2YTU2ZGUxYTZiZmE4MzU4YzJmMWY4MWFhZGY4MDU0ODAzMmY4NWQ0Y2VjMzQ2MzllZDk0YjNiYWYyYmQyNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyNzFiZDQ0OGNlNTFjNzcxZGFiZTBkNmIyYjEzZTliYjQ0NTMzZTJlZDYxZjkzMjRkMjQxMjIyYTUzY2EwODQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e5d84062170540ccb4ed644b41cd9316",
+      "statement": "Schedule state is not stored directly; approved ApprovalEvent records are read in (created_ts, event_key) order via schedule_state() and folded into active ScheduleEntry values through Add, Reschedule, and Cancel mutations.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L396-L449",
+          "version": "repo-lines-v1:sha256:21fc373c2574f341490981a133866849c055a36ae1f6b0229facdbba2c985f5d:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiMzViYzQ4MjRjMDcwZmNiNWYzNzEwNmY5YmRjOTI1YzU5ZjA0MTAxYzU3YzZmM2E2YjA2OTBhM2JhODU4YjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhNzI5NTFhYTUwNmFlMjg5MzYxOTY0MWNlZmE0YTkyYjg0MmZhNDk3MGJmOTAwYzUyMTcxNjM0NzY4MWVmNjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1MWMxNDI5YjFlZDQyZWI0NGY1ODQ4MDVmZGM1YmIwZDNkZjA2NTg0M2Y3OTQ4OGM4NjM5ZTgxM2EyODY3MGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY3YTFjODdiOTJhZGU5OTRlMjFhMmRmYmUyZjQwOTJmZjhkNjU4NzU3YWE1MGJjOGNlNzQ4Njg5NmY0ZGFmMjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ad3b73e9be4c46e5b2d7d14e525aaee9",
+      "statement": "append_event() is idempotent by op_id: a repeated append with the same op_id returns the existing stored event rather than creating a duplicate.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L504-L535",
+          "version": "repo-lines-v1:sha256:f016aadb3f1bc0e7bfc43fb6344cf766f1011c39d63d7f186818aa062e472ea0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGE4NTRjM2IxOWY4MjY4ZDg3ZmRmM2JkYWU3ZWY3NzE2YjFlZDkxYjA0ZTBiZjU2YzczYzY3M2M1MjE0MDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxYzIyNDMyZjU1MjQwZmI5ZmY1MzBkM2MwMjg5YzljYTQ2NTgwZmM4ODVmYmRmYWI4OTRhNDYzOTA1ZDU0MDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBiZWRkYzhkODJhZDE3NjY2YjMzYWQwNGQyODY4NDliMzg0YmIyNTIyNzhkMGZmNDVhYTFlNWRkODkxMmU2YjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b6c27b08f2724fd786ec38a1ec49d370",
+      "statement": "A reschedule or cancel event whose target entry_id is absent or already inactive in the folded schedule state is persisted with decision declined-stale instead of approved, leaving derived schedule state unchanged.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L443-L446",
+          "version": "repo-lines-v1:sha256:8e53e17baa8dc21e151fdb0dab623fa416c7db9fd4b22678fdbfcaf6503c2c3d:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzljOTZjNGQzMGZkN2Y1NTQ1YTI3OWExMTI5ZDJhODAyMGM1YzQ2YTAxN2NhYzlhZWRiYmQ2OGJhOWJhZTc4MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDQ2MzNlNTk1ZWViYmM2ZjczNmFlZWFlYWI3ZWY4Y2ZlNzJlZTBhYTIyNjZiMmRkNjY3ZmIxMTk3YmVkYTVmNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE4ZGQ0YzEzN2UzYWY3YzU5MWIwNDYxYWYxYWVhMWYzZDdiZjk3MzM2MGNmNDY1MmJmM2FhYTMzZWRlZTQ0ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTMyNzZkZTJlYzhkNWY3MGE2NDIxMDIzOTY1OGI5MjcyYzMwYWZjMTJlZjZkZmFkODdkMGZmZDBhOTRhZmYxMCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L513-L525",
+          "version": "repo-lines-v1:sha256:31c3177d3c78164d07cf56b6659017be7182c5abfbeea29e13f6cc9b7ca5b7d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjOTE0YWRjMWZjNTYxZTAwYWRmMzg4NDA1Y2QzODQxZDNjZDMyOGIzM2Q5YTA1OWFjYjVkYWJkNDM5OTg0OTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5MTBkY2Y4Yzc5YzEzMTNjNWEwNTM0YmUyYmY4YzJiNDRhYmI2YTYxODM1YTg1NDMxYmIyMmE1NTIwZjIyY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1MzU4YzA3YTMwMDg4NTljMTFhMTY2YzMyNjAxMjIzZjlhNGJjNzg2NmUxMjNhNTg4MTEzODlmZGZlMzBlZDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_530f8dd09afa4dccbbcb744e108a6b88",
+      "statement": "POST /coach/uploads reads the request body into a bytearray via read_multipart_upload(), requires exactly the fields upload_id, thread_id, and one file, and rejects payloads once the buffer exceeds MAX_UPLOAD_BYTES plus a 64 KiB multipart overhead allowance, clearing the buffer before raising.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L138-L150",
+          "version": "repo-lines-v1:sha256:66f4998a384c06bde26115994a0771bfb77e5a3124fcaae3e90fc61a389fd4fc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1NTBkN2Y0NjE3ZWYxNmZhY2EzYzM2OTVkNjFiMzY0NDUzYjY1ODVhN2E3MDAwMGJhNTM5MjU5MjM3YWJhNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyNzgwYTNmMzM1ZDdiNTUxM2YxNjVlNDI4NWQxYzIzMzY4ZmE0ZjcyMjk3MWNkNzJhNGJmMWZhNmI1ZmYzNWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3YTAyYzY4YWIxYWY4OTdjZTkwNTNjNGVlYmExYTU1NjRjMjQzNzJiYTdhNWJjZmUxM2VjNTAwMWEwN2U2MzMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L34-L35",
+          "version": "repo-lines-v1:sha256:139b9d6a3496122794afbb85f0ff4591d18548bb722c6514d31a1ed64f7791a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDRjNDBkZDgxMGE0NzFjZWRlMGE4NDYxMzVmMWRmZTFkOTNhOTM4ODFlYjRlYzNlMjA0NTEyYTJiZDJmZDdjOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmZhZGU0YWE3N2FhZDg1OTRmODhmZmRiZThlZjZlNTg3NjM3YTcwMzkyNjQ2ZTAzMzU3Njc5YTBkN2E1MWM4YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODNiOTdiNDhmZjE3MzYxZGZjMTU4ZGIxOWMyNWU0YTUxYTNiMzZmYjJhMTExMTk3ZmRjZTI5YjA5MDYwYmM5NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjc0Yjc1ZGJmMDY1ZGYwYzlkY2JkMDI2OWU1MGRmMzg4ODNmYTMyMjljZGNlZjIzNDU0NDNhM2FlMjhkZGYxNiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_893684be496d440d846771731d62b710",
+      "statement": "Upload admission accepts only PDF, JPEG, or PNG, requiring the declared MIME type and filename extension to agree, and the maximum accepted file size is 10 MiB (MAX_UPLOAD_BYTES).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L186-L201",
+          "version": "repo-lines-v1:sha256:7e3a091760d5a1456306b2aac4f57d66d7b43d88d8f92b084f7e143b7524f89c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzNTk1OGM1ZGY2Njk0NmVjZjQ1ZTFkZGJmNzhiNWE5ZGM5ODFmYjdiYTc1MDY2ZDVmODMyYmU3NzIxNDU5NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZWE5MGJiOTdkM2IzN2I0ZDBhODc0N2Q3ZDdiOGY2NDY4NGI2MWU1NzQ3NWVhOThjMmJiNmE4ZWJiY2YzMmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5ZmU3YjU2YWJhMjE0NGI1ZDRkNWE5YjhiOWY4NWZhMDIwNjNjZjJkMWU2MmNhZmJhN2RlMTUwZGFmNzk1ZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5ZjM5OTI3ZTZiODkzYjJmMzFjYzI3Zjk1MTA3Nzk0YzM3YjJmOGZlYzhhOGFkNDNhOGE3MWNjZDMxYmI1M2YifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L36-L40",
+          "version": "repo-lines-v1:sha256:77f333ad36a0ad6145a06cbe451092e9166bd8bc63c58028431d9b314790de36:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjE0YTIwMWQ0ZmQ4ODVlMjA5MDA4MjBiNmZlN2E2MmJhNzk5ODQxNmUzOTk4MjFjYTFlYzhlYzIwMGRmYmJmNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjRlMTVmNTU5MmYwMWNkYTdkYTYyZGU0YWQ5NzE4ZjJiZmI3ZDE3ZDhiMWM2Njg2MTdiNjAzYzg3ZmMxYzFhZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDA4MjBkOTk2ODEzZTc0NzdlYjVhOGQ2YTRlYzgzY2Y5Nzc4ZGE0ZjZiOTM0M2U3N2IwM2ZkYTgwMTQwMDIwNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_de8b03542b574ed9ab4a97899aeda005",
+      "statement": "post_upload() additionally checks the file's byte signature against its declared MIME type via _valid_file_signature() before proceeding, so MIME type, filename extension, and content signature must all agree.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/uploads.py#L44-L50",
+          "version": "repo-lines-v1:sha256:47b9ff65c0b9a74acba8ec56d64e865763916033b0c9d69c21591a9a122d8ab0:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZhMTVhODFkMmQwNDNmOWM1YWRmNTBmNGYxMTIwODY2ZTFiM2QwMGUxZjYzYzk0OGM2Nzg0MzE2YTZkMWJhOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTIxZmJlMDI1ZTI3Yjk4ZmJhMzJlNmE5NTIyYzk3ODk5MWNkMmM0ZTNkNWU2YjFlY2U2ZGY0N2VjZDVmMzNiNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzMwMzI1Zjk4MGI0YWJlMGE1YmZkZWIyZDNlYjkzNDg3NmQzYTA0MzMyNTY0NDQ3MmMxMzZjY2EwMmI5YTgwYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTI0ZDZhNGNmZjQwY2JiOWY5MTRkNjdlZDg0MzU4MzA5MzhlZTQ0NTg2OTcxMmYyODA2NGYwODQ2NjEwNGM4MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a2449b1e209a4aa0ac2b0b33d2734092",
+      "statement": "The multipart reader does not use framework multipart spooling; it accumulates the whole request into a bytearray and clears it in a finally-equivalent path both on success and on rejection, so raw bytes are not retained beyond the request.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L144-L178",
+          "version": "repo-lines-v1:sha256:1c060a63a2b2e7847bdcc906ed6bbf1f2460b461c15d259514962942758e5248:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlZDA4NzM4NjBkMThlMTRmZTVjY2JjMTc3ZTcxMWJlNmJjM2Y3MTU1OWM2MDdmMjZjYTI4NmQ3OTk4NjI1M2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViMDRlMjY1MzI3OTY4Y2Y1ZDUyNmNiNjM4OTZmMTNjNzQ4MTNlYTEwYThhYTQ0MmUwNmMwMWQzYzFhNDk0YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzZWI5MmZkYTNkYzA5Njc3YjNlMjFjOTg5OTY4NGQzMzY3OTYxNjc4ZmU4MjdjMmI4YzIzYjZkOTBiMDg5NzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkMzllYTFlNzM5YzA4ODEzOTdjNDMzMGNlNzRiZTExNWU1ODBkZGU2NTMxNmM5NDNkOWM5ZWZmODg0MDQ2M2EifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8903c78a023f4687a4a94644b5f406da",
+      "statement": "post_upload() verifies the authenticated member owns the target thread (via a self-call GET on /threads/{thread_id}) before creating a deterministic reservation thread keyed by reservation_id(upload_id), with owner and intended_thread metadata and a 15-minute TTL (UPLOAD_TTL_MINUTES).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/uploads.py#L24-L25",
+          "version": "repo-lines-v1:sha256:812c23d01e4484b56bd0c410e383b9f42058598d81281ada12fed99ca1854055:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGY4ZjNjYTFhMWIyNjE3MDFhNGQwMmI0OTdmMzQ1YTNkZTY0ZTc4MTVjODA3OGVhY2FlY2QyMjRiODYxMGE5OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzlhODkxYTVmMWI3ZmE4ZTllZGJhYjQ3ODYwN2FlNjMwNzQ1Y2JhOWUwZjM0N2IzZDk5NTUzMWI4MzlhZjM1MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWMxZDczYWYyOWNkODA0NzcxMWJiMTkyNzBlNzFhOTY3MjljNDIyY2U2YTI5OTJlN2FlMWY0NzkwMmEwYTUwZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjg0NmJiMzNhZjYwNWZkZTcyYTM2N2Y3YTVkYWU2NTZhYjczMGM5Njg4YjZhYTVlZWI2Yzc0MDY0Mzg1YTY4ZCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/uploads.py#L60-L90",
+          "version": "repo-lines-v1:sha256:40541de3c74a6c36e96a57f9946fef59066a59c63911b6aede27b4fa486a681c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1MGIxYmQwNzQ1OWQ4ZmViZmI3MDgyNDFkOGFhZTFkODNhOGU3ZDM0MWZlNjI3MGIzNTEzOTI2NGZkODM2MzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlNTdiNjY3ZWM3OTZlMWU4ZDMzODE3Y2IwYzdjZjEzM2ZiNzk3MzcwYzAzNTliODRhMWJmNzUzY2YxOTM3ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzYjFmMzgyMGQ3NWVhN2M3MmRhZjA1YzljYWIyNmQ3ODQ0MTNmYjUzMDhkM2U4ZjY0YWZiZGQ0ZGJmNzdmNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4M2Y1OTMxYmQ0YWZjMzJhZDI0M2NlODMyNDc4ZGE4MmIyOWMyNjVlZTllMzEzY2ZmNjBmZmVjNDgyYzlmZTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_96da84a25b124e6ca2dd1f832498ba74",
+      "statement": "Repeating the same upload reservation returns its current stage only when the existing reservation's metadata matches the new request; a conflicting reservation on the same upload id with different metadata is rejected.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/uploads.py#L90-L100",
+          "version": "repo-lines-v1:sha256:19277f16193c490957e764252557690480f3b4a50bc41795bb28b8a4982f70a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlNTdiNjY3ZWM3OTZlMWU4ZDMzODE3Y2IwYzdjZjEzM2ZiNzk3MzcwYzAzNTliODRhMWJmNzUzY2YxOTM3ZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMzhkOTVjNzA4ZTZlZmZhODBjM2Q4YmRhODMyMTg4NmM2NjBmZmZmNjhmYWIyZGQ1YTBmNmM2ZGFjYzE1NGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwNTIwN2VlMGUwNWUyN2NkNWQ3ZTQyM2EwNTI5OTliNGU4ODUwZTQ2YzY3OTA0MDViNzhmNmM0NTBkNWNhNmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI0NzczOWQyYTNiMWUwYzZjMjdjNmMwMGU0NDQ0Yjg4NTg1ZTA1M2E3ZmQ1MGMwYWQ4NTBiNjRmYWUzMjBkZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e482ffa83da4aeea8b0df5955c3e372",
+      "statement": "UploadRegistryRecord tracks status through uploading, scanning, extracting, and either done or error, stores a privacy-scrubbed proposal and non-content metadata (never raw upload bytes), and carries separate consumed and admitted flags.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L237-L252",
+          "version": "repo-lines-v1:sha256:fcac9cacb8c23f446ba42bc9b786a532b251947133c28ef604c04f9ed6115c87:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmZGZlOTc0OThmNmNiMjU0ZGZhNDliZGQxOTIyYjk4MTI3OGM3ZWZmZDhkODFiZjlkYzIyMmM0MmE5YmVhNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhOWJmN2RjODFhY2M5ODljZWNjNThlNzAyOGEzOWZhYTQ4N2NhYzZkOTc5ODJiODRiYzhjYzY2NjM1NTYwNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkNDA2YWU4YzkzY2FjOGQyN2JlODU3NTQyMDgyMjdhMjVhZDU1MGU3YTk0M2I2YjEzZmNiNDg3MDkyOTVhODkifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L257-L265",
+          "version": "repo-lines-v1:sha256:1d288db4c475e4eaec49c23040354791480c30cf5ec25a4b80e6e10e4917dec4:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjc3ODRiZDQ5NDM2MTcyYzRkNDEzOTcxNzhlMTBiYmNhYmRmODU0YzU2ZDExMmFlYmIyZjgwODRhNWE5YzJlMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWE0OTc2Y2QwNjUyNzkzYzRjYmI2N2I3ZjgzMDliOWJhNTJmZGMxYmI2NTEwMzU0ZTRmZmY0ZjY4NGRjZDBmNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTI3MjNkYWRhNGU5ZDVlYWM3OWE3ZTFiOWIyNjVmYzk3MDU1ZTY1OWEzZGFlNDY1ZTliZTRhY2VjZDAzZjc0YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_15b7741973ab4d86be2eea2e8c644dfc",
+      "statement": "get_upload_registry() enforces that the record's owner matches the requesting user_id (raising StoreNamespaceError otherwise) and treats a record whose expires_at has passed as absent, deleting it under the write gate and returning None so status lookups distinguish missing from expired uploads.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L736-L753",
+          "version": "repo-lines-v1:sha256:fa614aa99d1d0eff8d3964e5d681bf28eb47d55cb40635bfefa00a3d4504861a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1YWFmMzRlNDg4MTVhODAyOTI5NDBhOTlkYzAzMmRmYzJjYzUxM2JhOWRkYTM0YjI5ODFkMmQ5ODRjYmFkNzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4ZWNlNTQ2NGYxZDc3ZjJkYzFiNGYxNDQ1NDY0YmE2OTIxOGQwNjkyZjU0ZjY5ZjA4ZWQ1MTU1NTQ4ZDI3ZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU4NjBiNWZlZDYwODk1NGY0MzhhMjJhMmVlMTQ4YmUzY2IwY2IyZjg0MWVlN2E5MzViNTVkYjI1YTUzOTFiOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3NTEyYjk2NWRlYTA2MmQ3M2NmNjgxMDM1M2U3N2ViZjEwM2ZkYjNlNDVmOGNhMTlkMGNjOWQ4YjBhOWIyNzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_834164c22174468fa1ed398f48168e8b",
+      "statement": "The member perimeter admits an attachment for a run only once by setting the registry record's admitted flag to true rather than consumed, after rechecking owner, intended thread, completion status, and expiry; this lets the graph make the first claim while a resend is denied at the perimeter.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter_middleware.py#L60-L74",
+          "version": "repo-lines-v1:sha256:88bd743426dda29504d152f11cd6662697ce064066ba0aeaf2e27bbe7d543de5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhN2JlM2VlNTE4MjA0ZjBhMjdjYzFlMjljNGQ1YzE1ZjkzNzkzNjhlYjg3MTgwMzFjM2U4YjVhMjk2MzQ0MTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4NTAzMGUwYWE4ZWYwNWNhMWNkMGVjMjIyMGY1NTgwMGJmNzQ5MzM1ZWMxMmVhMDZmMzgwM2NlMzBmOThiZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwZGM0NWU1OGU2YzlhZGZkMTFjYTk2NDgwODlhNDNlZmU0YjU5NzQyNTMyNDQ0ZjhhYzZmYWQyYmY0MjA4NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE4Mzc2NjkwNWViM2EzMTJhY2RiYTZjODI2NTkxZWMyNzI3YzgzNTk2OWJkYThiNjVjODA2OTJmMWNmMTk4Y2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b803f53001524dd49ce659be69fe6d94",
+      "statement": "claim_document() derives user_id and thread_id from graph configuration, accepts only a non-expired, completed (status==\"done\"), unconsumed registry record bound to that thread and containing a proposal, and otherwise returns the same DOCUMENT_UNAVAILABLE re-upload message instead of recovering document data.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L269-L294",
+          "version": "repo-lines-v1:sha256:5fcf34a6f2b753c25e89cd81ce618a14f00a36a64ed230cb9ab2ea43536a15b4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmNWQ2OTFlYWU3NTJhMThiM2ZhNzJiNTVkYmI0NTA3NGM5MGM4MjM0ZDE2YmQyNGM2NzZjYzJiM2NkNTU0ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3OTkxNDM5ZGQ1ZDA1NGYxMDdmNDE0YWJjNzIyNjc5ZTU0YWMyY2U1OWFiMzNlNjQwM2NiMGEwNjY0NDc0NGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRiMDc2MDYzNjFjMzI1ZDM1NTUyZmNiYzlhNjE5YWYyNjI3ODdkOTdlNDg4OTUxNjQ5Y2UyNmVhNzBkNmNlNDAifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L42-L44",
+          "version": "repo-lines-v1:sha256:849d081a7d45b4ccdce70df2884710ca2a1ca8c365ed9ee0f4103e0add66f388:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWIzNWU0ZWQwY2VkYzRjYzg5ZmNkZWZmNDg2MzFjZGFjNTM2MjU1ODRkOTM4YjMwNmNiY2YyNTY3ZmJmNzhhMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2FhMjEwZjVjY2E1YTVhNTQxNzY3ZTVmYmU1MmQzMzQwOTE5ZTA5N2E4MjI0ZjUwOTAzMTMyNzhmYWUzYTFjNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWQ3ZmNiMjk0YTgxNmYzY2JiNGRjNDk0YTUzNGE4YjhiZTMyMjdhNzI4N2RhNjdkOThmMTE5ODA5NTBlYTIwZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c29ff246d0b142b6834889fe41eafa36",
+      "statement": "claim_document() hashes the canonical claim data (user_id, thread_id, attachment_id, proposal) into an idempotent pending OpRecord via put_op_if_absent(), clears the attachment from graph state, and routes to review_document.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L296-L330",
+          "version": "repo-lines-v1:sha256:1cb226d10e215778cde7250c596426390b287ae085fa1715e60292403563484c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1ZTg1MzYzM2JlYTYxN2RhNWZiMzRhMzQ3MWM2NjU3NWNmMDAwM2EyNzc0ZDM5ZmU3YTY2ZjFkOTc3ZjBkODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiYjM0ZjRhYTIwNjgyYmVjYzY0YzhmNTIzMTRlMWRhZThiMjFmYzQ5MWQyZDM4NzcxNzExYTQzZWI5NzUzNDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0YzJkYTI0MzkyNGU2NGQyMDBhZDhhMjBmY2Y1YTViZTM2NzI1ZmY3OGUyY2NiMThmNzliYjk3ZGRkNTIzZDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b659389181149f88fa45b7aa89744be",
+      "statement": "review_document() first deletes the upload registry entry for the claimed attachment, then relies on the persisted OpRecord for interrupt and replay behavior; if the operation has already reached a terminal (non-pending) status it returns the saved result instead of re-applying the decision.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L343-L378",
+          "version": "repo-lines-v1:sha256:2470c330600ddeca8fb6b45c9b458a2af88d04f3a2ca10098ec6ab6010f406b7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkNzFmYTIwYmVjYTI2YTRkM2FlODljODg0NWViYjVkZDYxNTIyOTZmN2NkOGUwNDYzMTg4OWIwNDdjMDMwYTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4YmQzODhkMzkxMTc3NGU5NjIzMWYzMzMyZTcxNTc1NDg3MmRmYjUxZTU4NTA5YWViMmRhOTgyODhhZTVmNjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkYzJiYWU0NzJkNjNjN2YzOWIzZGQyMjcyMDMwMjFiMDFhZTc4NGFiMjk2YWRlZjEwM2FlYTFlMjE2YWVjZWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ef96883aa7044644968d1ec9cff2c537",
+      "statement": "On an accepted document review decision, each selected field is passed through sanitize_memory_field() before a profile record is written; a declined decision writes no profile facts, and a field that fails sanitization is discarded and marked with a privacy notice rather than saved.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L378-L400",
+          "version": "repo-lines-v1:sha256:a805e770d00508c975e83004e060708e693c897c74c952396b556fb3e3af1cd8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4YmQzODhkMzkxMTc3NGU5NjIzMWYzMzMyZTcxNTc1NDg3MmRmYjUxZTU4NTA5YWViMmRhOTgyODhhZTVmNjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkYmFmNDhiZjkwYmU3YWYyMjA4NGQxYTM4NzVmYmYyYWUwMDNjYWM3ZTNhOTBlNzE3MmNiNWU4YzNlYTMxNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY3NDg5Nzc2OTM3YTgwNGJlZjk0YWMwZWZiYjcwNWVkY2JlNWEzM2E5ZWMxY2FmNjk0YmI1NzI5MDgyNjQ2ZjkifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/documents.py#L45-L45",
+          "version": "repo-lines-v1:sha256:a86cc6b35a00e691c2c3b4841db6a3dbd3a137ae873b772936d67b7040b9f2dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTg2Y2M2YjM1YTAwZTY5MWMyYzNiNDg0MWRiNmEzZGJkM2ExMzdhZTg3M2I3NzI5MzZkNjdiNzA0MGI5ZjJkYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTg2Y2M2YjM1YTAwZTY5MWMyYzNiNDg0MWRiNmEzZGJkM2ExMzdhZTg3M2I3NzI5MzZkNjdiNzA0MGI5ZjJkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODQ5ZDA4MWE3ZDQ1YjRjY2RjZTcwZGYyODg0NzEwY2EyYTFjYThjMzY1ZWQ5ZWUwZjQxMDNlMGFkZDY2ZjM4OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjc1YzYwMTNmZDU4MDIzMTAxODU3ZGYxNjc3NDRjZDEyMjk3ZmRmNDdhODVjYmZiMjBiMTA3ZGM0YjNiZGE0YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_09725246f0c24f63a4f30421b941b18d",
+      "statement": "A ReminderRecord stores an owner-scoped reminder id, title (1-80 chars), weekday, HH:MM local time validated by TIME_PATTERN, an IANA timezone validated via ZoneInfo, an active flag, an optional remote cron id, originating thread id, wake token, and next-run date; create_reminder() enforces a cap of MAX_ACTIVE_REMINDERS (10) active reminders per user across all threads.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L144-L171",
+          "version": "repo-lines-v1:sha256:6d74043b3ce6f21863b21e3558efe096ab0cda31f42b3ffa287d021160f46fba:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExYzM2MjE5NDhiOWE5N2UzNjE0MzFmYzQyYWVkMjYxZjI5MmEyYTJkMTM3ODc5YzE5MzFlYjFmY2U2Y2E4NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlM2NmY2ViMzNlMDExZjliNjk1MDg4ZTBiM2FhODNiMTYwM2Q2OWRiNGRjNjU4MDNhYTgzNjM1M2U4MWIwZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhNDk3NmNkMDY1Mjc5M2M0Y2JiNjdiN2Y4MzA5YjliYTUyZmRjMWJiNjUxMDM1NGU0ZmZmNGY2ODRkY2QwZjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExNzEyOGI1N2E0ZmM0ZjE1MjI0MTA1Mjc3NzAwYjEyY2ZmNjI3NjUzMTI2OTY5MzIzZTVlZmNjOWQ5MjI1ODcifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L33-L33",
+          "version": "repo-lines-v1:sha256:259530cbce8c7bfd5e9b15f450d80e5aa854edcfe370ca9d420ccdca7cd5ec2a:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjU5NTMwY2JjZThjN2JmZDVlOWIxNWY0NTBkODBlNWFhODU0ZWRjZmUzNzBjYTlkNDIwY2NkY2E3Y2Q1ZWMyYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjU5NTMwY2JjZThjN2JmZDVlOWIxNWY0NTBkODBlNWFhODU0ZWRjZmUzNzBjYTlkNDIwY2NkY2E3Y2Q1ZWMyYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTE0MjU5MDEwNDQ1MmUzNTQ0ZGJhYmQ5MmIxNDgzNjQ5YTlmMzlmY2E0YTZkMzNhNDE0MmRjYWI5MTljZWJkMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2NhOWI0ZWZhM2FkZGFiNWM3ZTczOTA5ZGMxM2E1YmEyYWM0ODNmY2Y3Y2RlMjEyN2Y1NzliZDlmNWExMDM4YSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L576-L594",
+          "version": "repo-lines-v1:sha256:89e73f94f526cb6ff02fdd1cbe0528db2ceb86c9c5020712ac65eff8c88035e4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNDE2NzAyNjA5OWY3YTQ4YTU3YTAyMjM2NGQ5YzAxNzJlNjYzYTMwNjVjYTNlOWE5ZTM5ZDhlNTQ3Nzc2ZDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZTYzMzI4NDViZjkyMWY5OTU4NDZlZjI3OGEwMjA2NjNiNzc0MzYyZmU4MmRlYzFkYmEwNGQ0NWQ5YjlkM2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkM2UyZThiNWU1ZTVlNWNjYjA2YzNhYzdiNWI3ZjY0ODk2ZGYyNTZiY2JlMjNjZTdiMzU1ODk4MWE5MjllMWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0MmQ4MTFiOGU1ZGE4NWVmZDlhODU5OTc3YmU1YzMzY2IzYTU1NWI3YTM5YzQ0ZTdjNzg4M2Y5NTYwZDIwMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2789425344184978a2fa04f1b5b06233",
+      "statement": "edit_reminder() rotates the reminder's wake_token on every edit via secrets.token_urlsafe(32); soft_cancel_reminder() performs a soft cancel by setting active=False and clearing cron_id rather than deleting the record.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L609-L640",
+          "version": "repo-lines-v1:sha256:9a98ba9463edda3f75db7f33fc3503cbdb17ae86a60e9baa1403b217b1d9fc8d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlNjE5OTQwZDI0MmIyMTVjNTFhN2Y3MDVhYjUxNGRlYWZhZDNhZDE5Y2Q4Yzg5ZDNhNjZiNjEzMzI1NjY3YjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5NmJkYTgwZTI0MDY0ZmNmNDRiYjFkNTU1MDczMmExMTM0NTkzNDE2NTZlMGI5YzA2MzkzYTU4NDcyNmU5ZGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1a3eab9502ba4bd284d1a6b413d4bcd3",
+      "statement": "Reminder creation is two-stage: create_reminder_impl() persists an inactive record, creates the remote cron via CronClient, then finalizes the record as active with the returned cron id and next run date; a definite create failure leaves the local record inactive.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L1-L10",
+          "version": "repo-lines-v1:sha256:2d35b05a1d9bbe1dab89417f8017d768f420e58f5a14e996eb3ec53cf15a0b4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmYzEyOTRlMjgzMWE0NzA4MTAxMDA5NjM2YmIwZTc4ZmJlNDM3NDQwYjNhNjQ0ZDFlNjk1YjBlMWIwMWNlY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxNTY5N2RmZDA1ODhhODNhMmIxNTBlYTdkZTMwOGE3YmE1MWI0MTdhYzYzNTE5YmQ1MzkxN2NmM2JhMTU5ZTEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6de77dc7c6724d7c9ee36f10c203b44d",
+      "statement": "When a create or update has an ambiguous network outcome (CronAmbiguousError), the implementation searches remote crons by member and reminder metadata via CronClient.search(), reconciles to one canonical cron, and deletes duplicates.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L323-L361",
+          "version": "repo-lines-v1:sha256:c44362ed38a9cef121a90774d44a89f6d492a8608bd5f68960b0e6900b458b24:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0OTcwNTQ4NjFmOTA4MDNlZDJkYmFmZjAyODg5NGU3ZTA2NmFhZWM4NzNhMGQ3NTQ2ZTU0NGY2OWQzMzY0MGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzYzUyYmNjZDQ2MjVmZTM1MjUzNjBiOTkzNzE5NDg3YWE3NDAwYjVhN2JjNDU5ZGI2M2U3YzBlNmI0ZmIyMWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmNjBkNTRiZmI0NDFlYmE5Mzg3YTg1YTRiYzA5ZTczMzliYTJhZWJkMzRmYzM5NjJjMDU3NjVjYzBiYjMyODEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_64e1a7f81b4b493c87ecf1140dca9406",
+      "statement": "An edit that fails after rotating the wake token (edit_reminder_impl's pause-then-update/create sequence) leaves the rotated record inactive rather than reactivating it, preventing a stale credential or cron from authorizing an old scheduled wake.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L300-L337",
+          "version": "repo-lines-v1:sha256:9e85ca882e70852f851583f49d4f04d0ce342561a10575e4542330a5623705a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5Zjc5MWI3NTNlMzI3ZDcxNGIzM2UzNGQzMDE1NGZmMmUyYmFiMWVmY2MwYTczMDI2MDMyNmIzY2I2N2NlMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0YTlkYTUwZWI3OWJlODdjYzQzYzlmNTQ5N2FlMjdlYTQ3ODA5OWJmNjU0MWIxMjgyMTRjNDE1MmQyNTU4NzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzNDAyNWIzZjQzOGVjYzkxNGRjZDZjNTczN2MzZTNhZGEzYjY1MjY4ZWZmN2JmOTk4NzBiZGE2MzgzY2NlNjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2fed9bdebe3f42b397057fb40104df73",
+      "statement": "A delivery wake carries reminder id, member id, thread id, and wake token; coach_gate() only looks up the stored reminder record (and thus can only validate the wake) when the calling principal is not in member role/context, so a wake presented in member context is always routed to short_circuit rather than delivery.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/gate.py#L45-L74",
+          "version": "repo-lines-v1:sha256:f19476b4a487bbb99411b5083e877489a5e0c878405487a7ac98ce7beea4b757:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkOGZlOGIzYzQ2ZTlkMjQ5NTM2OGI2YjU1MmZkZWQ3ZGJiMmNlMWYzOGVmNGIyMDY0MjI1OTgxOGZiZDJmY2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4MWZjOTY3NmM0MjgwOTFiOWQzZjU3MzgzOTZjMzY1YjI0ZGRmZDE2ZjZmOTdhYWNiYmYwMGRhZTU3ODg4YTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA2YjNmZTZiZTJkM2Y2ZmMwYmMxZGM4ZWExYjVkYWNmN2Q4ZWE2YTE2MDgxYjc3ZDg1YjA5MDZlNzBkMDBmZjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fd12ea039a0c46dbb97aa629981fb6a8",
+      "statement": "reminder_delivery() independently re-validates the wake by requiring a valid, active stored ReminderRecord whose reminder_id, thread_id, and wake_token (compared with hmac.compare_digest constant-time comparison) all match; an invalid wake is cleared without producing a message, and a valid wake yields a reminder card without any model or memory access and never exposes the wake token.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L397-L456",
+          "version": "repo-lines-v1:sha256:494d434a16174b93114db9cfa4cc1a44a9dfcf79632acbbc7826f3f7278d30e6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkNTAxYWExODYxNTkyNjIzMGRiZGFkOTExZDc1OWE2NjViNWNjNjM0YmFhMzViOTRlZWFkNjA4ODk2Y2FmNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM4MDY3NDU4ZWMwY2VkODkwYWQ2YjNkZTAzNGQxNDEwMmViYjdiMDgwOWI4YzA1MzcyNTQ5Yjk4NTQzMmVlZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_342330deb04741828c97759a7d283188",
+      "statement": "cancel_reminder_impl() pauses local state (soft_cancel_reminder) before deleting the recorded cron and any remote cron matching the reminder's metadata via _delete_all_for_reminder(); incomplete remote cleanup causes it to return the CANCEL_FAILED retryable-failure message instead of confirming cancellation.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L340-L394",
+          "version": "repo-lines-v1:sha256:fc2d1e3d9cbcc767840359de70974def52c7b005395f5a0e1ea3bd661dffb164:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiYzlkOTQ3YWEwODk5ZDc5YmEyOWJiYjVjY2UwYTk0NDJlZjJlNjMzNzFmMTc1YTY2MWYwNzA0MmI3ZjkyZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYyNDdiMzZkMzRjMzQ2MmE1MTAzZDQ3MGRhODM2MjhkMzQ1MjE1ZmZjNWYzY2M0NGNlMGUwZDIyNzJiZmJkMmEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L54-L54",
+          "version": "repo-lines-v1:sha256:e8cb92ab7e48b9ab57e29fc75283945e830dff2cd397d7fe3fcd1dcb04d484e5:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZThjYjkyYWI3ZTQ4YjlhYjU3ZTI5ZmM3NTI4Mzk0NWU4MzBkZmYyY2QzOTdkN2ZlM2ZjZDFkY2IwNGQ0ODRlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZThjYjkyYWI3ZTQ4YjlhYjU3ZTI5ZmM3NTI4Mzk0NWU4MzBkZmYyY2QzOTdkN2ZlM2ZjZDFkY2IwNGQ0ODRlNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2JlMGVlZDA2YTM4MzQ1MDMwMzJjMmI3ZThlNmFkNzU1MzVlZjg3NDJmMjE5ZTQzMzA5MjNmNzY4NzkzYjJkZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGJlYmQyYjNhOTA1NWMxMTNhZjgwNGJjNjI3Y2NkNjk4NzE4N2Q4YmU2YTIyNGQ0YTI2NzkwMjViZDhhMDZkYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_23e36a74f7db4fcba7817d4a2335b0de",
+      "statement": "cleanup_user_crons() deletes every known reminder cron, searches for metadata-orphaned crons owned by the user, deletes those too, and returns success only when a final search for that user's crons is exactly empty.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L459-L472",
+          "version": "repo-lines-v1:sha256:e5bf23d5a2567e87b8c2ce809780a29e6387dcfe2217a11b9236d6e5ab16557d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmNGYzZDJmMTliYjZhNTc0MzFhYWYxMjQyYTk0ZjUyYWRlMGM1MWE1YWRiMjUzYjMwOGE2OTUxYjU2YjBjMDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5N2M3MTI0N2FmM2NkMWVkZjU1NWE3ZDEwNzU5MzE1N2Y2ZGMyYTIyYWYwZGU4MmU3Nzc0YWJmMTBmOGFkZTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxMjJmYWQxMzJiN2NiMzRhYzkyYjE4MzQ4YTBkM2IyMmQ1OGZlNjUzNWQzYmM0ZDA0ZjUzNzJlNDQzMjFjY2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_55a0d0cb5b7348988871e8271a3731be",
+      "statement": "sweep_upload_reservations() deletes owner-filtered reservation threads and their upload_registry records, then returns success only when both a follow-up reservation search and a follow-up registry search for that owner are empty.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L475-L491",
+          "version": "repo-lines-v1:sha256:2376888198eceb7409de280547c7a9cd8d9fcb3e9062fcb830b0c9d4850aec4f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1NjQyYTZkNjkyN2Q4MDQ4ODJhZGJiNjk4ZmU5MGUyZTUyZTE5ODFlZTIxYmJjNjNkM2U5ZDc4ODk2ZGJjZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5N2M3MTI0N2FmM2NkMWVkZjU1NWE3ZDEwNzU5MzE1N2Y2ZGMyYTIyYWYwZGU4MmU3Nzc0YWJmMTBmOGFkZTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5OWVmZWRmZDJkOTcwNmQ4OTFjN2JhOTgzZTdmODRlMDVhZDBlMDE5MWMxMzI3OThiZTVlM2MxY2M1MzA0MjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlNTA1ZWU0NGQwOTJmYTNmMzJiOWVmYTU1ODQyNDkyYWRmODE0MWNlNjM1MTU3ODQ0OTAzZDE5ZmQyOTBlNWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_69434c822b5a46ad8e80d998a9f71078",
+      "statement": "For ordinary thread deletion, prepare_thread_deletion() places a cleanup_pending marker in the member's gate namespace, pauses reminders bound to that thread, and removes matching remote crons before allowing the thread deletion; a cleanup error (paused count mismatch or non-2xx/404 cron delete) leaves deletion retryable rather than deleting the thread first.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/cleanup.py#L36-L90",
+          "version": "repo-lines-v1:sha256:88168048e6ed47d2535c655a0eeea07265112d841d97994ec4d93da40365ca92:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzODRiY2FhNmU3NzExYmJlZGIzNmZjZDEzMDc3MTFhNDY0Y2Y4MjdjNzc5Nzk1OTZjZmI3ZGIyNDcyNmNkOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwMDEwNWUwYTY4NTIxYzNkMzMyNjE1MzkwZTg1OWUzOWNmMjQxMjc0YTdkNzgxZDE5NmEzYWRhMDdiMTBmZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhMDdiNjdjZmI3YjEzMWE1ZmNjYzgwNTY3Mzc3YTY5MzJmNzM5MTM3MjgwZDgyODU2ZDgxZGQ3OGMxYzdlZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwYzk0YWIzOTRhY2U5NTc4MjA4NTc1Nzg0ZWM5MmY3MThhMDgxMGY5Njc3ZDhhNWZlYTljMjRiYmQ4NjUwODIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_17f67cd6d50743a7b1a28b6618c259a4",
+      "statement": "A recognized erasure request is routed by the model-free coach gate (is_erase_request()) to erase_my_data(), which first writes (\"users\", user_id, \"gate\")/\"erasing\" before any cleanup begins.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/erase.py#L16-L26",
+          "version": "repo-lines-v1:sha256:5d799527465eff913e2612e7f81873e28588fc29f4495c8aec0f39c7d637eeec:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZGQxMTRjMWMwNGM3OTM0MTdhN2Q5YTUwNjAxMDViNGVjYWM0OWJhNWRiODQ5ZGE0ODcwMTRjMGNmM2U2YmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlOGQzZDY4MTNlZmZlYjMxMmE1NzViMzkyZGRiMzNmMTIyYzBkNWVjMmI2OGE1YjUxMGViOGU0ZjhlOWI0NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk3YzBlZTg1OGIzZGY1OWEyMDdhZmQyMGRhZjgzMjEyZDA2ODhiOGM5YjAyY2Q3MTc5MGJkNzc2MDQ1ZTJmZTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlZWMyNjM2YTlkMGNlOTJlN2MxY2I4NzI2NmJmYTFlMzcwZmI2NDgzYWY3ZjNjNGM0Y2M5NGU4MjE1ZDAzNzAifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/gate.py#L85-L88",
+          "version": "repo-lines-v1:sha256:5b9b28eaf56c834989e45d06b7db5b4ca87382ef4e37a30771048e2861b106a5:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTE0Mjg1YjQ0Y2EyM2Y2OTU1M2UyMmVkYjkzZDZlMDZmYzE3NjI1OTFkNWY4ZTVhOWE2YzMwMzE3MWM4MDZiMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODMyYzhmNWZkNWQ5ZDhhMGM0YmU3NThjYjY0NWVjODkxYTYzNmI3ZWUzMmRhZTIzZWY0OTk4ZWUxNGYxZjdiNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODE2OTJmNTYxYzhhNTQ5OTJjNDU0NTY2NTg2ZmE3ODJkNTZiNmRjYTkwYjViZDAwMzJkNjlmYzE5NDRjOGU0NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDUzZDY0MDcxYjk3OWZhNWEzNDQ3YWVjYjA0ZDE1NDA1YmJmNzNkM2M5YWVjNjNjNDNkOWFhMTYxNTU3NGE5NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e143a2a1ab5b457289bf875f27838a3f",
+      "statement": "erase_my_data() uses the deployment cron client to run cleanup_user_crons() and sweep_upload_reservations() for all known and orphaned member crons and upload reservations, then calls delete_all_for_user() with the module-private coordinator_capability(), and always removes the erasing gate record in a finally block regardless of outcome.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/erase.py#L27-L41",
+          "version": "repo-lines-v1:sha256:9230dd3f69309eece340fefab693ba5f16c8ed214ac7c09e9a41a0164c357be9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkYmZhNTlhMjcxZDIzZDljMjUwYzM2YTQ3N2Q1ZWQ5YTBhNzdkZjA5YWJlYzM1M2M4MjM5Zjc4NjMzZTMyNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1ZDc2MTY3NzYzZmNjYjViYWUzZmM4MTFmZjg0NjE2NDIzZTVjM2JhZTM0NjE1NzIxNzI5MmE0ODcyMGFhMTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlNzAwM2UwODczYjAxYzgxNGQ5OTU3OTNmN2E2MmJiMzRiYzkwYWRlOTE3N2U1YTdlMjc2M2RjNzZlNGFkNGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0b396a6d6e0c444eb1954ace4906382e",
+      "statement": "delete_all_for_user() requires the caller to present the private _EraseCapability sentinel (raising ErasureCapabilityError otherwise), enumerates and validates every namespace under the member's users/{user_id} prefix before deleting anything, then deletes every item from every allowlisted namespace except gate; a malformed namespace fails validation before any deletion begins.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L267-L279",
+          "version": "repo-lines-v1:sha256:49992ab6a1ae58a69ed5f3e4578044ed75e9ee2bea9f34e30eabab9751b8ce7a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5OWJlYWI3ZjBkYzQ4MzBiM2Y5NzI1ODVjM2ZlMzE0ZmY5NmY0MjQ0ZWUwY2Q2NzNkYWVlYmQyNTQwYzI1OWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwM2IwMWE1NzdmMjU0NmUzZTYzYmEyMGUwMmNkZGU2MjE5NjFhZjgxN2Y5MWU5MjFhNzVjMWVmNjVmNDA3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlZWMxYjYxNmYwYjFiMmViYzIxZGY1YTc3ZGI0OWY2ZmMxMTY2MDNlYzdiZmIxNzA1MjJiOGU2ZjI1ODI5MTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhNjhmNTliOTdhYWUwM2JjOWQzOWRlNTkzMmFiNjE5NjViMzJjYWIxZjA1NjBiN2FiY2VhNmJhN2E0MGY3NzMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L771-L803",
+          "version": "repo-lines-v1:sha256:966d9a44a28183f127972436dce604d8d3350cc8c31370f0799524e8af080d99:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlZTdhZWIzZTkwNjE3ZGFmZWYzNjA0NjQ1NWEzZmZhMDQ5MmRmYWI1YTkwMzkwZTVlZTJjYWEyYWZhNGM0OTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyYmUzOTVmZWI5MTY3OTM3OTJkZDMwM2E5MDk1MzdiYjI2MGIyZTE0ODZkZjY3ZTQ4NzA2NDMzYjQ0OGE4MWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViOTliN2YzMWE5NTA2YzQzNjY2NDY4ZmFkNTZkZDE2ZmE4ZGU4ZTNmNTdhMjk0ZDEzMWNiYzYyNjc3ZmQ4NGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4ae0e4c626074dccbd3e423141cd7c04",
+      "statement": "The gate namespace is intentionally excluded from delete_all_for_user()'s deletion loop, and the erasing marker within it is removed only afterward in erase_my_data()'s finally block, so the erasing gate outlives the bulk of erasure cleanup by design.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/erase.py#L33-L35",
+          "version": "repo-lines-v1:sha256:aa4904c8691fb6f9a4b28ab628204fd9873135b01724305e75ef742660e4e8af:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODc3YzQwYjk3MmI0YmQxMGMzZDEzMTgwNzIzNzkxMTBmOTEwMTFlOTA3NTIyMDQ4NTM5MzAyY2M0ZTE2MTQ2ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjFiMjJkNzk1OTI3OWEzZDUyMTllMzg3NmUzMWRiZGNjZDYyMWUzMTM0YTIzM2NjMzg3MjkxY2U3NGFhNzU5MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWEwN2UwNDk1NWMxOGU5NjU5OWRmMGE1ZDFkYmQ5Yjg4NTliZjI4ZWYyMDE4M2ZjOTE3ZmJmNjVhZDRkZDlhMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTE2NTYzZmRhMTA1NmUxZDVkYjQzMWZiZDUxNzE2NzI3ZTBmMzhhNDgwODI2YTg2YmJkYzY2YmYzNmRlYjQ5YyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L793-L795",
+          "version": "repo-lines-v1:sha256:30a403111308ff856ca6d3cf1829e9ef17e70a6766aedd613aee84ef32c7ed1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTRmMzk4MmJlNWE2MzMxZGJjNTIzM2MxYmQ3NWQ5ZWM0NGQwOGRmYTBkZTg4NGNjMDdlMzNmYzhiNzY5MzA0OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjZhZDA1MmM0NGI5NTNmMGQ4MzI4NmEyZGRkZWMyMTg1ZTdmMTg5ZGIwZTRmNTAyYzZmMDZmMzQ3NTg0NTRhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTEwMGNiMzkxMjQwZjhmYmQ2ZDQzMzE3OTQwOTBhNjVjYTE5NWJkYjgyNmUxZTFlMDcwMDRlYjU2NzJmYjBiMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDBlMThjNjY3MmVjZmQ5ZWQxOGYyOTY2MDY4NWZhYTczMzBjYjMxM2QyMTE0NTM5NzM4NGMxYzM5OGJhNjk3MSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e9745c9180c42fab2079684e4f391ff",
+      "statement": "erase_my_data() emits the erase_confirmation_v1 AIMessage marker only when both cleanup_user_crons() and sweep_upload_reservations() report exact-zero remaining resources (clean_crons and clean_reservations both true); otherwise it returns no confirmation message, and any exception still clears the gate via finally while surfacing as a failed graph run.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/erase.py#L12-L13",
+          "version": "repo-lines-v1:sha256:9fdcc38521c3c162764e163e5985627391b935e6914251fe5eab36104344e49f:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTdjMTk1MGY5MmE3MTI0OTA0ZmQ2NzQxZDU3MDE2ZDFhOTU4NGNiNzZhMzcwOTAxNTc4ZjFlOWQ5OTVhOTBjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmQ1ZDViODZmYjEwYWIyMmEwOTZkZWQzNjY4OTExYjYwODM3MzUwZWIwNmZkNDhlMjliYjE0YWIzYmY3Yzc5MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzQ3YmUzZWZmOTAxNzkzZWQ3NzM1MTEyMTZjMjljYzJmYzIzOTNhMTM2MGVlMWM0OTIzMDQ1NzhiMjlkY2I4OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzhkZTVkZTkxYTg1ZGMwYmM0NmZmZDY5YTU2NjJmNzMwM2Q0NzE1YWY4ZTgxZTFkZWYzODk1NTcwYzk1N2U0NSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/erase.py#L27-L41",
+          "version": "repo-lines-v1:sha256:9230dd3f69309eece340fefab693ba5f16c8ed214ac7c09e9a41a0164c357be9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkYmZhNTlhMjcxZDIzZDljMjUwYzM2YTQ3N2Q1ZWQ5YTBhNzdkZjA5YWJlYzM1M2M4MjM5Zjc4NjMzZTMyNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1ZDc2MTY3NzYzZmNjYjViYWUzZmM4MTFmZjg0NjE2NDIzZTVjM2JhZTM0NjE1NzIxNzI5MmE0ODcyMGFhMTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlNzAwM2UwODczYjAxYzgxNGQ5OTU3OTNmN2E2MmJiMzRiYzkwYWRlOTE3N2U1YTdlMjc2M2RjNzZlNGFkNGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ad4a425c3e6a488e81d5cb9afaa3ac24",
+      "statement": "The two-phase erasure design covers metrics, injection logs, reminders, feedback, upload registry entries, profile and episodic memory, operation records, and schedule events (all non-gate store namespaces) plus remote crons and upload reservation threads, but intentionally excludes the transient erasing gate record from the bulk deletion pass, removing it only after cleanup completes.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L35-L48",
+          "version": "repo-lines-v1:sha256:ec9421c52e5e55487ca808074cb4c97cb55a856b67a0517f6cc8c79fc58f256e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0OTU5NTNhMjczOGEwZmIyNGE1YTEzYmQ2ZTkzZGZjNmI0ZTQwN2VmMjk4ODhlYzQxMmEyNmRiMDM1MjNmYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMyMGIzMzkwNzAyMTE0YWFlYmYwYmYzYTk2ODhmMTQ4ODM4MWY2ODJmNGVmNjhmZGE1YTE0YWQ1YmE1ODc0MGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc1ZDk1ODUwZmYxM2Q5ZmRlMmIxZTg3ZGM5ZWZiZmExYzY0N2QxNTI1ODY4ZjBiYTdkYjY3YjhmZGEwYjNlOWIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L793-L803",
+          "version": "repo-lines-v1:sha256:abc745aa967e1d5ea130d54ccc1fbf61f9c63f904958b0d0b823571449cb23ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ZjM5ODJiZTVhNjMzMWRiYzUyMzNjMWJkNzVkOWVjNDRkMDhkZmEwZGU4ODRjYzA3ZTMzZmM4Yjc2OTMwNDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyYmUzOTVmZWI5MTY3OTM3OTJkZDMwM2E5MDk1MzdiYjI2MGIyZTE0ODZkZjY3ZTQ4NzA2NDMzYjQ0OGE4MWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExMDBjYjM5MTI0MGY4ZmJkNmQ0MzMxNzk0MDkwYTY1Y2ExOTViZGI4MjZlMWUxZTA3MDA0ZWI1NjcyZmIwYjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_518f4bdd3f8d4e168a758eb081534234",
+      "statement": "scripts/forget_member.py implements phase two of erasure: it waits for the erase run to reach stream EOF or a non-busy thread status (wait_until_terminal), verifies the erase_confirmation_v1 marker from the stream or current thread state, snapshots every owned thread id before deleting any (snapshot_thread_ids), deletes sorted non-current threads, and deletes the marker-bearing current thread last (delete_snapshot).",
+      "evidence": [
+        {
+          "resource": "repo://scripts/forget_member.py#L48-L84",
+          "version": "repo-lines-v1:sha256:cea7bf230b5139956dbf038fcc67c66b3b0ac1f9419bc4c08c39a28c71a35a4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2OTU3ZjNlZTQzNzk0OGFlYmQ4YjFkNDkxMTY1YmM4ODZkN2FkMDdkYTYxZWQyN2Q0NmRiYmY2ZWFjODUyNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNmY0ZGViNjFlN2JlYjAyZTA2ZTcyZjBlZmYxZDk2Nzk1YTg3MDVkMDFmN2IxMjhjYzg5NTRhZDMwOWFmMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0OGUzYmNjMDFkNDNmYTMzODkwMzFkNjEwYWI5YWU2NGVhYmY3YTM1YzAwMjY1NjRiODBkZjAzZDY1Mzc1NzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlMzY2ZTAzMmM2MzBiZWExMDhkYmQ4Y2E3ZjUwZjhkYzMwY2ZhOGQzZjMzOWI5Y2UwYTMxNDYwODA3MTQ2YzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e34d390e37a44c13bc290b89d45581ce",
+      "statement": "In scripts/forget_member.py, a missing erase marker, a polling timeout while the erase run stays busy, or a thread deletion failure stops the procedure (raising ErasureFailed or DeleteFailed) before all threads are removed; because the current thread is deleted last, an unfinished run leaves the marker-bearing thread as a retry boundary.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/forget_member.py#L48-L84",
+          "version": "repo-lines-v1:sha256:cea7bf230b5139956dbf038fcc67c66b3b0ac1f9419bc4c08c39a28c71a35a4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2OTU3ZjNlZTQzNzk0OGFlYmQ4YjFkNDkxMTY1YmM4ODZkN2FkMDdkYTYxZWQyN2Q0NmRiYmY2ZWFjODUyNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNmY0ZGViNjFlN2JlYjAyZTA2ZTcyZjBlZmYxZDk2Nzk1YTg3MDVkMDFmN2IxMjhjYzg5NTRhZDMwOWFmMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0OGUzYmNjMDFkNDNmYTMzODkwMzFkNjEwYWI5YWU2NGVhYmY3YTM1YzAwMjY1NjRiODBkZjAzZDY1Mzc1NzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlMzY2ZTAzMmM2MzBiZWExMDhkYmQ4Y2E3ZjUwZjhkYzMwY2ZhOGQzZjMzOWI5Y2UwYTMxNDYwODA3MTQ2YzQifQ"
+        },
+        {
+          "resource": "repo://tests/test_forget_member.py#L36-L39",
+          "version": "repo-lines-v1:sha256:4378a59d1b541618e13febe6a27301a435a6c1fee675106538803254ec7e3c52:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODRiZWE3NGU4YjIyMDFhY2Y4MTAxYjZkMTIzYWNjMjc5MWIzYzZhOWJkNjc1YWZjNGI1YmE0MTY0MmY3OGE1YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDhjYThlZmIxYTdkZjc0NzQ3ZTE1ZWY1NDdhYTllYWJkYTVlYzk4MTUzODA4MzEyZmYwZDQwYzc3MWQzMzQ0YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzM0ZmU3OTJkNWE2ZmQwODJmYzk0NWE3ZTVmNmY1MWYwNTI3MGJlZDU3OWNiMTQ0NTkxYmRiM2M4Y2E1MmFkNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDU2NGNlYTk4ODAyMjlhZDEzODlmMWVhOGY2ZmEyM2MzMDM1MzNiZmUwODg3ZGY1MjVlYjZiMmIxNDFiOGVhYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_16ed5cec524f490dbf6d260ffb334ba6",
+      "statement": "The remote cron and upload reservation client targets LANGGRAPH_API_URL (default http://localhost:2024) and authenticates service calls with LANGSMITH_API_KEY (as x-api-key) and COACH_INTERNAL_TOKEN (as x-internal-token); upload reservation calls in uploads.py use the same internal credential headers.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/reminders.py#L528-L538",
+          "version": "repo-lines-v1:sha256:f37bfae430dd39c41e26227666dc8fddbcefc385eda76fa03558b5a753515ff4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3Y2ZmM2YxNzg0MmRlYzZlN2U5MWMzZTNiOGZjZTBhODIyZmMzMTEyNzM4MWIwMGY0NGE5ZjEzMzMzMDNhMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0NGNjZDk1NzVlMTQyYTU3YjY2ODExYTk3NWE3Njc1OWI4ZTk2OTY1ZGUxNzM5MzY5Y2IwNGVkYTExZGM2ZjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwZDBhYjdjNmZiYmRmZTcyN2NiNjFhOTU5ZWY0NjBmZTBjZjk3MGJlMzE1OTNhZjM4N2YwNzlkZTU5MjNjN2YifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/uploads.py#L28-L32",
+          "version": "repo-lines-v1:sha256:4c15b114e57598919504ec6126997b8e315d9ed1ef8e852fcc5062b8712b9b98:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWM5MmJiYWEzZDRiMzk3Zjg3ODE3ZmEyNTY4NmVhNWRkNjhkY2E4NDU0ODJiZmMzNTY2YjdlYjc5MGM1ZDg2MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWI1NGVkMDE4ZDQwZDg1NWFlY2I2YmNmYTUzMDVjNDE5MmJhNWU5YWM2MGIxYWNkOWVhMTA2MmI5ZTlmMjk4OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2UyMGFhNWQ5YjAyZmE2MDNjNTg0YzQ4ZWQwMDZmYzExOGZlNzY4NjBhY2VmYzMxZDFjNDE4YWM1N2M1ZmZiOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_71d86e419f77435380e1b7d0ffb7fc15",
+      "statement": "Focused test coverage for this lifecycle spans tests/agent/test_store_data.py (namespaces, sanitizer failure, event folding, reminder limits, expiry, write gates, capability-protected paginated deletion), tests/agent/test_documents.py (bounded non-spooled parsing, raw-buffer release, claim/review replay, scrubbing, invalid attachment rejection), tests/agent/test_reminders.py (inactive-first scheduling, reconciliation, failure states, validated delivery, erasure cleanup), and tests/test_forget_member.py (marker latch, polling, thread snapshot, fail-stop deletion order).",
+      "evidence": [
+        {
+          "resource": "repo://tests/agent/test_documents.py#L377-L421",
+          "version": "repo-lines-v1:sha256:d55a3a40fd3fec3a9a887db6a505e4ef3d6da62b2bb6780386a7bfe8609d6910:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0ZjEzMTJiNDRhN2E5NTI3NTZkZTE2ZDA5NzE5ZGVmNTAzZDRiMTRiMTE4ZTI1NzZmNjM4ZjExZWUxMzkwMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5MWJhYzhkNGFlY2MxOGViYWJlOTczZjZkNWQ1ZjRiMzJmMWI4YWIyZDk1ZjJhOTgyNGVkN2E2NDZhNTI2YmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1ZGZjZWNkZjQ0ZmQ4N2I4MzY2YmExNDY2ODU3YzUwN2MxYTdmOWM5OWQ1ODBlYTNmNWUwZWRlZDU3NTQzNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyNjY1ZGNiNWVhYTZkOTE0YTM3MGMzYjliYzQxYTUxMmI4MzVhNWYzZDc4NzA5NTYzNDgyZGJhZGNkZWNmY2UifQ"
+        },
+        {
+          "resource": "repo://tests/agent/test_reminders.py#L563-L629",
+          "version": "repo-lines-v1:sha256:4e90991887f42a1ceca19f1694d8be3a1279b60ed55ecfed4d3b89352d765223:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlOWVhMGMyMDY4OGMwYzA1MGIyNjU3NzBiY2I3M2MwMDBkMzllNWVhOTZjNjQ0MGE3ODRkZWJiNGY1YjQ5NzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOTk0MmRlYjdkYmFiYzExNGIxYzQ4ZDAyZGE0NjM4NmU5YWNhNTE1YTUyZmI3YjNjNDEyZGM2Mjc5MjFiMDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVhYjdiMjcyYWI0ZTI1MTc1YjVmZDI0YzEzY2ZlNTYzNDI1MTRjMDI3OTQ2ZjAzYjUzMDVkZjIwMzM3ODc5ZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzMDVhYTRiYzYyNDUzYmNkOGJlNDY4NTkzNmI5MDZkZGMyZDk2YWY5NGExZGY1MzRhOGMxODkzNTYxOTU0OTEifQ"
+        },
+        {
+          "resource": "repo://tests/agent/test_store_data.py#L494-L533",
+          "version": "repo-lines-v1:sha256:86f2b0565860043f2e88880fc825044050aa5fc6d326890951808627f3dda395:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4MTIyOWYwOGYxZmEyYjBiNDNlZjNhY2VlMzY4NjU0NDU4NzkyODAwZjIwZDVjODgyMzZlZmNkNjk5NzRkMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwMzlmMTllNWRjMWU3MzRhNjg4ZDE4NzNjNmQ1YWQzNjEzOGMzMWRjOGJkMDI3NWI2ZjZhNzhkN2Y5OTU2MGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVhYjdiMjcyYWI0ZTI1MTc1YjVmZDI0YzEzY2ZlNTYzNDI1MTRjMDI3OTQ2ZjAzYjUzMDVkZjIwMzM3ODc5ZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkM2M0ZWU1NmE1OTMxZGQxNjllMjE5NmE1ZTMwOTFhNmQ0NTU0NmU2N2UzNjk0NzhiMDI1NjBiMTU1NGI1NTIifQ"
+        },
+        {
+          "resource": "repo://tests/test_forget_member.py#L42-L64",
+          "version": "repo-lines-v1:sha256:a263788892931df4453202b7479fec4cd38cc3b7dec27be1c3a38c4cc4aa254a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzODczNmNiMmIwZDkwMWMzM2VkYzFmMTc1MWJmYmFlNzBkMzhjMTUzNmEzOTY3OGMwZGNjNDlkY2E0YTcyOGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNWJlNDhhM2Y3ZDRiZjc2Y2IxYjNhOTAwNmEyYjc5ZDE0NmExYjUyMjhkNDVjODQwYmRiZmYxNzM4NTA3YzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4YTE5MTgxZGJjOGJiYzA1MTY3ZWU3Y2Y0ZTQyZmMwODE5MDM5MDJkMGNmZjI4OTcxZThmZGI4NTc2OTAyNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiYTQxNzhkZGYwMWY0NWM1OGE0OTE1MDM5ZGVlYThiMjUzYmRmNjAyNTQ5YzFhNDVhNTQzZTViMDU0ZjU1NDQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

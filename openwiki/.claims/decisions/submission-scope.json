@@ -1,0 +1,348 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:dbba0da36b8521360d687a6b059cf6f3c86e7d49953177c98fc6fd11722d36dd",
+  "claims": [
+    {
+      "id": "claim_55c27f353b314b37a219c5c6ac3792bb",
+      "statement": "The submission treats required safety work (Direction 4) as one of ten listed directions plus one direction not on the original list, doing the safety direction first specifically because it was required, while stating that all ten directions were touched to different depths rather than treating the required direction as the only in-scope work.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L28-L31",
+          "version": "repo-lines-v1:sha256:46ba4807bca6467837b88260b046d0cef08ea0a9fbc4b18b344d0e2718987e19:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjUzNTQ2YTY2ZThlODE0NDY3MDRkMDYzNmU4NWE3ZjEwODZmYmEzOGE2MmU1NWZiMmEwZWE4Y2NjMWY3Njg4ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmRiMzhlM2I5ZThiOTU3NGU1OWEyNjY1ZjU1NjZkM2UwMzQ4YzU0MGYyMWNhNjVjZThjNzBmOGQxNzc1N2RiMCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b2868cc8442b4156aef70b85913131c8",
+      "statement": "An eval harness (regression-protection infrastructure) was deliberately built and run against the inherited system's original models before any safety-behavior change was made, so that later safety improvements could be stated as a measured delta against a fixed pre-change baseline (`baseline-gpt4o-mini-25edbd33`, git SHA `497d456`) rather than an undated claim.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L22-L24",
+          "version": "repo-lines-v1:sha256:927ebfd639d6d6f2352763b3a46e75a91fa7a8dcb09ec9a690097de7f5e634ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGY4MDc0ZGQ0NTEwMzYwN2IyMzQzODQ1YTNiZGYzMTQ0OTg2NmY3MWY5MDIwYTUyOWFlOGI2MjQwMTE5OTE3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjY2NmU3YWNhMDQ5ZDhlZTgwOWU3NDU2NmNlZmVmNGJmMWRkMTcxMjdiZDI5YzBlYWRlY2IwOTRiODQyNjMwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWQ0MDhiODNhMzg5MjBjZWEzOGI0ZWExNWRkODIwYTlmNGM2YjcxNDhiMzMxMTg4ZjNkNWI5NTQ3ODc1NDQ0ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ec5dbdc5730f4a1fa32b672569edb232",
+      "statement": "Inference: the original deploy target (LangGraph Platform Serverless) failing to start on Aug 22 for a platform-side reason (a control-plane-injected sidecar flag with no supplying process) is the documented trigger that is inferred to explain why an independently owned, digest-pinned Fly.io deploy pipeline was built instead of continuing to depend on the failed vendor platform; the specific causal link to the release-identity design is this page's inference, not a directly quoted rationale.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L110-L120",
+          "version": "repo-lines-v1:sha256:eabfb3a240ff44c6a11b8c828b46beec0c43f58de863950eb55a8cb24594b4dd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2OTU4NmFjMGEwZTc3MTNiMDViYTE1MGM5ZTE2NTBjMmZiMmM2YjEzYzI2ZDU2ZWUwYWRlMTNmNTYxNWFiNzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlZmI0ODMyYTc4YTg2YzAwMGQyNzllNjc2MDkxNTcyMzc1NzE2ZWEyODk1NTNmZjc5MzkwZDM1MDNlMGQzZTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmYzgwYWI4NTVkMTAzOTkyYjg3MDJjZTYyOTRjNTI3ZmFlOGE4YWI4NTE2YTRmNzNiNThjZDlhNjUxYzJjNjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRiMjI1ZjNlZDJjNTljNWRjZGRiNzUwZWJiZTc1ZTE4ZWY2MDk5MWM4NDY2NzcxMmU2MWIzYTkxZjg3NmQ3Y2MifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L311-L316",
+          "version": "repo-lines-v1:sha256:7302c2b2bc48a49ffe1721a18cec067e5c5cca108d282efc8ab084905b6183b8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTM0ZjY5NGYxYmVjNDE4Nzg0ZDIyZWVjZDA0Mjg3YWI3MTc1ZTJlZjIwMDZkNDA1ZWVhMzM3MjRjMzBiNWZlYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmI1M2E1N2I4YjU1ZDE3MTBjOTdjNzU3YTYzYWIzMmZmNTBlMWM2NTU0ZGM5ZmQwNTI2MDcwOTNmNDBiY2E2YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGI3MzE2NjZkZmMwODk3NDM1NzZmNWU3NzkyM2I2MTI0Njk0NDQ0OWQ5ZGM5Y2QyOTFkZDVkNzYxYzZiMWVmZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_03b71166883649a2b34035252f492f1c",
+      "statement": "AI-contributor readiness artifacts (55 nested AGENTS.md files, decision records each ending in a verdict tied to an evaluator run rather than a hand-typed number, and Make targets an AI tool can call and read the exit code of) were built with an explicit self-test that a stranger's AI tool dropped into the repo should, from AGENTS.md alone, learn that the safety gate is a graph node rather than a prompt and that it must measure before and after with make eval.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L102-L108",
+          "version": "repo-lines-v1:sha256:9625d49c88a538480f22dbb845d5e55558bdb48ccb462d5cd9314bd398338419:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTgwNzRlNTcxYjZhZmJjMzQ1NzA3ZWQ1ZTUyNjBlY2Y4ZDI4NWMzNWI3OTBmYTA3ZDIyNjg2MzIxYzk2ZTE3NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmQyODE3MzI4MTk0YjgxOWRmNzM1NGYwNDQ1MWM1ZmQwODZiMDFhMDA1NjRiN2RjNWViZjZmY2RkMGIyMDkyOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjUwYjIyN2NkZGVhYmU5ZTY5MTExZTlhYjE5MTk2MDY0ZWNiOWQxN2Q2MTVjYjU4ODg2ZmU3N2YwMTkxMjY0OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzhmZjZiNGE3ODcxMGZjOTNkYzZiNzE5M2UxNGRjNWJkMmI4NzIyNTU3NWE3OWQyNjM3ZjFjMTYyYWZlYWQyNiJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L235-L235",
+          "version": "repo-lines-v1:sha256:f91cb0879b3bc25953a3c586140398f4e68dd85e85cc30e245950874bb0063de:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjkxY2IwODc5YjNiYzI1OTUzYTNjNTg2MTQwMzk4ZjRlNjhkZDg1ZTg1Y2MzMGUyNDU5NTA4NzRiYjAwNjNkZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjkxY2IwODc5YjNiYzI1OTUzYTNjNTg2MTQwMzk4ZjRlNjhkZDg1ZTg1Y2MzMGUyNDU5NTA4NzRiYjAwNjNkZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWM1OThkMDQxMTE5YjdkNjk5ZDE3MTY4YzU4M2YwMzlhOWUwNjBhMWNiYjMyZjI5MzNhOTYwMDgxNmI2M2YxOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_203501f5057042d08334b3f4ba3ad62a",
+      "statement": "LangGraph StateGraph is the active runtime, replacing an earlier speculative orchestrator; its first node is a safety gate that sanitizes before later processing, can route directly to a terminal templated response bypassing retrieval and generation, and refusal templates are regression-tested to exclude a number paired with a clinical unit.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L93-L127",
+          "version": "repo-lines-v1:sha256:8ea755c2a3a170fe429bfdef56116b8fde2c94c16071026259492c1a388cf16b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiOGYyYzdkMWM3NDZkYTg4OWEzOWUyODQyMWUyZThhNzU3OGZkZGFmOWQ5MWFmYjEzMzZhOTU4ZDEzNmNjMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZDZlNDIzZTkyZmI2OGMyYzM5NjFmYWYwOGI3MTc4Y2RhNWIxOTE1Yzg2NTAxOWI1NjAyMTgwOTMxMzgzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZGZjODc1NmY0NjRjM2M5NTA4NjQ1NTE0NWE2MzgzMWJiMDFkOTQ3M2MzNGUyYjczNjA5NzQ2NmFhOWY5N2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmNmYwYjU0OTA0YmQ2M2VkMmE5MjYyM2ZlZjdiYTRiNjM0OWNjYzFhOWRmZTYwZTVhMzZiOGQ4MWRlN2MxZTgifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L32-L50",
+          "version": "repo-lines-v1:sha256:bc49d02a144be983cabe2d3ff4690ce85de4aec31993f8244b7084278f164725:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4ZDg1ZjZhMWIwNTgyZTM3NDM4MDdkZjk3NzQyNTE0ZGU0YjFhODI2MzJiMDRhM2IxODc3NDhjOGQ4MWYyNGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1MTQ5ZjJmMmQxNThmMDdjZDg5MTFiMGI2OWM2Y2UxOTIxZjgyNjcwNmM5MTFkMjkwMjY1MDM5YWM1NmEwNzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyNGQzZDNkODUzMDhlNWI5MzUzMGE5N2RjYWYxYWM0ZDdmMDBhNWM3MDIyNmZhMTA1M2YzY2E1MTExODk3OTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlZmVhYzVkODBiZmRkYjJjYTQwZmIyMWVkMmI4YzQ0MTY0YTkxNzZjY2NkZDgwNWFkOTkxMzQ0NDgxOTQ5MzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ae8b43d0ffdb47989b74edb73ea2d126",
+      "statement": "Weaviate hybrid retrieval remains the default retrieval stage; PageIndex tree-search, Pinecone hybrid retrieval, and a bge reranker are kept only as opt-in experimental arms after each lost against a frozen two-stage retrieval/quality gate (PageIndex rejected at stage 1 on page recall; Pinecone hybrid and the reranker both rejected, the reranker after winning stage-1 retrieval recall but losing stage-2 answer correctness).",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/pageindex-vs-weaviate.md#L1-L37",
+          "version": "repo-lines-v1:sha256:420c0465ac366f286cf43e9f713260ee83e64075c7d70e8f7895ac5db85eb6a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4OWMxMWFkMjYyYzJkZjRiODIyNzg4YTI1Yjc5MTM0M2EwMjlkNTE4YWRlNTFmODlhNGMwZGUxNmZkMTJmZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5YWNjZmY2ZTZiOGVmMzk4Yzk1MGYyNTYwYTNjYjNmOWNhYzA2NmUwN2EwOTNlNWRmZGU4MGY0YjQ1ZjJiMmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkYjU1MTZlMGFmOTZlZDEyNjI2YmFlNWEyNDFkOTY1NWExNmE1ZDA0M2EyZDg0ZTQ0ZTkzNTE4ZDhhODg0ZjYifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L1-L52",
+          "version": "repo-lines-v1:sha256:f4960509949245da423d0caaf0451d29fb44895923e7539785a1f0b5abe46bcd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNzFmNTljOGU2ZTgzMWYzNzM3NDQ4ZDIxNTEzY2VjMDRlZWI3ZWQ3M2VhYjE4YjNmMWFhN2JhZDQ5NjNkY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjM2UyMTdlNjVjYWU5ODNjN2NmZDE2Y2I2N2IyOWRlMjFkZGNjN2QyNDFkOTY1YjYxNTg3MTNiZTVkYjEwNzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e0f23bd5dd4455a9fe4ab2ff11c3d2d",
+      "statement": "The query-or-respond routing arm and the Semantic Router safety-classifier arm are both recorded as INCONCLUSIVE rather than as rejected or adopted: query-or-respond's own judge calibration missed its authored 0.80 threshold on two greeting fixtures before any paid arm comparison ran, and Semantic Router is blocked by an unresolvable dependency conflict under the project's unchanged openai<2 bound, so production keeps its current defaults (HC_RAG_QUERY_RESPONSE_ARM=current, HC_RAG_SAFETY_CLASSIFIER=llm) for both lanes.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/query-or-respond-vs-current.md#L1-L23",
+          "version": "repo-lines-v1:sha256:76c706901d5485351c096c2d0cd78814bbc503be074bbc5906ab0b2384ed13da:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5MWFlOGI2ZDBkMGZmOGY5Mzc4YWNjOTJkODAzMzA0YjBjYWZkNTMzNDY1NzQyMmUyM2E5ZmNlMTc2Mjk3MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4ZWFjNTg4ZWQyYmVmNzhlYmM1NjVhODNjMzkwN2UxZWMzOTYwYmUzOWIyOTRkNzJmN2NiMjI1Nzg1MWEwYWMifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/routing-experiment-summary.md#L1-L22",
+          "version": "repo-lines-v1:sha256:65c158a75246de77cac5c762e8309b4337b524f0d0232c890675146fbe18b809:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlYTA4YzUwMDBhNDM5NWRmMDRhOTczZmFhY2I0ZGE3OWRkOGVjYThmNmU2ZTJiNWJhYzVmOWMxZDUyZjk3NmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlYTNmMTBiOGQ0YTNmOWNjYzFjOWQyZTkxMzgzZDZiOWZhZWNjZWZlMjk2NjE0NGFmZThlMTFlMTgxNTY0YjcifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/semantic-router-vs-llm-safety.md#L1-L20",
+          "version": "repo-lines-v1:sha256:6c9a5dfe223eb979128457452e56d21d343ba6c874887ef6955abd969a9ba764:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYThjNjhiMjZlNmUzODE0MjBmMGMxNDIyNjIxMTA5YmYwNGY2OTU1YTgxM2NhZmQwYzhjOWUyOTU1MzljNzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZDU4MDYwNDZmMWJiNWMxYWI4NDhkMWU3OTY3ZjRjNzZiMDE5Y2I2YzA1OGU4OWU4Y2FmOThiNWI5ODIxZjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4ZjYzNjc1ZTAxMDJlMDQyYzM0M2Q2NzgwNTlkZWRjNzMyNTg3M2IwMzEyNjkxZjE0NWY1MTIzNzFhMWVkNDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_64b4d1c4c42948e0856b5726fb184120",
+      "statement": "A production release is defined as the immutable triple of git tag, image digest, and that tag's Fly configuration; rollback redeploys the whole prior triple by digest rather than mixing old code with new storage configuration, deploys occur only through a human-gated production GitHub environment, and a red post-deploy smoke does not trigger automatic rollback by written policy.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/release-tags-and-rollback.md#L1-L67",
+          "version": "repo-lines-v1:sha256:35b8790bf111760972389415ba0f4c50237a3298843eb6276a9336d7ccc27924:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4NGY0OTgzYTlkODVhYWJjMjAyYmRkOWI1MjdiNzZlMjcyM2U4ODFiZjJjMDM2NDI5OTAzZmEzMWI2OGFkNmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4YTkzNzgxYmFmMjViYTIxMWI1NWFiOTA5MDI0MTZlNGY0MDM1ZTJlYTNhYjNmZmNkMmFkMThiZjdiMmE5YTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlZTkzMGU5N2YyM2U1YjQ5Yjg5Mzg3Mjc5ZmJjZDAyODA4YTIzNWE5NjE3MzU5OWQ0NTM5NDM5ZTBiZDVkZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7c1c42ef882d4afd9b9c65f5002ab1f0",
+      "statement": "In the recorded 86-example comparison for the safety gate, safe_redirect moved from 0.16 to 0.64 and numeric_advice_leak moved from 0.52 to 0.04, while overall correctness moved from 0.89 to 0.81 and estimated cost/median latency declined because short-circuits skip later pipeline stages.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L93-L127",
+          "version": "repo-lines-v1:sha256:8ea755c2a3a170fe429bfdef56116b8fde2c94c16071026259492c1a388cf16b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiOGYyYzdkMWM3NDZkYTg4OWEzOWUyODQyMWUyZThhNzU3OGZkZGFmOWQ5MWFmYjEzMzZhOTU4ZDEzNmNjMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZDZlNDIzZTkyZmI2OGMyYzM5NjFmYWYwOGI3MTc4Y2RhNWIxOTE1Yzg2NTAxOWI1NjAyMTgwOTMxMzgzYjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZGZjODc1NmY0NjRjM2M5NTA4NjQ1NTE0NWE2MzgzMWJiMDFkOTQ3M2MzNGUyYjczNjA5NzQ2NmFhOWY5N2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmNmYwYjU0OTA0YmQ2M2VkMmE5MjYyM2ZlZjdiYTRiNjM0OWNjYzFhOWRmZTYwZTVhMzZiOGQ4MWRlN2MxZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_200220aedc3740898ef971f7a8943996",
+      "statement": "Graph-stage ablations support retaining document evaluation, clarification, and decomposition-for-complex-queries, and answer validation as required stages, while follow-up generation is answer-neutral on scored answers and therefore treated as a UX feature rather than a quality control; removing validation specifically drops false_premise handling from 1.0 to 0.875 even though it costs about 90% of per-query spend.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L188-L191",
+          "version": "repo-lines-v1:sha256:72dff1437c6f8534788cd6ce978ed5be3f163f6ef4b537fce75d8cea5b7a13b2:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDVlYzExYzMwYTRiZGQ0MmEwZjQ3OTA2ZDQyZmMzZjIyZmM3MGE1YjI0MGIwZWRjODBjMDZiYTY1ZjFhYzY1NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTdlODhmNjdjZjI0ZjI3ZWQxYTg1MzY5YmQ2YmQyMjQ5OTY4Njg2OGZiYjc3NGY4OGZjNGFjMjI0MTU3MzUzYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        },
+        {
+          "resource": "repo://docs/baseline-report.md#L70-L86",
+          "version": "repo-lines-v1:sha256:e0a7a2dcdcbc77a3b69d659f39b2ab8ca3c08f36d467ddfe3a691b7b751c9cbf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1MTg2OTYzMDY2MWQ2NDhiZjE0ZTg4MmM3NmQ2M2JjOTU2OTYyZmM5YzU3ZDMyZWNkYTJiMjZjMDk2OTc1Y2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjMzZmMDAxNDIyMWM3ZTNhMDk3MzIxMDVlY2U3ZWNmMDNiMGMwNTdiZmI2NDU4YjlhMGE0NDcwY2ExNzM0ZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRjODBhNjkxMTIxZjk4NzY3ZjRmMjE2YjU4MDM4YWQ2NTk0ZjY3NTdmOWQ2ZDhiNDkzZTI1NTljOWQxMTI0NDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b57c50b86fdd437da790233cab648481",
+      "statement": "The system makes no clinical-decision or HIPAA-compliance claim: the HIPAA Safe Harbor coverage table (15 of 18 categories covered or deliberately diverged) is explicitly documented as a coverage inventory, not a compliance certification, and the product is scoped to Canadian-context information support.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L93-L97",
+          "version": "repo-lines-v1:sha256:031d8a2ae09188884fc2cffe0560878c9a4f64d353d4226d877033c8f07d234e:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2I4ZjJjN2QxYzc0NmRhODg5YTM5ZTI4NDIxZTJlOGE3NTc4ZmRkYWY5ZDkxYWZiMTMzNmE5NThkMTM2Y2MxZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdkZDU0NWRhYzUxOGQwMzgzZTIzYjJhZGE2YWY2YTNjMmI2ZDRkOWQ0YWI1MDkxMjk3OWNkMDk0OTc1NjQ5YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDNkZmM4NzU2ZjQ2NGMzYzk1MDg2NDU1MTQ1YTYzODMxYmIwMWQ5NDczYzM0ZTJiNzM2MDk3NDY2YWE5Zjk3YiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjQ5NTFmMzBiNzQ2MDFkMzhiYmEzMGI4YWYxYWFmMTQ3NzBkMjhhYzc5NTJkNWM5ZGE4MzZlZWVhZDIwNDcyMCJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L50-L50",
+          "version": "repo-lines-v1:sha256:e5149f2f2d158f07cd8911b0b69c6ce1921f826706c911d290265039ac56a077:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTUxNDlmMmYyZDE1OGYwN2NkODkxMWIwYjY5YzZjZTE5MjFmODI2NzA2YzkxMWQyOTAyNjUwMzlhYzU2YTA3NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTUxNDlmMmYyZDE1OGYwN2NkODkxMWIwYjY5YzZjZTE5MjFmODI2NzA2YzkxMWQyOTAyNjUwMzlhYzU2YTA3NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzk0NWM5NWIwOGI3NDdkMjNiODc3ZTFiYzdhMmVjNjRiNzVhN2I0ODdkNTVhODg1Njk2ODZhNjMxZjVlYTNmOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGVmZWFjNWQ4MGJmZGRiMmNhNDBmYjIxZWQyYjhjNDQxNjRhOTE3NmNjY2RkODA1YWQ5OTEzNDQ0ODE5NDkzNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_36d3baac45334c969d738cd6eb964daf",
+      "statement": "Direction 1 (inherited standards) replaced a frozen 182-package requirements.txt with a uv-managed pyproject.toml, and separately deleted that same requirements.txt after finding it carried 136 of 142 open Dependabot alerts (including both criticals) that no build tool actually read; the remaining 6 real alerts were in uv.lock, 4 cleared by a single cryptography upgrade and 2 deferred with a written reachability argument.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/dependabot-requirements-txt.md#L1-L62",
+          "version": "repo-lines-v1:sha256:91e670bf8ca06cfa271d1af7988999cb4c4213a453065473ae57894f62c7a31d:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZjAwNzRiMWVhNmE4YzgxOTUzYjQ0OTYyMGU3YWU3N2FkYjU1Mjc0YTQ4N2QxNDFjY2YyZTU1Y2I4ZjlhNTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3MjRlZDI0NGU0ZmJmYWVjMGU3YTIxYzI1Y2U5MTUzZGQzZWI3ZWNjNTJkZGVhNmQwZTdjOGMxZGRmOTZkNjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhmZDliMGExNjViNDAwMWRjODA3ZjY5MWE2OWQxMTNkODk3N2VmNDk1NTVlMWQ1YzhiYmVhZjFhNjUyMzk3MDYifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L52-L60",
+          "version": "repo-lines-v1:sha256:c4a51f8a58becb5d27ba81146262b620732730eede33b88fb901ffb8143aaed2:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTk2NWQ3ZWQ3OWFkZGZkOWUzMjM3ZDUwNzRkOWQ2MDAyZWMwZDc5NDg5Yjk0ZmJkMjVhMjFiYzUyYjc2NWNjOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmI3ODAzOTU1NTZkNjFlNTZhNDZjNTM3NGZkMWQ4YTI4NWNlNGE5YTczMWEwOWY2YzVkNmYzYTgxM2Y5ZGZjOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDIzNWE4ZjM0MzM0Yjg0YTVkNDIwNmFiZDdhMDBmYzdmNDViYTY4NWFkZDc4ZWU0NGQ3NTJlYzM3NTY4MjNkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjk0ZTM5MTY2ZmQzMTJmYWI4ZTljMDIwMjU5NWUzYjAwZjYyM2Y3ZTdmZWRmOGI1NDlmOGU0OTE2ODI5MGM4OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5bb58f2f5a8740e69a2694c480bef223",
+      "statement": "The member-facing UI renders coach-provided facts only through a __ref JSON-pointer into a same-turn, server-produced data envelope rather than as literal values, a pattern chosen specifically so the model cannot smuggle a hallucinated number or date into a static-looking card; a production 403 error on the original custom chat transport (useCoachChat.ts over the raw LangGraph SDK) forced an unplanned rewrite onto CopilotKit v2's useAgent mid-week.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L335-L341",
+          "version": "repo-lines-v1:sha256:d41c3c25799d96669e208710984a50ba40fdb99a855ac7b00ce1d7b18ec77235:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzEyMjEyMWE0NGQyMzBjNGRlZDI1YWMyOGQ3YTRmY2RhN2E2YzJjY2E5YzM4ZjZjZmYwNTA1NjRhYThlZjI2YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDkyMWNkNWYzZTZlMDQzYTU3NjM0NTczMzdlMzFjOTk1YWNiMWI2ZDcwYzFkNTU0Y2ZmMTU4NjljMzA0NmRhMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWZiODFlZTgyZGExYWYwZTMyNTA2OWQ3MjdmMjJlNjI0NWVlNjVmNjUzZDE3MzM0MzM4M2M5NzFlMDM1MmRkYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDNkMmQ0Nzk5MzU4YThkMmY1MDg1ZjUxZmE5NzAzZTRjYzIzMWFhN2UzOTVkZTIyZDUyMzFjNDE5YTI5MTVmMSJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L62-L74",
+          "version": "repo-lines-v1:sha256:f5573cd714db90ef4e666be89cace6601a60f9ed05cf85e23da45204fefb4f14:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkYzU5OGExZjBhOTA5NDZlZmVlODU1YmNlNmI0ZjBkZWFjYTRhYjMxZDgxYThhYzg4YmE5MzNlNTE3ZTBhNTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0ZTIzMmFlZTc3M2JhOGY4Mjg2ZTIzNmYzZjhlYTY0NTZmMzY3ZWRmZmUxNDYzYWQ0MDRkZjhmZDNiODAwYjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFmZGQ2YmVjYzAzMGIyZjU3ZmM3ZDA2MDk0ZWM1NGEwNDBlYzkwZDBmNzQ3MDg0ODFjNjVhZWU5YWNmY2ZhMmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzMjZhMGVmZGVlMTEwNzI2MDQxMGE5NzVkM2U2MGEzYTUzNWE3YWRjMjdlNWQ3ZWQ2NWMxMzY4YTlhNDhlNDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_05b105efd444497d9843525de35245eb",
+      "statement": "The regression-protection harness (86 golden examples, a calibrated LLM judge with deterministic checks, a 27-conversation multi-turn suite, a --fail-under CI gate, 73 committed reports) measured run-to-run judge noise of roughly ±0.05 to ±0.07 on byte-frozen code, which established the paired-comparison, fresh-reference rule applied by every later decision record in the repository.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L1-L7",
+          "version": "repo-lines-v1:sha256:83389934282f129af47dc46e643d3bd66dc1863aba12ff16ac22b4d5d18b5b32:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU4MDk3ODYxOTI0NDcxYTAwNmQ5ZTNmYTMyMmM1ZTdiZDUyYmIzMTM3ODIxMmIyNmViZmI0ZGY2MDJjZTVmMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmM5YTQ4NWQ4YjI5MGNkM2NhZmJhM2JjMjc2ODBkNjUzYTY5ZWM2ZTA4ZDMxZjg0YTkzYzc2NWNhMmFiOGE4ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTgyZjkxYmY2ZjFiNTQ4ZWFhY2VhOGI4MzRhZWNhZjdlNmQ0NzMxYjMwOTdkNmMwYmE1NDJmMjZhNThjYTVkMiJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L76-L84",
+          "version": "repo-lines-v1:sha256:3beee5c6ceb874e0e67630a1acacf398be54c04b61b63f5d467ee4bcc34185e1:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjc3YzE2NjhlODIzOThlNjY5YmNkNTdlNTM0Y2Y4MjMyZmVjNzk2YTY2MzAzZjJlNzliOWFmYjA3MWNmYzc2NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2ZlNWU5NzhlMDg0MDk0MTEwNTZmY2E2YTEwNTgwYjE3MmE4NWI1NzI0YTM0ZDBmMjQ5YmJkMDQzZmM4YTFmZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzYxYzg1NjA5YWY3YjhlMGExODc3MGZmNTVhODQ5ODAzZTQ2ODM2YTMwMjlkOWI4ODIxNjRiZGQzYjQ0MzEyZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTRlOGVjYzE4Yjc0NGMyNmFmMjQ1ZDBkY2M2MGQ0ZmE3NzA1Yjk2MDBhNzNiMzgzNzJlZmU4YzQxMmE1MTRlOSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fcfbb081d3824d00afd5f1a366c6ae21",
+      "statement": "The speculative concurrent orchestrator was replaced by a conditional LangGraph StateGraph, accepted with correctness moving 0.813 to 0.855, cost falling, and p50 latency slower by roughly 1.26x to 1.34x; three alternative retrieval arms (PageIndex, Pinecone hybrid, bge reranker) were built and rejected against frozen gates, and two routing arms (query-or-respond, Semantic Router) were built and recorded inconclusive rather than measured.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/pageindex-vs-weaviate.md#L1-L37",
+          "version": "repo-lines-v1:sha256:420c0465ac366f286cf43e9f713260ee83e64075c7d70e8f7895ac5db85eb6a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4OWMxMWFkMjYyYzJkZjRiODIyNzg4YTI1Yjc5MTM0M2EwMjlkNTE4YWRlNTFmODlhNGMwZGUxNmZkMTJmZWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5YWNjZmY2ZTZiOGVmMzk4Yzk1MGYyNTYwYTNjYjNmOWNhYzA2NmUwN2EwOTNlNWRmZGU4MGY0YjQ1ZjJiMmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkYjU1MTZlMGFmOTZlZDEyNjI2YmFlNWEyNDFkOTY1NWExNmE1ZDA0M2EyZDg0ZTQ0ZTkzNTE4ZDhhODg0ZjYifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L1-L52",
+          "version": "repo-lines-v1:sha256:f4960509949245da423d0caaf0451d29fb44895923e7539785a1f0b5abe46bcd:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNzFmNTljOGU2ZTgzMWYzNzM3NDQ4ZDIxNTEzY2VjMDRlZWI3ZWQ3M2VhYjE4YjNmMWFhN2JhZDQ5NjNkY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjM2UyMTdlNjVjYWU5ODNjN2NmZDE2Y2I2N2IyOWRlMjFkZGNjN2QyNDFkOTY1YjYxNTg3MTNiZTVkYjEwNzkifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/routing-experiment-summary.md#L1-L22",
+          "version": "repo-lines-v1:sha256:65c158a75246de77cac5c762e8309b4337b524f0d0232c890675146fbe18b809:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlYTA4YzUwMDBhNDM5NWRmMDRhOTczZmFhY2I0ZGE3OWRkOGVjYThmNmU2ZTJiNWJhYzVmOWMxZDUyZjk3NmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlYTNmMTBiOGQ0YTNmOWNjYzFjOWQyZTkxMzgzZDZiOWZhZWNjZWZlMjk2NjE0NGFmZThlMTFlMTgxNTY0YjcifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L86-L100",
+          "version": "repo-lines-v1:sha256:0b0871b38fca2bdf8324491d00b3918ad7e341d1d798cb44c99c8e310e790bc1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmZjg3MGE3NWY4YWJmNTM1NWEyM2NmNWIwYjMwODRkNDNiMTI3MGM1NWQwMDE3MWZiN2NlNzFhNjFiYzUxZDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3ODBlNjgwOGM2OWU5MDA5M2E0ZGI3OTBmN2RkOTBhY2ZmMmU5MzZlOWY5ZTMxNWQ5ZWQ2NjI1M2Q4Nzc3OGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2YTZiYjlmOGE1NGQ3ZjZhNDA3NWMyZDI1YTJhOTVmNzVlNmMxOTI3ODc3NDRiMDNhZTZkYjI4OGRjNjNkZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0M2ZjYTgxMWFmYTlmOWI5Y2ViYTZhOThmODAzNWRiZTdmMDdmNjQ5YTIxMzc4ZWUxOWU1MWJkNTUzNjgwOGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_641c1a0670a0468993e5f51b22f77799",
+      "statement": "Direction 9 (resilience) implemented a 100-run-per-thread queue cap, saver faults that are logged rather than swallowed, a readiness endpoint that answers 503 until the graph is actually ready, idempotent resume replays, exactly one 409 response when two concurrent runs target one thread, 15-minute expiry on upload reservations, degradation to the underlying search's own top-four results on reranker outage, and CORS mounted outside auth after a production incident where a preflight hit auth first and returned a bare 401 with no CORS headers.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L130-L134",
+          "version": "repo-lines-v1:sha256:feee87d5952694f504192099852ba7959b79cf2dfaf3ee62e6d9569fa36cd38d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmNlNzhkODdkMTJhODMxMDAxZTViMWUyNTZlYWJmMGFlNGM1ZmI2YWZhZDBiYTdkZGNhNTJiY2MxYjJhYjU2NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDBhYWI3MmRhYzdkZGFjYWI0Y2E5NmFlNzkzZTliNmQ4YzhlYTViNzY2YTY4NjFmM2ZiOTJkMGI2MDQxMDBhOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODgyZWYzMGY2Y2ZkZGYyYTkxYzM1Y2JmNzYyYjdjMTkzNTVjZjFhNmIyMjc3ZTJlMzU0YTJlMjBkMWJmNTVhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjk5MjAyMTk2NzAxMjQzY2E3MTI0YzZiZWU1YWI0YWQyYWU5NjNlMDQyZTMwMzQ4M2U1MjhiYjFkZWRhZWVhZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fad67ba7df9845b095c7144efa569449",
+      "statement": "Direction 10 generalized the product from a two-drug Q&A demo into a coach platform with pluggable retrieval and storage backends, while deliberately leaving the monograph corpus at exactly two drugs (Lipitor, Metformin) because every safety number in the submission was earned only against those two, and widening the corpus without re-earning those numbers was explicitly rejected as this week's trade-off.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L136-L140",
+          "version": "repo-lines-v1:sha256:cf38ad5a555cabc8cbfea71a4d6a0050bdeed9b6caef65df889a192b773f123e:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ZlODc4NzgxNGZiNWUwZmU2N2Q3NWYyN2NlYjZkYWZmODQyNzI0NDc0NDVhYmMzMzY4MTI1ZDgzNDhhYzkxZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjI3MDQxZGM0MDlhMDczODc4ODNmYjU4NzJiMjI5MjcxZThkZDk1MmFlMDM5YzhhOGM5ZTJiMDkzMjMyZDY4ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGEzMTQwYTViNzg5ZTYzY2NjN2ZmOWIzZTQxMDg5NjVjYjdiODNmNmU4MmM3MTcxYzViOWQ4OWJlNmQ2MTUwMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWQ4MmZmZGU1ZWQ4ZmVjZGU5MWM1YzU1ZWE2MDk5NjM2OWUyMDFhNTQxOGYwMDAyODA1MDE1ZjFhMDRmNjM2ZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_715792a9660c4d8692a8b3540a51b75c",
+      "statement": "A clean-room server reimplements the LangGraph platform API and is held to the real platform's behavior by a pinned 0.12.6 oracle and a smoke suite, with CI proving by SBOM that the vendor package is absent from the production image; OpenAI (model serving), Supabase (login JWTs), and LangSmith (opt-in tracing) remain the three genuine external vendor dependencies, each isolated behind one interchangeable layer.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L142-L148",
+          "version": "repo-lines-v1:sha256:24121b6dd1b15e05aef0642c367009e16c5cd30a26ebb81105a5444cd27919bc:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWQ1NmZmYjViZTkwYTU2YjI2ZTIxM2FkOWQzNDAyMjhmM2QxMDVkOTk1ZjEwZmI1YWYyODQ5NzkzMWM3ODQ0YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjkwMDNkNWUxODQ5NjgwMzQ4Yjg0ZjkxZTFjNzkyNGNhNzliMGMxOGVmMjQ3YTRkOWVkNWM2MzZmMDYzOTE5OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODZmOTYwZDU4MzA5YmJkZTY0NGE1YjMyNzIzNDIzMmJlYjZiMWQ4YjgyZmJjOTY2NDAwZmJiYTdlMWIxZTQwYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5e322b99bad8433aab9e5abb8b230104",
+      "statement": "Reporting discipline was tested by two retracted claims that are recorded rather than silently corrected: a claim that a cryptography upgrade had un-skipped two conditional tests was retracted after the real cause (an unrelated CI fix) was found, and a reported count of 1,632 passing tests was found to depend on one test reading a 956K untracked directory present only on the author's machine, so any clean checkout failed.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L208-L220",
+          "version": "repo-lines-v1:sha256:ffeb41f9af54dd8c32f6cfce5f6e306cb3661d64bbcdc46caff60e1fe2841e77:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhMmIyMDUwZWNmNDdmMWVjNTk3MzIzM2FmMzZhYWRkN2MzMzY0YzhlNzU0NzUyNTdmM2U1ZmJiNjIwYjYwYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MWNiYmU3YzAxMDQ2ODUzY2Y0ZDFmOTI1OWMxMzUzMGFiMTgxMzNlYmYyYjFjY2U5NjEwMmM2ZTViNTE5NWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBlN2RjN2Q0ZDkwN2I2ZmY4Mjk1ZTRhYjM5YWMyZjllYTBkMDdkMWU5NjFiMzQyNDU1Y2Q1OGNkOTBjMDY5YTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNWU4YTE0NmMwYzkxOTZkYjllMmFjOTExYWY0M2EyOTY5NWFhNGM4ZjIxM2M1NWI3MjFmNTRiYWU2NTdlMjQifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L56-L58",
+          "version": "repo-lines-v1:sha256:9f33083e3caf59f5f817b635ca027ef985d4926c1cc036e6f39adbfef60a1886:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDQ2ZWU0YTkxYjA4MmRhYzZkNzljMGM4YjliMjVjZWU0NjZiNDgzMzQ5ZDU5YmQ2NTUxNWQ0NzgxMmE3NTJlYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjRlOWRjZmU5OTQwOWMwYmM1OGNkZjIwMDYyMDE3ZTU5ZWE4NThjOGNlYjNhOWNjOTRjNDYyNzI3N2Y2NGI3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTljMDBiMzFmZmVlMGJmMjliN2QxNzlkNjhjZWZlODA3NjEzNzY3ODM0OGUzMGYzN2VhNTI2MDRmOGZiMDJmNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWZkZDZiZWNjMDMwYjJmNTdmYzdkMDYwOTRlYzU0YTA0MGVjOTBkMGY3NDcwODQ4MWM2NWFlZTlhY2ZjZmEyYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d8a1e92943c44bde9a4a73a2fa89b179",
+      "statement": "The largest recorded trade-off is refusing before generating: the safety gate short-circuits before retrieval, accepting 4 false-positive refusals out of 59 answer-expected questions and a headline correctness drop from 0.89 to 0.81 in exchange for safe_redirect moving 0.16 to 0.64 and numeric dosing leakage moving 0.52 to 0.04, justified on the stated reasoning that an answer that should have been a refusal is a harm while a refusal that should have been an answer is a support ticket.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L154-L154",
+          "version": "repo-lines-v1:sha256:b20be5ee9c8b401cdc200e1c2c9e8b81de2c5f3e6171a80273de05833ba48a71:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjIwYmU1ZWU5YzhiNDAxY2RjMjAwZTFjMmM5ZThiODFkZTJjNWYzZTYxNzFhODAyNzNkZTA1ODMzYmE0OGE3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjIwYmU1ZWU5YzhiNDAxY2RjMjAwZTFjMmM5ZThiODFkZTJjNWYzZTYxNzFhODAyNzNkZTA1ODMzYmE0OGE3MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODg1ZjkxNTgwZTNhNmM5Y2VkYzBiMjM5ZmQ2ODExODNhNWI3N2Q5MzRlYzI4NzJmM2FjMDcyODlhZTE2OTRhOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjQ2NjdmYmQzMDJhMzk2ZmQwYjYxM2QwYjJjNTIxNTBkYzE0YzE1NTAwMjdhMGI0NTQ0NDhhYzIzZjk1NmVlYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5e64a9a68e3d4db8aea1298d7c8b2f68",
+      "statement": "The runner-up trade-off was giving up the speculative orchestrator's concurrent race for a conditional pipeline, accepting p50 latency 26 to 34 percent slower in exchange for higher correctness, lower cost, a single engine instead of two, and a raw question that is never checkpointed.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L145-L191",
+          "version": "repo-lines-v1:sha256:f9b7fd158d778dc2ee25d31028f81473c465163146891a021b17c4bf709f8237:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzMDBiNzExODc0ZDJiODJlM2FlNjYxMWZiYjhhZTNlOWZmNjI3NmZhZmRmYmUyMjMyOTdmZWNiNTk5YzUzZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1ZWMxMWMzMGE0YmRkNDJhMGY0NzkwNmQ0MmZjM2YyMmZjNzBhNWIyNDBiMGVkYzgwYzA2YmE2NWYxYWM2NTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzMDVlYzRiODU1MzZhMGY1ZGY2ZmVjN2I3YThiYzdkYjRkNzBlNmZiMDY1ODg3NTJmOTExOWIyMTBkZWU4MDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L158-L158",
+          "version": "repo-lines-v1:sha256:30d7f5bbfa0eedfd313a17d5c20b3bfed8d3b17214bf067b885948bfcbf7e0de:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBkN2Y1YmJmYTBlZWRmZDMxM2ExN2Q1YzIwYjNiZmVkOGQzYjE3MjE0YmYwNjdiODg1OTQ4YmZjYmY3ZTBkZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBkN2Y1YmJmYTBlZWRmZDMxM2ExN2Q1YzIwYjNiZmVkOGQzYjE3MjE0YmYwNjdiODg1OTQ4YmZjYmY3ZTBkZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjQ2NjdmYmQzMDJhMzk2ZmQwYjYxM2QwYjJjNTIxNTBkYzE0YzE1NTAwMjdhMGI0NTQ0NDhhYzIzZjk1NmVlYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWVlODk4OWQ1OWFmNmJiMDdiYzI4ZGYyZmEwMmEwZTVlNWM2YWFlMDVjMzc1ODk0ZTg5ZGIwZmU5MTNmMzkzMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a85a73340d4491aa1337bcefe43e021",
+      "statement": "The member-facing coach agent deliberately does not carry the RAG graph's LLM classifier or persisted refusal boundary; its own gate is a short deterministic list of red-flag terms, injection phrasing, and identifier-recall requests, and the only path by which a drug answer reaches the member is the medical_lookup tool relaying the RAG graph's fully gated output verbatim, a design chosen so a member refused on a dosing question can still use the rest of the coach.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L156-L156",
+          "version": "repo-lines-v1:sha256:022b03e5ebfc0a0fd0538de90fb0ebaab417fa75cc18c9a21f390833c2caeec9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDIyYjAzZTVlYmZjMGEwZmQwNTM4ZGU5MGZiMGViYWFiNDE3ZmE3NWNjMThjOWEyMWYzOTA4MzNjMmNhZWVjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDIyYjAzZTVlYmZjMGEwZmQwNTM4ZGU5MGZiMGViYWFiNDE3ZmE3NWNjMThjOWEyMWYzOTA4MzNjMmNhZWVjOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWU3ZmExZjhlYTkxNzRmOTY0NTg3NGVlZTQ2MTEyN2ViMjk5YTk1YzFiY2E2ZDI1ZWI1NWUyNDVjMTE5ZTEwMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWU3YTc2NzBmY2Q0NTY2MDA0Y2EzZTA1M2E5NTBlN2UzYWI1NTVmODU0MWZmMjIzZDdkNGI0MDgzOTdiNTRlNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8e660edd84245e0a3e168369d37fe85",
+      "statement": "The frontend's 313 unit tests across 31 files and its e2e spec run locally but were deliberately not wired into CI by submission time, and a designed rollback contract with a runbook-mandated one-time live exercise had not yet been run end to end in production.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L120-L120",
+          "version": "repo-lines-v1:sha256:8efb4832a78a86c000d279e676091572375716ea289553ff79390d3503e0d3e4:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGVmYjQ4MzJhNzhhODZjMDAwZDI3OWU2NzYwOTE1NzIzNzU3MTZlYTI4OTU1M2ZmNzkzOTBkMzUwM2UwZDNlNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGVmYjQ4MzJhNzhhODZjMDAwZDI3OWU2NzYwOTE1NzIzNzU3MTZlYTI4OTU1M2ZmNzkzOTBkMzUwM2UwZDNlNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTYyYTg3NGU0ODVkMmM5M2ZhYTMwOGE3M2VjYzAzOWU3ZmMzYTY1MWJjZmRjYzZiY2MyM2JkOGMwNzExZTM5ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGIyMjVmM2VkMmM1OWM1ZGNkZGI3NTBlYmJlNzVlMThlZjYwOTkxYzg0NjY3NzEyZTYxYjNhOTFmODc2ZDdjYyJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L60-L60",
+          "version": "repo-lines-v1:sha256:2b780395556d61e56a46c5374fd1d8a285ce4a9a731a09f6c5d6f3a813f9dfc9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmI3ODAzOTU1NTZkNjFlNTZhNDZjNTM3NGZkMWQ4YTI4NWNlNGE5YTczMWEwOWY2YzVkNmYzYTgxM2Y5ZGZjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmI3ODAzOTU1NTZkNjFlNTZhNDZjNTM3NGZkMWQ4YTI4NWNlNGE5YTczMWEwOWY2YzVkNmYzYTgxM2Y5ZGZjOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjE1ZDI2YTZiNDk1OTkyOTYwMGI5ZmJmNTFkN2Q3ZGNjZjA3M2VjMmUxOThhNmU0YzM4NzkyYWE3YWU5MGViYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjk0ZTM5MTY2ZmQzMTJmYWI4ZTljMDIwMjU5NWUzYjAwZjYyM2Y3ZTdmZWRmOGI1NDlmOGU0OTE2ODI5MGM4OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_64540696ecf44ff4a1c356fe2c10946c",
+      "statement": "The stated priority order for a following week of work is: fix two known documentation drifts (the compose_ui tool-call limit documented but applied only to change_schedule, and stale references to memory-based production storage that has been Postgres since PR #29); wire the frontend's unit and e2e tests into CI; run the live rollback exercise and record the digests; make answer validation cheaper without removing it; unblock the two inconclusive routing lanes; and only then add a third monograph with every safety number re-earned against it.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L108-L108",
+          "version": "repo-lines-v1:sha256:6d2817328194b819df7354f04451c5fd086b01a00564b7dc5ebf6fcdd0b20928:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmQyODE3MzI4MTk0YjgxOWRmNzM1NGYwNDQ1MWM1ZmQwODZiMDFhMDA1NjRiN2RjNWViZjZmY2RkMGIyMDkyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmQyODE3MzI4MTk0YjgxOWRmNzM1NGYwNDQ1MWM1ZmQwODZiMDFhMDA1NjRiN2RjNWViZjZmY2RkMGIyMDkyOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTBjODcyMTkzNjQ4MTU1NjM3YTExOTcwNTQ0OGU4Y2YxMTcwNmQyYTNjODYwYTYxOTgxNzc4ZDllOWE2ZDFjYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzhmZjZiNGE3ODcxMGZjOTNkYzZiNzE5M2UxNGRjNWJkMmI4NzIyNTU3NWE3OWQyNjM3ZjFjMTYyYWZlYWQyNiJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L172-L172",
+          "version": "repo-lines-v1:sha256:f7fb3940c1ce15566936a8b12b1f87b46b270038f52739ee3749dce104fbb537:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjdmYjM5NDBjMWNlMTU1NjY5MzZhOGIxMmIxZjg3YjQ2YjI3MDAzOGY1MjczOWVlMzc0OWRjZTEwNGZiYjUzNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjdmYjM5NDBjMWNlMTU1NjY5MzZhOGIxMmIxZjg3YjQ2YjI3MDAzOGY1MjczOWVlMzc0OWRjZTEwNGZiYjUzNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjMxMTE0M2M1YTkyMjdjYjlhY2I2MDFiMWQwNGU2YjkyYjZlZDFkODQ3Mzc3OGI5ODM3NmM3NTg1ZDRkMTE3MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDAxZjJlYzE3NTkzYzEwNTRlYjQ2MzY3ZDg0NTNlZjI0YTE3M2NlOTZiNzExN2Q5MWY5YTY4ZDQ0ZmVmOGIwMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_07a3bc18fa5c41c28db48bde9fd6bc88",
+      "statement": "Recorded per-direction second-pass proposals include recalibrating the personal_medical_advice boundary against its 4 false-positive examples and continuing multi-turn conversation-level drift tuning (settled at 0.36, not zero); running an alpha/limit sweep on the already-winning Weaviate hybrid retrieval (roughly +0.05 measured stage-1 headroom); adding more judge calibration cases whenever a judge flip on refusal-heavy transcripts is traced to phrasing; pursuing a smaller or batched-verification model for the validator stage without removing it; and choosing an alert channel for the existing LangSmith error-rate and latency signals.",
+      "evidence": [
+        {
+          "resource": "repo://docs/writeup.md#L100-L100",
+          "version": "repo-lines-v1:sha256:5780e6808c69e90093a4db790f7dd90acff2e936e9f9e315d9ed66253d87778c:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTc4MGU2ODA4YzY5ZTkwMDkzYTRkYjc5MGY3ZGQ5MGFjZmYyZTkzNmU5ZjllMzE1ZDllZDY2MjUzZDg3Nzc4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTc4MGU2ODA4YzY5ZTkwMDkzYTRkYjc5MGY3ZGQ5MGFjZmYyZTkzNmU5ZjllMzE1ZDllZDY2MjUzZDg3Nzc4YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWM5OGU3NzYyMmI5ZmJjODIyMjQ1ZGFlOGExNjMzNDM0NmQyOTg1MTIyOGE3NTBkMmI5NGY2NWNlNjc4OTJhMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjQzZmNhODExYWZhOWY5YjljZWJhNmE5OGY4MDM1ZGJlN2YwN2Y2NDlhMjEzNzhlZTE5ZTUxYmQ1NTM2ODA4YiJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L128-L128",
+          "version": "repo-lines-v1:sha256:6b53aa1f0f20ba30e5ceefbbeedace62e4b3330f3e0d1a4ce05793c884b0e44e:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmI1M2FhMWYwZjIwYmEzMGU1Y2VlZmJiZWVkYWNlNjJlNGIzMzMwZjNlMGQxYTRjZTA1NzkzYzg4NGIwZTQ0ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmI1M2FhMWYwZjIwYmEzMGU1Y2VlZmJiZWVkYWNlNjJlNGIzMzMwZjNlMGQxYTRjZTA1NzkzYzg4NGIwZTQ0ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDc1Mjk1ZjAyNWE5MWIwYzExY2RhMjc1MGQzZmRhMzJhYWVmYTQ4ZWUyM2VkOGNhYzA0ZjNlNGM0YzEyNTYwZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmMxYzNkYjJkZjIzN2ZkNDIwYzc0NjliYWQ0MmFiZWM1NjAwZjMyOGYyMmU3NWZlYzMwNGZiOGU1YzdlYWZhNSJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L134-L134",
+          "version": "repo-lines-v1:sha256:d0aab72dac7ddacab4ca96ae793e9b6d8c8ea5b766a6861f3fb92d0b604100a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDBhYWI3MmRhYzdkZGFjYWI0Y2E5NmFlNzkzZTliNmQ4YzhlYTViNzY2YTY4NjFmM2ZiOTJkMGI2MDQxMDBhOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDBhYWI3MmRhYzdkZGFjYWI0Y2E5NmFlNzkzZTliNmQ4YzhlYTViNzY2YTY4NjFmM2ZiOTJkMGI2MDQxMDBhOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjRkMTI0MTM1MmQyYjMwNzQxNWEyNGQ1MTcyZmY2YTljYzQ0ZjUyOGFiZDc4ZDcxYzRmNmMwZmE5YjQxNjBhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjk5MjAyMTk2NzAxMjQzY2E3MTI0YzZiZWU1YWI0YWQyYWU5NjNlMDQyZTMwMzQ4M2U1MjhiYjFkZWRhZWVhZiJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L48-L48",
+          "version": "repo-lines-v1:sha256:d8639a43f0ac581d01a063a71a4e24dc1637cfb16c2dcf6fe81b9575f860fa03:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg2MzlhNDNmMGFjNTgxZDAxYTA2M2E3MWE0ZTI0ZGMxNjM3Y2ZiMTZjMmRjZjZmZTgxYjk1NzVmODYwZmEwMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg2MzlhNDNmMGFjNTgxZDAxYTA2M2E3MWE0ZTI0ZGMxNjM3Y2ZiMTZjMmRjZjZmZTgxYjk1NzVmODYwZmEwMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTIxMjg4YTY3OWJlMzZiNjAxNmI5ZWYzYzIxOTdmOGQ1MGI1NGRjZGQxYmQxMGMxMjIzNTc0OTVlZjg5MzBjOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDIzNWE4ZjM0MzM0Yjg0YTVkNDIwNmFiZDdhMDBmYzdmNDViYTY4NWFkZDc4ZWU0NGQ3NTJlYzM3NTY4MjNkMiJ9"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L84-L84",
+          "version": "repo-lines-v1:sha256:3fe5e978e08409411056fca6a10580b172a85b5724a34d0f249bbd043fc8a1fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2ZlNWU5NzhlMDg0MDk0MTEwNTZmY2E2YTEwNTgwYjE3MmE4NWI1NzI0YTM0ZDBmMjQ5YmJkMDQzZmM4YTFmZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2ZlNWU5NzhlMDg0MDk0MTEwNTZmY2E2YTEwNTgwYjE3MmE4NWI1NzI0YTM0ZDBmMjQ5YmJkMDQzZmM4YTFmZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWEzNTcwMDQyMjgyZTkyNzYwMmNmNmUyMTM5NDU3M2NhNDJhNGY1MjIwMWYwNWQ4NzE3NzE1NzAzMWFiNzZiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTRlOGVjYzE4Yjc0NGMyNmFmMjQ1ZDBkY2M2MGQ0ZmE3NzA1Yjk2MDBhNzNiMzgzNzJlZmU4YzQxMmE1MTRlOSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

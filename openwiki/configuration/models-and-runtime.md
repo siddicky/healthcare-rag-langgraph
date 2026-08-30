@@ -4,8 +4,30 @@ title: Model configuration, runtime controls, and cost boundaries
 description: Environment-derived controls for model selection, compatible sampling, graph stages, retrieval, checkpointing, and resource lifecycle in the Healthcare RAG runtime. Use this page to change runtime behavior safely and evaluate—not assume—cost or quality effects.
 tags: [configuration, models, runtime, operations]
 verified:
-  - by: openwiki/0.4.0
-    at: 2026-08-26T20:21:43.477Z
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-3f718dfc0cae53689e49b15c
+    resource: repo://docs/baseline-report.md
+  - id: openwiki-source-4ab4e92e28196bf577454906
+    resource: repo://docs/writeup.md
+  - id: openwiki-source-e464dbfbded5331ec055dd1a
+    resource: repo://healthcare_rag/AGENTS.md
+  - id: openwiki-source-ce5020c63c5a2b23e700e1d0
+    resource: repo://healthcare_rag/config.py
+  - id: openwiki-source-184fc99d49c5faae867575f7
+    resource: repo://healthcare_rag/graph/engine.py
+  - id: openwiki-source-7772f43efa9811bd36483e17
+    resource: repo://healthcare_rag/graph/llm.py
+  - id: openwiki-source-9b0965dd12a5f2c42ed4d2a7
+    resource: repo://healthcare_rag/graph/settings.py
+  - id: openwiki-source-05c6c517a6da00d1f78ecc7d
+    resource: repo://healthcare_rag/services/model_sampling.py
+  - id: openwiki-source-5dac0d93eedc2d38a0fc6eaf
+    resource: repo://healthcare_rag/services/models.py
+  - id: openwiki-source-3e028c0fa647f1fe0f2c897c
+    resource: repo://tests/test_model_sampling.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
 ---
 
 # Model configuration, runtime controls, and cost boundaries
@@ -25,6 +47,8 @@ flowchart TD
 
 This shows ownership: settings select behavior, resources lazily own external clients, and the engine owns graph compilation and checkpoint lifecycle.
 
+`healthcare_rag/config.py` is a separate, legacy env-var helper (`get_env_var(name, default, required)`) that also loads `.env` at import time; no module in this repository currently imports it. Model and sampling configuration lives entirely in `healthcare_rag/services/model_sampling.py`, re-exported unchanged by `healthcare_rag/services/models.py` — do not add new model knobs to `config.py`.
+
 ## Settings, entry points, and lifecycle
 
 `GraphEngine` is the in-process entry point: its first use initializes the privacy sanitizer, selects and initializes a checkpointer, and compiles the graph. Use `async with GraphEngine(...)` or call `await engine.aclose()`; closing exits an engine-owned SQLite context and closes resources held by the process-wide `Resources` owner. `Resources.get()` returns that singleton, while `override()` replaces it for test injection. Constructing resources does not connect to Weaviate, Pinecone, or OpenAI.
@@ -38,15 +62,33 @@ This shows ownership: settings select behavior, resources lazily own external cl
 | `HC_RAG_LLM_MODEL` | `gpt-5.6-luna` | Default tier for routing, preprocessing, retrieval evaluation, generation, and follow-ups. |
 | `HC_RAG_VALIDATOR_MODEL` | `gpt-5.6-terra` | Validator tier used for the `validate_answer` structured stage. |
 | `HC_RAG_REASONING_EFFORT` | `none` | Reasoning control supplied for recognized GPT-5.x and o-series names. |
-| `HC_RAG_STRUCTURED_STRICT` | `false` | Enables `strict=True` for JSON-schema structured output. |
+| `HC_RAG_STRUCTURED_STRICT` | `false` | Enables `strict=True` for JSON-schema structured output (`with_structured_output(method="json_schema", strict=...)`). |
 
-The model getters trim whitespace and fall back on blank values. `LangChainLLMGateway` centralizes client construction, selects default versus validator tier, uses three retries, and caches each `ChatOpenAI` client by tier, model, requested temperature, and reasoning effort. Structured stages fail soft: exceptions log a stage warning and return their supplied default rather than escaping from the gateway.
+All four are optional; every getter (`default_llm_model`, `default_validator_model`, `default_reasoning_effort` in `healthcare_rag/services/model_sampling.py`) reads the environment at call time (not at import time), trims whitespace, and falls back to its default on a blank value — there is no required model environment variable. `LangChainLLMGateway` (`healthcare_rag/graph/llm.py`) centralizes client construction: it picks `settings.llm_model` for the `"default"` tier or `settings.validator_model` for the `"validator"` tier (used specifically for the `validate_answer` stage), builds `ChatOpenAI` with `use_responses_api=False` and `max_retries=3`, and caches each client by `(tier, model, requested_temperature, reasoning_effort)` so a settings change only takes effect in a freshly constructed gateway. Structured (`astructured`) and plain-text (`acomplete`) stages fail soft: any exception logs `LLM_STRUCTURED_STAGE_FAILED` (or the plain-text equivalent) and returns the caller-supplied default rather than propagating out of the gateway — a broken model call degrades a stage's output, it does not crash the turn.
 
-### GPT-5.x reasoning controls are not temperature
+### Why `sampling_params` exists, and reasoning controls vs. temperature
 
-`reasoning_effort` and `temperature` are distinct inputs. `sampling_params(model, temperature, reasoning_effort)` recognizes case-insensitive names starting `gpt-5`, `o1`, `o3`, or `o4` as reasoning models. For a GPT-5.x reasoning model it sends `reasoning_effort`, and sends a supplied temperature only when the effective effort is `none`. For o-series models, `none` is converted to `low`, so temperature is not sent. A non-reasoning model receives a supplied temperature and no reasoning parameter.
+`sampling_params(model, temperature, reasoning_effort)` in `healthcare_rag/services/model_sampling.py` exists because the GPT-5.x family and the o-series are **reasoning models**: they reject `temperature`/`top_p` unless `reasoning_effort="none"`, while older chat models (the gpt-4o family) only understand `temperature`. Every call site used to hard-code `temperature=0.1`, which is a 400 error against a reasoning model. `sampling_params` turns one "desired temperature" input into whatever kwargs the selected model actually accepts, so a model can be swapped from the environment without touching call sites in processors or graph nodes.
 
-Do not bypass the gateway with a direct `ChatOpenAI` construction or hard-code a sampling combination. The compatibility rules protect a model-name swap from an unsupported parameter combination; they do **not** establish a quality, latency, or cost improvement. Measure any such effect with the [evaluation workflow](../observability/evaluations.md).
+`is_reasoning_model(model)` recognizes, case-insensitively, any model name starting with `gpt-5`, `o1`, `o3`, or `o4`. Given that:
+
+* For a **reasoning model**, it always sends `reasoning_effort` (the supplied value, or `default_reasoning_effort()` if none was given), and sends the supplied `temperature` only when the effective effort is `"none"`.
+* For an **o-series** model specifically, an effort of `"none"` is converted to `"low"` before being sent, because o-series has no `"none"` level — so an o-series call never receives `temperature`, even with the default effort setting.
+* For a **non-reasoning model** (e.g. `gpt-4o-mini`), it sends the supplied `temperature` and no reasoning parameter at all.
+
+`tests/test_model_sampling.py` pins this matrix exactly (including the `o1-mini`/`o3`/`o4-mini` "none"→"low" conversion and the case-insensitive prefix match) plus the identity-preserving `services.models` facade over `services.model_sampling`; run it after touching model-family or sampling logic.
+
+Do not bypass the gateway with a direct `ChatOpenAI` construction or hard-code a sampling combination. The compatibility rules protect a model-name swap from an unsupported-parameter 400 error; they do **not** by themselves establish a quality, latency, or cost improvement — the model/temperature values only decide which kwargs are legal, not whether the resulting answers are better. Measure any such effect with the [evaluation workflow](../observability/evaluations.md).
+
+### Model history and what a tier change actually costs
+
+The defaults (`gpt-5.6-luna` for the default tier, `gpt-5.6-terra` for the validator) replaced an original `gpt-4o-mini` / `gpt-4o` pairing during a documented migration (`docs/baseline-report.md`, section "Model migration (gpt-5.6)"; `docs/writeup.md`). That measurement matters for anyone changing a tier again:
+
+* Swapping the *validator* tier down to `gpt-5.6-luna` (i.e. `luna` everywhere) measurably dropped correctness from 0.75 to 0.55 on the core golden set, because a weaker structurer discards good content it cannot cite — the validator tier is not a safe place to cost-optimize by itself.
+* Swapping the *default* tier alone (luna generation + terra validation) initially raised per-query cost roughly 2–4× over the `gpt-4o` baseline, driven by more aggressive decomposition, not by the per-call price difference.
+* Cost was only brought back down to the original baseline (~$0.028/query) after a separate, non-model change — capping decomposition fan-out and adding a synthesis branch — was combined with the tier swap; that combined result is the one committed measurement of a net cost outcome for this migration (`docs/baseline-report.md`; `docs/writeup.md`).
+
+Treat that as a caution, not a template: it is evidence that a model tier and the orchestration around it interact, not a general claim that any tier swap is cost-neutral or beneficial. A different tier swap has not been measured and should not be assumed to behave the same way.
 
 ## Stage switches, routing choices, and fan-out boundaries
 
@@ -104,9 +146,9 @@ The LangGraph deployment reads `.env`, exposes the `healthcare_rag` graph, and s
 
 1. **State scope and rollback.** Identify the single intended model/configuration change, retain the previous environment, and distinguish a production change from an ablation. Never make `HC_RAG_DISABLE_STAGES=safety` a production rollout.
 2. **Validate a fresh snapshot.** Check enum spelling and case, boolean/numeric bounds, selected-arm prerequisites, required credentials, PageIndex artifacts if applicable, and the `graph-sqlite` extra for SQLite. Construct a new engine and capture `GraphEngine.describe()`.
-3. **Preserve sampling compatibility.** Keep calls behind `LangChainLLMGateway`; do not conflate GPT-5.x reasoning effort with temperature. Run `uv run pytest tests/test_model_sampling.py` after changing model-family or sampling logic.
+3. **Preserve sampling compatibility.** Keep calls behind `LangChainLLMGateway`; do not conflate GPT-5.x reasoning effort with temperature, and do not assume an untested model name's reasoning-vs-temperature behavior — check it against `is_reasoning_model`'s prefix list and the API directly if it is not a recognized GPT-5.x/o-series/gpt-4o-style name. Run `uv run pytest tests/test_model_sampling.py` after changing model-family or sampling logic.
 4. **Exercise the changed path.** Run `uv run pytest tests/test_routing_settings.py tests/graph/test_settings.py` for routing/settings changes, plus focused graph, retrieval, reranking, resource, or history tests for the modified control.
-5. **Evaluate before asserting outcomes.** Compare a baseline and treatment that differ only in the intended setting. Use smoke/deterministic checks and, for behavior or model changes, the relevant judge and multi-turn evaluations from [evaluations](../observability/evaluations.md). Review safety, correctness, groundedness, latency, usage, and cost only where the harness records them. Do not assert savings without a measured comparison.
+5. **Evaluate before asserting outcomes — do not invalidate a baseline silently.** A safety-gate template, a judge model, and a golden/hold-out dataset are all pinned to a specific pipeline behavior; changing the default or validator model changes what the safety gate sees and what the judge is grading, so an old evaluation report or safety-gate acceptance is not automatically valid evidence for the new model. Compare a fresh baseline and a fresh treatment run that differ only in the intended setting, using the [evaluation workflow](../observability/evaluations.md) and, for routing-sensitive changes, [routing evaluations](../observability/routing-evals.md). Review safety, correctness, groundedness, latency, usage, and cost only where the harness records them for that run. Do not assert a quality or cost outcome — including a cost saving — without a fresh, committed measurement backing it; the one committed cost result in this repository (`docs/baseline-report.md`, `docs/writeup.md`) covers a specific combined model-and-decomposition change, not model swaps in general.
 6. **Roll out and observe.** Monitor initialization and lazy credential/connection failures, retrieval and rerank warnings, and outcome telemetry; keep the tested rollback configuration. See the [runbook](../operations/runbook.md) for setup, commands, and service recovery.
 
 ## Focused tests
