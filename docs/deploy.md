@@ -284,7 +284,7 @@ Secrets source of truth is the GitHub Environment `production` (§2). For bootst
 | `COACH_INTERNAL_TOKEN` | yes | `<high-entropy-internal-token>` | internal cron/owner ops |
 | `COACH_ALLOWED_ORIGINS` | yes | `<allowed-origins>` | must contain the deployed frontend origin, e.g. `https://<frontend>` |
 | `CORS_ALLOW_ORIGINS` | yes | `<cors-origins>` | must contain the deployed frontend origin **and** `https://smith.langchain.com` (Studio Connect panel); keep the frontend origin aligned with `COACH_ALLOWED_ORIGINS` |
-| `LANGSMITH_FEEDBACK_PROJECT_ID` | yes | `<uuid>` | `00000000-...` shape — required by smoke (`COACH_INTERNAL_TOKEN`/`LANGSMITH_FEEDBACK_PROJECT_ID` both required); if feedback project not yet configured, create one and use its UUID |
+| `LANGSMITH_FEEDBACK_PROJECT_ID` | no — remove | *(retired)* | no longer read: member feedback attaches to the trace's own LangSmith project via the run id embedded in the message id (`lc_run--<run_id>`); safe to delete from Fly and GitHub secrets |
 | `LANGGRAPH_DEPLOYMENT_URL` | yes | `<https://hc-rag-server-prod.fly.dev>` | public prod URL |
 | `LANGSMITH_API_KEY` | yes (for smoke) | `<lsv2_...>` | required by `scripts/deployed_smoke.py` even when `LANGSMITH_TRACING=false` |
 | `LANGSMITH_PROJECT` | if tracing | `<healthcare-rag>` | optional |
@@ -297,7 +297,7 @@ Secrets source of truth is the GitHub Environment `production` (§2). For bootst
 
 > **Origin alignment contract:** `COACH_ALLOWED_ORIGINS` and `CORS_ALLOW_ORIGINS` must both contain the deployed frontend origin (`https://<frontend>`). `CORS_ALLOW_ORIGINS` must additionally contain `https://smith.langchain.com` for the LangSmith Studio Connect panel. CORS wraps auth (outermost) so preflight `OPTIONS` succeed unauthenticated and every response, including `401`, carries CORS headers — the browser can read an expired-token `401` and refresh the session. `NEXT_PUBLIC_LANGGRAPH_URL` must equal the server origin the browser calls (same value as `LANGGRAPH_DEPLOYMENT_URL` in prod). Use placeholder syntax only (e.g. `https://<frontend>`, `https://smith.langchain.com`) — never a real secret value.
 
-> **Why `LANGSMITH_FEEDBACK_PROJECT_ID` and `LANGSMITH_API_KEY` are `yes`:** `scripts/deployed_smoke.py` requires `LANGSMITH_API_KEY`, `COACH_INTERNAL_TOKEN`, and `LANGSMITH_FEEDBACK_PROJECT_ID` even in manual runs (see §5). The table above matches the workflow's `EXPECTED_NAMES` fail-closed check — do not treat them as optional.
+> **Why `LANGSMITH_API_KEY` is `yes`:** `scripts/deployed_smoke.py` requires `LANGSMITH_API_KEY` and `COACH_INTERNAL_TOKEN` even in manual runs (see §5). Member feedback no longer uses a dedicated run-less project: `/coach/feedback` resolves the message's model run (`lc_run--<run_id>` message id), walks it to the root trace, and scores that trace in its own project. The table above matches the workflow's `EXPECTED_NAMES` fail-closed check — do not treat them as optional.
 
 Seed on Fly (all required names — this example is truncated for display; repeat for every `yes` row above; values never echoed in CI):
 
@@ -313,7 +313,6 @@ fly secrets set --app hc-rag-server-prod \
   COACH_INTERNAL_TOKEN="<high-entropy-internal-token>" \
   COACH_ALLOWED_ORIGINS="<allowed-origins>" \
   CORS_ALLOW_ORIGINS="<cors-origins>" \
-  LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
   LANGSMITH_API_KEY="<lsv2_...>" \
   LANGGRAPH_DEPLOYMENT_URL="<https://hc-rag-server-prod.fly.dev>" \
   LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
@@ -336,7 +335,6 @@ gh secret set NEXT_PUBLIC_SUPABASE_ANON_KEY --env production
 gh secret set COACH_INTERNAL_TOKEN --env production
 gh secret set COACH_ALLOWED_ORIGINS --env production
 gh secret set CORS_ALLOW_ORIGINS --env production
-gh secret set LANGSMITH_FEEDBACK_PROJECT_ID --env production
 gh secret set LANGSMITH_API_KEY --env production
 gh secret set LANGGRAPH_DEPLOYMENT_URL --env production
 gh secret set LANGGRAPH_U1_TOKEN --env production
@@ -474,7 +472,6 @@ LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
 LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
 LANGSMITH_API_KEY="<lsv2_...>" \
 COACH_INTERNAL_TOKEN="<internal>" \
-LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
 LANGSMITH_TRACING=false \
 uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 ```
@@ -485,7 +482,7 @@ Ingest is idempotent (`--delete-all` drops and recreates the collections). Run i
 
 ## 5. Smoke — post-deploy live check (synthetic accounts, tracing off, redacted logs)
 
-After every deploy, the pipeline runs the fast `--profile gate` suite (LLM-free: isolation, perimeter, and disabled-protocol checks - seconds) against the prod URL with synthetic accounts and no tracing. The full ten-check suite, including paginated erasure coverage and other graph turns, runs on demand: `make deployed-smoke`. The pipeline's `Run deployed smoke` step sets all six required env vars from GitHub Environment `production` secrets - your manual command must do the same:
+After every deploy, the pipeline runs the fast `--profile gate` suite (LLM-free: isolation, perimeter, and disabled-protocol checks - seconds) against the prod URL with synthetic accounts and no tracing. The full ten-check suite, including paginated erasure coverage and other graph turns, runs on demand: `make deployed-smoke`. The pipeline's `Run deployed smoke` step sets all required env vars from GitHub Environment `production` secrets - your manual command must do the same:
 
 ```bash
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
@@ -493,13 +490,12 @@ LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
 LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
 LANGSMITH_API_KEY="<lsv2_...>" \
 COACH_INTERNAL_TOKEN="<internal>" \
-LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
 LANGSMITH_TRACING=false \
 uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 # Do NOT pass --allow-insecure-staging for the HTTPS prod URL. That flag is only for http:// staging harnesses.
 ```
 
-> **Required env contract (`scripts/deployed_smoke.py`):** the smoke reads `LANGGRAPH_DEPLOYMENT_URL`, `LANGGRAPH_U1_TOKEN`, `LANGGRAPH_U2_TOKEN`, `LANGSMITH_API_KEY`, `COACH_INTERNAL_TOKEN`, `LANGSMITH_FEEDBACK_PROJECT_ID` from the environment and fails fast if any is missing (`missing required environment variable: ...`). `LANGSMITH_TRACING` must be `false` in production (synthetic input only). The three values above not in earlier runbook drafts (`LANGSMITH_API_KEY`, `COACH_INTERNAL_TOKEN`, `LANGSMITH_FEEDBACK_PROJECT_ID`) are the missing ones — always include all six.
+> **Required env contract (`scripts/deployed_smoke.py`):** the smoke reads `LANGGRAPH_DEPLOYMENT_URL`, `LANGGRAPH_U1_TOKEN`, `LANGGRAPH_U2_TOKEN`, `LANGSMITH_API_KEY`, `COACH_INTERNAL_TOKEN` from the environment and fails fast if any is missing (`missing required environment variable: ...`). `LANGSMITH_TRACING` must be `false` in production (synthetic input only). `LANGSMITH_FEEDBACK_PROJECT_ID` was retired when feedback moved onto the trace's own project — always include the remaining five.
 
 **Provisioning synthetic accounts** (one-time per environment):
 
@@ -570,13 +566,12 @@ until curl -sf https://hc-rag-server-prod.fly.dev/ok | jq -e '.ok == true' >/dev
 done
 echo "rollback: /ok is 200"
 
-# 3. Smoke the rolled-back version (all six vars — see §5)
+# 3. Smoke the rolled-back version (all required vars — see §5)
 LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev \
 LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
 LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
 LANGSMITH_API_KEY="<lsv2_...>" \
 COACH_INTERNAL_TOKEN="<internal>" \
-LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
 LANGSMITH_TRACING=false \
 uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
@@ -609,7 +604,6 @@ LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
 LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
 LANGSMITH_API_KEY="<lsv2_...>" \
 COACH_INTERNAL_TOKEN="<internal>" \
-LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
 LANGSMITH_TRACING=false \
 uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 # Expect: 10/10 PASS, /ok 200 — paste the full output
@@ -622,7 +616,6 @@ LANGGRAPH_U1_TOKEN="<synthetic-u1-bearer>" \
 LANGGRAPH_U2_TOKEN="<synthetic-u2-bearer>" \
 LANGSMITH_API_KEY="<lsv2_...>" \
 COACH_INTERNAL_TOKEN="<internal>" \
-LANGSMITH_FEEDBACK_PROJECT_ID="<uuid>" \
 LANGSMITH_TRACING=false \
 uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 # Expect: 10/10 PASS, /ok 200 — paste the full output
@@ -782,7 +775,7 @@ fly apps create hc-rag-weaviate-prod --org "$FLY_ORG"
 fly volumes create weaviate_data --app hc-rag-weaviate-prod --region iad --size 1
 fly deploy --config deploy/fly.weaviate-prod.toml --image cr.weaviate.io/semitechnologies/weaviate:1.30.2 --app hc-rag-weaviate-prod
 fly tokens create deploy -x 8760h -a hc-rag-server-prod   # AFTER apps exist
-fly secrets set --app hc-rag-server-prod OPENAI_API_KEY="<...>" SUPABASE_URL="<...>" SUPABASE_SERVICE_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" CORS_ALLOW_ORIGINS="<...>" COACH_ALLOWED_ORIGINS="<...>" LANGSMITH_API_KEY="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGGRAPH_DEPLOYMENT_URL="<...>" LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>"
+fly secrets set --app hc-rag-server-prod OPENAI_API_KEY="<...>" SUPABASE_URL="<...>" SUPABASE_SERVICE_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" CORS_ALLOW_ORIGINS="<...>" COACH_ALLOWED_ORIGINS="<...>" LANGSMITH_API_KEY="<...>" LANGGRAPH_DEPLOYMENT_URL="<...>" LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>"
 fly secrets list --app hc-rag-server-prod
 
 # Release (strict vX.Y.Z for prod; -rc allowed only for local hermetic probes)
@@ -797,14 +790,14 @@ fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image ghcr.i
 make ingest-fly
 fly machines run ghcr.io/<owner>/<repo>@sha256:<digest> --app hc-rag-server-prod --region iad --rm --env WEAVIATE_HOST=hc-rag-weaviate-prod.internal --env WEAVIATE_PORT=8080 --command "python -m healthcare_rag.storage.vector_store --delete-all --collection Lipitor data/chunks_lipitor.json --collection Metformin data/chunks_metformin.json"
 
-# Smoke (all six vars required)
+# Smoke (all required vars — see §5)
 curl -sf https://hc-rag-server-prod.fly.dev/ok | jq .
-LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
+LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
 # Rollback
 fly deploy --app hc-rag-server-prod --config deploy/fly.prod.toml --image ghcr.io/<owner>/<repo>@sha256:<previous>
 curl -sf https://hc-rag-server-prod.fly.dev/ok | jq .
-LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_FEEDBACK_PROJECT_ID="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
+LANGGRAPH_DEPLOYMENT_URL=https://hc-rag-server-prod.fly.dev LANGGRAPH_U1_TOKEN="<...>" LANGGRAPH_U2_TOKEN="<...>" LANGSMITH_API_KEY="<...>" COACH_INTERNAL_TOKEN="<...>" LANGSMITH_TRACING=false uv run python scripts/deployed_smoke.py --url https://hc-rag-server-prod.fly.dev
 
 # Status
 fly status --app hc-rag-server-prod
