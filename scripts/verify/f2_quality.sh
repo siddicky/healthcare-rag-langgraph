@@ -35,7 +35,6 @@ run_stage "ruff" uv run ruff check \
   tests/test_catalog_data_ref_fixture.py \
   scripts/coach_smoke.py \
   scripts/deployed_smoke.py \
-  scripts/provision_feedback_project.py \
   scripts/forget_member.py \
   scripts/forget_member_api.py \
   scripts/__init__.py \

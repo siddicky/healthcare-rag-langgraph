@@ -23,7 +23,6 @@ via `.venv/bin/python` or imported.
 | `langgraph_smoke.py` | SDK-level smoke test against `make dev` (127.0.0.1:2024) with real Weaviate + LLM calls; slow (5-20s/turn) because it exercises the actual retrieval/generation path. |
 | `parity_gate.py` | CLI for `evals.parity.ParityGate` — compares baseline vs. candidate single- and multi-turn eval reports plus code/base SHAs and fails (`exit 1`) on any breach (code seal, provenance, population, metadata, metrics). |
 | `probe_chat_openai.py` | Manual, opt-in network probe (~$0.01 real spend) verifying `ChatOpenAI` behavior for both model tiers from `healthcare_rag/services/models.py` — reasoning-effort/temperature interaction, structured output, tool binding, usage metadata, callbacks. Never collected by pytest. |
-| `provision_feedback_project.py` | One-time LangSmith setup: creates/verifies the feedback project via the `langsmith` SDK. |
 | `seal_clean.py` | Exit-code wrapper (`0`=clean, `1`=dirty, `2`=git error) around `evals.seal_clean.check_clean` — used to gate that eval runs happen against a sealed (committed) checkout. |
 
 ## Subdirectories
