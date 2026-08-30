@@ -1,0 +1,266 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:b145b25400892f6bce3ebc6a6d457e35c5b99cd88573f2e326b6ef4d96f49da9",
+  "claims": [
+    {
+      "id": "claim_99f2fa65f0ca4a42a53337db04b2b9dd",
+      "statement": "PromptRegistry (healthcare_rag/graph/prompts.py) renders healthcare_rag/prompts/<file>.yaml.j2 templates through Jinja, YAML-loads the rendered messages, and converts them into LangChain SystemMessage/HumanMessage objects; STAGE_FILES maps stage names to template stems and RESPONSE_MODELS pins each structured stage's Pydantic response model.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/prompts.py#L28-L79",
+          "version": "repo-lines-v1:sha256:153a1b91db8d1515af3d72ddf9c0b7ce7a528e288b2e9b9aecdcb7b5338e3b29:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NGViNDUxMjUxZWRmNGZkNWQyMjc3Y2ExNjgwNzQ1OGFjY2NkNTc0NDliYjUwZWU1ODM0ZjhkZjU1YzE5NzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhYWU4YTBjYTc2Zjk4ZjdiN2RjNzk4NDk1MWQ2M2U1N2RiM2M2NDU1NzljYTUxYmFkNmE1MzlkNjE0ZWRiYmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3ODQ1Njc1YWEzNWFiMjcyZmI2Y2U4YjU2ZTExNjk4OWRjYzRjNDA2YjRmZWI3MDFmMTVmNDk0MDdmM2JjYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY0ZTBmODMxNGU0NzczMWMzYzZjM2JkMmJlOTU1OGIwZWY1ZjA1N2QzOGJjZWFkNTRhOGRmYTQ1YjQ4ZjFiNzEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ccc90c79c4f4e148303412fc8076048",
+      "statement": "LangChainLLMGateway (healthcare_rag/graph/llm.py) executes stages through astructured (with_structured_output, method=\"json_schema\", strict when HC_RAG_STRUCTURED_STRICT), acomplete (plain text), aroute_tools (tool-calling retrieval routing), and aquery_or_respond (bound retrieve_monographs tool call); astructured and acomplete each catch any exception and return the caller-supplied default.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L109-L200",
+          "version": "repo-lines-v1:sha256:38d05bcd650fd66f0a9b62412405ed3d443964e2c3a6fd42a28fc5402e793a95:eyJzZWxlY3RlZExpbmVDb3VudCI6OTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4OGZmOTVjOTZmZTU5MTYxMDQxYWRiNjdjYTEwMWQxMWI5NzkwMDg3YzgwZGI5ODhiNGVmZDFlMDVlMzQ5MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzNGUwYzgyOWE1ZTExYTBkM2IxMjgzOWM5Yzc4MTBiNDI2NTMwNjg0Yjc5NjM1MDIxZmVlYzNmMDc1NjQ2ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e7d5999a008a458a94f5cd89777bbfa0",
+      "statement": "sampling_params (healthcare_rag/services/model_sampling.py) adapts temperature/reasoning_effort kwargs per model family: reasoning models (gpt-5.x/o-series) get reasoning_effort and only receive temperature when effort is \"none\"; non-reasoning models just get temperature.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/model_sampling.py#L1-L48",
+          "version": "repo-lines-v1:sha256:e159003ca85c0cf26263652b61ba548a70c3b3575bf1c9831721f2ec21937a91:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkMWIwZWRlNjU4YmFlYzE1MGNlYjJjNDZjNjVjMGJhZDE0OTNhZjA4NDcyNWJkOWVlMDBlNTJkOGJiNTkxZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fb370e1ee1b24338bc796b104954a701",
+      "statement": "safety_gate is the first node on every turn (nodes/safety.py), calling processors/safety.py's SafetyGate.evaluate via nodes/safety_classifier.py's LangChainSafetyGate (which runs the safety_gate.yaml.j2 template against SafetyAssessment at temperature 0.0 on the default model tier) and returning a Command that routes via route_after_gate.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L64-L262",
+          "version": "repo-lines-v1:sha256:b1ec7391d9108ee203db12100c2d258e558536e33572a494e806fcd53f3f98c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTk5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzMzVlMjc0MDI1MTUyMTNmNTJhOWJlYzhkNWZhMjk5YmIyMzM3Mjk2YTk3OTAwNDY0MjQ2ZTlhYjllMDI2MDQ0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIzMGMxZjE4OGYxNDJlZDdhODI0NjgwYjIwNzE3MmM1NTE5YmM2MTRhNDhmZGE3Y2YxNjdlZGI4ZGRmNzk5NTZjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI4Y2M0YTdkMWNjNzk2YWJhM2U0NjcyMzMyN2Y1MTdlOWY4MTE5ODJkMjUwZjA3MDI5ODZlNGI1NzY0YWQ5NTg5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety_classifier.py",
+          "version": "repo-file-v1:sha256:fee674b813c42d5271f750de9bb49a9069bb38eb5a115e72a2db63d0b5e4551e"
+        }
+      ]
+    },
+    {
+      "id": "claim_1da572ed2d03419b997707d1bd2ef3c7",
+      "statement": "SafetyGate.assess ORs the LLM-classified category with deterministic regex pre-checks (red_flag_terms, injection_flags) that can only escalate the outcome (emergency_red_flag > prompt_injection > whatever the LLM said), never relax it, and falls back to a safe default SafetyAssessment if the LLM call fails.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L128-L186",
+          "version": "repo-lines-v1:sha256:a7d7acaa9ef0e9c8581b7c55583fc1a3485e8af8da4b6112973c8874c8095f43:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkOWFkOTNlNzA2Y2E5MDE4NWY2MzYzNTJhNjc3NDAyYWU0YTRiZWEwNmRhMWMyZDVkODJiN2FjZmE1MGE0NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhMjliMWFiZjUxNDZlMzAxYTk3ZmQzZDNkMDNiNzI3MTdhMzIwZGEzMWI5NTkxODlmYjU1YTIyNTBjNmYwNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjYTVmMDI0NjAyNTI3MGI4NzNjYWZjNWE5MzUxNzJjNGRlOGM1Yzk2YTI1OGVjODRhMDViNGZkNzVmMDM2ZGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7e72983cf1fa4b4b99c92cc485b64fbb",
+      "statement": "SafetyGate._evaluate short-circuits into templated responses per category (injection, emergency, identifier_recall, personal_advice, out_of_scope) and, for a detected prompt-injection attempt, performs one recursive re-evaluation pass over the residual text after stripping the injected instruction (capping the safety stage at two LLM calls per turn).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L188-L283",
+          "version": "repo-lines-v1:sha256:1b26b44f5f67f00f8121a959cb61dfdce192b30b30889d25af597bbb94944e4b:eyJzZWxlY3RlZExpbmVDb3VudCI6OTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NDRkNjNjYzY1MDg4YjIwMjU2MzBmMDk5NWM4YTJjMTM1OTcwNzZlNTE2ZmFlZTMzMzMzYTBmMTc2ZmNmZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlN2NmMzJhMDIxNjZlMjA4Y2E5NDhlOTVjNmNmYjRlMjNiYzBkY2RjMjFlNjM3ZDQwMzQzMmE1YTA3Mzk0NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZmZTBmNTZiMWNmNTFjZjM5NTQ4OWJiMThkNGU0ZjhhOGIzNDMwYmI0NjI4ZmM3ZmZkMTRmZmYxOTZjM2RjYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5021a5ad433e4bccbdd11ccb42b764db",
+      "statement": "The safety node logic is split across nodes/safety.py (the Command-returning safety_gate node, deterministic pre-checks, refusal-boundary short-circuit), nodes/safety_classifier.py (LangChainSafetyGate, the concrete _llm_assess implementation), and nodes/safety_finalize.py (finalize, the terminal node that assembles the visible answer from safety_response/direct_response/validated+follow_ups and scrubs PHI a final time).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L1-L48",
+          "version": "repo-lines-v1:sha256:a85a863d8a91953634c19d8037c57c767ac67587c164c9018d1b1f7268d47bae:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxNDE3MzIyYjM0MDk3MTYyZDY0YzRjY2U1MGVjZmFmNmUwNTRmMWM5MTExMjNlYTYwODAzNmU1NWUzNjgwNjgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety_classifier.py",
+          "version": "repo-file-v1:sha256:fee674b813c42d5271f750de9bb49a9069bb38eb5a115e72a2db63d0b5e4551e"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety_finalize.py",
+          "version": "repo-file-v1:sha256:fa7905c241fba2a741ab217e9b7867c272ce26e420360df2460c29b9bc5b5d9c"
+        }
+      ]
+    },
+    {
+      "id": "claim_de82f1842d15416c881349148fa25b9e",
+      "statement": "clarify_query (nodes/preprocess.py) is skipped (returns clarified=None, no LLM call) when there is no history_context or when \"clarify\" is in disabled_stages; otherwise it calls the clarify_query template against ClarifiedQuery on the default model tier at unset temperature.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/preprocess.py#L64-L97",
+          "version": "repo-lines-v1:sha256:8d3a1ee3cc97652afc41bfe45f6219e43cb76303107da8d9da91bcd6f8e31c1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3M2MxMDI0N2E2YzcyZjUzNjhmMmExN2RhOTc5YjhjNDg5ZjA2ZDgxZjRkNzM2ZTJhZGE5ZDhjNzAwN2ZkMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmNTI2NmY3MmQ0ZDBkNTg3OTY2OTQwZGQxODA3NGY2YmE0MjI2NGM0YzA1NzI1NWI5MTYwOTFlMzgyNzUyNTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2YjFlMDMwMDQwYTY5NWJmM2E0NzU2MjU1NGZlZTZiZDcyMzk3Nzk2OTdhZmExMWQ0MGYxODgzYTMxZTYzZmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a222141fb48048569d5232029a536c26",
+      "statement": "decompose_query (nodes/preprocess.py) calls the decompose_query template against DecomposedQuery on the default model tier (skipped when \"decompose\" is disabled), fans out into sub-query branches only when 2+ normalized sub-queries come back and (if HC_RAG_DECOMPOSE_ONLY_COMPLEX) the model labeled the query complex, capping branches at max_subqueries.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/preprocess.py#L100-L156",
+          "version": "repo-lines-v1:sha256:2cd4514a00becf8457c32f9dc16b029563cc7d4f7361247a2b8887e5adf51964:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhMjlhNTg4ZDY5NGMxZjIzZGFlYTE0ZTg3OGRkMWU5NTk3YWNlMGZiOGYxNDdhMWI1MjA5ZWJlNzdlMDVhNTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwZmVhMDVkOWI0ZjMzN2ZmOTQ5Y2E5YTdhODM0MjE1NGRjN2YyMDEzMDM5ZmQzNGZlMjljZWY4YjlkOWY2MWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFmY2QxYWMwMDJiZDdmY2VhNjIxZjY4ODVjZWUyZjE0ZDM3NWVhMWY4MDMwYmM2MTQ0NWU2MTJlZGU4YjEyNDUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_903bae1003d342b5bdd5cfbc121fa67b",
+      "statement": "extract_conversation_context (nodes/preprocess.py) returns required_context=False with empty snippets and makes no LLM call when processed_history is empty; otherwise it calls the context_extraction template against RelevantHistoryContext at temperature 0.1 on the default model tier and scrubs PHI from the returned explanation/snippets.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/preprocess.py#L27-L61",
+          "version": "repo-lines-v1:sha256:99c33f6d3cdb825106f67a6b960acfebf17fc281495698f372b3aa2fdedd4de0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkM2Y2MmRlYTY5ZTAxNDYzNGRkNWJlNjdjMmJhOTVjZjkxYjY2YmNhYzcyODJmMjQ3ZjMyZDcxZWJkMTE2ZWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyMDE4MTI0ZWY3YTVhNDgyNDhiMjMwYTQ0ZWE1YTVhMmE3NzFjYzVmYjRiOTU0ZDU2YWJjZDRjNTUzNzZjNzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjOTg5MGZkNmViNTU5NDkxZjU4MDZjMjlmYTE4OWYwZWUyYWIzMGUyODE0ZmFlZDQxMWY1YjI5Y2FjODllNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmYThiNzZhYjBiOGE3Njc2MGMwZGE3MGUxYjU3YTQxMzNhMGRlZTRmOWJjMzIxY2NkMWE3YmIyMGE1Y2E1ZTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_46f2ca4cfce9493e89e3aa5ce43d8bd8",
+      "statement": "retrieve_documents (nodes/retrieve.py) routes a query via LangChainLLMGateway.aroute_tools/build_routing_tools into per-collection tool calls, catching any routing exception and treating it as zero tool calls; each routed search runs through resolve_arm's selected backend (weaviate/pageindex/pinecone) with up to 3 retry attempts on that arm's transient error type, and optional reranking runs nested inside the traced search span.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L45-L176",
+          "version": "repo-lines-v1:sha256:a8ffd3ad0ef1b75ab51bb68c027853e141e3d576c89572c93835c1b0bb115a28:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhMWVmNzNhNTMwMWVmZjE3NDIwM2VlZmQ3YmQwNmE2YjZhZDljY2MwZDhkZjljOWUzODE3YTNjMDE5MTkxNmI2IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhMTQzYjQzOWJmMGE0OTExZGI1ZWFhYzc3MDUwYzA2MDBiMjA4MDQwMDRjNDhjYzcyZmQyMDQ2YTMyYmU4MjE3IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwOWY5MzA4M2MxOTcxMjFiOTgyNzAwYmE4YWZhYmQxNzIyY2YxZDNlNzQwNDUwOWU4MGVmYTI3MjQ3ZjYyZjA3IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjMjg5M2YwMDNmZjNiNmE0NTQ4ZWIxN2U2OGIxMmNiNGM5MDM1NDg0YWE2Nzg2YTE5OTZjMzhhN2U3MWYyMzk5In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_718893592e0643c49adb1ef0398ff264",
+      "statement": "generate_query_or_respond (nodes/query_or_respond.py) only runs its tool-arm decision logic when settings.query_response_arm == \"tool\"; it calls LangChainLLMGateway.aquery_or_respond, which trims/scrubs conversation history and returns a QueryOrRespondDecision parsed from a bound retrieve_monographs tool call rather than from a RESPONSE_MODELS structured-output entry, and maps a PrivacyScanError or model exception to a safe fallback decision.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L164-L199",
+          "version": "repo-lines-v1:sha256:da11e55e838fff3549a6c3890e27c6dcea2d79eb2999b14ee33cb7f4f4af7712:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNWVmMWY4OWU0MTRjY2E0YzMxNTNhZmJiNWEwMjcxOGU0OTZkNjBmYTFjN2ZlYTljNjk2ZmMzNDQ5YWI4ODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2Nzg5NTNjMjFhNDU1NjkxYTA1ZTRmN2UzMTBhMjcxZDE0ZDNmYTY3OTRkNjZhZmI0Y2Q2N2U5NjZjZmE0YzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyMDU1NGU5NzJkYjdkNWE5ZGZjYWMxMGM4MzZjNTQzNjBhMDA1NzYxNmMxNDZkMzMxODg2MWFjZmRjYThjMWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/query_or_respond.py#L49-L115",
+          "version": "repo-lines-v1:sha256:36193f75b64cb9bc5a7f77e455059e049f9d93e3a4d947edab907a2bf8614170:eyJzZWxlY3RlZExpbmVDb3VudCI6NjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjYjE3Zjc1NzM1Njg2MzhhNmI5YzJiZjdmNTQzNjVhOGUwOTQwMjMxNDlhOGI5NDViN2ZhN2VkM2MxZTE4YzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjczM2U4NDg3Yzg1ZGZkY2Y5ZmE3YjkzYzc0NmM5NDYyNWFlNDdlMTIwYzc5N2U3OTFlNzM3ZjllZDdmZmM3M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzY2E4ZWQ0NTQ3MTg2MGY0ODQzZGUzNjRiOWYyMzM2OGNhNTM5OTNhYzhiZTQ1ODU4MDI4MjJmMzIxZWMxZDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_107869b1f8b54327a9c530937e68943d",
+      "statement": "evaluate_retrieval (nodes/evaluate.py) skips the LLM call (defaulting to is_sufficient=True) when merged retrieval has no docs or \"evaluate\" is disabled; otherwise it calls the retrieval_evaluation template against RetrievalEvaluation at temperature 0.1 on the default model tier and triggers at most one gap-fill round (gap_round capped at 1).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/evaluate.py#L14-L86",
+          "version": "repo-lines-v1:sha256:6ee9e08fd3dd0e424e108fc0ff0dc1b5e9d7d1b6950fb456f06f5ce500b8e5b9:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4Yzg1NWI0M2FlN2Q5NDZhZTBhZmY1OTFhNTdhNjNkZDgxYWM5NjlkMjRkNDlhNzgyNWMzMDgyYjA0YmEzZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQwZTJlNmVmOTk1YTJkNWRmZTJhZTgxMWM1NjVkZWNmMDA2MDBlZjQ5MjQ1YzU3ZWQwY2Y0MTVkMjJjOTlkODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjYTFkNmMwOGNlOGFiNzAxMjNkNjVlZTk1NzU5MWRkYTI5YjhlOWJhZDQ1YjQ3NTI0NTI4MWNjNmY2Nzg3NzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_57e6a0820f9348498d30db73b9265647",
+      "statement": "generate_answer (nodes/generate.py) calls acomplete with the answer_generation template at temperature 0.1 on the default model tier, using formatted_docs/prompt_id_map built by processors/generation.py's format_documents_for_prompt, and falls back to a fixed \"I'm sorry, I don't know the answer to that question.\" string when merged retrieval has no docs.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L21-L50",
+          "version": "repo-lines-v1:sha256:e101d5fb324acf51116aaa8f1bd2b31ff29a1d54587c90e049cf5b2fe4fa664c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDU2ZWIzZGU2ZjQ3NzY2ZTQyMDZiZmYzYWNmZmMyNDI5MTkyYWQ3ZWMxNmI0M2FiNmY3YmExNGM2ZGNkMmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUzNGU5MTUzYWU1MzIzMTg1ZWUzYmVlZjNiN2UxNjllNDQ2Zjk2ZjFhNWVlZTgwMzBmZDAxNzk0NjlkMGQ3N2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0NzZjMmE2MTdjZDgwM2Q4N2RkMTUzMzdhZDBiNjIyYWVhMDYzN2UxMTAxMjhlNTJmMTM5NzJmNzk2NDhlZTYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/generation.py#L10-L40",
+          "version": "repo-lines-v1:sha256:7c9709a8293fd1216f89c08e5e9e79bed206da7ceaf79f65d78e1cac44bf32ac:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MmE2ODZmNmNlNmY4Y2E1MWNiMTQzYmZlMGMzNDU2YWZlZTUwYWJlYzcyMGE2NDM0YjMwZWJlNGU4MDA2ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNjU2NjdjNjdkMTYzM2EwNzUyOTc2ZGYyMmQ4Y2ZmNDc5MzlhN2M0ODdiMzZmOThjMWY4NzI2MTY0ODI5MDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyYmQ4OWFhNjNhODY1OWNhNzllMjU4NDAzZjA0NDgzYTRkMDdhNmQ1Yjg4ZDg5MjhiNDU1Y2M0NjdlMTUwZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ba670450aef4ad589087242cf449e4e",
+      "statement": "validate_answer (nodes/generate.py) returns the raw generated answer pass-through when \"validate\" is disabled or merged data is missing; otherwise it runs AnswerValidator.structure_and_validate_async against the answer_structuring template (CitedAnswerResult) at temperature 0.0 on the validator model tier with a quote-match threshold of 85, and treats any exception from validation as a hard failure (structured=None, validated=None) rather than failing open.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L53-L102",
+          "version": "repo-lines-v1:sha256:2f940da7abe3e102c258704b849fa1a879616904636982ff94c40fa1f05cd986:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMTVlODEwMzNmZWJlOWQ3ODgxNTBjZDYxZjhkZTEwZjM1OGNhZTMzMTVjYjA4NWJkYTg1Njk4MjMyM2I2NTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiOWFiMjIzYTc2N2QwMDAxMTZlZmM0ZDg4YmJiYzZhNzY5MDY2NDZhMGI2NTEyZTg3ZDFmMTYzZGMyZjgyNjMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L27-L96",
+          "version": "repo-lines-v1:sha256:948c42399b43d0b27f4b88da10307487383fdeca32c84b54b7a6b6c16323cdf4:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3ZTllZTk3NmY2NDAwMmE1OGM3NDU3ZTljYzVjMjE0NjdkNzJjMGY0OWJhMzY3YmEyMGRkOTYyYTQyZWE1MWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkOWZmNTg5OWViODVmM2QzZTlmNzE2YjViNTc4YjM3NzJhMDYzNmY5ZjM2NTg2MjU4NDg3OWFjZTQ3MTE1N2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzN2QyYzI2ZDRmNDVkMWFkOWNkNjBlYjMxY2E0YTcwMWUxYTU1ZDMxYzZjNjY3ZDA4MDg1MWEwYzdkZDUwOWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2f82fafe71ce4885b57f2969eda69844",
+      "statement": "generate_follow_ups (nodes/generate.py) returns an empty list without an LLM call when \"followups\" is disabled or when there is no validated answer or no user_id; otherwise it calls the follow_up_questions template against FollowUpQuestions at temperature 0.3 on the default model tier, catching a gateway exception locally to fall back to an empty list.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L105-L138",
+          "version": "repo-lines-v1:sha256:fa4240a8937544eac45c9923322aa7d83f748efd10af621d7248f4e1406125a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjMzNjZTNiY2JkMTYyNjhjNzk0M2RkZTY1MWM3Mjk5ODllYzgzYWJlMDliY2MxN2Q2NGY3NGVlZWU2ZDVkMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMWY2YmYwOGYxYjYwNWVjOThiYjMyNmZjMDEyMGMxZDA0MzNiZDMyZWEyNjgxN2Y3ZjZlMjhlMmFjZmEyMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_807c31d9d4094f5da30a7ee454cde9ba",
+      "statement": "pageindex_select (processors/pageindex_retrieval.py::select_nodes), used only by retrieve_documents when HC_RAG_RETRIEVER=pageindex, calls the pageindex_select template against PageIndexSelection on the default model tier and is fail-soft to an empty selection, with results capped at pageindex_max_nodes.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L181-L198",
+          "version": "repo-lines-v1:sha256:db290e8b3573685d05004bcea0e351bc5737411d7c505e0a0dfb8136ba4162bb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMjVjYjkyNWEyOWYyYmE5NGQ4NTk0ZmUwNWI2NGJjZjViY2FlYTk4Mzk4MDE4NWMyY2M5OWY5NmE2ODFhMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzYTQ2ZDVmNGFlMzNlYzVmNzFiMjY5NDBlMDI3ODhkZmI3YmViZjFjZWE3YzdmMWRiYmY3MjJlZWFmYWUyZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1NmZhYmVjMWNjNzc4MzJiZWNjM2Q3NzBkYWYwYWZkZDJkM2Y4ZWExZGJiNTdiNzE2NjI3YzE1NjVlMDJjYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzNzgwMmViOWZkZmU4ZmZiNGI1ZTI1ZjVjMjlhOTU0NjkyYTI3MDJhMmJmZDM2ZDYyZWM2NzgxYjFiYTliMmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c5c6095224ae4c0ebdee8cddff4b2c27",
+      "statement": "ClarifiedQuery forces clarified_query back to original_query when ambiguity_level == \"clear and specific\", and DecomposedQuery normalizes decomposed_query to [original_query] when query_complexity == \"simple\"; the graph relies on these post-validation normalizations to decide whether clarification/decomposition actually changed the query.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/models/queries.py#L1-L44",
+          "version": "repo-lines-v1:sha256:faa79d23c65848d110822fb705ae5fe851aba09b4e18cdf84802f1dbc378a803:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMDhlOWVmMzYxNWU5MTQyOTczNTBhNTY0Mzg0ZTJiZTcxOWI4ZGMzOWVmY2ZlNzQ4MThmMDQwOTk5YWE4NzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhYzkxZmMxYmJjOGY1ZmJjNDM1YTk2OTljNGU2YTU0NGQ1NmYwNzE5ODc3MzAzOTUwODg4ZDRlMWI0NGYxYzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b1f6ff1e1e6347a4a0cb2caf674211c4",
+      "statement": "RelevantHistoryContext forcibly clears relevant_snippets to an empty string whenever required_context is False, and its relevant_snippets value feeds the generation prompt as conversation_context.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L34-L41",
+          "version": "repo-lines-v1:sha256:efa5d2d3d2511676536e0f8402eface0bf047bb509954b57e829fd8ecd379184:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzFkZTFkOTBjMTg5NDk3M2U4ZDA5OGMxY2Y3NTU2ZTNhM2ZlNTQ0Y2JiZTgzYzFmNTI5Zjc3NzVjOTRlM2UzNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDI0MWZjNDM5YWY2ZTc3ODgxYTE4NjY4ZDBkYTBlY2ZmNDcxOTUyODg0OTVjOTZlZjEzM2VhNjg0ZGY2YjA1ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzcwYzk1MDc4Y2NmN2U1YjAyZjlmYjdkMDQ0ZWY1MWNlOTE5NTE0ODRiNDg0YzA3YmQwOWZiZGQ4ZmI4NjcxYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmY1YTQ4Y2ExOTM2ZmM0YzhiNzVlZTExMDg4MTQ1NDFhYTk2MTEzZDhjYzgzNDQyNGJiYTQ1MjQzZmQyMThhOSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/models/answers.py#L44-L67",
+          "version": "repo-lines-v1:sha256:cafaca70e8c77b7308b0452f8dbb804712f1ff381e90570ab158788ff6beb0f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0ZDQwZjMyZTA2YjZhMDM4N2E4YzI3ZGU2MDA5ZWY1YzUwOThlNDNmY2VmMzk5MjE2ZWZlMDhjMzUyZDUwNzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3ZDU2ZGQ3ODk3YjQ4MTQzNWE1YTEzMzFkYzZmMTQ0ZTc2YTg1Zjk0MzM0YTQ2N2ZkODY0NWZhM2MyNWIyMzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM0OGFmNDlmYzA5MDc4OWViYjZkNTc0YjUwNzZiOTI4ZTU3YTY5MDYzNjA4YTc0NWI1MDVjMzU3YzJiYTI3NmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImExZmY1NmM4OTU4NGUyZmZiY2EwODU3NDE1NzIxMDNhNDgzMDI5NzY2ZGUwYmFkZDU0MzA2NjFiM2U5ZGM0MWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fde588d5131542f7a08a69e185064154",
+      "statement": "format_documents_for_prompt maps each retrieved document's real doc_id to a sequential doc_N label for the generation prompt and returns a prompt_id_map from doc_N back to the original id; validate_answer's citation resolution requires both formatted_docs and prompt_id_map together with the generated answer, returning (None, None) if any are missing.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/generation.py#L10-L40",
+          "version": "repo-lines-v1:sha256:7c9709a8293fd1216f89c08e5e9e79bed206da7ceaf79f65d78e1cac44bf32ac:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MmE2ODZmNmNlNmY4Y2E1MWNiMTQzYmZlMGMzNDU2YWZlZTUwYWJlYzcyMGE2NDM0YjMwZWJlNGU4MDA2ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNjU2NjdjNjdkMTYzM2EwNzUyOTc2ZGYyMmQ4Y2ZmNDc5MzlhN2M0ODdiMzZmOThjMWY4NzI2MTY0ODI5MDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyYmQ4OWFhNjNhODY1OWNhNzllMjU4NDAzZjA0NDgzYTRkMDdhNmQ1Yjg4ZDg5MjhiNDU1Y2M0NjdlMTUwZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L63-L80",
+          "version": "repo-lines-v1:sha256:de418d790e475800a0f6212c8f3bebd995aaccaa7fd6f2e2dd6b1ddcad33738e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2NjY4ZGRkOTRlN2FmNzQ1YzFlMzEyYzYyNTQ5OGE3MTEwNDVlMDRiYzE3MGUwNWQ5Y2VlYzlkZGJjZjIzMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlZDVkNGZkYjU5NzQ0MWIzMTY0MDdiMjBlNDBkZWM5ZTRlM2ZjMjFkZTU4ZmU1Y2NlNDJlZDNiNGM3NTgyOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwMThjYzY5YzhhM2FmN2FkNzUxMTdkZmEyOTEwNTE4ODYxOTk5NTExMzgyZWY0NzVlMjQ0ZjQ2NzA1OTQ0YTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fa56cd3e591844e5b5153d1c60b515b6",
+      "statement": "Adding a new graph stage requires registering it in STAGE_FILES (and RESPONSE_MODELS if structured), adding a node under graph/nodes/, wiring it in graph/build.py, extending RAGState (and the safety_gate per-turn reset), and, if the stage should be ablatable, checking it against services/models.py's VALID_STAGES set (safety, clarify, decompose, evaluate, validate, followups) read from HC_RAG_DISABLE_STAGES; disabled stages make no LLM call and return a pass-through result.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L53-L110",
+          "version": "repo-lines-v1:sha256:73d75fc74e3f5ee56547aacd23ad9cf4f5c140f059f299640882e171393a3b4e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMTVlODEwMzNmZWJlOWQ3ODgxNTBjZDYxZjhkZTEwZjM1OGNhZTMzMTVjYjA4NWJkYTg1Njk4MjMyM2I2NTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkwY2M0ZDg2MzM4ZGU3ODA5NDJlZjgxNDBlMDFlOTRiNDc0MDg5ZjZkZTY0MmQxZGJkYjhiZjJlZDdlYWJjYTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiODJjMjY0ZWM1OTIwYjcwNzhiN2UwOWNlNjEwYmIyNzdjODA2MWRiNzczNjExMGUwYzUwZjBkOTY0MGM2NzIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L103-L119",
+          "version": "repo-lines-v1:sha256:5ea9465126255f23d5cfa612661d8057852550d3b1cee41efff02d0b9a2a5672:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjOTliZDExZDY5ZWY4MDQ3MjI0ODliNDlhOTY1MTc1ZGZhNTc0MTMwNmNkMGM0MzI0ZDA0OWZjMWZjODAwNTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwZDZlNzVkZjZkYTdmODNjZTQwODU3ZWVjNjYzNDhhMDJmOTNhMDIwNzY0MWZkZTljN2IxZDQ0NmI3ZDY4ODciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5ZTFmZDkzZGM3YzIxNzc3MTJjN2NhMTgxNTBlNGExYmE5NGZlOTA2ZWRjNGFiMjcyZDA1ODlmZGM3MzY1YjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhOWJiNGIyM2UxY2ZlN2MyZWYwZjAyZjE1NWM4NzI2ODY0ZDNlMDUxNTQyZmQzNTdjNzhkZjZhMTBhNGMzYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_89707fd52dd240fd9bf4fa10e9c8c4a1",
+      "statement": "tests/graph/test_prompt_fidelity.py pins PromptRegistry's stage-to-template wiring against frozen fixture renders, verifies template resolution is independent of the process working directory, and asserts that an unknown stage or an unknown message role raises an error.",
+      "evidence": [
+        {
+          "resource": "repo://tests/graph/test_prompt_fidelity.py#L1-L61",
+          "version": "repo-lines-v1:sha256:d621ef68b70908c5c42a2129e07028cc58b180c35e867faad47c368282611f37:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhOTk3OGFiMDQ1NzQ0MTZmMThkNTM2ZDFkMDkzNWQ4MTJmNGM0ODM3OGRkMDdiMTYwZTU2ZmZiM2I4YWE2ZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzN2ExMGI2ZGZmOWRiNDAwY2ZlMzM2Yzc3OTI0NTYwYjA4MWQwNTY5Y2I4OWFiZGI0MThjOTQ4NGVmMTI4NTYifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

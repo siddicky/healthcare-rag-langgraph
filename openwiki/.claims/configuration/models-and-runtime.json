@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:04bbdba6af758d954856ee92ce20309f9f5107b9b70326f4fce23cb706a77360",
+  "claims": [
+    {
+      "id": "claim_838bb3be312a460fbcf70cb8a3cab28f",
+      "statement": "GraphSettings.from_env() produces an immutable environment snapshot; GraphEngine, Resources, and the model gateway retain that snapshot, so editing process environment variables after construction does not change an existing runtime's behavior — a new snapshot requires reconstructing or restarting the engine.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L46-L54",
+          "version": "repo-lines-v1:sha256:ab982eda3b5b1d441d94bb3c53b55db49db8dd31c22b2e9a13b66bd69fff4b6f:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWZkN2EwN2E4M2RkMTk5NmZiNTE2ODRiNDJhZWNhZjRlOTBmYjc4YmE3MjMwZTU0MmVkN2JkMDFkNDIzMDFiZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTJhMzY1NTY3MGZiMGZiYjk2NzI3YmQ0Yzk1ZmVkNzA4NTExMTFmMGMyMTJmYWM0NGZkNzZjOTUwZDgxYmNhMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWFiMmRiNzM1MzVlNWIwMmMwOTJiMGVmYTJjMjkzMDI2ZGNiNzVjYjQ2YmVhMDIxYjc4NTNlNDdmZTcxOTEyZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzE0NjVhY2JlZGU3ZWUwODc1YWI3ZWYxMjdiYTJlMGY5MDJiNzY3MjFlYjg0OTdiOTgzZDA5MTU0Nzk0MTg0NSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py#L33-L70",
+          "version": "repo-lines-v1:sha256:8c213dfacec3901e918153594f36bd2ab210f087b00fd184123c681a1ea2adc7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlM2ZiMWU1OGZiYzkwNDc5NGQ1MDczMTRmYTkxYzlmMmYxOThjODhkM2ZmMzk1ZTAwODI4OTAxYzM3ZGM5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZTg5MjJlODJmMDFmMjI2N2M4NzY2NWQ3OTZkY2NjNGE0OWQ3MjRiY2E5ZmQ0MDA2YTBkNDc2Mzc1OGU4MTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkNDViNTRiNWFlMWM5N2Q0YTBhYmExYWNkMmQyNTI3NmI3ZGE5ZjY5OWYxZGE0OWQ4ZmQ1Y2U4ZTQzMjJmODkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_861bf88d8e76452e85524e3a9ae7d76e",
+      "statement": "healthcare_rag/config.py is a legacy, standalone env-var helper (get_env_var, plus a module-level load_dotenv() call) that no module in the repository currently imports; all model and sampling configuration lives in healthcare_rag/services/model_sampling.py, re-exported unchanged by healthcare_rag/services/models.py.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/AGENTS.md#L18-L18",
+          "version": "repo-lines-v1:sha256:78cf74c60a9edfc7f6502f86c98c43d956feed40d0efde7b91b5e9b7bcb50ae1:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzhjZjc0YzYwYTllZGZjN2Y2NTAyZjg2Yzk4YzQzZDk1NmZlZWQ0MGQwZWZkZTdiOTFiNWU5YjdiY2I1MGFlMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzhjZjc0YzYwYTllZGZjN2Y2NTAyZjg2Yzk4YzQzZDk1NmZlZWQ0MGQwZWZkZTdiOTFiNWU5YjdiY2I1MGFlMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTg3MTA3Y2MxOWVhNDcyYjNlNTU1MmZiNzE4NmE1ZmE2MWE0MjdiZmUxMmI1MjY5YmQ5ZjI4NTgxMTAzMGU1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjUwMDQyNzVmOTlhNTBlN2JhM2NkMmRhMzVlNDA4MjcxYmQzZjAyYWYzMDZjMWQ3YWQ0OWFhMGMxYzU4N2RhYiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/config.py#L1-L42",
+          "version": "repo-lines-v1:sha256:d51d3da77582d08621d359aa6b8d951b319b2c5ed72138913c260a631c1de1fb:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L87-L100",
+          "version": "repo-lines-v1:sha256:70e38401f0ce8a99dda7fbf33099706a20acf486582a0117a4c7d00763f63ac5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmZWFmNjAxNWE0MDk0ZTJmMGNjNmIyM2EyZGQ0MGJlNTI3ODRkNzE4ZjEyMDE1YmI4N2Q3ZGI3YWQwYjY2MDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5ODYxOTFiYzQxNjM3OWRmYTZmODBlNTIxMDllMjJhZTI4MzMyY2U1NDUxNWViYzU0NzI4YWNkYTM2YjA1NmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc2Yjk5NDI3YjM4Njg1NmFiMjFhNGExZjU3N2IzNWM1MjM4ZTdhMDBjMjFhNjZjOGQyYzkzNzhmZDVmZDUyY2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5956ccfbe9644fdab1d970fe45d0bb6a",
+      "statement": "GraphEngine.describe() reports the effective safety, model, sampling, retrieval/reranking, structured-output, and routing configuration of a constructed engine, and should be captured alongside any experiment or rollout so results are attributable to the actual runtime snapshot rather than an assumed environment.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L215-L223",
+          "version": "repo-lines-v1:sha256:b6bf2d655904dee21efbc56d9fd438a1372007ae9d3cef1076294f3595a3cb8c:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTJlZmE5MGY5MzEwNGZjMjM3MzQxNmFhOTMzN2JkYzM1NmZlMmQ3ZjhkNjk1MDdiMjkzZmFkZGNmMmM3MTExMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTA3YTU3NDZhNTEyYjE0MDhkYmM0ODI5Zjc0ZTc4ZDc5MmY2YjYxNzJkNGFhYjQ0MTQ3OGI0Zjk1MTI0MDNmMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzc0OTIzMGY4YzRkYmEwNTBiNzFjODJhNGQzODgxNDRmYTc5ZWEyMGQxYjZjZGVhZTUxYzVmYWQyNTFhMTQzMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTAxMDIxN2NhM2I4Y2EzYjQ4OTU3NWE0Y2NiZTVhM2I4ODFkYmJhMjRkNDlhMDAzZWM1MDFjNzUwNmFiZGFiMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_819871eaf8cd4d03afb257d15ceec896",
+      "statement": "HC_RAG_LLM_MODEL (default gpt-5.6-luna), HC_RAG_VALIDATOR_MODEL (default gpt-5.6-terra), HC_RAG_REASONING_EFFORT (default none), and HC_RAG_STRUCTURED_STRICT (default false) are all optional; their getters read the environment at call time, trim whitespace, and fall back to the default on a blank value rather than raising.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py#L81-L94",
+          "version": "repo-lines-v1:sha256:2ca131a2037b786b494b0a7f9e34b917f33ce72a28323999f13ee4565cd38976:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4MDk1ZTI4NTQ4MTdiYzZiMjgzNDhhNGRhNjA3NDU2NTg5YzU2NzBiODgzYjUzMWE5MTkwMWM1NDEyN2Q2Y2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNjNWI5NGMxYzUzZDJiMGI4MTVkZTM2YzlhYzNjOGJmNzM3Nzc3MDQ0NGM4YjA4MWEzYTAzYzg2MWZjODk4MmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1ODY1NTAzOGNhMWY5NmMxMmZlNmU3YWI5ZWVlMjNlMzFmMTFmMjQ0MDllMzQzN2M1ZDBmN2M1NmU1Yzg0MTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2OWY3ZmRlMGM3ZDg3Mjg0N2I4MzM1MTk3NmI3ZjIyZjM2NmYyNjg4N2Q3ODFiYmRiMTIzOTQ2Y2MxZjg0ZmUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/model_sampling.py#L1-L28",
+          "version": "repo-lines-v1:sha256:6ed7bc02d49883a5205d98b7762739cf30b168e71a40925ac34af6f7795c2040:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJhYTdlMzg4NjlkNGUxZjdlNTI3YzhmZGE0NjRjOGY5ZGVhMjhlZmM2OWZiZmQ0Yjk2M2JjYzc3MjNlODU2YjYifQ"
+        },
+        {
+          "resource": "repo://tests/test_model_sampling.py#L11-L48",
+          "version": "repo-lines-v1:sha256:32761825a46993b3141bdb2bde1ad8b2d6004ac1493e620ca6941c811ff7ce6a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmMzQ1ODNhNTk4NzY3YmY1NmFlZmViNjVlMjAzM2ExNjUxY2M0YzhkN2U2ZjBhZjNlNWNmZDMyOTNmOTMzYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4Nzk5ZmNhZDEzZmE2MGY0MTgxY2U5MjFhZjVkNmZkM2FjMTBkODQ5MzJjMmQ4OTkwMjRmOGRiZTM2MDQ4YzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhYWQzMjhlYzQ2ZjQ2ZmQ1ODAzYjc1MmQ3N2U2NjY3M2Y3OTIxOTMwNzFlOGYxZjVmZmVlMWMyNWM0MWM0ODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2ODBiMGYyOTI4YWMwZGJmM2RkNGEzMWQ1YzE2ZTkxOThhMjlhNjA4NmQzOWNmYjU3YzIwZjYwYmUzM2E2NWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c35115d5ee9541989bff3aee3b0ee300",
+      "statement": "LangChainLLMGateway.chat_model selects settings.llm_model for the \"default\" tier or settings.validator_model for the \"validator\" tier (used specifically by the validate_answer structured stage), constructs ChatOpenAI with use_responses_api=False and max_retries=3, and caches each client keyed by (tier, model, requested temperature, reasoning_effort), so a settings change only takes effect through a freshly constructed gateway.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L121-L124",
+          "version": "repo-lines-v1:sha256:45f0bff890a99035ac73cc49cee3b7c396fa1e8acb82e318fce03b15da33b12f:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2FkNzgzNjc1Yjg1ZjkzYWNiMWJiOTdiYWVmYjRjM2RjZWNiNWZiZGJkY2IwNWU4ZjdjOWJkZTI3NmIyNTc0MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTUwMzJlOTY0ZDA5MzIzNTFlNWQxODUyNjkyODFiMTcxYTNhMDliMDhiMjg2ZTY2MWVhNDcwMzIzYzgyZWI0ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzFkNWIxOTU2ZjNiZjQyNGE0OTE0OTdiN2MwNDcyZGIxYzQ3YzhjZTAzYjE3ODYxZWRlMjI5ZTMxMWE1ZDgxMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmQ2NjlhMmUwNzc5ZGY4YTk5ZTgxNmM3NWQxZjU1N2UxY2Y4ZGE4OTk3YzliOTgxNTcxZDAyNGQ2ZDJiNDZkOCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L43-L87",
+          "version": "repo-lines-v1:sha256:f539adc0072c2a7aa2c96a77ab2dab10d6e117f6e4c16775d8237fd680c06a68:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlOTNjYjE2ZDUzNmE4Y2RiYTZmMzM1ODViM2MzMzI0MmU5ZDBmZjA5YjE2YzAzYjM2ZjRjMGQ3NTEwNGI1YzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwZDZkMzBhN2ExYjI2MzdiODAyNDg2YTE4YzIzNTkyMDk0ODYyZDY5ZGFiNGYzYzUyMDM3NDQwZTVlOTExMDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1OWZkYWUxYzhhYzAzYzQ5Y2JiMDEyNWVlZWNlYTZlYTRhMTNjNDBiNTcyODZiZDBjOGZlYWRhZjFiZWIzN2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZmE1Nzc2N2Q1YmRjNzkyODFlNjUyM2FlODRkZDRhYTU3YzRmZjUxMDU0OTEwZmY0MzhmZGI0Y2VmNmVhOGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_366be2dbad6944f5a1f53bb37d32855b",
+      "statement": "LangChainLLMGateway's structured (astructured) and plain-text (acomplete) stage helpers fail soft: any exception during rendering or invocation is caught, logged as a stage warning, and the caller-supplied default is returned instead of propagating out of the gateway.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L109-L150",
+          "version": "repo-lines-v1:sha256:0a44180a5ae41f838f48fc38ad1ce708efd022003814210b81aa95aec93456bc:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4OGZmOTVjOTZmZTU5MTYxMDQxYWRiNjdjYTEwMWQxMWI5NzkwMDg3YzgwZGI5ODhiNGVmZDFlMDVlMzQ5MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2NmIwNDM4NTE4NzllNTIyZDc5MjljOGVkZDFiZjQyOGE1YjUyODgzNTdmNDAwMmU1YTUxMjEyMWY5Mzc3ZDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzNGUwYzgyOWE1ZTExYTBkM2IxMjgzOWM5Yzc4MTBiNDI2NTMwNjg0Yjc5NjM1MDIxZmVlYzNmMDc1NjQ2ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc4Y2Q3M2ZkYjg0OTNjZjBkMGJlZmUwNjM1MzBlYjE5NTNkODQxOTE4MWM4MDNmZmY5ZmFiNWYzNDI5NTAwOGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3afb8c60873240cdb6741fd1c7b78cbc",
+      "statement": "sampling_params(model, temperature, reasoning_effort) exists because GPT-5.x/o-series reasoning models reject temperature/top_p unless reasoning_effort=\"none\" while gpt-4o-family models only accept temperature; it converts one desired-temperature input into the kwargs a given model name actually accepts so a model can be swapped from configuration without changing call sites.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/model_sampling.py#L30-L48",
+          "version": "repo-lines-v1:sha256:332dd054e4d9566a04f3b0b15f17b777781db79a90be85ec4f3196f28f5694f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0MTEyODhmN2YxMTllYWI0YmNmMjNkYjkyMmI2Y2E4MTYzZDNhYTZlMjUzNzA4NDgzNDgyZTBhYjQ3ZWE1ZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkMWIwZWRlNjU4YmFlYzE1MGNlYjJjNDZjNjVjMGJhZDE0OTNhZjA4NDcyNWJkOWVlMDBlNTJkOGJiNTkxZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmY2YxMzA4N2MxMTM3NWEzZTlmYjIxYjllN2YxYTk4MGUyN2NmNTcyOTk4ODg0MGUxMTliYWQxMTRmNTdiNTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L1-L12",
+          "version": "repo-lines-v1:sha256:8bae7419da63e1d9f1bbc36182ab519f93fbb42f573ba62e3da0b590020b3d34:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhMzRmYjZkZGUxMzYzYzcwMzc3OThhM2MzMDdiOWNkZjE2OGI1MDVkNzNjNzI1M2ZmMjNjZGZiZjQ3MzNkN2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0e97bb0c66b242e79e646fa2259c0ba6",
+      "statement": "is_reasoning_model treats any model name starting case-insensitively with gpt-5, o1, o3, or o4 as a reasoning model; for such a model, sampling_params always sends reasoning_effort and sends the supplied temperature only when the effective effort is \"none\", for o-series models an effort of \"none\" is converted to \"low\" (so o-series never receives temperature), and non-reasoning models receive only the supplied temperature with no reasoning parameter.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/model_sampling.py#L25-L48",
+          "version": "repo-lines-v1:sha256:5aaadaeec097b9bc65b86759e618011b4f14aaf0b92374768bb4967593ec2b0d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiOTY0NzU4NGQzZTdkY2UxZGM0MmRjOTcyZDEzMDk1ZWFmMTI2ZTJkMzY1OWZjZTU1NWVjNjNiMzhiYzJjMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkMWIwZWRlNjU4YmFlYzE1MGNlYjJjNDZjNjVjMGJhZDE0OTNhZjA4NDcyNWJkOWVlMDBlNTJkOGJiNTkxZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2MWFjMTE0M2RmYjAzMmQ0YzZkYjhlMWUyYTI3MWJkNWZlYTNkMzhkZmJmYmFkZDBlYWViMmJhOWExNDA0YWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_model_sampling.py#L51-L109",
+          "version": "repo-lines-v1:sha256:e91d2994cbabf627764097e51727ff6fd4248e0a5f5df3d3278668dd8ec62805:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmMzQ1ODNhNTk4NzY3YmY1NmFlZmViNjVlMjAzM2ExNjUxY2M0YzhkN2U2ZjBhZjNlNWNmZDMyOTNmOTMzYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFkODhjYWViMjU0NjhiNWJlMDhmMDBmMDgzOTBmOWRhNTMwODljODNiNzM5ZGY2OTMwNWEwYzNhNTVjNzhiNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNkMGFiZWI0MGEwNzdlYzI4ZDAyMWI3ZTQzMDFmYWJlNGU4YWQyMjRmZjZkNzg4MzQ1NTk4MzUyOWQ0MGJlMzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_831dc22f95c742dba31d93c1d60c4675",
+      "statement": "tests/test_model_sampling.py fixes the full model getter/fallback behavior, case-insensitive reasoning-family detection, the sampling matrix across gpt-4o/gpt-5.x/o-series models, environment-driven reasoning-effort fallback at call time, and that healthcare_rag.services.models is an identity-preserving facade over healthcare_rag.services.model_sampling; it must pass after any change to model-family or sampling logic.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_model_sampling.py#L1-L133",
+          "version": "repo-lines-v1:sha256:9e200f1654ac5b45e19606b25eb1596f685c28b076fc7802a0734a77239469da:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1Mzg0YmZkYjJkZjM4MGI2NTU3Y2M3YTcxZDE2ODkxNDE1YmNjYWE4NzY5OTQwNmUyMzZmNzUyYzY0MTUzODlmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4MTg5OTQ5NWRmZTZiYzRiN2IzZjJlZGQxNTM0MGY4YTJjNTRmNDdlNGM5ZmRlMmU5YTc5OTM0MGNhZjBhNTgwIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_18ac02787d964c70a9bb206e17827ab5",
+      "statement": "The gateway's compatibility rules (sampling_params, tier caching) only prevent an unsupported-parameter API error when swapping a model name; they do not by themselves establish a quality, latency, or cost improvement, so callers should not bypass LangChainLLMGateway with a direct ChatOpenAI construction or hard-coded sampling combination, and any performance claim needs the evaluation workflow.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L58-L87",
+          "version": "repo-lines-v1:sha256:1953c46d5b5819d4f06ba785bf212a921afae43e8a85a70f9608a229b66ade37:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwMzU4Yjk1NjUyMTc4MzRmOGIzZjNjMzc4NDlmYjNmYzkyYjQ1YzlhYTM2NThjZmExODY3YzgwMGI2OTAwZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwZDZkMzBhN2ExYjI2MzdiODAyNDg2YTE4YzIzNTkyMDk0ODYyZDY5ZGFiNGYzYzUyMDM3NDQwZTVlOTExMDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxNDY1YWNiZWRlN2VlMDg3NWFiN2VmMTI3YmEyZTBmOTAyYjc2NzIxZWI4NDk3Yjk4M2QwOTE1NDc5NDE4NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZmE1Nzc2N2Q1YmRjNzkyODFlNjUyM2FlODRkZDRhYTU3YzRmZjUxMDU0OTEwZmY0MzhmZGI0Y2VmNmVhOGUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L1-L12",
+          "version": "repo-lines-v1:sha256:8bae7419da63e1d9f1bbc36182ab519f93fbb42f573ba62e3da0b590020b3d34:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNhMzRmYjZkZGUxMzYzYzcwMzc3OThhM2MzMDdiOWNkZjE2OGI1MDVkNzNjNzI1M2ZmMjNjZGZiZjQ3MzNkN2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4174b6ead2a64bb299405dc6607b6c09",
+      "statement": "The current default model tiers (gpt-5.6-luna default, gpt-5.6-terra validator) replaced an original gpt-4o-mini/gpt-4o pairing; the repository's committed measurement of this migration shows that using gpt-5.6-luna as the validator tier dropped core-set correctness from 0.75 to 0.55 (a weaker structurer discards good content it cannot cite), and that swapping the default tier alone raised per-query cost roughly 2-4x due to more aggressive decomposition rather than per-call pricing.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L43-L68",
+          "version": "repo-lines-v1:sha256:6fcf4de041da0a052f2475f86dadd4dce876b6e86fb32b8089b1a09a9c101639:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MjEwNTFmNWQwODkxNDJkMTJlZWQ1NTdkZDdmODU0NjBiNDk0NDQ2OTQwOTk3ZDNjODM4NGNlZGYxZjIwMTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3ZWIzNzA3NTk4NDAxZjg4ZWM5NjRjNWNkNDE5NGIxYjMxYjJhNjlmNzhkYzYwODM4YzUzMDMwNWUwNjNjMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIwYTVlMDFjYzkxYzAwYjYyZDY1ZmM3MjhlOWEwODlhZWUzZTdjNmRkN2IwNjM0NzU2ZjcwYzU5MjA0YjRjZmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NDcwM2U5NDhmMDg4MThjNzBkNmIwMzg4NTI2NGFjZDAyMGE0NTYxMGUzMzEyMjA4M2I3OTUxOTc5NWE3YjUifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L255-L255",
+          "version": "repo-lines-v1:sha256:86713b4b01d2f6a2af5ef16d80dc3be20647ac61e428ecd5b158e43836c1658f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODY3MTNiNGIwMWQyZjZhMmFmNWVmMTZkODBkYzNiZTIwNjQ3YWM2MWU0MjhlY2Q1YjE1OGU0MzgzNmMxNjU4ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODY3MTNiNGIwMWQyZjZhMmFmNWVmMTZkODBkYzNiZTIwNjQ3YWM2MWU0MjhlY2Q1YjE1OGU0MzgzNmMxNjU4ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDZmZTE3Y2NhMzQ2ZGYyZTIwMDYzYWVkZWNjOWM0OTY0ODc4ZDlkMDhmYzczOGIyNjZlODIyM2Y4NzhhZjRiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjlhZmEyNDE0MjcxNzY3ZDVjNDBjOGYxMzUxZTgwZDVkNDBmZTc4YTM3MmY3ODhhMzQwZDhjMmMzN2M0MTNjMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_688d4a107dd24aa49e9d9d9d1786ff44",
+      "statement": "Cost was brought back down to the original ~$0.028/query baseline only after the model-tier migration was combined with a separate, non-model change (capping decomposition fan-out and adding a synthesis branch); this combined result is the one committed net-cost measurement for the migration in this repository and should not be read as evidence that model tier swaps in general are cost-neutral or beneficial.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L58-L68",
+          "version": "repo-lines-v1:sha256:79dedba76ee1b09a89c371641504b765ba178c37b7901df4438ab4ba22efd949:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkMWFhYmZlNDFjZjdmYjcwNTNmN2E3YjcxZmQ2YzZmYjQyMTQwOWI1ZWM3NGY4ZDYwZTg4NmQ1MzY1ZWQ4NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3ZWIzNzA3NTk4NDAxZjg4ZWM5NjRjNWNkNDE5NGIxYjMxYjJhNjlmNzhkYzYwODM4YzUzMDMwNWUwNjNjMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjYTZmZTRhYzA1NTQ0MTlmZmJiZWQwZGMyYWZiMDI4YmE4NzU4MjExZTc5MGE2MTU1NjE4YmViMDM4OTJlOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NDcwM2U5NDhmMDg4MThjNzBkNmIwMzg4NTI2NGFjZDAyMGE0NTYxMGUzMzEyMjA4M2I3OTUxOTc5NWE3YjUifQ"
+        },
+        {
+          "resource": "repo://docs/writeup.md#L126-L126",
+          "version": "repo-lines-v1:sha256:d0b73c5a73ecb36d535d2a9a5458222776fc512adcbc2f5941d048385c772d43:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDBiNzNjNWE3M2VjYjM2ZDUzNWQyYTlhNTQ1ODIyMjc3NmZjNTEyYWRjYmMyZjU5NDFkMDQ4Mzg1Yzc3MmQ0MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDBiNzNjNWE3M2VjYjM2ZDUzNWQyYTlhNTQ1ODIyMjc3NmZjNTEyYWRjYmMyZjU5NDFkMDQ4Mzg1Yzc3MmQ0MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2MyMTcyNWJhNWNjMGI0ZDNmMWE0MmY0ZDE0Y2I5OWQ2ZDliNWM2ZTAxODk1Y2Y1MjA2NGYxMjU3NWEwY2MwMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODgyZWYzMGY2Y2ZkZGYyYTkxYzM1Y2JmNzYyYjdjMTkzNTVjZjFhNmIyMjc3ZTJlMzU0YTJlMjBkMWJmNTVhMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_2eaf28cf45ce41a4a2d2e727275e85d7",
+      "statement": "HC_RAG_DISABLE_STAGES is a comma-separated, case-normalized ablation switch limited to safety, clarify, decompose, evaluate, validate, and followups; an unrecognized stage name raises ValueError while GraphSettings is built, and disabling the safety stage also disables the safety gate, so it must not be used as a production safety bypass.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py#L1-L30",
+          "version": "repo-lines-v1:sha256:958024cd2b0d980a88700111af4dc73ccb217a40cd9904ac5401ac8f1edd61ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzOTUyZTI0NjBiOGE5ZWRkNWNiYTc4YmY5MGE1MzQzMjQzODc2ZWZlMmRiNjViNDkxYjEwNGUwZWM1NDAxOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhOGI5Y2MwZmJmZGU2Y2ZlMGRiNjFlMTBjOGFmYTkzNzg4NDkxZTY5ZWViZGRhMjJkNWZjOWUzODkxODNlMzYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L20-L24",
+          "version": "repo-lines-v1:sha256:0e86f27a087252dbe155d81f06b5718235b5769fb6e29b54664aa928d194e3a4:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWI1NDY4NjZkOTlhZDgxMDJjY2UzNmIxMzc3ZGUzMzcxMWVjMGMzM2JkN2IwMWFhMWRkM2M2ZTNiNzVjZGM2YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWE3OTIxYzllNDU2ODkyZjI5Yzk1Y2I1ZjJiYzU1YzZkNTZmODRiZjEyOWE5ZTIwNmVlM2EwOTBhNWNmMmIxNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzBhZDY3ZTgzNmVmMDMwYTc0YzcxOWI0NzM5OTdjNGFjN2JkMmI1NDdlZWY5ZmQxMDZjNTRjMDI2YTQwODM3NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjg4ZTU4ZGY5YzhiNTAxMjczYTZhOTJmZTAyZTQzMWYzOGY5NmFmMGMzOGRiNmE3MTM0YTA1MTJkNTg4ZjBhMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_481016669fa5451e92e058f088b8cb5d",
+      "statement": "Boolean environment controls (HC_RAG_SAFETY_GATE, HC_RAG_REFUSAL_BOUNDARY, HC_RAG_DECOMPOSE_ONLY_COMPLEX, HC_RAG_STRUCTURED_STRICT) accept case-insensitive 1/true/yes/on or 0/false/no/off, treat a blank value as the default, and raise on any other value, while HC_RAG_QUERY_RESPONSE_ARM and HC_RAG_SAFETY_CLASSIFIER are exact, case-sensitive enums that reject blank, differently-cased, or unrecognized values; HC_RAG_SAFETY_CLASSIFIER=semantic_router parses but is rejected at engine construction with SafetyClassifierUnavailableError in this build.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py#L66-L105",
+          "version": "repo-lines-v1:sha256:ba3e4034b497b184ef80ea7e5dbc485e445106011829e41878e1d74ee3dc1945:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmM2JhMTg2ODNhMmNiZjFiN2RhZjQ2ZmFlMmFjMjdjMWE4MzRjNjI3MGQ0OTBmNDE3ZTc2MjM0OGQ0NjBmYzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1ZmZiZGM2ODdmZjhjNmUxYWQ3NDEzYzRmN2Y3ZTMxYTQ0ZTkwN2E5NGQ0OTgyMGU2OGMzNzFiNTE2MGY4YjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE3YjkwMTg2NTBmYzZjZDc5M2Q5NTkyYWIyOWNhNzNmOTNiMTVkNTkzNjQwNmI1OWJhN2IxZDA1ZDc3MzFhY2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzMTBhMTg2NWU2NmIyNTJhNTY3N2Q1NjRhOTBkZmVjMDMzNDFmYTZmMDBjMGViMzNhNmZjNTc2OTk5YjM0NjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_def311bb92ee4171b3dbfff979f3e78c",
+      "statement": "A safe model or runtime configuration change follows a defined procedure: scope the single change and retain rollback; validate a fresh GraphSettings snapshot and capture GraphEngine.describe(); keep calls behind LangChainLLMGateway and rerun tests/test_model_sampling.py after sampling-logic changes; exercise settings/routing tests and other focused tests for the modified control; evaluate with a fresh baseline-vs-treatment comparison rather than reusing an old evaluation or safety-gate acceptance, since changing the default or validator model changes what the safety gate sees and what the judge grades; then roll out while monitoring initialization, credential, and outcome telemetry.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L58-L87",
+          "version": "repo-lines-v1:sha256:1953c46d5b5819d4f06ba785bf212a921afae43e8a85a70f9608a229b66ade37:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwMzU4Yjk1NjUyMTc4MzRmOGIzZjNjMzc4NDlmYjNmYzkyYjQ1YzlhYTM2NThjZmExODY3YzgwMGI2OTAwZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwZDZkMzBhN2ExYjI2MzdiODAyNDg2YTE4YzIzNTkyMDk0ODYyZDY5ZGFiNGYzYzUyMDM3NDQwZTVlOTExMDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxNDY1YWNiZWRlN2VlMDg3NWFiN2VmMTI3YmEyZTBmOTAyYjc2NzIxZWI4NDk3Yjk4M2QwOTE1NDc5NDE4NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZmE1Nzc2N2Q1YmRjNzkyODFlNjUyM2FlODRkZDRhYTU3YzRmZjUxMDU0OTEwZmY0MzhmZGI0Y2VmNmVhOGUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py#L33-L70",
+          "version": "repo-lines-v1:sha256:8c213dfacec3901e918153594f36bd2ab210f087b00fd184123c681a1ea2adc7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlM2ZiMWU1OGZiYzkwNDc5NGQ1MDczMTRmYTkxYzlmMmYxOThjODhkM2ZmMzk1ZTAwODI4OTAxYzM3ZGM5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZTg5MjJlODJmMDFmMjI2N2M4NzY2NWQ3OTZkY2NjNGE0OWQ3MjRiY2E5ZmQ0MDA2YTBkNDc2Mzc1OGU4MTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkNDViNTRiNWFlMWM5N2Q0YTBhYmExYWNkMmQyNTI3NmI3ZGE5ZjY5OWYxZGE0OWQ4ZmQ1Y2U4ZTQzMjJmODkifQ"
+        },
+        {
+          "resource": "repo://tests/test_model_sampling.py#L1-L133",
+          "version": "repo-lines-v1:sha256:9e200f1654ac5b45e19606b25eb1596f685c28b076fc7802a0734a77239469da:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1Mzg0YmZkYjJkZjM4MGI2NTU3Y2M3YTcxZDE2ODkxNDE1YmNjYWE4NzY5OTQwNmUyMzZmNzUyYzY0MTUzODlmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4MTg5OTQ5NWRmZTZiYzRiN2IzZjJlZGQxNTM0MGY4YTJjNTRmNDdlNGM5ZmRlMmU5YTc5OTM0MGNhZjBhNTgwIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_1c1393591d744231803381b2cf42e93e",
+      "statement": "Decomposition and retrieval-gap-fill have explicit fan-out limits independent of model choice: decomposition always retrieves the parent query plus at most HC_RAG_MAX_SUBQUERIES additional branches, and retrieval evaluation permits only one gap-fill round (requiring gap_round == 0, retaining at most three additional queries, and marking the round used before routing to generation).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L35-L38",
+          "version": "repo-lines-v1:sha256:9490639022b162a664b219a6b29920a0894860b78502f7bb5cbe19710a9a92d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzljMDA2OWQxMmY2MmVhYzEwODU5ZDhjNzM1MDg0NjMyOWJiMjY5YzI5NTdlMTRkM2M1MTZmY2NiMDFlNTBiMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODY3ZTQ1NDBkNjVlY2NmMDIyY2JkMGQyMjA2YTkwYzY4ZmNiZmU5OGQyNjcxMDFiNzZiODUzNTBlYjZhNzE2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmJlOTRiNzk2NDc3ODg1NjgzZjI1Njc2ZmZkYzY5MjFiNzUzNTRkYjc3OTk0MDQ5OWZkMWM0OTA1MzRhNDIxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjA2NTFkNzc4ZTRkNzRhNmMzNjlhZjZmZTllNTI1ZmZlYmI3YzFhMTZiOWUwN2M2ZTE0NDY1MzcwMGNhYTBiNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1c4971e7ac9248c388a3fc35679072bf",
+      "statement": "The retrieval arm (HC_RAG_RETRIEVER: weaviate/pageindex/pinecone) only swaps the per-collection search callable while routing, merging, and all downstream graph stages stay shared; Weaviate and Pinecone clients connect lazily on first use, PageIndex reads cached tree/chunk JSON files and opens no retrieval client (missing files direct the operator to run make index-pageindex), and OPENAI_API_KEY / PINECONE_API_KEY are required only at the lazy boundary where they are first needed.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L43-L73",
+          "version": "repo-lines-v1:sha256:271d2ffb55100ed1af55c5f8e4aa32c728d25e4a56b1552ce9d5a49e0d0a8a44:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzMDcwYTM4NzE5ZDhiODk0MDRlODJhYjZlZGYzMGRmMjM5OTBiNTQ1ZjliNWI5ODIyZjU0ZjQ1N2JjZDVmNzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmOTY3YjRmZjU3MTM0MmE2Zjg3MmZmMGM4ZTlkMTk3NjM1YmZkMGI2YjY5NmVlNmVkZGNmYzk0ODM5ZTk5MjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmNDE4YjFjNjFmOTFlOTk4MzIxODYyY2UwMjdmYzJhNjFhODI4NjljMmEzMzE4ZjA4YTMyZDg4NGIyNGQ5NTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxNDUyNWExZjllMGQxYzViNzVmZjA0NTBmOTNlYTZlNmE3MmE1ZWMwMGJjZTI4YmUxZjlkZWFjNzhjYjVmZjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3bbebed69d9548fca42e45cb3b637051",
+      "statement": "When HC_RAG_RERANKER=pinecone, the search fetches HC_RAG_RERANK_CANDIDATES documents per collection and Pinecone Inference reranks down to HC_RAG_RERANK_TOP_K; a rerank failure or empty ranking falls back to the search's own order truncated to top_k, so a reranker malfunction degrades result composition without failing the turn.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L50-L56",
+          "version": "repo-lines-v1:sha256:b5b3d7b350be2abb03ca4faa4f1d09e40a4906351dbedd6d89737d492aab4753:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjYyYTIxMDAzNmYzOTdlN2UzZDA0MzAzNDZiOTM2YzMxZGI4YmVlNTM0NzBlNmZhNzE4MTdlNWM0NGVkMWU4MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDRmMGQ4NGJmZTBiMjMyZTQwYzY5MTdmNDQyZjQzNmU5YmJiODFkMDNjYmE5MjYwM2EzYjE4OWE2ZDVlMzc1NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDc0NGE3MmI1N2RkZWEzZDdjZDhlMzk3MDUyZGE0OThhMGE4M2E5ZWM3OTBmYzAzN2IyYzM5ZGFmY2EzNmQ3NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2FjNjQzMDY1YmEzODBmMGNiZDAyYjUxZGZlMWFlZDc4ZmFjYjM0ODNlYTcxNGU0NGE1ZTY3MTQ5YmVmMTdjZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d9fc0754eae24398b125ee1d81c8df08",
+      "statement": "HC_RAG_CHECKPOINT selects the engine-owned checkpointer at initialization: empty or any value not beginning \"sqlite:\" selects InMemorySaver, a \"sqlite:<path>\" value enters an AsyncSqliteSaver context and runs schema setup, and SQLite support requires the graph-sqlite extra or initialization raises RuntimeError with that instruction.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/AGENTS.md#L17-L18",
+          "version": "repo-lines-v1:sha256:f68e76c0c324aedbf3b1a258650e91c24ad5731bf408405dc4ad506e358db050:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjFkNDUyYzE2N2YwYmUwODE3Yzc1ZWM4OTA1ZDcwOGEzNTM4ZGRjNGMyMmRhOWUwNzBiNzQyY2IwNTc4MzZlZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzhjZjc0YzYwYTllZGZjN2Y2NTAyZjg2Yzk4YzQzZDk1NmZlZWQ0MGQwZWZkZTdiOTFiNWU5YjdiY2I1MGFlMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2ZjNjQ2NTE2YTMyY2M0Y2ViYTc5ZWM2MDM1NjQ1NDVkZWVhNzE4Mjg5MTJhYjM0MjUyYTI5NjNlZTliZGRkZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjUwMDQyNzVmOTlhNTBlN2JhM2NkMmRhMzVlNDA4MjcxYmQzZjAyYWYzMDZjMWQ3YWQ0OWFhMGMxYzU4N2RhYiJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

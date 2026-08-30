@@ -1,0 +1,328 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4e6bac8910f7ee913507768e0b0cb00a7942f802ff71bf49f716d837bfa661e3",
+  "claims": [
+    {
+      "id": "claim_eb96a970568c4b779448329629560c2c",
+      "statement": "The active RAG runtime is a LangGraph StateGraph; build_graph() supplies the public graph with constrained GraphInput/GraphOutput, GraphEngine compiles and executes it for the CLI and other in-process callers, and the LangGraph server separately exports the compiled healthcare_rag graph from healthcare_rag/graph/__init__.py, with langgraph.json also registering a distinct coach graph.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/__init__.py",
+          "version": "repo-file-v1:sha256:938f7da4d578f942aa3103501bb7a5d4bb2a97b4fd37e92fd1fc175597a0e69d"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L115-L134",
+          "version": "repo-lines-v1:sha256:0db24aa3916a68d28997f9c074f2b5c65a2a2ab8e7ad8bd5e2a3a46a38e749c6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjZGVmMWJkNTgwNmEwNGE5ODZhMWQ0Y2I2ZjE3MzA2MDk4ODczNmQ4NWYyYTRmZmMzZmY3MmMzMmRhNzBjMWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNTdiMWM4Y2FjYzgyZGQwZGRiMGYyZWJkMDg5MTlkNjgzZTdkZTdlZmRlMjZmYzc1NzE3NjUwZDg0M2YxMTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5MGM5ZDlmNWQ0ZjhhZjVjZjViOWVkZjg4N2ZmYTYwZjI3NjJiODYxZmEwZjk1MTcxMjQ5N2Y5OTE0MmQ3ZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://langgraph.json#L1-L6",
+          "version": "repo-lines-v1:sha256:b4a482b402c242d259b769678d2b840c8c106ae8082f1e74ac048bca7f106690:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZmYjA4ZmRhMWFjYjk1N2I2MTE2YmQzNzgxMWExZmU0MWEwMTYxMWMwNjMxZWRiZjc4NmQ2ODg5YTI3YTU1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTM5ZDE5ODY4NGQ2NTUyMDRkM2RjNGZiYzZiMGI3MTVhNzhiNGNiYzFlYjliYjE4NGZhYmI4OTY3OWYwMzAwYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1a13666f728845ce880a1e9fe45c6800",
+      "statement": "healthcare_rag/orch/ is not part of the current architecture: it was removed during the Phase 2 port (commit 3435caf), and build_engine() documents the LangGraph engine as the only runtime since that cleanup.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L242-L245",
+          "version": "repo-lines-v1:sha256:7338b309de903b3afdc1fceebd7d463e467827304a3ddc2b372f399b8478686f:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYThhZTJmNzA3NzAzYjBhZjU1YzgxODUyODQyZGQxYjQ1MGJkNmEzMGY3Yjg5NmNmNmFmOGVmYmIwN2JiMjM4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDIyOWM1OWFlOGRkYjAyZWI1MjYxNDc5YTk5Y2VjZTM5MzUzZjZlYTQ2NjFmZTRmMzhlODM2ZDUwZWU2NWM0OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWZkYzE0MzU5NWRkMzYxZGYwNDM4YTZkMDU3N2E4YzI5ODAxZjJhM2RkMGJmNjBkOGU5YjBhNzg3MTZjNDZlZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_efec884987cf4d289c2b5ff5e683e53d",
+      "statement": "The public graph starts at safety_gate and ends only after finalize; add_pipeline() provides the shared post-gate stages while build_pipeline() is an internal trusted variant that starts directly with the two preprocessing nodes and maps validation's terminal path to END instead of finalize.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L60-L134",
+          "version": "repo-lines-v1:sha256:1e9cf97799a1fe13e86c32cea2591f71b994cc2a400058a74e01e92fa92650d9:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmNjczYzZjZDM4NTI0NTA1MzA4MzViMTBhNWVmZWIwMzUxOTE3ZTBjODc3Yzk3MmEwZDdiOGE0OWYxZGM1OTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNTdiMWM4Y2FjYzgyZGQwZGRiMGYyZWJkMDg5MTlkNjgzZTdkZTdlZmRlMjZmYzc1NzE3NjUwZDg0M2YxMTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxN2ZhY2E3MzVkNTllMjM4ZDVkODI3Yjc4ODIyZTg1NzAxMmJkYzFhMDA4ZWUzNGVhYzRmYmE2MDUwZTI1MzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ca8f6936c9224ccd83307ea43740d784",
+      "statement": "Decision nodes (safety_gate, generate_query_or_respond, decompose_query, merge_retrievals, evaluate_retrieval) own their own transitions by returning Command with a typed goto computed from their post-update state; ordinary sequencing is declared as plain edges in build.py, while validate_answer alone uses a conditional edge because its 'finalize' target differs between the public graph (finalize) and the internal pipeline (END).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L79-L102",
+          "version": "repo-lines-v1:sha256:dc3bdf0a87d4b6cf7f08ba1a4580fafbab77e191cc44a88a51628f05a097654c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxNDMxZTQyNTRlZWQ3ZTlhNjQyODhlM2Y1ZWI2MDg0OGIxNTJlMjNmZGYxNzE4YmYyOWZiNjU0YWMyZDM0YTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3N2IwM2FlMDY3ZDRmMWE1MjgwMTFiMTA3ZGYxY2I4ZDBiYjhiNjY0OGVlM2U2YzhlYzQyYTc1ZjQyNDM0MjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5MGM5ZDlmNWQ0ZjhhZjVjZjViOWVkZjg4N2ZmYTYwZjI3NjJiODYxZmEwZjk1MTcxMjQ5N2Y5OTE0MmQ3ZDIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L1-L15",
+          "version": "repo-lines-v1:sha256:86cd1201e870a988b52138e33cf0856c0604cd19e28b17ed9678bd18333acf07:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhNjAzMTk1NjEzNDZhOWJiMThlMWUwYzJkZDJmNWI2ZDI0OTE0MjkzYjY5MWJhMGFhZDljYmI2YTNmMmRiNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQyNGIwN2JhNmFlMWRhODI0ZGZhZjY4YmRiZGNkNzNjODJhYzMyNzQ1YWMwMzQ2N2Y1NTc4ZTMzMzRhM2IyMTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L181-L188",
+          "version": "repo-lines-v1:sha256:6a418c13c370cd0a5499e3732ddd65838ff3c0285e2ae815e1ef3dd881c80fee:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTZhNGUwMTc3MjY0M2UzOGNjNTIxOTY2NmJlM2QzODkyOGQ3NWQ0MmU2NzZiYThiMWZkMGVkZjFiYWE5ZjUyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTAyOTg2ZTAyOWI4MjBjYzBhZTUwNTUxOGFiZTFmODBlNmM5NTM0YmIxNzU3ZTllYzlmYzkwZjcxZTY4ZTYwNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWE4MmViZTllZDQwN2MzYTZiYTRiMDAzNDI5MmJhYTUyYzExY2U1YWUyODYxMDc0MDJkZTQ3OTJlZWVjYWNmYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e498baa00d294ddbb5ddd94788e2f623",
+      "statement": "Canonical NODE_* constants and router target Literal aliases are pinned against the nodes' Command annotations and the compiled graph's edges by tests/graph/test_router_typing.py, and the full compiled topology is pinned against the committed docs/graph.mmd artifact by tests/graph/test_graph_build.py, preventing dynamic routes from silently drifting from the declared topology.",
+      "evidence": [
+        {
+          "resource": "repo://docs/graph.mmd",
+          "version": "repo-file-v1:sha256:216dfbcc0d8dec6bda688cc71f2185f10afe6c6b4e70abb6beebcdb0445dc46c"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L10-L15",
+          "version": "repo-lines-v1:sha256:9dcdd0f56536712fbb90d4fe5d7c12635b7c4332c8f03b2caf2f71a979699d80:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzliZjQ2OTNjYjc0MTcxMTUzYTk2OGZhMTZkODdjYjRkYmVhMjMzYTdkMGNlNDE4OWU1MDY3NmQ2ZmZjN2Y2NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTFiMzMwNGFhNzU3ZTBmMWQ4NzY5Y2YxZDNlNmM2ZmE2YTQ2MDc3YWVjMDhiMzliODA2NTEzZTI0N2VmZDI1YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDI0YjA3YmE2YWUxZGE4MjRkZmFmNjhiZGJkY2Q3M2M4MmFjMzI3NDVhYzAzNDY3ZjU1NzhlMzMzNGEzYjIxNSJ9"
+        },
+        {
+          "resource": "repo://tests/graph/test_graph_build.py#L58-L62",
+          "version": "repo-lines-v1:sha256:2244694785c045cea8a2a965ade0ce3e9140bfd586126a099a78441b338adab2:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWVmYTRjZTg4OTdlYTZkMWYwYTYxNDJlYjFmNTkwMmEyOTE0ZmM0Y2E0NjlhNjc3OWRlMjVjYTBmYWI4YjYyMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWZlNjhhNTRiNjM3MTRmODA1MjIyN2NjNTNmOGQ0YmFkYzBkNGEzNTMwOTU4NTU2YWE3NjZjYzM0OGMxZjA3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjJlYjA3NzVjYzk1MTgwOWU4YzU0YjQ0ZjM5YTkwNjRiMTcyZTFiOTZjODI4MDhlMDJiNWE5MzVlMzY0ZDgyMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_176e330269734d91ac5c5ffdffb8d1ec",
+      "statement": "route_after_gate (deterministic code) sends a refusal or precomputed direct response to finalize, sends a turn to generate_query_or_respond when response_action is 'query_or_respond' or when query_response_arm is 'tool' and the model-driven safety classification category is 'in_scope_informational', and otherwise fans a safe retrieval turn out to both clarify_query and extract_conversation_context, which must both complete before decompose_query via a joined add_edge.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L74-L74",
+          "version": "repo-lines-v1:sha256:811aab714944e8a6ce9c13b92383c28d812b2c480e0b195c08974d4c342bce1d:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODExYWFiNzE0OTQ0ZThhNmNlOWMxM2I5MjM4M2MyOGQ4MTJiMmM0ODBlMGIxOTVjMDg5NzRkNGMzNDJiY2UxZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODExYWFiNzE0OTQ0ZThhNmNlOWMxM2I5MjM4M2MyOGQ4MTJiMmM0ODBlMGIxOTVjMDg5NzRkNGMzNDJiY2UxZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzI2YzFiNDE3MWI4YzFjNjY5ODZiMWI5ODNkOTRmN2UxY2ZlMzc5ZTI0YmQ2YWZkYzgyNTJlZjNhNTRmNmEyYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjQzZWIyYTY0MDI3MDUwYmNlNDNlNTBjNjQ4YmRjNGY0MTc0ODYwNjc0ODM4MGQ4YzIxZDUzNmM5ZjkzZGNjNCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L72-L91",
+          "version": "repo-lines-v1:sha256:86663ea852de10e77e6425c7bf9df343bb942e6034dd28a0a8f142caa47f5cdf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjZGIxM2UxMjllOWQ1MDg0ZDA5ZTdiNDk5ODVkMzhjM2M5YzY0ZTI2MzI1NTIzMGVmMzMxMGU2MjA4ODU4NjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjZDliMTFkNzVlZGI5NTJmZWQxY2IyZWU1OTI4ZTUxMmU3ZDE0MDUzMDU2M2U5NTNlYWYyNmY2OTJjMjJiZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZDE3MWRlNzU0MzFhMDIxYTBkOTRmYTc2ZmFiZjBkNzEzOWM4OThjMWEwYjQ0YjQzY2E2MDkwM2ZhMWI4NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0MDE1MmM2YTRkZmI3YTMyZWY3OTk0ZjJiMjU3MGZkNGUzMjU1ZTBlMDBmYThlYWQ5MzcxNGE2NWY5ZTVjMmUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e8bf9f447490420c9624a379e9507894",
+      "statement": "route_after_query_or_respond can only route to finalize when a direct_response was set; every other outcome of generate_query_or_respond rejoins the same clarify_query/extract_conversation_context fan-out.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L94-L98",
+          "version": "repo-lines-v1:sha256:5d39da1caed670449ffb0c866f50676d913170e636e4548eb0f5d4421761487d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA5YjFkOWEzMTQ0NjY1NzRkMGQ3NmM1ZDk3ZTdiNWYxMzRkOThmMmM0YTg3N2M5YWE5YjYwNTQ3OWE5MjkyYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDFkOGUxOWIxNzgwMjVlZjYyZDExMWE5Njc3MTVkMGQxYzY2NWRjZDZlNjAxNTg0ZGIxMjQzYTY2N2QyNmNjMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjI4MjJiNTNkYTE3OGU1NDRiMjk3YjljOGU2NjI0ZjU3NDNjZjkwODY0ZjhhNzUyODYzMzhiMDA0NmU3MWYyYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjI4MjJiNTNkYTE3OGU1NDRiMjk3YjljOGU2NjI0ZjU3NDNjZjkwODY0ZjhhNzUyODYzMzhiMDA0NmU3MWYyYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_dffab33edf4b42f0aed0d2c0e3c68c6d",
+      "statement": "route_after_decompose always sends the parent working query to retrieve_documents (kind 'clarified' or 'initial'), and when decomposition is enabled additionally sends at most max_subqueries decomposed subqueries; every Send carries phase, kind, index, and branch metadata used later for deterministic merge ordering.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L102-L134",
+          "version": "repo-lines-v1:sha256:6f8d8d2093ecd7f889ccc5839dfdfe3245301f84ceec9ea7cb6024cbb63c9b65:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0OTU3MmJmOWU4NGRkODY1MjQ3MzVjZmNiYmEyOWUzMjUwMWNjZDUyYmM2ZDRjODgzMTJmZDg4MjY0OWZmZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwZWRlNWZiMDQwNmJmZDBhN2NiZDIzNTVlNmJhODA5NjI2OWU4OTFlNmI2ZGU5NmUxNDI1MGI5ZmNkYmRkM2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyODIyYjUzZGExNzhlNTQ0YjI5N2I5YzhlNjYyNGY1NzQzY2Y5MDg2NGY4YTc1Mjg2MzM4YjAwNDZlNzFmMmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5ZWQ2YTViNGQ3Y2I5OTgwZDA1MTZhYzA3YjQ0ZGI2MDEzODM0YWZiZGRhYWE2YzI2MzdjMDM5YzYwMGRhZTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8243e5afbc084ad6ba11903d438aca39",
+      "statement": "Retrieval envelopes append to the retrievals state channel via an operator.add reducer rather than overwriting each other; merge_retrievals sorts them deterministically by phase, kind (RETRIEVAL_KIND_RANK), and index before unioning results, then routes an initial merge to evaluate_retrieval or a gap-filled merge directly to generate_answer.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L76-L81",
+          "version": "repo-lines-v1:sha256:7220a1a1c5bf2edafa4a7555b719da24a7b7e0f5ffb5ab42f94c2c2ea86b026a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4MzhhYTI5MjAzMzYyMDM3N2M4ZmI2YzgzMTRkNjA3YWM4MzMzMTkxM2Q2ZDk1NWZmNDJjYWQzN2I5OGNlMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGNjNGE3ZDFjYzc5NmFiYTNlNDY3MjMzMjdmNTE3ZTlmODExOTgyZDI1MGYwNzAyOTg2ZTRiNTc2NGFkOTU4OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDEwYmYyMjg0NmUxMDUyNjk2NjlhYTQ2MmYwOWNmYjc0NzllZTgzNzhiNTgxZTMzM2FmYWNiMDYxZDkxZGRlMSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L137-L142",
+          "version": "repo-lines-v1:sha256:0fdc1ecc40112e6306fa337b6a9714f798158304bb963099d635902129316284:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmJkNDY0YTIxMjYyMzZiYmQxMGRkNWQ4OWNkNGJhMmQ3YmY4YmZlZWY0NjNlZDRhOTgxMjFiYmY0ZDgxM2E5NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2VhNjc4ZTdkYTQ0NjI4ZDdiYjlhZDU0YjNhMmUxNjBlYzIzYWJiNmJmYjUyNTlhMzhjMWY3NGJjY2RlNmIzZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDExYTA0MTczY2IyNzdhNDU0YjRlMjNkMmZkMGZhYWVlYmUwYjQzN2FkMWVhZWNmZGM1MWQxZmYzMDQ0ZTI1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWRhNGZlZjgxMDEwNWYyNzU5NjhhM2Q4MjVhMzdhYTZiYjJhZTk0M2MzYzZmNjlkMWViMmM1MTE5NGFiZDdjYSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/state.py#L44-L44",
+          "version": "repo-lines-v1:sha256:04ad5c21fbd4b6b964b766e494b73f2b387c7363c8db39b4e9572a9fa08f1371:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDRhZDVjMjFmYmQ0YjZiOTY0Yjc2NmU0OTRiNzNmMmIzODdjNzM2M2M4ZGIzOWI0ZTk1NzJhOWZhMDhmMTM3MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDRhZDVjMjFmYmQ0YjZiOTY0Yjc2NmU0OTRiNzNmMmIzODdjNzM2M2M4ZGIzOWI0ZTk1NzJhOWZhMDhmMTM3MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTBjMmQzMzZkNTgzMDU2MTAxYjVkZTFhYjBiYzFmNzc5ZjY1MjRiZTVlZGUzN2RmYjc5OWQwNmUyNjI2M2M5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTE0MTIwNWEwODY2OWMyZjlmMDdjNTJmNWY5YTQ4YzY3OTBlYzk4MmE0ZmZjZTMzM2JjZmRkOGVmMzZiNzBjYyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e600da639a8a4f46962ea1a5ebb33996",
+      "statement": "evaluate_retrieval's router can launch only one additional gap-fill round: it requires insufficient retrieval, gap_round == 0, and nonempty model-suggested additional queries; the router caps that round at three Sends and the evaluation update advances gap_round to 1 before routing, so a later merge cannot re-enter evaluation.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/evaluate.py#L65-L85",
+          "version": "repo-lines-v1:sha256:5588a183ce76834f3e3c97465fcb37129a345fb92d1c853a4b12d0c5730a1627:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2ZjM2NDgzZTlmMDQ5Mzg0ZWY2YjUxNzkyNjE2Y2E3MWJhZDRjOWE2OTU3YWE0NzcxYzkzY2Y1MWVkNTE4NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZjZTYzY2NjYWVkYmQwMzU5NGI4ZTkzMTY0Y2U4ZmRkZTg4ODdiZWFlNTk0Mzc0NTc1NzZlNjk3Y2QwNDUxMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5YzI1MTU4NTEwMjZkZmQzMmM3NGRkZTUyMTFiOTE1NTEwZTNjN2NhYjFkZDVhMTE3YTNlYTQxY2IxYjgwZWMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L145-L178",
+          "version": "repo-lines-v1:sha256:8975c050f889f6c0b84e956c402e7a2099fab7e8581390a3ac524240713fe570:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmOTU4NTU2YzkxYWJjYmYxOTdiZDUyNWQ4NzZlMGE4MDBmMDM5ZjdkNDZiZTRhNzgzYmQ3ZTUzY2RmODJmMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDI0NDU4MmI2ZmIwM2QyM2I4NDE1YWJlY2QzNDZiMGM5ZjQ2NmI2Zjc1MmIwNjgxODljZTdlOWEyZGMzNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwMWFjODMzMWY3ZDFkZjNjYjhmZmY4MDRjNjdlNGUwNDZjMzEzYmVhYmRjMWIxZDY3YjU5YzkxZmZlNGRmODQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmNDI1MjVhYWYxNDIxMWU4NTFmNGQ3MTAyZmE0MjJhNTEyZmMyYThkNDhlYjEzOWU4MDlhNWY0ZGUzOThkYmMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L37-L37",
+          "version": "repo-lines-v1:sha256:b6e9960461fb61b870969f4f1343cbbcddff5cb2304f11ac1427a009b7b5d022:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjZlOTk2MDQ2MWZiNjFiODcwOTY5ZjRmMTM0M2NiYmNkZGZmNWNiMjMwNGYxMWFjMTQyN2EwMDliN2I1ZDAyMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjZlOTk2MDQ2MWZiNjFiODcwOTY5ZjRmMTM0M2NiYmNkZGZmNWNiMjMwNGYxMWFjMTQyN2EwMDliN2I1ZDAyMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzUyZDEwYzljNWUyMGY4NjFiMDkwYTkzNDYwMjU4MmJmMWE5NDBlNGIyOTI3MGYwM2VkOWI4MjYzZTVmNWUxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjJiZGEyZGE5MjJhYzE4NWZhYWE5ZmZlODQxOTlmM2Q5MTZjNDI3NWM5OWExMzM3MDA5ZWY3OWYyZDg1MDY0NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_517a5715ece54e8b889f926b8e282f58",
+      "statement": "safety_gate derives scrubbed, token-bounded history views from checkpointed messages, then resets all per-turn downstream state channels (retrievals, merged, evaluation, gap_round/gap_pending/gap_filled, generation, validated, route/branch fields, error, etc.) before processing the new question, which is essential for a reused checkpointed thread; it writes a scrubbed question/working query, a model-driven safety classification, notices, and either a refusal/direct response or a deterministic route into the retrieval pipeline.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L64-L100",
+          "version": "repo-lines-v1:sha256:50b951bd5af03a974984ada16bb6e0376730406d8795093094fc9bb4e66eedcd:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzNWUyNzQwMjUxNTIxM2Y1MmE5YmVjOGQ1ZmEyOTliYjIzMzcyOTZhOTc5MDA0NjQyNDZlOWFiOWUwMjYwNDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1YzgwNWEyMDdmMjM5ZDY2OGJlY2JhNGY4YjU5YTNkNzgwMTk0ZWFhNTRmYzBkNDI3NTAxYjFjYjEzYmIyMjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhNzU5OTI4OTkzZDYxMjc1OGRmMzA5OTRiNWU0YzE3N2FmMDY1YjNjNDk3MmJhZTIwNzk5Y2NhOTNlYTZkMGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_69d3e4c6337f4d499d1cae1808008fad",
+      "statement": "When refusal boundaries are enabled, safety_gate can replay a persisted matching refusal before invoking the classifier, and qualifying new refusals are upserted into refusal_boundaries state; classification adapter failures return the classifier default rather than propagating.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L19-L28",
+          "version": "repo-lines-v1:sha256:6735902c425e2bd7463223e28c8ef0358a47051b5db1ad3c7990394642a06039:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhODBkYzViM2EwYjY5NTkxZjcwMmRlMzg4NGVlODViZWQ3OThiOTU5OTAwNTVhMmE3MTQ5Mjk0YjU5MjZhNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4ZjljY2QwNzU0OTQ2MTEwN2E0YzdhMGRjZTdhMDVlZWE1NWNiZDEzZTlmNDNmMzgyZDY0ZWEyMWExOTFiNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5MWIxZGU3OTU0OWIyMTM3NzNjZDQ5NjVlZmQzNjliMWMyZmFhMTUzMGE3ZWNjMzdiOGNlOWRiYjZkYzBlY2MifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ecb02b7b7f354ac1965eb9e5bbb10144",
+      "statement": "generate_query_or_respond is active only when query_response_arm is 'tool'; it makes one model-driven gateway tool-call decision and records router telemetry, returning a direct response only for a benign social turn (out_of_scope + benign_social + valid social_intent) and forcing an in-scope informational turn onto retrieval rather than accepting a direct medical answer.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/query_or_respond.py#L49-L99",
+          "version": "repo-lines-v1:sha256:1c417d2e1d02c8094ff52cf921265e624733af60fef523a9fae492d219c90994:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjYjE3Zjc1NzM1Njg2MzhhNmI5YzJiZjdmNTQzNjVhOGUwOTQwMjMxNDlhOGI5NDViN2ZhN2VkM2MxZTE4YzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjczM2U4NDg3Yzg1ZGZkY2Y5ZmE3YjkzYzc0NmM5NDYyNWFlNDdlMTIwYzc5N2U3OTFlNzM3ZjllZDdmZmM3M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiNjRhZjg0NmQyZmJlNmMyNzgyZGRlZWQwZmEzZmZhZjE4OWUyMDkwMWIzY2MyYjFhNzljOTQ5MmVlMzVmY2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4588b1f5cb0649a9959ecaaa3da1c661",
+      "statement": "finalize renders refusals with notices, preserves direct answers, or renders a validated answer with notices, scrubbing answer and follow-ups again at this output boundary, and appends a scrubbed Human/AI message pair to checkpoint history with a shared ISO-8601 timestamp only when there is a nonempty answer.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety_finalize.py",
+          "version": "repo-file-v1:sha256:fa7905c241fba2a741ab217e9b7867c272ce26e420360df2460c29b9bc5b5d9c"
+        }
+      ]
+    },
+    {
+      "id": "claim_1873dc378798408c835c5e0954f53f95",
+      "statement": "Each retrieval Send scrubs its query, uses fail-soft tool routing (aroute_tools) to select collection queries, then dispatches the configured retrieval arm (weaviate/hybrid_search, pageindex/pageindex_search, or pinecone/pinecone_search), with a resource-injected hybrid_search override always taking precedence; Weaviate and Pinecone transient SDK errors are retried up to three times with one- then two-second delays, and a terminal failure produces an empty envelope so other fan-out branches survive.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L38-L100",
+          "version": "repo-lines-v1:sha256:eb6ebe6fa62f3c681bb93e9c729cf9a5f7e2085ff10ddd6a59418d03a8772f73:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4MTczM2FmOGZlOTFkNzliYzVmYWM1MzYzZTJiOTcyN2ZhNzMyYzY4MDVkMjhiNTExMmZhNWZkN2FkZDUyZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2M2QwNTMzYzIxYTk0YjdkNWJjMzE3MDA4OWZjZjRjNjZhNWI5OTBlOTU0MmQ3Y2ZmYzg3ZWQ2N2RhZGZjMGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4NmM1YWMwNzdiNmZmYzUzNWUyNDdmN2JkYmQ0MmRmMDM2NmYzNTIyNmJhY2U5MTRiNzlhNTJlNzY3OWNlNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFjYmVmNDVkMTZlYWRhMGI1NmE0MzVjM2RjOTNiZjVmMTU5MjI4OGNkZjVlNWFmYjIyN2ViNDQ0ZTA3NWIxY2UifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4ff71b378a04429d87bc19d9c62a4ce4",
+      "statement": "Optional reranking (enabled unless reranker is 'none') fetches a wider candidate set and trims it to rerank_top_k before merge.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L95-L100",
+          "version": "repo-lines-v1:sha256:dd618652f79094cf031849545c67e605aeaec00814dd653bb3806280d77ac839:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjNmNTg0NGM1ZGExMzE0OTliYTNjZjZjMjI0NmMwMjk1MTQ2ODVhZTUwZGQyYmIzNDE0MmM1OWI2ZGZiZjk0MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzYzZDA1MzNjMjFhOTRiN2Q1YmMzMTcwMDg5ZmNmNGM2NmE1Yjk5MGU5NTQyZDdjZmZjODdlZDY3ZGFkZmMwZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTM4Mzk2NTkwYTNjMGQzZGNhMWEzNWQ1YWE3ZTJhMTk4MGM5YTc0ODlmZjQ2YWJmNzAyMTc5Y2Y5YmYyYmZmNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWNiZWY0NWQxNmVhZGEwYjU2YTQzNWMzZGM5M2JmNWYxNTkyMjg4Y2RmNWU1YWZiMjI3ZWI0NDRlMDc1YjFjZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f6db6dc4e75e4694b2a333acbc787fd2",
+      "statement": "generate_answer returns a fixed unknown-answer fallback when the merged result has no documents, otherwise generates from formatted retrieved documents and relevant conversation context and scrubs the model output; validate_answer passes through a scrubbed answer only when validation is disabled, produces no validated answer with no merged data, otherwise applies an 85 quote-match citation/structure threshold and treats any exception as validation failure rather than approval.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py",
+          "version": "repo-file-v1:sha256:26f74deb5c850da843109316542074b644e576f3b7187c036cf22050c06a401d"
+        }
+      ]
+    },
+    {
+      "id": "claim_8ecebb00e79e4c7eafefa994bfb6a449",
+      "statement": "Follow-up generation runs only for a validated answer accompanied by a user_id, and expected gateway failures return an empty follow-up list rather than propagating.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py",
+          "version": "repo-file-v1:sha256:26f74deb5c850da843109316542074b644e576f3b7187c036cf22050c06a401d"
+        }
+      ]
+    },
+    {
+      "id": "claim_39578f5971694deab7b58dcd307c1f1f",
+      "statement": "RAGState is primarily JSON-native; messages uses LangGraph's add_messages reducer, retrievals/route/branch_events are append-only operator.add reducer channels, and question is UntrackedValue so the raw input is not persisted in checkpoint history beyond the turn that produced it; RetrieveInput is a narrower payload type used for each retrieval Send, and GraphOutput exposes only answer, follow-ups, safety, selected branch data, and error to external callers.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/state.py#L24-L82",
+          "version": "repo-lines-v1:sha256:9b3d4af56cb909adf6ce519880a852b4b5a9d57e0e6331de28a4c9cb21413bfe:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzMzgxNjkwZDBkMjNkYzA1NTVmNGEzZWJmNDliZmUwZDY2NjY3ZDY0ODk0YzM0ZmI4YTY0MDlhODE1YWVjODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwNTZjMzQ3ZmQ1OTdiNDgyNjVmZmQ2N2FjM2JlZGI1YjEwZjk0OGNkOTZhNDRhNDM2MDVjMWM1MzA2YWYzNmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2b40757234b14fae837b26911a8e403e",
+      "statement": "seed_history() inserts scrubbed legacy turns into a thread's checkpoint as messages via aupdate_state with as_node='finalize', so seeded history looks like normal finalized turns.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L118-L124",
+          "version": "repo-lines-v1:sha256:f5d098af0bb915af7030cf85983b19af49559cbb898ac277d08140ac9061caaf:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWQ4ZTkyNDUzMmQ4ZGJlMGMyODk0NmMyNjFjNmM3YzVjNWQ5OWFmYTNmMWU5N2ExOTgyNTIwZTAxNzk5MmRlNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTkwOWE1M2E2MThkMDI4ZTFkMzAwMGMwYTdhYmNlZWNiZTVmYjM3ZjRlNTExZWZlNDY2NDNmYWQ2ZTY2ODcyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzhkYjJkYjY4ZDg5ZDM1OTM3NzBlZGNhMjJlNzA2OThmMGJjZDc4NTg0YmM1ODc4ZWRjYTIzOTU2MmJmNzA1ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDhjN2UyMTJiYmFmZTZkNzNlMWQ2MTFmMTExMGE2NDNmMjg3NTM1MmQxYmRmMzQ5NTQ3NWU4MmQ0YjFkM2JlMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_75f743377cc0436586da6e1d5bfb2419",
+      "statement": "GraphEngine uses InMemorySaver by default; setting HC_RAG_CHECKPOINT=sqlite:... selects an async SQLite saver, initializes its schema, and requires the graph-sqlite extra, raising a RuntimeError at initialization if that extra is missing rather than silently falling back; a checkpointer is supplied at compile time only by the engine, while the server-exported graph in healthcare_rag/graph/__init__.py is compiled without that engine-owned saver.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/__init__.py",
+          "version": "repo-file-v1:sha256:938f7da4d578f942aa3103501bb7a5d4bb2a97b4fd37e92fd1fc175597a0e69d"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L100-L116",
+          "version": "repo-lines-v1:sha256:aacedb770e2da34806987a7f1980b8de768549a3a5aa83cecd9008683a48d9f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyMWZkM2I4NGE4YjcxYTVmYjEzZTdhOWU4YzBkZmFjYzdjNTZlNDVlNzU0NDQ0N2E3M2JhMjQ3ODlmOGZjYmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NzdhMjMwNTEzYjg4ODNiM2IzZmY1MjJlNzhlZDdhMWNiNDUyZDYzNzYxODRlMmZjYTMwNTJkYWFjMWI0MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3MDhmMDg3M2EzOWI1ZjcwNDk3ODY2NmQ5M2IyZDM4YTYzNGNlZDU2YzkwYTI1OGZiNTRjZjA1YmEzZWFlNDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxYjM3NmEwMTU1NzM1YjE1NDdiNDhlYmQyMmU1M2NiZGVhNGQxMWM0YmU5ZmI0NGJlNDU2MGEwNWZhYTQ4ZWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_21f4ec5219ad44e2bb5ccbd09928a2d4",
+      "statement": "During a turn GraphEngine streams updates with stream_mode='updates' and durability='exit', forwards node status/answers to an optional QueryMonitor, retrieves the final checkpoint snapshot via aget_state, and creates one UsageRecorder callback per turn for usage telemetry.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L138-L210",
+          "version": "repo-lines-v1:sha256:2a15dab012d56c3fe231a432779cc9983007172586a572c04d99c40c7b22c846:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhNzFjM2NiN2EwYjY1Y2FhMDZiMTFlNzY3MGIyYmMxZjViM2E1NjhlNDYyNTEwNWM5ODNlODBkYzI5Yzk4ODciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3MmY5Njk1Yzc0NjdjNzQ3NzNjOWNlN2ZjNDI5YzVkMGQwZTQ4N2YzYzUxZDE1ZDY2NjhhM2QyNDA3MmJiOTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlYzg2NDU1M2Y0ODg2MWRkNmQ2ZDk1YTkyM2Q1NzhkNTM2Yzc0OGI5M2FiMzRhODk1MTAzOTgzNzU4MzE4NzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0NTdkMDU3ZGJlZDFjNzlmZmVmNTg2M2JiYWFlNThiNmY4MDdiZmI2OWI1ODcwYTk1NzQyYzYxMzNkMDJmYjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2d68dc84a28b4ede9606f120ba4d2b69",
+      "statement": "build_result() converts persisted graph state into answer, raw answer, contexts and retrieval identifiers, branch status, usage, timing, router telemetry, and error fields, scrubbing router-sensitive telemetry keys; fold_branches() sorts append-only branch events deterministically by phase/kind/index so parallel completion order does not alter reported branch telemetry, and marks the selected branch FAILED when validation was enabled but produced no validated answer.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine_record.py#L33-L100",
+          "version": "repo-lines-v1:sha256:01d523ddbec98b606bc16fbf7cb6f7570e1e627364325a6cc4ffa15814c90546:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkOTMzMjZmNGQ5ZWI0NTIyY2NmMTlmZmEyZmYwMDg3NjQ2YjQxMDAwOGNkOTNmZDQ0MjMwZWMwZjNlNjhkMzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmZjc4MDBjMTY0MWU0OGNhYWUzOTc3ZDYxYmRlM2UyY2M3MWM0YWQ4YmFjZjAyMDYwZTUxMTY1YWFiMjhhZjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhNTNhMWQ3YWI2ODEyZTEzZDExNDM4ZjA5YTI4N2VmOTMyNmYxY2RhNzg1MDQxYmI1OWU4MTk1MGI4OTkwNmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzNWFkYjNhYjNlZjkxODQ3NmE4MDhmZGExMTE0NTJiZTgxOGQ2ZjgzZWQ3ZDYxNzVlZThiNjg1ZmI0YzUzYTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_eebe38c6646e4f9ea3fec82a2e5c3a63",
+      "statement": "GraphEngine initialization rejects the unavailable 'semantic_router' safety-classifier selection immediately by raising SafetyClassifierUnavailableError, and calls PrivacySanitizer.initialize() before compilation so missing privacy runtime prerequisites fail initialization rather than silently disabling scrubbing.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L80-L101",
+          "version": "repo-lines-v1:sha256:f044d75d62d38e17dc88539bf6a2c1e509fec119a09b69ac90a1fcc0312ae00d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxZThkN2FjNWU1ZjQ5MjQ3N2I0YjZkY2Y2ZTVkNzc1NGNhYjNjOWZmNzcyZTE4ZDI0ZTJkMzVjMzdlMGY0ZmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4ZGQ0Nzk4MWZlMTEyNjA4N2YxZTc5ZDM4N2ExYTU3ZjM1ZTE1MjFlNWNjNThiMjhlY2E0MjllYzBhMTI0ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5NTVlOGZmZDBkOWZiZDhjMmU2OWUwNTM4MjRkYTUyYzE5ZjUyMjFjYTQ1ZTBjNjRlMWIzYmE4ZDNiYjUyNDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0Y2NiNDhlMTE2MGY4MDFiYWM0NjczNzkxMTNjM2RkM2Y3NzM4YzU4NTk2ODUwOTM1NmIwNzhiOGRhMTJmOTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_59b8aaba756f4623afd6c53a12eefbf6",
+      "statement": "At the request boundary, tracing root inputs are scrubbed via _redact_root_inputs, and tracing fails closed to an empty input map if scrubbing itself raises, so LangSmith never retains an unscrubbed question argument.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L69-L74",
+          "version": "repo-lines-v1:sha256:efcc574ac230ca9b68a3b5bb187e2752709fb081834b1fbe3f168b7c6ce409d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzMyNWFhMzhhMDdlYTI4YTNmZGQ0NjkxZjMxY2RmNTVmODlmODM2ZDkyMWNhYmQxMzQwZDY0YTk3YjEzMDE2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGYyOGUxMDZjYjczYTg0MmZmOGUwODgzMDgzN2Q1MjBmOTU1YjRjMDk0YTk3MGQwZTYzZjQwNTI1YzE4ZmMyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzAzMTE5NTgzY2NmN2E1MTYxNTA1MTY4YTNkYTZmOGNiNjg0OGYyMDhhNDQ3NTMyMTMzOTk1Y2E1ZWIyMmZiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmJhNzc1NDBjNGFjNjAyZjdkZTgxNzYzMjAxMjNmMGFjMWQxYzFlNGVkMjI3OWEzNGFkYjQ3NTBiYjI5N2EwYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3bf10eebb1c64f6fa14baf96fed3412b",
+      "statement": "The engine catches unhandled turn exceptions: PrivacyScanError is retained as its specific error string while other failures become PIPELINE_EXECUTION_FAILED; if state cannot be read after a non-privacy error, it reports PIPELINE_STATE_READ_FAILED and projects an empty state, and these errors are returned in the result record rather than re-raised by run_turn or process_query.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L177-L210",
+          "version": "repo-lines-v1:sha256:663cb264752b4c47b4f2a0aa67d7c7c456d9c34474eb9487eacbb8420b798d88:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0ZTU2ZjdkZjQzZDRiYzM0ZDkwMWJkYTFlZjYwMzI1NTQ2NGU3MGVlNDlmMmJjMGQ3OThiN2FhNTZmYTdiZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3MmY5Njk1Yzc0NjdjNzQ3NzNjOWNlN2ZjNDI5YzVkMGQwZTQ4N2YzYzUxZDE1ZDY2NjhhM2QyNDA3MmJiOTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYwNGM2NDJjNzA5OTUyMmU5ZjMwZjMyZGQxZjc3NmQ5NzBhYWM1N2YwZTkwOTQwYzVjNDFiM2QxMWY3Mjg4NmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0NTdkMDU3ZGJlZDFjNzlmZmVmNTg2M2JiYWFlNThiNmY4MDdiZmI2OWI1ODcwYTk1NzQyYzYxMzNkMDJmYjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b57a88361054dd2b1818800c3a9f877",
+      "statement": "GraphEngine.describe() reports the effective safety, retrieval, model, reranking, structured-output, and query-response settings for experiment comparison.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L215-L233",
+          "version": "repo-lines-v1:sha256:2e197ad66d07d06849ad2c612cb2f0c4c1c6694c7cdfd692c4a85629a4213a34:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyZWZhOTBmOTMxMDRmYzIzNzM0MTZhYTkzMzdiZGMzNTZmZTJkN2Y4ZDY5NTA3YjI5M2ZhZGRjZjJjNzExMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3NDkyMzBmOGM0ZGJhMDUwYjcxYzgyYTRkMzg4MTQ0ZmE3OWVhMjBkMWI2Y2RlYWU1MWM1ZmFkMjUxYTE0MzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiY2MwM2FhNDEzOTQwY2IyOTc0ZTE2Y2QxMjVlODc5NDUwMDliZTY1N2RkM2JmYWUwNmZhMGI5Mzk1NTc3NmEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

@@ -1,0 +1,220 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f093b7fa5fc2238a185cabd6aba4af25e15427c9132d5194b082739e91689924",
+  "claims": [
+    {
+      "id": "claim_b74b8d9a07af43d19d094ac0a3c0df4c",
+      "statement": "Configuration for this project has multiple distinct owners: pyproject.toml + uv.lock define the Python dependency graph, .env supplies local secrets, GraphSettings.from_env() snapshots RAG runtime choices, langgraph.json selects graphs/auth/custom app/API version/store index, Compose supplies local service overrides, and Fly manifests/workflows provide deployed topology; an env var consumed by one surface is not automatically consumed by another.",
+      "evidence": [
+        {
+          "resource": "repo://docker-compose.yml",
+          "version": "repo-file-v1:sha256:de17b65adc18a797dac886d633472483a2b7181fb3a576b546d48d088764e011"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py",
+          "version": "repo-file-v1:sha256:b6591f2bbd25923ae19cd55abcc6415e313aceaa58ff9a9a4844c2bbb2e17b00"
+        },
+        {
+          "resource": "repo://langgraph.json",
+          "version": "repo-file-v1:sha256:edc19183e919a8a0e015dd62f264c85e4975ebf6acc521875c44d73147abde42"
+        },
+        {
+          "resource": "repo://pyproject.toml#L1-L48",
+          "version": "repo-lines-v1:sha256:f298b2f7f1164fabdc10c41a2cf0b22f13fa53cf0d55e2eb463d4987f8c21be5:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwMmE4MWMzODM2ZWRlZjJkMGJhMTFkMjM1M2ZiNmRhYmM3NzcxNTBhN2NhODNlYTBkOWU5YTcwMzEzZmVhYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIzNDZiNjQ2M2Y1NDY3OGEzM2IzNmFmODZhOWNkNzNlOGM5YjlkYjZhMWViNmFhMDZjYWM2NWZjZDMwY2NlMTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmNjE5YTBhMWJhZWJlYWQ0ZTBjYTk4MGQ5NDg0MmM2MDJlOTk1ODNkYmVmYzNiN2IxM2FjNGZmYjg3OTk1YTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f0208d7810fc4915a97a4a3d3baef651",
+      "statement": "The project requires Python >=3.11 (pyproject.toml pins requires-python = \">=3.11,<3.15\") because model classes (healthcare_rag/graph/engine.py, healthcare_rag/models/answers.py, healthcare_rag/models/queries.py) use typing.Self.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L8-L8",
+          "version": "repo-lines-v1:sha256:9f1fe61e914f8294cf91d8b107bf4e56f8d6388098c307cc2a7787a354e4802c:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWYxZmU2MWU5MTRmODI5NGNmOTFkOGIxMDdiZjRlNTZmOGQ2Mzg4MDk4YzMwN2NjMmE3Nzg3YTM1NGU0ODAyYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWYxZmU2MWU5MTRmODI5NGNmOTFkOGIxMDdiZjRlNTZmOGQ2Mzg4MDk4YzMwN2NjMmE3Nzg3YTM1NGU0ODAyYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTQxNTdhZGVjYWQ4YjVlMzNkOTkxNmQwOWE0NGI2ZjE0NGIwYWRjMjZlZTY2ZTExMzU0ZGFlNjIyZDc5MjFjNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWU0YTJjMzVkOGRjYTAwYWJjY2JiYWZmODNlMjUyODNkZmY1NzQ3YTM3MjlmMWI4ZTZjOTJmYjgzYmZlMmY2YyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/models/answers.py#L1-L1",
+          "version": "repo-lines-v1:sha256:cf08e9ef3615e914297350a564384e2be719b8dc39efcfe74818f040999aa872:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2YwOGU5ZWYzNjE1ZTkxNDI5NzM1MGE1NjQzODRlMmJlNzE5YjhkYzM5ZWZjZmU3NDgxOGYwNDA5OTlhYTg3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2YwOGU5ZWYzNjE1ZTkxNDI5NzM1MGE1NjQzODRlMmJlNzE5YjhkYzM5ZWZjZmU3NDgxOGYwNDA5OTlhYTg3MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzVjYjNhODg1ZGRjMWZkZmUzNmEzNjZiNzNhNTVjYjMzODUyNDgwYTVkNmU5NGVkNmFhODBhMjZiYTkzOWQxNCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/models/queries.py#L1-L1",
+          "version": "repo-lines-v1:sha256:cf08e9ef3615e914297350a564384e2be719b8dc39efcfe74818f040999aa872:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2YwOGU5ZWYzNjE1ZTkxNDI5NzM1MGE1NjQzODRlMmJlNzE5YjhkYzM5ZWZjZmU3NDgxOGYwNDA5OTlhYTg3MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2YwOGU5ZWYzNjE1ZTkxNDI5NzM1MGE1NjQzODRlMmJlNzE5YjhkYzM5ZWZjZmU3NDgxOGYwNDA5OTlhYTg3MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWVlODlmZGQ4MDU2NDBlMzc1NTQxZDgyMjYyM2RiMzcyMTJmYzhmZGE3ODI5OGFjNjIwNGY2MWIzNDIwOTc0NCJ9"
+        },
+        {
+          "resource": "repo://pyproject.toml#L1-L6",
+          "version": "repo-lines-v1:sha256:0b24c354c6e827c94e0d769d909c999337e32000bdff617969e5b5e0ec82b13f:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzAyYTgxYzM4MzZlZGVmMmQwYmExMWQyMzUzZmI2ZGFiYzc3NzE1MGE3Y2E4M2VhMGQ5ZTlhNzAzMTNmZWFiYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWY4MzY0ZTg5Y2FhMTc2NTI5YzIzMjNmNmVhMmVmZTJlNzNhM2FkODE4ZmU3ZWRkYzk0ZGIwNTYwZGM1ZWRlMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzA2NGMxMzFhOWU3YmVlMzBjZWUwMDlkYWNkM2Q0Mjc4NGZiZDA4NmUxODk0ZDU0OTY5OTQ4MjA5YzUwZWVlOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_623349ee5037442799c6353527152e1f",
+      "statement": "The documented clean-checkout path is: install uv/Docker/Docker Compose, populate .env with at least OPENAI_API_KEY (optionally WEAVIATE_HOST/PORT/GRPC_PORT, model variables, LangSmith variables, and PINECONE_API_KEY for the Pinecone arm/reranker), run `make venv`, run `make weaviate`, run `make ingest`, then run `make run`.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L23-L46",
+          "version": "repo-lines-v1:sha256:c289a4d6ac348e4b763a7a7f7ee8e4f890a118ff09589722aa8016d17358dae2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1M2ZjMmQzZWQzMGI0NWFlMzQ1ZWZhZTE1NmM4NDA2MDdkYTkxOTU4MTQ1Nzg1MDNkNzY4ZTA5ODQ1YzQ3MjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1YjU3Y2M5MWNmYWJiYTU2YWJkYmIyNzMxMTlmOGIwYzE5MTU0YzlkNzY0ZjNlMThlZDdiNDcxM2IzNmE0NmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEyODgxYWZkMGJjOWFkYzQyNmUzZWRlYzhmNzI0MzUwOGFjZjhhYjA0NjIxZGYzYzM2MzYzNjVlN2M2MjIzOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhMTkxMTdlNjA0NGJkNmRhYmY1OGMxZWE5YWE3NjY2MmQ5OTdmYjZmYWIwZDhmNTAyYmNhMjgwYjFjYTMyMjAifQ"
+        },
+        {
+          "resource": "repo://docker-compose.yml",
+          "version": "repo-file-v1:sha256:de17b65adc18a797dac886d633472483a2b7181fb3a576b546d48d088764e011"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L73-L76",
+          "version": "repo-lines-v1:sha256:787ef97ed553f4722cb219139b2b240ea44e1a6f1302fb9223722bb56a28a4d4:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDU3ODVkZTY4NjUwYTlkMThkNTRhODA3MWVmYzIxM2M0MWRhOWEzMjllM2NlMDJmODllYjQ2NjgxODVhNTQ1OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjdjMjc0ZjI0ZjJkYzc5YjljNzU4ZTE5MmE0YzA0MGJhNjcyMDM2ZmQ3NWIzYzYxMTU4OGU4MjAxNDYxODg4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGMxZTFiMDg1YmE0OWVkYjI5YzcwNzY2MWU5NTNkZDFjYzYwZWNiMmZjNmM3YmRlNThkZTUzMDg3ZGE4NzVjNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2ExZmNiZmUwYWVmMGRhY2U0N2E3OTBhYzYzMDI3MDhhNzFjYjc2NzFlYjY2MTA2Y2U5NmQ4MzdkYjY0M2FjYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_8e2d9b4c84024ac3b6609da370795a19",
+      "statement": "`make venv` deliberately creates a Python 3.12 .venv (not the minimum-supported 3.11) and installs the project with the evals, dev, and graph-sqlite extras via `uv pip install -e \".[evals,dev,graph-sqlite]\"`.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L23-L25",
+          "version": "repo-lines-v1:sha256:728a8908902669979d3f7c0e2b832e960ec4fb2f16cd73f6468babf59cc5a70b:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDUzZmMyZDNlZDMwYjQ1YWUzNDVlZmFlMTU2Yzg0MDYwN2RhOTE5NTgxNDU3ODUwM2Q3NjhlMDk4NDVjNDcyOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTg4NDBkMzdjODU1ZTc2ZDdiM2YwMzVhMDAxYWE2ZTI2MWUyNGNkYTA2NDhiZjZiMTc2MzA4NDUxN2I0NDE2NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTI4ODFhZmQwYmM5YWRjNDI2ZTNlZGVjOGY3MjQzNTA4YWNmOGFiMDQ2MjFkZjNjMzYzNjM2NWU3YzYyMjM5YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWY5OGRmZTRmZDRmNDBhNWQyYzVlNzJmZjkxNTYzMjI3MmY4ZDljYWQ0YmQ4Yzk2NGJjNDY1MDViMzMyN2FjOCJ9"
+        },
+        {
+          "resource": "repo://pyproject.toml#L50-L77",
+          "version": "repo-lines-v1:sha256:fc48e79fa387633d165efafcc0d3c0a1d449e85049c31cd7807a45e8e2eacd48:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5MjE4ZGM0Y2U5NzFjYmUzZDM4ZDc3NDMwZTYzOTkxODg4NGRkNzdkNzE4NGM3YjkzZGZkYzJlOTk4NjkxYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUwM2RkNzNhNTQwNjYxZGFjMWI4ZGUzYzhhZjc3NGM4MzQ4MDMzNDdkYTY0YzNlZTIyN2VhYTY3OGJiZDE2MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5NGRjNTRlNzY5NmMyZGUwMTcwNTVjMmFhZmUyNjhhYjJkN2Y0ZTc2YzgwZDMwNDU3ZDE1YTllNDM1MmU0OTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_edc473499e354b19833e84a9258444e0",
+      "statement": "`make weaviate` runs `docker compose up -d` and then polls `http://127.0.0.1:8080/v1/.well-known/ready` in a loop until it succeeds before reporting the service ready.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L27-L29",
+          "version": "repo-lines-v1:sha256:b696b9db6fa08246131f190efea1252af905f1daecbd3f1218941138ac22cdf4:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGVlZTQ1YzI2ZTA3OWFjYWNiZWU5NGI0ZWEwNWRiZmE2M2U0NTFlOTc1N2U5NzRlYTgxMDZiOWQ3NzkwZjQzYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmZhZTVmNTRkN2VjYjZmYWRkN2NmZmM5Mzg3MWU0MGI2ZjZkN2JjYmZmZTk4ZTJkNTI5NDQxMzRkZDIzMWY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTkyNWI2OTE1NjE5NjNlNzhhODFjMWUxNWMyMTVlOWI4NmI2N2VjOGRmNjg2OWM1OTBkOWZkZWVhOTFlNGFhZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjFjMjNmZjQ2MDI4OWU4ZDU4NDA4YmQ5Y2YzYTA2NGNhODJiN2Q0ZjZiZDg4NWViMDFmYmE1YTY2NDM3OWU0OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_afc5c5a5383a4ca7be82ea2cefda81bd",
+      "statement": "The local Weaviate Compose service exposes HTTP 8080 and gRPC 50051, persists data to a named `weaviate_data` volume, enables anonymous access, and sets `restart: on-failure:0`, meaning Docker will not automatically retry the container after a failure — operators must explicitly restart it (e.g. `make weaviate` or `docker compose up -d`).",
+      "evidence": [
+        {
+          "resource": "repo://docker-compose.yml#L1-L29",
+          "version": "repo-lines-v1:sha256:f9d01b2c8bc58bb6ae7dbbb17e9d74bc2676d18bded63d4d36c4883d7e0f3fef:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmQ3MTExMDNkNTBhNDM3ODMwYzZmYmNkMDRmYjRiYWI0OWEwZjgyZjZkMjZkMWM3OTFjNmU4NDg4ZGQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQzZDdmNGZiYjI4NzcwZGQwNGI4NTQyYzA5YmE1N2FmNTU3MTlhMDMyOTE0MDdhYmMzMTJlZjJiMjVmNjBmNTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ1ZmFhMTRhM2Y2NTRiMzgwZmNlNTIwMjcwMTEyMzRiZDAxMDgyZTk4NzBkZDk3ZDg4MzFiODdjZjJkMDRhZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ab70251a14b94ed48af66b885011c646",
+      "statement": "`make ingest` invokes healthcare_rag/storage/vector_store.py with `--delete-all`, which deletes every existing Weaviate collection in the persistent volume before loading the checked-in Lipitor and Metformin chunk files, so it is scoped as a full destructive rebuild and should only be run when that erasure is intended.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L31-L35",
+          "version": "repo-lines-v1:sha256:695c29606233256f1daf81dea91577770c8f1b6e6eb7a7c1711b2b552cee31f1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODNkYmRmNjkzMjAyMGZjNjA1ZjA4YmRiYThmYWQzYmM5ZGIwYWZjZDFjN2EwZTNkNmYzYjE3Zjg5YThiZWZjZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDA4ZjUxMTFiYTU2ODZlMWVhNmJlYjBmN2VhNThiZmQyMDhiNWU2ZDI5NjdhYzZmNjliMjY3NzQwODkyYmQ1OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDE5NzgzZmQ4ODYzMjRhYjdjMDE1N2RlNGI1ZDEzMDg5Nzg2MGM0N2RjOGUwNjc4MTUxYzc5OTQ4MGYxZTIzNyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L330-L387",
+          "version": "repo-lines-v1:sha256:0e48d40bb2fff2ddee6d36be9748d21f6c8dfa4082ba435cfbb05b05bf8bcacb:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyZTMxMjU3ZGMwYWUxZDU5MzAzN2MyODBjOWFkNTA4MTliOGE2YzhjZjcyOGJlMDcxNmQwMGEzZWVjYzA0YmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyMTA4YWYwYTI4MDBjZDg0NGU1ODVkOWU1MjJhYzdkODE4NGJmOWVhMTQzMjRjNmMzNDE1MzIzMWU0MDEzNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwZjE2OWMyOWVmZDU3MTRhODdlMmUyYjAxMzU3NDY2NWRlNWE1YWFjYmM3NGUzMzI4ODExY2VkODdmM2MxMzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b79d1c8d53c4e88a7f911bef037a203",
+      "statement": "The Weaviate loader (vector_store.py import_data) batches inserts at 100 objects by default, silently skips any row missing a `text` property, stops the import early once batch errors exceed 10, and only logs an approximate success count — so a non-crashing `make ingest` run is not proof that ingestion fully or correctly completed.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L166-L234",
+          "version": "repo-lines-v1:sha256:379310e57f52682bb2b408a97db753a44686b8e4a5d2165760aa1416c8531358:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YmZlZjg2YjU3YzIxNWM0YmZkMzA0NmNmY2FlMjM4YTAzNjMyMWM2YjIwNDFkODY2YmVjNzY4NTdiZjRjMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlMzgxMWFlNmRlZDljY2Q4ZDY1MjI1NjJkMTU2MDNiNDEyNGU4NmM0YzZiNmQ0YTQyYTllOTQzZmMyNTk0ZWQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L37-L39",
+          "version": "repo-lines-v1:sha256:a331f5fdca317bcbe0ce2773b5a6ade927903eadcfd415d09aff3508f91ec981:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzRlMDBkYzJiN2ZmMTc0NGZiMjZjYTdiODNiNDc0Y2JjOGY2MzdlYzEyOTNiMTRiMjE3MjBlNTg5OTFjMTVhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2VjOTg4OTk5Nzc4ZGFjODVlYWU0N2U5NzRiYjBjNWQ4NzBhZTcwNDAwMmQ1OTNjMjgwNWRjMDM3MGM5ODE0ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTJmOGU4MGIyMjQ1OTdkZGI1OWUzNTQxZDM5ZmMyNDQ5ZDIwZDU1NjE5Y2FmNjM5ODM3YzE0Yjc0NjY0ODA2ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzFkZjFmOTVjNmI1N2FkZjNhOGRhMjNiMmEyZWJjNGFkZTQxY2MyMjM4YjMwZGJjODZlNjNiOTNjNDM2ZTg0ZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_87b0961601f84ea9b8d96df33d1e52b8",
+      "statement": "The interactive CLI (`make run` / `python -m healthcare_rag`) waits up to 30 seconds for a raw preliminary answer, prints it labeled 'not verified', then continues processing and prints a separate validated 'VERIFIED ANSWER' once the pipeline completes; the preliminary answer is not citation-validated and must not be treated as a safety boundary.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/cli/interactive.py#L94-L135",
+          "version": "repo-lines-v1:sha256:4dcfb42ded41c7020a24c7ca18812e1e74269a128120da84ea0b8f3a927394e9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmMDg0ZTJhNjRmNjQ5Yjk2NWZkY2QzM2IyNmJkNTU5YTUwNjEzZWU2NmM1YmExMDEzNDhiYmEwOWJjMWEwOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3YmYyZGRlZDFmZTExNjA1NDkxYWQzNTA1ZDE4MGQwODljODdlZjRjM2VhODNlMGY0YmJlZWMxYTJjZjJiYjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxZmU1MzViNDBhZjg3ZWZkM2UxZTUwY2M3MjRkNzZhNGQ4MDMxMGFhZTVjYzI3ODU0Y2JiZmZjOTBkNWMwMTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUwNzkyZWM0MzU0MDNhYzIyM2I3YWEwYmUwN2VjYTFmMmU0NzA3MjAxOWViZmJkNGUwYjc1NjRiZWQwM2RlMDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e00276062598484e92094b7fec713a84",
+      "statement": "The repository has no root requirements.txt; a previously checked-in frozen pip-freeze file by that name was deleted because its pins were mutually unsatisfiable and it was the source of 136 of 142 open Dependabot alerts against code that no build or deploy path ever consumed. pyproject.toml + uv.lock remain the sole application dependency source, and contributors must not restore or use a root requirements.txt; the unrelated tests/server/oracle/requirements.txt, which pins an isolated oracle test environment, is preserved and is not a substitute.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/dependabot-requirements-txt.md",
+          "version": "repo-file-v1:sha256:f0631b2e7733bba312080af2b480b04c9a045949652ddb77cc061adb264a83d3"
+        }
+      ]
+    },
+    {
+      "id": "claim_b4b212b81565428388821f8fa7749bf0",
+      "statement": "`make test` runs offline pytest (evaluator calibration, privacy/routing/graph suites under tests/graph/, safety gate, and parity gate) with no network access by default (pytest addopts excludes the `judge` marker); `make test-judges` runs the LLM-judge calibration tests (`-m judge`), which call OpenAI and need OPENAI_API_KEY.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L63-L67",
+          "version": "repo-lines-v1:sha256:ef38ad7c1372026b17aa012b17935e99adcd3a8cc0ef6da964169fce8e94f481:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjE3NjcwOTgxZjA0YjQzYjQzZWFlODczYjFhZGM0MjgxZTg2ZTlhZDNlZDljMzc0YTg4NTliNjE1OWJlOTE3NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4Y2VkZjRiY2NmOWIzMjZjZTRlMzU1MTVhZmM2NzNkYjY3YjQ4MDMwNzFmYzc0N2JiNDNkY2I5OWIwYzIxZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTAxYTZlYWZlMTgzYjEzODcwMDllMjY4MTE1N2MzMmZiMDY3ZTNhMjhhM2MxNDFmZGEwZDA1MmExNzliOTM3NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTEyZTFlY2RlMTVhOTFhN2E5YzY3NjU2Y2YxNGM2ZDY1MjM1OTQ4MjZlNjA4MWQzYTlkMjIyYTU5YmRiYjVhMiJ9"
+        },
+        {
+          "resource": "repo://pyproject.toml#L89-L100",
+          "version": "repo-lines-v1:sha256:94ca5727ce73e69a930efe9e0e2854cf0a6b0532170a15d6655fb9fda1bf421f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NzZlNjQxNDY1YTY1NTFlOWU5Y2ZmZDdmYWExZTZhNDJmOWI3MjQ4MDk4MTNjOTAzZDdlZGNiNTJmMzAwNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjZjQ4MjA5MDhlZmUxODNmMTI4N2I0M2FhM2M4OWI0ZTgyODAwZWM5MzJlMmFlOWQ1MWYxMWUyYjY0NTVjZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk4Yjg3NGY2Y2JkMTZkMzAwYzIzZWViZjFkMzFkODQ4NDU0YjQzYjk1YWZjZTExMWU4MTE0MzAwMTRiYjZiNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlYWJjMzg4NWQyYWY4OGE1NzFjZTQzMDE4ZWQ5ZWMyNTg1MDdhZThjZmNkMmJjYTQ5MTQzYTczZTQ2ZjExMjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7b68a44f57ba41beae5729d8eb397244",
+      "statement": "There is no `make lint` or `make type-check` target; static analysis is run ad hoc via `uv run ruff check <paths>` and `uv run basedpyright <paths>`. The scripted quality gate (scripts/verify/f2_quality.sh) deliberately scopes ruff and basedpyright to healthcare_rag/agent plus a short, explicit list of evals/, tests/agent, and scripts/ files rather than the whole repository, because the rest of the codebase predates ruff/basedpyright adoption and is not retroactively linted.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/verify/AGENTS.md#L18-L27",
+          "version": "repo-lines-v1:sha256:039bb10d1dd1544b20b7880d6b4f5bc15b76663602b6809609af7dc35094f505:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzYzc4ODVjMDQ4MTJlY2M5NjNmYjhhZGMzMzJlMzg2YzI3MGUyODVmMWRiNGI0YjZjYmMyNzQ1YjM0NWUyYzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxZDQxMmE2NzQwMWY0ZmNjNGEzYjZjZTdkMzdhNGE0NTJiODc1ZjMwZDQwMDAxMDUyNGFhZDZlYTE5NDFmN2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNjMWVkMjhmZTNhMDU4ODM0MWZlODE0ZGExZmYzY2MyMmU5MWRmYzQwMGYwMTliMGI5MzJlNjlhOTYzNGJhYzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQwOTlkNzA1OGQxZWY5ZTQyOTU5YWE0MzJkNmQ3NDkyZTU1NGM0MzViZDcyMTU4NGI1YmUyYjU5OGE1YzlhMDEifQ"
+        },
+        {
+          "resource": "repo://scripts/verify/f2_quality.sh#L1-L52",
+          "version": "repo-lines-v1:sha256:f68d6803291fae11c58905b81f4d3cf82f222bf83e1baea9cf4e150d1da4a261:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkOTVmYzA0YTgwYzk1MmY0OWNlNDE4ODYyN2M1M2IwZmJlOGM0NDA0MWI5NTJkNTkyYWNkMWRlOTk4NjE0NjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMDQ4NWRhYjNlMDMxMjEzNjcyZDllNTc1ZGQ2YjBmMjczYmEwMjE4M2E5ZDNhZDc0YWZhZDgxNTY4MjNjNTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliMzAzNTgwNmE2ODhhOTEyMDQ1ZDcyYWRkZDRmZjJhZDRjZDIxODhlYzRhMjAwOTEyOGM1OWY5MDYxMzRlMmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f88f07dc01874a16b0fb0cb7bc751a2b",
+      "statement": "The Makefile exposes a graduated set of eval commands: `make eval-smoke` (3-example fast smoke), `make eval PREFIX=name` (full golden-set eval with LLM judges), `make eval-nojudge PREFIX=name` (full deterministic-only, cheapest), `make eval-holdout` (hold-out split), `make eval-ablations` (stage ablations: no-validate/no-evaluate/no-decompose via HC_RAG_DISABLE_STAGES), `make eval-multiturn`/`make eval-multiturn-smoke` (multi-turn conversation eval), and `make compare EXPS=\"a b c\"` (side-by-side experiment comparison); full judge evals are recommended only after corpus/model/prompt safety changes, with eval-smoke or a filtered deterministic run used for ordinary code changes.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L78-L96",
+          "version": "repo-lines-v1:sha256:58e4fd67e0073bd3c54cef295829724b5b55211eccdc29943287ba3fa7a1e361:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1YzgwODc4ZjY5YmM5YzZmOTM5ZDIzOGUwNzY5ODVmZTgzMDA4ZDdkMWFkMzczOWU1MGVjZWJkMzlmZDlmY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkYzQ5ODIxZjk5OGQyZjgwZGIwZWRkYTNkM2Y0YjBlMGQ3NGY3NjcxNTk3MWZhMzA2YjdlOTYxMTcxZGVhYWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhY2FlNjIwYWVmMzAyMTc0ZmQwMjkwOTYxZmM2NDlmNWJlODBiMDdiMWJiNGZjODJlYzFiMWY0YTk0MzA3ZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1ZTcwMzUzZDI0NzUwZTkzYzYzZDAwNDk2Yzk2MTQ0MGQ5OTVjZGVhMDk2NGM5NTcxOTFjYWYxNDQzODFkMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9255791248db4eadbaecb5485a46e96e",
+      "statement": "This runbook's Make-target and CLI behaviors are compiled from static inspection of the Makefile, docker-compose.yml, pyproject.toml, and CLI/storage source rather than from a live execution of `make venv`/`make weaviate`/`make ingest`/`make run`/`make test`/eval commands in the authoring session; the closest available empirical corroboration is docs/decisions/dependabot-requirements-txt.md recording that the full offline test suite was actually run against the current dependency graph, and scripts/verify/f2_quality.sh, which is itself an executable pass/fail gate (make test, scoped ruff, scoped basedpyright, frontend build/test) rather than descriptive documentation.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/dependabot-requirements-txt.md",
+          "version": "repo-file-v1:sha256:f0631b2e7733bba312080af2b480b04c9a045949652ddb77cc061adb264a83d3"
+        },
+        {
+          "resource": "repo://scripts/verify/f2_quality.sh#L1-L52",
+          "version": "repo-lines-v1:sha256:f68d6803291fae11c58905b81f4d3cf82f222bf83e1baea9cf4e150d1da4a261:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkOTVmYzA0YTgwYzk1MmY0OWNlNDE4ODYyN2M1M2IwZmJlOGM0NDA0MWI5NTJkNTkyYWNkMWRlOTk4NjE0NjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmMDQ4NWRhYjNlMDMxMjEzNjcyZDllNTc1ZGQ2YjBmMjczYmEwMjE4M2E5ZDNhZDc0YWZhZDgxNTY4MjNjNTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjliMzAzNTgwNmE2ODhhOTEyMDQ1ZDcyYWRkZDRmZjJhZDRjZDIxODhlYzRhMjAwOTEyOGM1OWY5MDYxMzRlMmEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_667781cd1da24e998285164c41f2d205",
+      "statement": "Rechunking source PDFs requires installing the `ingest` optional extra (docling, transformers) and running healthcare_rag/processors/pdf_chunker.py (or the ingestion CLI); because regeneration changes expected chunk IDs and pages, the golden dataset and evals must be updated in the same change, and PDF contents must not be inspected or copied into documentation.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/cli/ingestion.py",
+          "version": "repo-file-v1:sha256:138e3a717eaeaa48b6298343e0f3a4ebb03807dd7b89c46c3f67a46c23664c50"
+        },
+        {
+          "resource": "repo://pyproject.toml#L59-L63",
+          "version": "repo-lines-v1:sha256:b9d839553b9d3fe5ff1a180c29a5d5c1d676be9a8db32414dbc9cb2333dc2794:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWMzODhmYmE4MDAyOWM5YzEyODcwZmM0ZTkxMmZiZjQ5OTNlMjgxNDYwZmIzOTU0OGYyOGNkMGI1ZDVjZmFhOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjk0MTZlMDlmNzhiYTMxNmMwMzI1NjgyMTNiODU1ZWU3NTZlNDE1NjVkOTE4ZjA5NTE5YzgxZmQ2MjBmNDA2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTNlZDM2MzgzNWQzNWMwNjY2OTE4M2VjNjQzNTVjODcyZGI3MTM5NDEwZGVhMDE0MDRkNmVhNDE2YmY5NDA1MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzU1MjAzY2VlZmNiMTU1MDkwMTQzYzk1MTUyNmMxMjJiNDJjZjY1NDk1MTg0Mjk4Zjg4ZjVlZjAwMTg2MWFiZSJ9"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

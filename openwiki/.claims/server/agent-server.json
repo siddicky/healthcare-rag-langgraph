@@ -1,0 +1,316 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:4ec91fdc7fee701850d7a99a8e1c52b05e6cc14200982bbebe2f7b54ce44ccfc",
+  "claims": [
+    {
+      "id": "claim_08acbb616e5646418e405e8536f00659",
+      "statement": "server/ is a clean-room implementation of the LangGraph Agent Server surface hosting compiled graphs behind HTTP (not the base RAG GraphEngine), configured via langgraph.json which selects the RAG and coach graphs, the auth/custom HTTP modules, store embedding configuration, API version, and disables MCP/A2A.",
+      "evidence": [
+        {
+          "resource": "repo://langgraph.json",
+          "version": "repo-file-v1:sha256:edc19183e919a8a0e015dd62f264c85e4975ebf6acc521875c44d73147abde42"
+        },
+        {
+          "resource": "repo://server/app.py#L129-L247",
+          "version": "repo-lines-v1:sha256:42121dbcc3101cb6dea44267557e2a80a558f94219ccc157e0cdcc75cf62f104:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzNjhmNGFiZmZiMGNhYTA5YzY2YmY2NTU4ZGRkNzZmMzBhY2FiOGMwZmM2M2FlOTNjYjNiMmYzNjE1NDZlZTg4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiZDY3YjQ2NjM3ODc1YzNiYjdmOTAzYjFkYjg3MzRiNGEyOTY2ODVkZjRkYmU2NmE0ZjZjZWY3ZmRjNDExNjNlIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5NGM3M2U1ZWQ4NDZlMDEzZWVmMjg3YTE0MDQ0NjE0NDUxNTlmMDQwMzMyNDQ1YzY2ODUxMzdhMWE0ZTg5NDhlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_21c8ab01280c47c3a3b2f32ae0672832",
+      "statement": "App lifespan (server/app.py create_app's lifespan context manager) creates storage, installs the local langgraph-api compatibility shim, reconciles interrupted runs and crons, loads/recompiles configured graphs against the shared saver/store, enters the custom app's own lifespan, creates the RunEngine and starts the cron scheduler, and marks each readiness subsystem ready in sequence; shutdown clears scheduler readiness, cancels the scheduler and in-flight runs, then exits the custom app lifespan and closes storage.",
+      "evidence": [
+        {
+          "resource": "repo://server/app.py#L149-L188",
+          "version": "repo-lines-v1:sha256:e0e4eb1d1dc2fa5224f17c01942dbe8766f843b85be0e862fdeb83e85cb6b96a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkMDI2ZDU3OGI1ZjNkM2E5YzJiNjlkY2I5OTNhNmI3MzVhZTc5NmIxMDc1ZTk2YTZhN2YyNTI2ODE1MTc3ZmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgxMDBkY2Y1MjhkNWMzODU4Y2Y4MWY4ZGRiOGQyN2FjODczMTU1ZmNhNDM3NDU0ZDY5YTllMTc2M2M0MDliNjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlNzJkMzQwNDAyODYwNGNhYjEzNjE4NDlmNGEzNjFhMDg4NjAzNjc4ZWUwNWVlY2I5NGZhODQyZmVlMjVlYzcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_37b9e6092bb54a088cd1ed6349d87aa1",
+      "statement": "Readiness is tracked per named subsystem (config, graphs, auth, scheduler, custom_app, storage) via ReadinessState, and is only reported ready once every registered check is true, so /ok returns 503 until storage, graphs, the custom app, and the scheduler have all completed startup.",
+      "evidence": [
+        {
+          "resource": "repo://server/app.py#L145-L188",
+          "version": "repo-lines-v1:sha256:3a04220c1d60b98d8cc333c1be76e3d0458292fc2205e58f4d6e28481ecd4a63:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3ZjEyMzQ2MzY1YWIzNTdmNjk1Njk0N2U1Y2ZhNDRiOTI0NjVhOTQ0MjA0OGMyNzI4M2RlMGQ5YmQ0ZGVmYjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhZDZiNWQ0NWRmNzM1NGNjMGUwY2NiY2IxNmE1ZDdjYWQyZTYzNjJhOGQ0NDIyYWUyOTg3ZmVkOTZiMGQ2MmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJlNzJkMzQwNDAyODYwNGNhYjEzNjE4NDlmNGEzNjFhMDg4NjAzNjc4ZWUwNWVlY2I5NGZhODQyZmVlMjVlYzcifQ"
+        },
+        {
+          "resource": "repo://server/app.py#L45-L65",
+          "version": "repo-lines-v1:sha256:960860d7c492e8ca02d244509cce7dc055032e281bfa9cd07e9450ed4c2becbd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmZDZhMzFjMDhjYjA4MTJjZGUwNGM1ODdlOTdmNzAxY2Y4Y2JhNjAzMjlhNDBiNDQzNGNmOTJhMDk2ZTFmN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwMWYzNWE0NmI1YzY5OTMyNDNhZjM3MzgxYzk3OTljMTZlNzk5YzEwMTU0YTEzZTM1ZDUyMGU1ZDY4NmQxODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3Yzk3YWZkZGIyYzY3YTJjMjUzNzU4NTBiOTEzODg3OTc1NTkyNmU4N2U2YWMxMjIzN2JkNzYxN2FiY2EyN2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dc89a8202bd840f19056e634afb20156",
+      "statement": "Native HTTP routes cover threads/state/copy, runs/wait/stream/join/cancel, ThreadStream commands/events, crons, store items, and a read-only assistants surface; when a custom HTTP app is configured (cfg.http_app) its Starlette routes are proxied ahead of native routes, and a catch-all route returns 501 only for enumerated documented-but-unimplemented paths while unmounted MCP/A2A surfaces return ordinary 404/405.",
+      "evidence": [
+        {
+          "resource": "repo://server/app.py#L189-L210",
+          "version": "repo-lines-v1:sha256:e553c59951d46ba37e85cc2da6356759282debb0c1a1710e2de8f676ffeffe99:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4YTZiODM2OTQ1ODU5NGY2YjIwNDAxMzZlNWE1ODMyNzBmMmZjYzg0OWViOGRmMDAxNDMyNGQ4M2IyYWViNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ2YTRlNGUyMTBmYWU2MGU3MGRiYjNiZjI3NDJhNjQzMTk4NzFiZTllZGRkZTRhZjliYTAxZjNhMjljNWYyZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyMWEwZmNmODk5ZWU2YTY2OWQ0ZmI0ZGJiZTdkNzE5ZmU2OWMwZWQxNjhmYzg4ZjYxZGRiNDc2NzUxZmVjOGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjMmQzMzliMDQ0NDMwZGJhNzUzZmNmYWVmNWJkODI2NTRiNDdmMDQ1MTYyODhhYjZmYjU2MGY1MGRkMDcwNmEifQ"
+        },
+        {
+          "resource": "repo://server/manifest.py",
+          "version": "repo-file-v1:sha256:969827963086a10ca9d7b663452f7713fde55428fd4470968b39c7543452953e"
+        }
+      ]
+    },
+    {
+      "id": "claim_66566c1b19df4e5f924bf41633b3ffbf",
+      "statement": "The read-only assistant surface (server/assistants.py) exposes POST /assistants/search, GET /assistants/{assistant_id}, and GET /assistants/{assistant_id}/graph; the graph endpoint applies the same assistants:read policy as the assistant record, resolves the configured raw graph, calls aget_graph(xray=...), and strips internal node data.id values from the JSON response so a member cannot use graph visualization to discover an unauthorized configured graph.",
+      "evidence": [
+        {
+          "resource": "repo://server/assistants.py#L1-L98",
+          "version": "repo-lines-v1:sha256:a5a289058fa9edb38b0da46f67af7044d8c368f728297302d71a4188410304f1:eyJzZWxlY3RlZExpbmVDb3VudCI6OTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY5MDk2M2FlOGY5ZmUzZmQ0OGIyNThhOTNjMGNjYmZlMjc3ZjQwYTk3ODNmMWI4MzI0Njk2OGI4Y2ZhY2MwZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEwZmQzMmVhZGM5Yzc4YWU5MDBlNmQwNzBhZTc0NmZjOWRiYmQ2OGNmNjYxOWI3OTcwMzhhMjA4NmEyMjA4NzEifQ"
+        },
+        {
+          "resource": "repo://tests/server/test_assistants_store.py",
+          "version": "repo-file-v1:sha256:b33900af1a8482cce3a170387098b086d4940ad0b208e0a8d7481cf14d1ace6c"
+        }
+      ]
+    },
+    {
+      "id": "claim_f78f581e2b894a69842bc9f964d13137",
+      "statement": "This assistant-graph endpoint is a consumer-facing dependency of the CopilotKit/AG-UI LangGraph client used by the member frontend, which requests graph topology ahead of ordinary non-regenerate agent runs; perimeter admission of /assistants/coach/graph is pinned by tests/agent/test_perimeter_copilotkit.py::test_copilotkit_captured_upstream_routes_are_admitted alongside tests/server/test_assistants_store.py's topology/missing-assistant/xray/policy coverage.",
+      "evidence": [
+        {
+          "resource": "repo://tests/agent/test_perimeter_copilotkit.py",
+          "version": "repo-file-v1:sha256:2ab148590a7e1a664ab44bb3a5c8a551c8fd7cdc3b6e26fdd7afaa1f1819ee68"
+        },
+        {
+          "resource": "repo://tests/server/test_assistants_store.py",
+          "version": "repo-file-v1:sha256:b33900af1a8482cce3a170387098b086d4940ad0b208e0a8d7481cf14d1ace6c"
+        }
+      ]
+    },
+    {
+      "id": "claim_9bb97c9bb7684c999a99d2ffaaae5de4",
+      "statement": "Run submission (RunEngine.submit) enforces exactly one of input or command via RunRequest's exactly_one_payload validator, strips any client-supplied langgraph_auth_user from persisted run config and injects the server-authenticated identity into the graph config instead, so a client can never forge the executing principal.",
+      "evidence": [
+        {
+          "resource": "repo://server/run_engine.py#L267-L331",
+          "version": "repo-lines-v1:sha256:4b76eb1619dec95c30337262a776f231c7a4b10aa4ed1f0b635186920186118c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmNDk1NGExODc5OTVlYmFlYjA0ODQxYWMyYjUxYzNhMTU2ZjQ3Y2FhYzk0MzY5MTk4ZWQ5ODFmMDMzOWFhZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYyNWZmNDZhNDk5OGVhNDlhNzJmNDc4OTYyNDc1OWE1ZjBhYzM0MWI1ZjJjNmQ5ZjBjZjQ1Yzg5MDJhN2RmOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjZmRhMTU5NDUyODE0YjFkYmFjZWVjMzc5ZTRiNTNhN2QyMjVhNzkwYWZkNWRlMjE1Yjc5YWY4ZWMyMTk1ZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlOTg5ZTQzMTk0ZmYwNTdkNzg3ZmI0OTFmOTBlYjA4ZWQxMDA2MjNlNTAzMWIzMTBmNTAwODY3MzAyMjM2ZDQifQ"
+        },
+        {
+          "resource": "repo://server/run_engine.py#L404-L415",
+          "version": "repo-lines-v1:sha256:5aac742ee59397238a59d7a7217ffa6e6245c770696c74d9b13ec63ead197492:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4YWYyODkxMjAxNDFiOTJlZmQ3YjczM2FjZjY4ZmUyNzU5OGI4ODMxOThiOGIwMjczNDU5OTliZTAwMTNhOTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5NTFhYTI4OWQ4NzYzNjA1M2JmM2NmZWVmNWUwZGQ5NDZmZTFjM2E5Yzk0YWFkNjdlMjg0M2UyZDIyNjMzZWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmYzVmZDgzZGY3ZTVhY2NiNDYxZDhhYzMwNTNjNjQyOWRjYjAzNWNmODczOTdhZjdiMmQxY2JlNzdjMTdiYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUyYmY3Mzk5NDQ3MDEyMDZmOTcwOWZkZDdkMjk4MjAxODVhZmZlY2YwNmVjYmRlZTRkZmFmNDRlNzQxNjFhMjgifQ"
+        },
+        {
+          "resource": "repo://server/run_engine.py#L91-L167",
+          "version": "repo-lines-v1:sha256:ef2c934769464338b1c5e6d2e866bd4505d72cef30dc9a3306330bba7d3c9cf9:eyJzZWxlY3RlZExpbmVDb3VudCI6NzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwMTA4MjQ0YWM0YWNkNzdmYWQwNjUwYWU0MzFhN2RjZmU3ZjA5MDY3YTE0MGZiODZkZmY4OTcyZDIwNDQzMWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYWIwOTBiY2QxNjIwZmE2MmVhZWUxNTdhNzRmY2E2MzVhYTI5ZTEyY2JmZmQ2MThiNTc5MmQ4N2JjMDNhM2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllYTUxNjM3NWZmNDhmNTRlZmUyZTk3NDNlOTc4OWIxZTExZTRjYjBmMGI2NDRlOWYzYzI3MTcwMDcxM2QzNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4YjVkMGFiOTc0ZDVhNmRlMjdkMDhjNjdiZDYyZGRjZmFkNjEwZTEzNDI0OTE2YzI4ZGQwNDNkNDllYTk0ZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b9c28298a394c1fa2085c289b7c7d86",
+      "statement": "Per-thread run conflicts are resolved by multitask_strategy: reject raises RunConflict, interrupt cancels the active run first, and both queue the new run when a run is already active on the thread; the pending-run queue is bounded server-wide by QUEUE_LIMIT (100), and exceeding it raises QueueFull, surfaced by callers as HTTP 503 with a Retry-After header.",
+      "evidence": [
+        {
+          "resource": "repo://server/crons.py#L205-L215",
+          "version": "repo-lines-v1:sha256:2b7e8e923cac4b05d8dbc24e2e0c6e0fb29a72262a42565d249b40a18e670b33:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjYjg4NGEwZjg1ZTkzZjBkNGJjZGRhOGNjMGJjNzMyNmEwMWRkNWE4NGUwMzY0OTczNjc5MjY1ZjE4YzE5NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNDIyNzdiYmRhZDg3NjBhZDIzOTRiYzRkYzU1MDY2MDUxOTU5YTI3NDc1NmIxOTJhMDkwOTRjZDY5OGRlMjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiMjNhYzNlYjQ1M2E1NDc1ZDhkNTQxOGViMjAyY2ZlNTU2MTZhODk2NjFmNTczYjE1OGM5NmQ5MGI5ZTQzODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5Y2UwNTllZDRmOWM1ZGM0MGM4YWIyYzM1N2ZkYWY3ZTgwYTEzNDBkYzU2YzZmMGRhYjU0NzgwOTBjNGViMDEifQ"
+        },
+        {
+          "resource": "repo://server/run_engine.py#L24-L27",
+          "version": "repo-lines-v1:sha256:fd077f867a2ec1b71882b268c610e815433350fbe3b2391b2a4faf8c5dae3b81:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjA2YmNkN2YzMzczM2MxYTg4NDBiYjMzYjMwYjU3MzcwYTBkOTZhN2ZlZmVkYTkyNzliYTU3ODQwN2QwNThjYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWNlZjZmZTk2Yzk0NWI4MzBkNzVhMjY4OTA3NDg2NGE1OTRiMmY4MjNiMDU0Mzc4OTY2Njk3MDYyNzhjZmMwMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTY0YmQ1ZWM4MDdiZDRhOWNlMmNmODY5ZWE1OGM1OGYzOGQ4NjgzZWVlMGRkZTE4MDViZTY4N2Q2M2E4OTQ5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmNhZGYzMzZhOGM1NjMyMDZhMWUzOWFjOTc1ZWFhMTNiNjA1Y2EzZGM1YjQ2OTAyMjYyNTkzMDhhYmE0ZGIzNSJ9"
+        },
+        {
+          "resource": "repo://server/run_engine.py#L286-L330",
+          "version": "repo-lines-v1:sha256:f76974c88fb60c2518491fdb28492544bdc2d75c73756bc6d09781e0613f127f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiOTNjMDFhZGUxOGVlY2ViMWFhZGEyOTA2MjQ5YzQ3N2UwZmIzMDBkN2NjODg0YTE1ZDRiZTk0YTdkYWZiMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1ZjViMjkzMDg0MDZlZDI1MTE0MzM1ZjE2MjlkZGY3MjUzYjdlYTBlYWZkYTcwYzViNmE3ZDlhODEzOGEyNTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmMTg1YzE3MDVkNWJkNzA3YzFlNDhjNGI4NWNmM2RhODRhZDJlMDRiMWYxNmE2ZjI4YjExZGM4ZjgwNDg1NGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1YmMyMmU0NDQ2NzU5YzdmMTk5MjBkNDc4MTYzOWQ0Njk0OGNmZGRjYTU3NmMxMTYxM2QzMTc1ZGVlNTAyNWMifQ"
+        },
+        {
+          "resource": "repo://server/runs.py#L95-L105",
+          "version": "repo-lines-v1:sha256:dff844ec4a66e2fd5385f3252e76a1955b683c92dd1f79690e3e2e61b5f12645:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5ZGJjMmZhODBhZTBkNGE5YjMzMmNlZTU3NmEwOGFhY2EyM2I4ODk4NmMzN2RmYTkyODQxNWQ1M2U4ZGYxNjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyOTY3YjI3OTFmZmRkZDY4MzJhNDJhYWVkMDJjYjdiYWFjMzlkYzk4ZGQ5MThkNTY0NTQwNzgwNWFkMDRmMDcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f0e903a4731a4e81b321f3b5996ef3b0",
+      "statement": "Resume (command) run requests are replay-key idempotent: RunEngine derives a replay key from thread_id, assistant_id, and the serialized resume command, and a repeated submission with the same key returns the previously recorded run rather than starting a new one.",
+      "evidence": [
+        {
+          "resource": "repo://server/run_engine.py#L281-L286",
+          "version": "repo-lines-v1:sha256:0852a218f58ad803e8e2946cad5c3ff9ebac0beaa8208ac810a4a1fcc3c566e7:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGUzZjdkZWZlNmVjOGVjM2ZmM2MwMmI3ZGRhYTMwZTEzOGM5MDRlYzY3Yjg0YzljYzdhMDFmY2MyMzRiYzJjOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGI5M2MwMWFkZTE4ZWVjZWIxYWFkYTI5MDYyNDljNDc3ZTBmYjMwMGQ3Y2M4ODRhMTVkNGJlOTRhN2RhZmIxNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzI5MDYxODU0YWU5ZjMzZTk5YTk1ZDRkNTllOGNhZDJmODVlY2I5ZTVmZWQ5ZTk5NjRlN2QxYTk5NDc5NzRmYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzhkYzE3N2RhMGU0MzcxODkzZjg0MDYwNDliNjk1NTY1MGM3YTZjYWQ4M2NhMTQwY2U0MDU2YTRkODI1OWZjNCJ9"
+        },
+        {
+          "resource": "repo://server/run_engine.py#L417-L420",
+          "version": "repo-lines-v1:sha256:bfca9018c17bdb8afeeb1fcb2b91f29060db7c11af6b7086f2f946b2a96817bc:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTMzNzkzNTYxOTg1ZWVmYjMzMjg0MzVlZTRhNGZlNWRhZmRmODE1NTAwYzMwOGRiZWI0ZDgxZmY5YjU5MjEyYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2U3YzAxMjJhMWU1NDk3YTYzZDU2Zjg5ODhlNGQ1OTJjNWI2NjczY2ExOGQ5YjcyNDI5ZjZmMjRkYzk2MWMxNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTVmODA2NTczOThiMjQ3NDU1YzU5MTk1NTgxYmM4Mjk5ZTNjZjZmMjBiM2ZjNzdhY2Y3ZWJiYjA0Mzg4NjQ3NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTQwNGQ5MDAwNzczMjg1YjQ0OTM5ZTYxYzM1YTAyZTNmZmMxYzc4MWRmNWFmZTcwYWMyNDFiMjE5OGQ3MWVhNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b86a17e912b4423d85c9c490acf440b4",
+      "statement": "Cancelling a running run with action=rollback restores the thread's pre-run checkpoint state (deletes the thread's checkpoints and reapplies the pre-execution values), while action=interrupt just cancels the run's scope; graph exceptions during execution are caught and recorded as run status error, and process shutdown marks queued and active runs interrupted.",
+      "evidence": [
+        {
+          "resource": "repo://server/run_engine.py#L254-L266",
+          "version": "repo-lines-v1:sha256:fe3684628cbd9da0c371e64fec00f34a53a023b1088c97c3cd86c6a23f3f79ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MTk1YTJhNzUyNGQ4ZTc4N2Y5M2U3ZjM4YTFkNjk0MGU3OGIzODAyZjQwYWE0OTM3NjM1YjNlYWVlOWQxYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ4MTE1OTAxNDFmZjE2YzQxMzg5ZmM0MWQ4NTYyMGMwNzY4MDNhOWFmYzlkNDI3MDQwYjExMjBkNjY4NWU4NjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFiMWFhZWY4YTU5ODA3MDdlZGVkYTU0NDQ0ODBiYmM2YzcxZjVhZWFjOTEyMjI5ODA0OTgyMjkzMDc2M2I4N2QifQ"
+        },
+        {
+          "resource": "repo://server/run_engine.py#L342-L439",
+          "version": "repo-lines-v1:sha256:496f5aca588deaed9ae4c226bb1d573203cee42d98a9a68faba8184467af3f93:eyJzZWxlY3RlZExpbmVDb3VudCI6OTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhYmZlN2IzODRjNzMzYzJlYTJjMjc3YjE1OWRhNjI4M2QyNDc2MDUzMmRkZGUwMmM2MWE3NzI4NTg4YzY2MzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmNTYyNjJjYTQ2YzliZGM4Y2Y1ZWIyNzgzNDYwNTliYzA0YmE1ZTEyN2NmMWE0MWU1Yzg4ZWQ0Y2E0YWZlMTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxMDI3ZDVjNDQ0ZjRlZjQ1YTRlOTE3NzM1MjE3NGUzZWQ5OGMwYmY3Yjc0MzcxMTk2NWYxZGQ0NjQ2OTliNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a595699cae94e83832053d7b6c87c6b",
+      "statement": "Cron records validate a croniter-compatible schedule and an IANA timezone at input time; the cron scheduler polls once per second, computes due crons, and enqueues their runs, leaving any cron that hits a run queue conflict to be retried on a later poll.",
+      "evidence": [
+        {
+          "resource": "repo://server/crons.py#L53-L120",
+          "version": "repo-lines-v1:sha256:5014804708c24c45b85c00b98890c6f258f442ef72407fa8bbd6c41b83014e9c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzZmNmNWFlMTI0ZmNlMWJlNGI3NjhlYzU2ZGRiMjAwMzI0Njk0N2I4MjA0NmQ1Y2ExYjRiZDM3N2I2NTExZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkMDM2ODQ4NzI2YzAwNjVkYWYyM2M5ZmQ5ZmE3MzU1ZjllOGI5ZTNkMTkyODMwMmQ0MTkyNTBiYTJmZDkzNjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzOWMyMjNmM2NiZDdjYWRmNWQ0Y2UzMjNmNjcxMjI4MzMxNWI4NzE5OTI2ZjdmZTVlMjYzNGQzZDUxNGM2ZDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dd1f99b26ed04b249820703650e9eaba",
+      "statement": "Deleting a thread (server/threads.py delete_thread) cascades a best-effort cleanup: it deletes the thread registry record, the graph checkpoints via saver.adelete_thread, all run registry records for that thread, all cron registry records scoped to that thread, and any in-memory RunEngine runtime/queue entries for those runs; each cascade step is wrapped so a failure is logged rather than silently swallowed or fatal.",
+      "evidence": [
+        {
+          "resource": "repo://server/threads.py#L429-L498",
+          "version": "repo-lines-v1:sha256:32124637638f6f92d587d997390a0fada83609b9ef496acf7e8d697acbe42703:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0MmI3Zjk2MDQ3NTYzNGM3NzZkMDNlZTUwMWZmMzVmYmQyZGNiMTdhNGQ5NzVhNDVjYmYwOTgxN2RjMTA3NGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkNmIzMzVkN2RkNmY5YTJjYjU5ZmJhMjY5MWY3NmEzODk5ZDFlMDY2MjY1YTQ0ODI2MzNkNjYwY2ViMmFiMTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEwNDdiMTBjMzdhMmE5NzVlY2YzNTllNGQ0M2Q5NGJmZWRjZmMzNWQ4OTY2NWUzYzljNTkxZTdmMDY1N2UzYmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBlMjQ1MDlhMzMxNjE1MjVhMGVmMGQ2OTE3Y2M1NTk4ZTA5ZGE5MDM1MmJlODg5M2Q4NGM1YmJiY2ZhZWViZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1d2cc3de7cfb4f95a8fc85a862d17eb1",
+      "statement": "server/storage.py create_storage() selects the storage backend from SERVER_STORAGE: the memory backend (default) uses InMemorySaver/InMemoryStore plus in-process dict-backed MemoryRegistries for threads/runs/crons, so nothing survives a process restart; the postgres backend uses AsyncPostgresSaver/AsyncPostgresStore over one shared pooled AsyncConnectionPool plus PostgresRegistries-backed durable hc_threads/hc_runs/hc_crons tables.",
+      "evidence": [
+        {
+          "resource": "repo://server/registries.py#L121-L153",
+          "version": "repo-lines-v1:sha256:e1e4b060903c2b4608201498c68699a7c372b5ed5b908d5ef59a279c72897033:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlM2ZiMWU1OGZiYzkwNDc5NGQ1MDczMTRmYTkxYzlmMmYxOThjODhkM2ZmMzk1ZTAwODI4OTAxYzM3ZGM5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4ZTNkNzQzODQwNzcyN2RhMjA0NGVhYzU1NTgyMjQwNjcyMDRiNWUxZDJmOWZiMjgyZTU4ZjRmNDA4NzhiNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwOTNjMjBiYWNlN2U5YWM2NzAxZjI3NDUxZWRmMWI3NGVkNGRiMWYyMDMzZTdlZDFkZDQ0MTkxMDBlMzdjZjEifQ"
+        },
+        {
+          "resource": "repo://server/registries.py#L310-L357",
+          "version": "repo-lines-v1:sha256:16e9b735e2a6a7a5cc0a7504c95c19a925aaf4c82a0de7b79d27a2eef061d4d9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlM2ZiMWU1OGZiYzkwNDc5NGQ1MDczMTRmYTkxYzlmMmYxOThjODhkM2ZmMzk1ZTAwODI4OTAxYzM3ZGM5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxMDM0ODFjNTdkMGYwZGMwZjc2Y2QyY2M4YjM2MDRjNGU4Mjk2ZGE0MTIyYWRkMTllODE3NDVkYzdlMzMxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwN2NlMjg5MDdmZjRkOGZhNGRhZDIyMjJlZjJkMmQ4YzM1ZTIyNTRmZmViYjU4MzUzODlkNzkyNTMxYjk2NjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://server/storage.py#L84-L239",
+          "version": "repo-lines-v1:sha256:5c607d93757af4a015ba92fb435e89d87218b0670b78c3809ea22c05ee493115:eyJzZWxlY3RlZExpbmVDb3VudCI6MTU2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4YmYyNmE2ZDE3ZjJmMWUyZWE2ODEzYzkwODVjYjhjMzViOTE1NGQ0ZjU5ZWJlNDkxYzBmMWMzYzUyMmQ1NzBmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyZTA0NTIwYmE0N2I3ZTI5NWY0NzY4YmQyZjUwMTFlMjIwYWVlYTczNDUxYmU4ZmU2OWM5MGMxNDMzYTQ0MjUyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmNjVjNzc0NjcyMDMzMDczMDE1YmI3NTQxMmJhY2RlNDBiNzM3N2I1YTRmYzM1ODE4N2UzMDkxMTQ0N2I0NDdjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MSwiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzMGMxZjE4OGYxNDJlZDdhODI0NjgwYjIwNzE3MmM1NTE5YmM2MTRhNDhmZGE3Y2YxNjdlZGI4ZGRmNzk5NTZjIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_c5057dc8e1314f0eb8d225847785fb3b",
+      "statement": "server/config.py's load_config requires DATABASE_URI (or the Fly-provided DATABASE_URL alias, must not conflict if both set) whenever SERVER_STORAGE=postgres, and raises for any SERVER_STORAGE value other than memory or postgres.",
+      "evidence": [
+        {
+          "resource": "repo://server/config.py#L24-L93",
+          "version": "repo-lines-v1:sha256:74f13b025353231a25b9ba91f191ae430c76ce629f46016a8e077a8ed6f64acd:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2ZjlhMjQ2YmQzMzU0NjYwYTczODY0NTA3ZWJiZDBjMDFiMjI1ZDBjNTc0ZmVmYTFiMDA4NDdiNWM2NTExOGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlNzcxOTYyMjdiNzU3OTA4NGY0YjY5NjM2MGM4OTNjMDU3YmMyMjFlNmI2MjY0ZDQ3MDFjYzliOTEzOTI2NWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhYWJhNDMyM2EyZThiN2UzMmI2M2FlMzJjMDAyODgyYTY1NjE3NTNjMGZlMzYyNmM3NWRjNGVmMDc1ZTVkOWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fddca5ca5636487786328706dc24cf81",
+      "statement": "Postgres registry DDL (hc_threads, hc_runs, hc_crons plus supporting indexes) is created idempotently under a Postgres advisory lock (pg_advisory_lock/pg_advisory_unlock) in PostgresRegistries.setup(), guarding concurrent create_storage calls against racing table creation.",
+      "evidence": [
+        {
+          "resource": "repo://server/registries.py#L128-L153",
+          "version": "repo-lines-v1:sha256:4adf78e489e57a1cc704f2746bf07e45acae63b5a247cf878aafca3710b8cd5d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYmI5ZjcyNzJmYzQ3ZTdiMzU4MGEzYjZjODc2ZWM0NDFiODdkNWUyNmQxNTFlZjc4OTdhNDBmNzU3YjE2ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE4NjJiYWNlODk3MDM0NjI4ZWFkZGU4NTgxMmJlYmMwNDhhMTEzOWRkMTcyZjlhMjEyODQwNGFkYjY0NDcxYTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwOTNjMjBiYWNlN2U5YWM2NzAxZjI3NDUxZWRmMWI3NGVkNGRiMWYyMDMzZTdlZDFkZDQ0MTkxMDBlMzdjZjEifQ"
+        },
+        {
+          "resource": "repo://server/registries.py#L346-L357",
+          "version": "repo-lines-v1:sha256:65424e6bc0a12f0a21adb2e429a34882dbad4855d9827e0501451d4c55348b4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2NWY2MDY2ODFiYmNjNTE4ZDVhZDljNjRkYjZiMmRmMWMzNzQwZTA3NTFlMDA5YWEyNmU4NmU5OWMxNGM2YzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxMDM0ODFjNTdkMGYwZGMwZjc2Y2QyY2M4YjM2MDRjNGU4Mjk2ZGE0MTIyYWRkMTllODE3NDVkYzdlMzMxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlYWI2YzQ5ZjMwNTBlZWNmMzBmODRlNTQzYTEwZmY2NzhiM2I2YTNjMmI1YzBjNGI3MjUwZDBlMDVhZTU2NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f70b28c1d5d542a08830fe693a51e026",
+      "statement": "Production (deploy/fly.prod.toml) runs SERVER_STORAGE=postgres against a dedicated Fly Postgres cluster (hc-rag-server-prod-db) with the vector extension; the flip shipped in v1.0.7 (executed 2026-08-24). Since then, threads, store items, and cron registrations survive deploys/restarts/OOMs, while in-flight runs, the pending-run queue, and open SSE streams remain process-local state that is still lost on a deploy.",
+      "evidence": [
+        {
+          "resource": "repo://deploy/fly.prod.toml",
+          "version": "repo-file-v1:sha256:3951a0ad1dbb9813179643c31883b5903ed0471777b29a92340d6fa168273094"
+        },
+        {
+          "resource": "repo://docs/deploy.md#L684-L719",
+          "version": "repo-lines-v1:sha256:7a643b63abf64734244f4a85e25207dd00903ce109970bb08ad5f439363d274c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlYTc4ODE5MWJlYjViNjMzNWQzY2FmZmJmOTZjZWViODRlY2RiZWE2NTdiMjNjMzEyNTkwZWMwMjU5YTJlYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzMWIxYjAzMzIyYTg4ODI3Y2Y3MmNkMmZlYmM5MTVhZDM2MWNmN2QwMjM5ODIwZmUyOTAyYjAwZDNlZWE2ZjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c3cfccd1e7a44e259267669ace96001e",
+      "statement": "In Postgres storage mode, RunEngine redacts persisted run input/command payloads to the literal string \"[redacted]\" at rest (PERSISTED_PAYLOAD_REDACTION) while keeping the real payload only in in-process runtime state; in memory storage mode the raw payload is stored as-is in the in-process registry, so code must not assume either redaction behavior universally.",
+      "evidence": [
+        {
+          "resource": "repo://server/run_engine.py#L26-L27",
+          "version": "repo-lines-v1:sha256:65bb1fbf2efa105014b44a48514fd642efba33c73454af5c44a72b7a82904c23:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjAyYmRmMjQ4ODQ5MGE4OWU4YWRhOWY2ZjBlODljM2JlM2ZkYjBhYzQxMzBiNDAyZjA3NWI0NzU1MWQwZWE0ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWNlZjZmZTk2Yzk0NWI4MzBkNzVhMjY4OTA3NDg2NGE1OTRiMmY4MjNiMDU0Mzc4OTY2Njk3MDYyNzhjZmMwMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTkwOWU4N2Q3NmUyMjM4NmM3Nzc1ZmY1NzFiMzI4NjhlMTg0ZTM3ZjM4ZDdhYmE1ZTJhYzI3ZDBhY2Y2YzdjMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmNhZGYzMzZhOGM1NjMyMDZhMWUzOWFjOTc1ZWFhMTNiNjA1Y2EzZGM1YjQ2OTAyMjYyNTkzMDhhYmE0ZGIzNSJ9"
+        },
+        {
+          "resource": "repo://server/run_engine.py#L299-L321",
+          "version": "repo-lines-v1:sha256:a1dbfdc6bf4fbd64cc930520198d517a1f7910ab5f6522400d9331c21cb75946:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0ODIyYjEzYzJiNjUzMTRjMGM5OTYxZjg3Mzk1ZjgxNDJkMjU0Zjg5ODZkZTQ5Yjk0YzlkZGNmZmExNjc3OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1NTBlODFkMzY0NDY3NGFhMzM0M2JhOTJlNThlZDcwNGIzODhmZjc5ZDRjYTgwNDFlOTg1MTBlMmE4YWM3NzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3ZTQ5OWQ1MGMzNzBlNWYzYTVkNzFmMzkwY2U2NGM3Y2IyNTAxZjU0MGZhOGRkY2Q2MjA1YWEyNDU1NDdmZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjYWQ5ODRkYjY2NTc2MmIwNWFjYmQwZmYwY2FkOGUyOWI2OTlhYWY5NzU5MDZkNDIzN2YwNTIwNWRiYTVmMDcifQ"
+        },
+        {
+          "resource": "repo://tests/server/test_runs_durable.py#L1-L230",
+          "version": "repo-lines-v1:sha256:628afdf8a93825d30573fbbaa9d7ee594e5843fac41520e3c4d5926a54992403:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1Mzg0YmZkYjJkZjM4MGI2NTU3Y2M3YTcxZDE2ODkxNDE1YmNjYWE4NzY5OTQwNmUyMzZmNzUyYzY0MTUzODlmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MDkzZGNlMDJmYTNlNWMwYjhjMWM4NmFjNjdlODc2M2UzYTI0OWFhYWQwMWY5YThlZGUyZDY3MjcxNTBiZDc4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4YWM3ZDc5N2ZiMmQxYTQ1ZjFkYTA3ODQ2NWUyMGIwMTliOTZjYjM4NTY3MmRkNjkwYzlkYmM3ZTZiZWI3MzQ4In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_5c20155fcd1d472db4710ccb02fc644e",
+      "statement": "create_storage falls back to a lexical-only store (index=None) instead of failing startup when embeddings are unavailable (missing/invalid API key, import/runtime errors) or, on the Postgres path, when the pgvector `vector` extension is unavailable, logging a warning in both cases; non-vector Postgres setup errors are not swallowed and propagate so a deploy fails visibly, and the connection pool is closed before re-raising to avoid leaking it.",
+      "evidence": [
+        {
+          "resource": "repo://server/storage.py#L177-L232",
+          "version": "repo-lines-v1:sha256:87eaf8bb690448d68ea71c5f9daf7d7153c32113b2760504c30e984bb5230334:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwYmNiYThjNWVjZjQwNTJiOWVlYTRmMTViZDU1ZmFhYjlhY2I4ZjUyMGIyNTZmNzU0NWE4N2EyMmRhYjJjOWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNiN2ZkZjZmZjEzMjBhMTM1ZWU4OTk0ZmY2NTI2YzJhZDI1MTk3N2Y2MmVlNDg1MDdjYjdlNTU4NmQ3OTU2ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmNWYyZmM2YjJiZjdjNGIxYTM3MzQxM2I4YzdkMzk2ZjQ2ODhiOWYyMzYyMmEwMGNmZmVlOWU3MWVmYjQwYmYifQ"
+        },
+        {
+          "resource": "repo://server/storage.py#L49-L82",
+          "version": "repo-lines-v1:sha256:0ef30a5ed2d0b1e90dac26eedfb500c023572e88575e1c57e2ee9e3881a93a81:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlY2UzNTc0OGI5OGY5ZDM5Y2E3NWRlMzg5Y2QwMzYyYjJkYzNiZWFmNTgzOTFjY2NlN2ExZDQ1ZjNjZGZlMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjMTIwNzZlMTdjMmRiNGUyMzBmYjA1NjQxOTkwNzZjZTIxMzE2YTY4YzcyZDAxOTUxNjc4YTM1NWZmOGM2YWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2MWE3YTU2YWFkMTczNmRiNDJkNTY3ZjY0OTgwNjhhYmZmZDRkZDQ5NmE4MDhjZjk2ZjJkMzNkNjhlZGEyYTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_74006a786c50416c945b45ba271922e3",
+      "statement": "The Postgres storage test lane is run via `make server-test-pg`, which brings up a disposable compose Postgres container and runs tests/server/test_registries.py, test_threads_postgres.py, test_runs_durable.py, test_crons_postgres.py, and test_storage_postgres.py against it (plus scripts/pg_lane_concurrent.py for the advisory-lock race), then tears the container and volume down; tests/server/test_postgres_durability_gaps.py is gated the same way behind a POSTGRES_TEST_DSN env var via its postgres_url fixture and skips cleanly when unset, but is not included in the make target's file list and must be run explicitly. The memory-backed path is exercised by the rest of tests/server/ under plain `make server-test`.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L138-L145",
+          "version": "repo-lines-v1:sha256:8c18678eb84c47ef43d08ab600d301322b8269f0056410fee97e4ab4cb96c54b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWU2NjQyOGE4OGM0ZjM3ZDU2MGJjZjg5Mzc1OWQ3Yjk3YTNlMTdjMGZjMjA2NmMyOTk2ZTA1MDdlMDg3YjhhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdiNWMzZjkyNzNjOTY3OTE5OGYyNzYwOWQwMGM4M2UzNWUzODJkZTY1N2ZiZDNhYThmMThlOGFlODlkYjk1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGI3YWI4MDk4MjhjZThiMmQ1OGIwYjZiYjAzZjMwNzYwOTFmZDk5YzE0ZTM0ZGRiZjQ4NDA2Y2YxMGE2ZWJiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDYxNDNmMWUxYTc2OTZkN2EwNzFiM2ZmMjllZDNhYTZiOGQ4MTUzZDgwNmZkOTRiYzA5MTQ2NjlkZDY1YTVmZiJ9"
+        },
+        {
+          "resource": "repo://tests/server/test_postgres_durability_gaps.py#L1-L18",
+          "version": "repo-lines-v1:sha256:4958cee549b832bb4446e62881a9ac73b2e92f556db1acb2c17b72fe62915466:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMjA3NWM5YTJkNjA0NTY4ZDc0ZGM4NWE0YjUyNzRjYjc2Y2FhNWU2ZDg4MWJmMGUyYmE0NWUyZjQ4YTE2MGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_476d3f902a5941e693ed5ae635ecba26",
+      "statement": "server/protocol_stream.py and server/protocol_events.py implement a v2-native ThreadStream transport for the member stream protocol: POST /threads/{id}/stream/events (SSE, with validated channels/namespaces/depth/since filters) and POST /threads/{id}/commands (per-method validation admitting run.start, input.respond, and read-only state.get/state.listCheckpoints/state.fork, while update/goto/metadata and unknown methods fail closed with HTTP 400).",
+      "evidence": [
+        {
+          "resource": "repo://server/protocol_events.py#L1-L60",
+          "version": "repo-lines-v1:sha256:e135ed2e5c36f8ab609c97939b1655a69386960572b983e48447d88e999e148c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyMzY0ZDk4N2RjNTE2ZjU0Y2Q2M2UxOGMzNzFlODNhYmIxZmYzZDg2ZTUxNjkzODAzMzk4ZGVmYjI1MTliMDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY1YTNjMGViMzhhMDZmMWJkYzYwNDFjNjVjNzJhMWJhZDJlNzFhZWZlYTJkMTkyYWM3M2Q0MGQ0ZjA5ZWU4MDAifQ"
+        },
+        {
+          "resource": "repo://server/protocol_stream.py#L1-L120",
+          "version": "repo-lines-v1:sha256:bd8c1e91f79a08a40a0b5d2998850014811bf200e3434f9a512433b32ee2ff51:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1Mzg0YmZkYjJkZjM4MGI2NTU3Y2M3YTcxZDE2ODkxNDE1YmNjYWE4NzY5OTQwNmUyMzZmNzUyYzY0MTUzODlmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwNDc0YmExYmIxOTVjZTU3NmExYWRkZDRkZGMyMjAyNTY5ZTA4ZmJjNGM1Mzk0YzJkMzcyNTgyMTJlNmQyMDczIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyMmNhZTlhNGZiYzRmYTY3MWY4OThkZDBjYWIzYjQ5MDVhZjM1N2QyMDQ3MTQzYmZmZGZhOGVkMWIwZmRkY2I5In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_b19a88f80a1b438a8176e4beefda741b",
+      "statement": "The ThreadStream protocol routes are admitted only when HC_RAG_MEMBER_STREAM_PERIMETER=v2 (default v1 rejects both routes outright); the routes reuse the same RunEngine, checkpoint saver, and run queue as the native runs surface, and production parity is pinned by tests/server/test_protocol_stream.py plus a hermetic Playwright suite exercising chat, history/time-travel, and recovery against real langgraph-api behavior behind the perimeter.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L16-L17",
+          "version": "repo-lines-v1:sha256:590b408bb0fd17a4d34277bc1f21524fcf0b0cf87acd848c84f4bc24da8c89b4:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTYyZTQ0MmVjNzU0MGU0ZTg2OTZkODRiYmE4M2E2NDRjYTQ1NWNiYTFkZDdlYTMxZDdiYmY0YjVkOWZkY2QzOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmVhOTFjM2IxNjY5ZDRlMzI0YTA4NjYxMDkyZjgyNDRlYjk0OTI0ODg2NmMyYjJiNjM2NzAxODBiMzFhOTg0OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmZjMGI1ZjlhYjZhMmQzMTgwMWYzNTcwNzRhMmZhY2IzYjJmMzkyMTc1MGI3NDJmMzhiNmJiZGIxZjljZmU2ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjQxMGM2NjYyMzgwODJjZmM2NDkzYjhkZDFkNTdkOTdkNGU2NTdiN2IzMGJhMTdkNjA2MjkxYmEzY2IyYmUzNSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/perimeter.py#L246-L278",
+          "version": "repo-lines-v1:sha256:3a59d113fde79994056ae8f1177f8616b9d2e1e15689c70868e882952f1d40f6:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmNzdiMjhkZjRmYzMzNGIwN2I4ZWYwNTYzNWZhNjM5NGY1Nzc2MmZlZjYyMzUxNjM1ODJkNTY1N2I0ZWE4ZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3MTEyNzcxZGFkNmZiNTI2NDNhNzEwNmJjYjk3YjEzNmVjODU3YTBmNmM5NmY2Y2Y5MjY5OTQyYWU1ZDA0YWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxOTYyNWYyYmUwYTBkMjI2N2VmNDliMDljZTA5OGM1ODEwMTRlYjg1ZjUwN2I4OTEwNWNjOGI5N2Y4MTFjYjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkifQ"
+        },
+        {
+          "resource": "repo://server/protocol_stream.py#L76-L120",
+          "version": "repo-lines-v1:sha256:0d9517fca6d56543478394b1eb8de93b01290053c4538513251810abe1cad2db:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0YTY0MmFlYjgyYThlMGYyNjZmNTAyMjU3Y2QzODY2ZjlkNzJmMDg3ZjU4Yjc1ZTQ1ZWY2YzY2NDI3MzQyMDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0NzRiYTFiYjE5NWNlNTc2YTFhZGRkNGRkYzIyMDI1NjllMDhmYmM0YzUzOTRjMmQzNzI1ODIxMmU2ZDIwNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg2NmUxZDU2OGYwMGVjYWRhMDhhNjM3YmQ4MzY2ZGY3ZTI2ODQ1NmY0MmE3MDJmZWM4OWE2NDQ0ZjVmMjI5YTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyY2FlOWE0ZmJjNGZhNjcxZjg5OGRkMGNhYjNiNDkwNWFmMzU3ZDIwNDcxNDNiZmZkZmE4ZWQxYjBmZGRjYjkifQ"
+        },
+        {
+          "resource": "repo://tests/server/test_protocol_stream.py",
+          "version": "repo-file-v1:sha256:537c5435b38fdd288e70dd630c127f94b12e843693cd6abf1052226a781a0ddc"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

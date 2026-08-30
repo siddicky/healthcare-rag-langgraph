@@ -1,0 +1,256 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:50f38a325d378ddd9b70a703cdebaead7cf69053793ee23f9c4d04b3e4e05fb8",
+  "claims": [
+    {
+      "id": "claim_4c8d0957f3ab4ab39e0785134a2c7246",
+      "statement": "Every query passes through the `safety_gate` graph node before retrieval or generation; it resets all downstream turn state (retrievals, route, generation, validation, direct_response, response_action, query_router, etc.) via Overwrite before deciding the turn's fate.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L64-L123",
+          "version": "repo-lines-v1:sha256:957ccdbeb993dfe0a9eec643b92a494fef59fc18f87b94bf5be7c2fafb400c23:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMzNWUyNzQwMjUxNTIxM2Y1MmE5YmVjOGQ1ZmEyOTliYjIzMzcyOTZhOTc5MDA0NjQyNDZlOWFiOWUwMjYwNDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzNTc5MTA4MzEwNjMwYjI2NjkwNmZiZDNjYTJlNzQzMDczODM5YjVjYWY5NmYxMTVlNDEyZjc4NWQ0OTFhNTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e879db6d39354be08fd2cd3cedf763e9",
+      "statement": "The gate combines two OR-ed layers: deterministic no-network pre-checks (PHI detection, instruction-override regexes, identifier-recall requests, first-person emergency red flags) and exactly one LLM structured-output classification call (SafetyAssessment) at temperature 0; the deterministic layer is a floor that can only escalate the category, never relax what the model chose.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L1-L32",
+          "version": "repo-lines-v1:sha256:a67294bc90c45ac1a05be1a9521618e4f5220ad80833a92366e3464995b8da81:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L153-L186",
+          "version": "repo-lines-v1:sha256:884c5dbdef67b0bf786b9031f14f4908f5814cd892150705ab776d683960ee64:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4M2Q0MGM5MDQ0YzgzMzRlYTlhM2QyZTlhMzA4OWZlN2QxYzM4MDIzMzFkYzA3MWM1N2IwZTdiNTVkNmQ1OWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5YzBhMGI3NjFjMTdjNmNmMjk3OWExMTVjMmRlZWNiM2E1NmRmYTE2YjVjNmJiYzExNzkyMWE0NjAyMDE1N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjYTVmMDI0NjAyNTI3MGI4NzNjYWZjNWE5MzUxNzJjNGRlOGM1Yzk2YTI1OGVjODRhMDViNGZkNzVmMDM2ZGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aa08a37a45c2419fa8a46e60a5da3551",
+      "statement": "On any exception from the safety-model call, the adapter (wrapped in suppress(Exception)) logs SAFETY_CLASSIFICATION_FAILED and returns a fixed default SafetyAssessment(category=\"ambiguous\", contains_phi=False, phi_spans=[], drug_mentioned=\"none\", rationale=\"safety-gate LLM call failed; deterministic checks only\"); category \"ambiguous\" is not a refusal category and SafetyGate._evaluate falls through it to run the normal pipeline (short_circuit=False), making an LLM failure fail-open at the model layer unless deterministic red-flag or injection checks still escalate it.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L158-L176",
+          "version": "repo-lines-v1:sha256:b1a15677d12dd8cdb1a1d0c054e82894c28fbc7a1d002c22a0d44fa7682b3c4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhOWVkZjUxZTZiNjllNjQzYmMyMDVkOTA0YzkxZGExZGMxZTk0M2NhOWQ4YzY5M2E2ZGUwMTgwZjMzN2QxY2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyYWE0NjE2OGEwZmE2Zjc5OGFiMDBhNGNkZTE2ODc1MGMwYjUyYzJjN2Q3NzkzM2Q3YjVkNTVhOGZkMWUxNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlmZWExNDkwZGZjNGQ4NmQ0MGYwYzkzNDU4N2NhYzA3NjA5MTgyYTVhMzlkNDNiYzdkZmM5Y2Y3MDA4NTU4MTkifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety_classifier.py#L9-L34",
+          "version": "repo-lines-v1:sha256:53a554a71578112af66723f376c3ff13b2cd2cf7404adcac0929041bd77e8e9f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwYzA4MzQ2ZjJkMDJiZjhhN2I4ZGU0NWZmNWQ1ZGM0ZmMwNGU4OTllODY5OWUxMzBhNDUyYWQ1OTc5MzlmNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxYzVlNDE0ODViOTkwMmJkMjZmNjFlMTExZGVjNTJlZGMzMTczNDk4NzRlZTg5ZWQ2YWI3NzFmNTM4MjU3OTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkNzNmMTFmNjFlM2VhOGFiZTRlNTJjOWUzM2ZlMDdkYTA0MzhhMzdiYzFjODFlNTMzYzUzYmQ0NWE5MmY2OGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L128-L151",
+          "version": "repo-lines-v1:sha256:8324c1221ba2bef0337c5761238b2af6f84048dba35c41e64650c37cc91b873d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkOWFkOTNlNzA2Y2E5MDE4NWY2MzYzNTJhNjc3NDAyYWU0YTRiZWEwNmRhMWMyZDVkODJiN2FjZmE1MGE0NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMxYzVlNDE0ODViOTkwMmJkMjZmNjFlMTExZGVjNTJlZGMzMTczNDk4NzRlZTg5ZWQ2YWI3NzFmNTM4MjU3OTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhMjliMWFiZjUxNDZlMzAxYTk3ZmQzZDNkMDNiNzI3MTdhMzIwZGEzMWI5NTkxODlmYjU1YTIyNTBjNmYwNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlY2NjMDUwN2Q3NzE1Y2MwYmU2Y2RjZjFlMGE2MWNhZWJiMmI4M2I0ZmM5YTI4YjA3NDA2MjNhODIwOTczMWYifQ"
+        },
+        {
+          "resource": "repo://tests/graph/test_graph_safety.py#L170-L184",
+          "version": "repo-lines-v1:sha256:a3155ba0357b8b8a98a2d91ee3fd3de04cbb5bc11200183c6bc6cff3927e8fa1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOTk0MmRlYjdkYmFiYzExNGIxYzQ4ZDAyZGE0NjM4NmU5YWNhNTE1YTUyZmI3YjNjNDEyZGM2Mjc5MjFiMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkNjdhNzUxYWVlNjBlNWEyMDljZmM4NjRmZDVmMzU0YTlhZWE5OTM3NzhjYTA4ODg5OTgzNWNiYmQ5N2JiNTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1NWQ3MzJiZTcxNmFlMDNmOWZiYzcxOTU0MWY2ZTQ2OWY3YzExZWM5MWM0NmU5MzljYjU0ODQ0NjllMmMzOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlMTBkOWVhNzViMzIyNjJmNzU5OTVjZDIyMDA4N2JjNTE4MTBjZDhkNDYzNjBjY2UwMDBjNjQwNjJjOTE3NDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c769d42d54b64c83acb6ac498a88d3d8",
+      "statement": "scrub_phi delegates entirely to the process-wide PrivacySanitizer (get().privacy.scan) rather than running its own regexes, and is fail-closed: initialization or scan errors raise PrivacyScanError and abort the turn, so contains_phi reflects only what the deterministic sanitizer found and is independent of the LLM call.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L69-L74",
+          "version": "repo-lines-v1:sha256:efcc574ac230ca9b68a3b5bb187e2752709fb081834b1fbe3f168b7c6ce409d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzMyNWFhMzhhMDdlYTI4YTNmZGQ0NjkxZjMxY2RmNTVmODlmODM2ZDkyMWNhYmQxMzQwZDY0YTk3YjEzMDE2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGYyOGUxMDZjYjczYTg0MmZmOGUwODgzMDgzN2Q1MjBmOTU1YjRjMDk0YTk3MGQwZTYzZjQwNTI1YzE4ZmMyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzAzMTE5NTgzY2NmN2E1MTYxNTA1MTY4YTNkYTZmOGNiNjg0OGYyMDhhNDQ3NTMyMTMzOTk1Y2E1ZWIyMmZiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmJhNzc1NDBjNGFjNjAyZjdkZTgxNzYzMjAxMjNmMGFjMWQxYzFlNGVkMjI3OWEzNGFkYjQ3NTBiYjI5N2EwYiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_signals.py#L113-L126",
+          "version": "repo-lines-v1:sha256:8d6842c1183e9ce18565093c4ba689d9fba93a43db77d8f86b9e3ff93f5542c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmY2JhMzMzZGU1ZDc0OWIxMDA0NzQ1YTZjYTFkZmFjYzNkZjIwZDgwMzAxMjdlYTI1NDY2MWIxNTE3MDhlZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0ZTM2OGNjYzJjZDE4MGFlNThiZDhiOWZjZGI5M2IzNWU1ZWJlNmNiNWQxOGU0YmVhZTEyYzQ4YWY1OTllYjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhMWM4NTg0NjNiZDY5MGU5NTc0MWZjM2VjYzdlNzRlNmM2MmU1ZjQ1NzJjZjVkNjA3MWNiOWJjYjk1OTU4Y2IifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_82d0e3e5979849f7b474d79a1d14c5c1",
+      "statement": "SafetyGate.assess merges the two layers with precedence emergency red flag over prompt injection over the LLM's own category, and only escalates: deterministic red flags force category=emergency_red_flag, and deterministic injection flags force category=prompt_injection unless already emergency_red_flag.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L153-L186",
+          "version": "repo-lines-v1:sha256:884c5dbdef67b0bf786b9031f14f4908f5814cd892150705ab776d683960ee64:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4M2Q0MGM5MDQ0YzgzMzRlYTlhM2QyZTlhMzA4OWZlN2QxYzM4MDIzMzFkYzA3MWM1N2IwZTdiNTVkNmQ1OWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5YzBhMGI3NjFjMTdjNmNmMjk3OWExMTVjMmRlZWNiM2E1NmRmYTE2YjVjNmJiYzExNzkyMWE0NjAyMDE1N2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjYTVmMDI0NjAyNTI3MGI4NzNjYWZjNWE5MzUxNzJjNGRlOGM1Yzk2YTI1OGVjODRhMDViNGZkNzVmMDM2ZGMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b9a3d81b2ab149219d5abbd71b6a14b4",
+      "statement": "SafetyGate._evaluate maps each escalated category to a specific short-circuiting SafetyDecision: prompt_injection (unsalvageable or a second failed pass) -> injection_response(); emergency_red_flag -> emergency_response(overdose=...); identifier_recall_requested -> identifier_recall_response(); personal_medical_advice -> personal_advice_response(); out_of_scope -> out_of_scope_response(); in_scope_informational/ambiguous continue to the normal pipeline unscathed.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L192-L282",
+          "version": "repo-lines-v1:sha256:f99f650e4cfe053432d1c62ffdb1c3759474e2e7e64b0f13af4f820eea9446a7:eyJzZWxlY3RlZExpbmVDb3VudCI6OTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwZjgzZTI5NWQwNDc3YWIxYzk3ZTlkMTJhMmVmOGY0YTFjNTFmODM1NmNjYzQyNzU4MTBlMThjZWY2NmZjNjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MGVlODhjNjEzZWIzMzcxMGZjNTBmY2Y2ZWE0MmZiMTBmZmVkMjcyYzIzYjFmNGU2YjI5ZGU5OGYwZjY1MWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmZDg4MzgwYzMxOGE0NTNhNGRhOGRjODk0MWVjOTNhMGNjYzcwNzNiNDIwNzkyMDkyYTJkYTIxZGMzZTExOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNiMjM2N2JkMGRmMGE2MmRmYzNkMTIxOTkxYjI5OGZlNGU5YzNkMzI2NzUyZTY5ODU1OTQzYjZjZjRiMjQ4M2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d5ea549e784b42528bf9226f8d714433",
+      "statement": "Refusal bodies are plain Python strings in safety_responses.py rendered verbatim as the turn's answer by graph/nodes/safety_finalize.py::finalize (joined with any notices): emergency_response opens 'What you're describing needs to be assessed by a person, not by a document assistant.' and adds a poison-control sentence when overdose=True; personal_advice_response opens \"I can't tell you what to do with your own dose or treatment.\"; out_of_scope_response opens 'I can only answer from two documents: the Lipitor (atorvastatin) and metformin product monographs.'; identifier_recall_response opens \"I don't hold personal identifiers.\"; injection_response opens \"I can't change the instructions I operate under, adopt a different persona, or print those instructions for you\"; PHI_NOTICE is \"I've disregarded the personal identifiers in your message; please don't share them here.\"; INJECTION_NOTICE is \"I can't change the instructions I operate under or take on a different persona, so I'll answer your question as the monograph assistant.\"",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety_finalize.py#L12-L30",
+          "version": "repo-lines-v1:sha256:47761c55fe115447ef0ceca87e6c9ce730f25f2e810c78eeab1c0ef32bcccb74:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYTc5OWFmNTBlMWM4MGI4ZDJiMDFiNzRiYzkwNDc2NzQyMThiMzZjNDU0MTc5OTg3OTQ5NmE0ODZhNjcyYjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxNDY5N2U1Yjg5NmY4YTg2YzlkZDE4OTY0MjhjOGQyNDJmZDI1OTU3MjJmMTIyNGVhZTBkZjFhMDIyM2UxMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQwZTJlNmVmOTk1YTJkNWRmZTJhZTgxMWM1NjVkZWNmMDA2MDBlZjQ5MjQ1YzU3ZWQwY2Y0MTVkMjJjOTlkODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2Y2E3MjEwZGVkYTdhMTE4MTJlNzA3NjZmYmQ4MjI4OTRmYzI1ZGIxMmM0NTViMTM5NTc5ZjJlODg4YmYzNzkifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_responses.py#L22-L118",
+          "version": "repo-lines-v1:sha256:e4a8d135b858055d5893d37db96682014f8d812420513fb89ce0efa68f5332ec:eyJzZWxlY3RlZExpbmVDb3VudCI6OTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2MjU0OTk4MmJmMmVhMjRmNTI0OGU5YzEwYmYzODYxZjc0NWJkYTkyMWUzMGU5NDJhNjVhMjZmMTg1Y2M1Y2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhM2RjY2JkMmM5ZGEzMmRjYjRhY2RlYTQxYjE3NWRjNWRjNzBmYzRiY2Y2MWFmYmZlOTVjMDI5MjRlMjZmNDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_56cb34ab0eca4e5ba20c9347c80afba8",
+      "statement": "Every safety refusal template is asserted to never contain a specific number with a clinical unit, checked by the NUMERIC_DOSE pattern (mg/mcg/ml/mmol/L/%/tablets/times-a-day/hours/days/weeks) against every string in ALL_TEMPLATES; this is enforced by two tests (test_safety_gate.py::test_no_template_contains_a_specific_dose and test_graph_safety.py::test_refusal_templates_never_contain_a_numeric_clinical_unit) and mirrors the evals.evaluators.numeric_advice_leak grader.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety_patterns.py#L66-L70",
+          "version": "repo-lines-v1:sha256:f8482cb0a8af11115fce03037cd440770709967ef40d76d10a11d3ebe475f88c:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDVmODAxYTc3MjQyM2FlZGRlMWQ1ZWE4Mzg0YzEwOTlkNThkMzJmZjNjNDBlYTk0YmM0M2QxZDU3OGY2ZGY3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWI4MGQ3NGNjMzJmY2RiMDJmYzE4Njc0OTkwMDk1YThjZGYxNzhhNmQxMmQ3YWI2ZjdiMjQ1Y2RkZTMwODg1NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNjNTQxZmUwOTIwYWY0Y2U0MDNlNGUxZjFmYWJjNDYzZjA4MGU4MTA3MTQ4NTIwMmQ2MGNjOTQ4ZjE4MjI5MyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_responses.py#L108-L118",
+          "version": "repo-lines-v1:sha256:59167254233056cace3e7ed912a36effef5d8e6d40e022b1455a46c6b4a511fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMDJkN2U1MDUwMzQ5OWE1OGYyN2NjZjAwZWM4OWYwOTM4YzBiOWY2NWJjYTMzOWUzYjc2YjU0ZjJkYTVkNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/graph/test_graph_safety.py#L187-L188",
+          "version": "repo-lines-v1:sha256:c3349688dca3daecda8808d0f2ff464799b575dbbca0a1ca1a7ea38441df1b3f:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGE1MzIzYWY2ZDcwN2M5ZDk2MGMzYjNiNGZjZDkyNjY1NThmMDJmNjViNjgxNGMwNmRhNDcyOTk5ZWY0YjgyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTUxZjZjYTkzYzNhYzM2ZmQyNjQ5NzIyMzM2NzQyOTNlNWI2MmRjMDYyNDI3MWQzYzc2NDA0MDRjNWI1ZGZlZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTYxM2MwODg1OGY2NjMwNWNhZDFjYTQxZmMyM2Q0NDkwYmJmNWU5OWI4YzliYWYzMDEwMGRhZGJmNjEwMDM0ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWFiN2IyNzJhYjRlMjUxNzViNWZkMjRjMTNjZmU1NjM0MjUxNGMwMjc5NDZmMDNiNTMwNWRmMjAzMzc4NzlmOSJ9"
+        },
+        {
+          "resource": "repo://tests/test_safety_gate.py#L357-L358",
+          "version": "repo-lines-v1:sha256:da9f7484d4d0f82a2e55c83b3355f4c828e15c5d86fcbcb3b1672cae1b1ff7ab:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODg0MDZiMjEzNGJjN2EyZGMyZDVhYTU3YTQ3OGYwNGJmMTM5ZjljZTQ2NGNmMzNjNTUzNDNmMzgyYzYzMTVmZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiN2I3NjdmYWFhZWQzYjFjMDNjZjlmZGExNDQ5NjdhYmNlMmYxNzU2ZDFhNDc5MGQyMjJlMjNhOTM5MGM1ZWMxMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDdhM2UyNDA3NmRlZDQ5Nzc4NGE3N2Q0ZDlmNjJhNjhlYTRlMDhhNWI2MWM5YjFjMDBlZTUzMzFiOThiMmVhYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGFhM2JmNDI5MTQwMTAyYTQxYTg1OTJlZDcxYWFjZjRkNTBiNDc4OTk5M2Q5Y2I0YTk0YjlkYWQ5MmMxZjg5OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0fa4787a8be94b46a1a7d7495489ac07",
+      "statement": "SafetyAssessment carries benign_social and social_intent, accepted only when the merged category is out_of_scope and not escalated; HC_RAG_QUERY_RESPONSE_ARM (current default) chooses whether that turn returns the out-of-scope template, a deterministic social_response(intent) direct answer, or is routed to generate_query_or_respond under the tool arm.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L218-L227",
+          "version": "repo-lines-v1:sha256:75e819a35c52c5fc0f48a3516c6e8e3def04503cb48cb620cf5764f120f81e76:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhOTA4MzgwMGJmYWVhNzliYzdlODVmMzRhNWNmNDI1OGYwY2NjOTI1ZmZhZTZmNzZhYTgwZWUzZDgyMGU0MWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkNzRmMjNhYjQ5NTBjN2NjMWJhODZhODk3NGNjNDJjMjRlNTY5MDE5NTY4OWI0ZDUyNmYyYzM5NTVmNmRhMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFkOWRkYjRjMDMxZTcwZjFhOGY1ZjJmMjlkYTZhOTk0NTgxZDhhYmE4ODRjYjA1ZjE1ZDM4YzI0NzgwNjY3MWMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L173-L186",
+          "version": "repo-lines-v1:sha256:1e6f49ebe8dd9504764fd9f78e973ec91557da32ca764c352e7ace0908dc5f35:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkMTdhYjlkNjZiZTU0YjFjNjYzOGNiMjk4NDdiNmNjZDk4Nzg1N2Q3ODg4YmYwYjFmOThjNGIxMDVjMmY1YjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyMTUwY2I0MzM0NDNjNjU4NTk5YmUxODk4Y2E3YjY0YzE0NzlmZTgxZTBkZjAxYjE0NzY3MTgzNTViZTkxMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJjYTVmMDI0NjAyNTI3MGI4NzNjYWZjNWE5MzUxNzJjNGRlOGM1Yzk2YTI1OGVjODRhMDViNGZkNzVmMDM2ZGMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L191-L215",
+          "version": "repo-lines-v1:sha256:dfda6c737ab06c0916a9fc262832ec81250eb2fd2ff9e12ae22be28f1f6c5cbd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1NTU5Y2Q4NDI3NDYyOWYxZjhjNWFiMWZjZTNkZjgyYmYwOTgzODRhNWQwYjc0Zjg4N2NkNGRkYjlmMGE0ODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiMDU0YjY3MDY3YTg0Mzg5OTU0MTJkZDBjZjgyZjdjMDkwYTUyYTQ3YmM4MGJmMDQ1ZjllMTcyYjQ5YzhmYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhiZTRkODExNGZjMWYwYWZlNDljMjk5Y2RjMmMzOTY1NDM0MmY0ZjBkOGQwZGNiOTUwMDljYmQzODA4OTgyNjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4db6fea5398b4aadb9a0f80f14a8c192",
+      "statement": "HC_RAG_SAFETY_CLASSIFIER selects llm (default) or semantic_router, but semantic_router was never installed, imported, or exercised because semantic-router==0.1.16 is unsatisfiable with the project's openai and python-dotenv version bounds; selecting it is fail-hard at process start, not fail-open: GraphEngine.__init__ raises SafetyClassifierUnavailableError immediately rather than silently running without a classifier.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L39-L86",
+          "version": "repo-lines-v1:sha256:46755dbcfdd344831811430bce8a6b50725478123dca22dc86d91fc17da8122f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlM2ZiMWU1OGZiYzkwNDc5NGQ1MDczMTRmYTkxYzlmMmYxOThjODhkM2ZmMzk1ZTAwODI4OTAxYzM3ZGM5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZDE3MWRlNzU0MzFhMDIxYTBkOTRmYTc2ZmFiZjBkNzEzOWM4OThjMWEwYjQ0YjQzY2E2MDkwM2ZhMWI4NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5MDllNjc4ZjAyODkyNDZhMGFiMzcyYTg5NDJmOGU1MjgwY2NjOTg5ZmQ0ZmNmNzQxNzUzYWZmNjM1ZGVmZDgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/models.py#L191-L220",
+          "version": "repo-lines-v1:sha256:baecbe1c10f22e5d05e7122f92c3afb59babd25ff5fc2df7ec8ce7f5ffe3062c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1NTU5Y2Q4NDI3NDYyOWYxZjhjNWFiMWZjZTNkZjgyYmYwOTgzODRhNWQwYjc0Zjg4N2NkNGRkYjlmMGE0ODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiMDU0YjY3MDY3YTg0Mzg5OTU0MTJkZDBjZjgyZjdjMDkwYTUyYTQ3YmM4MGJmMDQ1ZjllMTcyYjQ5YzhmYzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhOWJiNGIyM2UxY2ZlN2MyZWYwZjAyZjE1NWM4NzI2ODY0ZDNlMDUxNTQyZmQzNTdjNzhkZjZhMTBhNGMzYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a8adf62ba8ea43f3b88f506234446840",
+      "statement": "Instruction-override attempts classified persona_override, unrestricted_mode, system_prompt_exfil, or fiction_harm are refused outright; only ignore_instructions is salvageable, in which case the override wording is stripped (strip_injection) and the residual text is re-evaluated exactly once more, capping the worst case at two classification calls per turn.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L218-L246",
+          "version": "repo-lines-v1:sha256:20815737320ebc2387462c6f93f7bb4fb8ff45226556546db87992499df91987:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1ZGQyOTMwZDY0ODQ3ZmYwMjI0YzUzODEwYjgzMzkxMWVlYTNlODJkNjQ5MmU2OWY4ZDVkOWFiYjEyNmY0ZmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZTgzNWVjOTRiY2FlY2RiYjM1ZGQ1MzI2NWY3OGE0NDA1Zjk3Y2NiNDBlMjZkYzE2MjgyOGU1MTNmMzZkMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdhOTMxYzVhNGFjNmRkNjRiNGE5MjBmYjRkM2EwNDAyNDY0MmQ5ZWM3OWZlYTg5NmFkZWRlMTBlMjA4YTc4ZTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhZTYxMGQzNDZlYzY2MWJmZGFjMWUyZTg4MjBmOTQ1ZWJkODExMjI0ZTJkNTRlYTI0NzM4NzVhMmE2MjhiMjQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_patterns.py#L6-L64",
+          "version": "repo-lines-v1:sha256:bb142abbe021056f7adc0df31873ceb3bc1cdf6dfc7ec30bf006a19ef9b97d4c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3M2ZmMGY3MTZmMjUxOGIxOWY5ZmUxYTNlZjA0ZjA0OTE0MDYyMzZlZGNiOTNmNTk2OTYyMWIyZDg3YjhiMGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFjNmRlOTdlNjdkNzA4OGI0ZjRhZGM2NTk3ODQ5MzQwOGExZjhjNjM0NTlkM2ZkYjU2ZDAxNWYzMjI5NGQxZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiMjBlM2RlOTEwNmQyZGVhMDQzZDcyMTUzMjZjMTU2ODUwODVlNWU5Y2M4ZDE2NjdhYWYwMmIzMjc1Njk4OGQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_signals.py#L11-L11",
+          "version": "repo-lines-v1:sha256:48f04b22e98cc7d56bb157791385f6d105f8e589d5b8946a517f51ac2fabe617:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDhmMDRiMjJlOThjYzdkNTZiYjE1Nzc5MTM4NWY2ZDEwNWY4ZTU4OWQ1Yjg5NDZhNTE3ZjUxYWMyZmFiZTYxNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDhmMDRiMjJlOThjYzdkNTZiYjE1Nzc5MTM4NWY2ZDEwNWY4ZTU4OWQ1Yjg5NDZhNTE3ZjUxYWMyZmFiZTYxNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTAzZDFiNzNjNTcwZmJlZjcwNmFhYjVlM2I4ZTcxM2ExMGIwNmVjMDM0MzQ5Mzk1MjdjNmVlNWY3NWE1ZWYzYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2U0ZWNlMzc2MzA4Njk4NGExYjdkZTY2NTVmMGVkZjk2YjhiMzZjMjdiYmE4YzY3MDhiZGFiYjFjMzhkYTFmYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_1dd24e551cac4e01b1fa7e2a516baea9",
+      "statement": "When HC_RAG_REFUSAL_BOUNDARY is true (default), a gate refusal of kind personal_advice, emergency, or injection is persisted into checkpoint state RAGState.refusal_boundaries as a RefusalBoundary carrying kind, a derived topic, a byte-exact template drawn from allowed_responses(kind) (never the classifier's own text; a fallback template is substituted otherwise), a UTC created_ts, and the current TEMPLATE_VERSION; upsert_boundary replaces any boundary with the same key and appends the new one.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L182-L216",
+          "version": "repo-lines-v1:sha256:787ef5bc8a71c26cae2189a25d5116aea6baf5b33c23aee2d00fc622d326fea3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliNjNhNzU4NmI1NTg2NWJhNWY2YjEzNzAyZDA5NWZmNGRhN2NmNmM3OGYxMWRlOGRiNTNmZTU2YWQ2Nzc4NTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmOWQ4ZTFkMDg5MDlhNTQ5Zjg0MDAxNjk1ZTIzMzNjNzIxMzBlNmMyZjQ3NDA4MzU3OTI5N2RmMzc3YjBlM2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU5MDdjZDdmMzJjM2NmN2QwMjVkODk0NzdiZjNiMjk1ZGY4YTdmNDg3NTgwMDA0NTRjZGYyNDJiYTYwY2VjMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5MTIyZDU5MTllZjhlZjBlYWU3NmM5NDZhYTM0NjAyYzRkNDk4MDcwYjM0MmMxNzA0NTdkNmM3NmZkNWQzOGYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py#L145-L255",
+          "version": "repo-lines-v1:sha256:d15a7db351d1ca154f1051b2fe8ba8d5b39c1feaf910d40958838cb3c59988dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTExLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4ZTcyMGIxZDNkNWNkMWFkNjkzMGQ2ODFkM2M4ZjZkNWNmNjgzOWRjOGMwMTlkMjFlMDBlYTA1Yjg0ZmZkODMyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5NDAzZDQ5OWRmMWY5YTU3ZGQ0NjkzZmRiNjhlMGQ4ZmVmMzczNDgzNzUzOGY0NmQ3MGYxNDJiY2Q1MWE1NjJiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmMTQzYjgyZjZlYmU2NTBkMTdkYzI2OGRkMjhiMzdhMDZhNTk2NjhjNmMwOWY1OWUxNDc4ZDQxMWRjNzFhNDQ0IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4MmZlYjEzMGJkMGU4YzcyNWUwMGI4ZDczNGM3YzljOGZjZTcxZGRhM2U4MWU4ZTJmMWJmZGVhZWQ4NTdmNmFlIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_9fb5981da18b4aa8b8fcb56f795a62b4",
+      "statement": "On a later turn, before any LLM call, boundary_hit(scrubbed_query, boundaries) matches a persisted refusal under exclusive cue precedence (emergency red flags, then unsalvageable injection flags, then first-person dosing/decision cues), skips the match if the query is explicitly informational, and requires topic compatibility; a hit short-circuits the turn with response_kind=\"boundary_replay\", llm_calls=0, and route safety_gate:boundary:<kind>, replaying the stored template with zero new model calls.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L124-L157",
+          "version": "repo-lines-v1:sha256:b8ff0e0e5ce9431c69fcf1292fb5b574ebb884a0e76bdd1a95b2d4935a665550:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkMDg2NjQ4NmYyOWFlYTMwYjdjYTQyZDEwODZmOTU1M2YxOTJmZmRjMmJiZWVhMjFkOGI2NDFmODE0MGQ1OGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyNGRlOGRiYzU4YmIyMmRjNDIzNjhlODY3MWMyNmJhOWQ1NGVhZmEzZWE5OWJkYzM2N2ZlZmFiOTJhMzE2OTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1MmFhMWU1NTY2ZWI5NTM1MzZhMzM4MmMzNGQ0YWYyYjYxODc1ZTAxNTFkOGMzNGE3YTMxZjRkZjk4MmMxMjYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py#L150-L212",
+          "version": "repo-lines-v1:sha256:72df88d8371d956713082ef55ec6198095dc6612b4f41ac6c5ea78d6200582f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1NzA0NzZjZGZiMDUxYjlkNTg3MzNiMmYwNjdjYmJjYzEwYmY5MDEzNjYyODc1YjgwNTE3NWI3YTFmM2FmNDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTYwMGE3M2QyZTAyZjM1MmI5MGZlZjFkOGQ2MzgxMWJhNGE4ZWUwYzFiZWFhN2FlNDY1OGYzNmFhMmUxOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxZTZkNGU0Zjc5N2U5ODM3ZTZhMzBjZTNhYzEwNGI1MDAzNDBlOTliZDA0ZDMwMDIxOWQwOGI4NDRjMWU0ZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiMDM0ZDAyODgzMWU0YmY0M2IzNTc1MmJlNjVmMjY5ODIyYjc5NTNmNjY4MmU4ZDRhNGI3MmViZWI0YTI3ZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_34c748278c694ac1b9be49265055f93d",
+      "statement": "Corrupted or stale-template-version boundaries are parsed as inert and effectively dropped by RefusalBoundary.from_state (which rejects any response not in the current allowed_responses set), so corrupted checkpoint state can never widen behavior beyond the fixed template set; turning the gate off (HC_RAG_SAFETY_GATE=false) never writes and never replays a boundary; same-thread concurrent turns are unsupported by design and the CLI/eval harness run turns sequentially.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py#L1-L8",
+          "version": "repo-lines-v1:sha256:384cb03ea34ac88556cf6a6421d3aba9bc030a8a3282cb3a0ed7bd805c11ea60:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2U1YzY1ZjQ5NDVlNWQ5OWVmOWQxODdlZGJlMDdmZWI0ODU2ZmM3Mjk3YTNjZWI5ODA5YjdkN2QzMTM5NDMyOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTMwM2VjZGQ0YTRkMTBmMTljNzNmZDQyZmQxMjQzN2ZkMzM1NGE4MjY4MTYwNWRhNTI1NWE5N2EzOTA2OGRiYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTViNmU4NzA2YjQzMDQ3ZjJhNmRiNjdmMTMyNjM4NTk1NjA0ZTY3ZjM2OTY2ODc2Y2UwMTU4ZjAwNTNlNmJkMSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py#L131-L143",
+          "version": "repo-lines-v1:sha256:426c78f9ab680382eab83590649c5682cc607b1010ca46bc3437e3b99facb3c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyMGI0NTNmNWUwYzkyZDVmNmMyNTFhNWVhMTk2MGQ3MmYzYmQwNzk1NmFlODU3ZGEyMGUzMWE4OGM1NTk2OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5YWEyNDRhODcyOWEzZjU4YjAzMGUxZmEyZmFiMDY5ZGMxZmRjNzhhYWJkY2I2MTcyZGRkZDE4NWUyMThmNmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU5Yjk0YjVhNDM0Y2FmNmUyYzZkNDlhZDYxNzA4OTRlYTBiM2E4MGJlYTE2YzEzMTUyNDdmZTNhYjg3MTEzNWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_db1df869972a4906ae4544777475166d",
+      "statement": "Each turn's SafetyOutcome (category, contains_phi, short_circuited, response_kind, deterministic_flags, phi_kinds, llm_calls, benign_social/social_intent, classifier_backend/classifier_calls/embedding_calls, gate latency, and a scrubbed rationale) is stored on RAGState.safety and copied into every eval result row as safety_outcome for observability.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L228-L262",
+          "version": "repo-lines-v1:sha256:7670b00d36cfe6d38fef7e4fdffc41e34e69634556dfa45ae98428c003686ddd:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgwYmQ4ZTZkNDM4OWI1MGFiZWEwMWQxNDBlZmY4NGNkYzc4YWQ5ZTI2OGJiOWQwMTJkOGExNGQ2ZTE4YjY3ZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ2OTdiYjQ1OTQ4NTAyYjEwMDY2MDEzNTMwZjM0NWRmYjcxNDRhNjk1NjU5Mzk1MzQ1N2E2NWMzNTVlOGNkZWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/models/safety.py#L79-L100",
+          "version": "repo-lines-v1:sha256:476bb82b8673ce85f9f4b5ce9424ef85fd2ff887122c0ce942343680682b0c4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjODdiZjAzNjYxNWEyZTYwNjQ4ZGM2YjMxZDc5ODFhM2IxZTk5NGFhNmMyMTU4YmYxMTdiMmI4MjU0YmU4ZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxNGY4OTVjNWNmZDMxODA4NDFjMWFmNmYyYzgwMDJkOTQ1NzdjYWMwOWJiM2ZjZDZhZDA2ZTU1ZGRiYjYzM2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlMDg4YzZkMTlmODZhZGNlN2JlZWE1ODFjZmQ3MWJjYWNmYWJiYzY3NzhiNDM0MTgwMTFlZDUyOWNiOGJiYjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc8ae6097a4844d4a8746476d0728071",
+      "statement": "HC_RAG_SAFETY_GATE (default true) or HC_RAG_DISABLE_STAGES=safety turns off the classification decision for before/after ablations while identifier scrubbing remains active and the scrubbed question still becomes the working query.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/safety.py#L113-L122",
+          "version": "repo-lines-v1:sha256:856ddf0844b72fdbda5f1b9b87f69b91d8cdd0ded0fa7c7a7bd3c727c268509b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzZmU5NzBmNzE0ZTIzZTNhMDBiMjQyMWNlNTE2MTRkZGEwNDI4NTE2YmJlNjUxZTJkNTM0NDkwYjE5NDQ3OTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQzNTJkZDVkNzZiOTIyY2I1YzYwMTEzZWY5NGJmODIzMDk1OWJmYjNmYmJlN2ZhM2JhMzcxYjM3NWYxNjM0ODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMDJkNzFhMTRhMTg5YTViZmM3OTZlNjU3NzI5YTRlZWMyOWQyYTQ4NDM0M2UzZGUxNWYxMGI2Y2ZmMTE5ZjgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4cf3718855864179861911c98788e6b7",
+      "statement": "personal_medical_advice refusals are terminal for the turn they occur in, but a later, explicitly informational question on the same topic remains answerable because the refusal-boundary matcher's informational carve-out sends that new turn through the full safety gate and normal RAG pipeline instead of replaying the boundary.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py#L163-L212",
+          "version": "repo-lines-v1:sha256:36e0c18bba0eb4a3161d93cb1ef59d4cad3ed8820b3be471a211c34f3c8a8120:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkOGE2MDZhMDNjZmUxOTRmMmQ4OTQ4ZDkyNjlmYTA0ZjUwY2UwZjg4N2M1ZjhmNDgzNDEzZjIwNDMwZmE2ZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTYwMGE3M2QyZTAyZjM1MmI5MGZlZjFkOGQ2MzgxMWJhNGE4ZWUwYzFiZWFhN2FlNDY1OGYzNmFhMmUxOTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiMDM0ZDAyODgzMWU0YmY0M2IzNTc1MmJlNjVmMjY5ODIyYjc5NTNmNjY4MmU4ZDRhNGI3MmViZWI0YTI3ZTgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py#L66-L80",
+          "version": "repo-lines-v1:sha256:b3d3869c248e7a134c73ed7cb51aaf807cebb7d0cc02d856b0c380de3143f379:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxZmVlOWMwYzRmMzNlMzBjZjE1MDgyN2UzOTA1ZDg2NTUxZmMxNWFiOThkMTVkNTZkZDYzNmMyMWRiYmIzM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkYmI1NjZmZjlkNDlhMzVkYTM1NzdjYTBhZmU1YWMxNjcxMTQwMzg1MGQ3ODI1ZTc5OWM3ZjM4YTJlMmI0Y2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkYmQ5YWZhZDQ3OWY1NmYyYjVmOTE2YmM2ZGU1MmYwNGUyNTU3ODFlODUzZmRkZWQwNTY5YWM2MmY5MjkzZjQifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

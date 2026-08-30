@@ -1,0 +1,224 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:b40058156fcfe7fc94132176f12ec7773a9276999433c0a0918d86cf40741285",
+  "claims": [
+    {
+      "id": "claim_417310ce3b6841f7a0fbdcbfcaa6416e",
+      "statement": "AnswerValidator.structure_and_validate_async takes the generated plain answer, its retrieval bundle, formatted docs, and the doc_N-to-original-id prompt_id_map, calls a structuring LLM to produce CitedAnswerResult(statements=[StatementWithCitations]) where each citation has doc_id, source_name, and quote, and validation.py orchestrates find_source_citations/reconstruct_source_answer (validation_source.py), resolve_citation_ids/validate_citations_and_build_answer (validation_citations.py), and formatting helpers plus FALLBACK_MESSAGE (validation_rendering.py).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/models/answers.py",
+          "version": "repo-file-v1:sha256:5a61fce55daa7de61cd145d80cd25c336c66b8dddb32cb4399877ec44d038985"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py",
+          "version": "repo-file-v1:sha256:cc1a2dcd87356d3ef137a2e28a8de4c03141a99ec383ef7833d4fa9b9e474c58"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py",
+          "version": "repo-file-v1:sha256:10f86721bdb1426e9c9c52131d7112286d101d9b57cc89127a10c66c58be95e2"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_rendering.py",
+          "version": "repo-file-v1:sha256:0c2bc0e0a1c028c6af353b87bc9a59f49207e8cb02c84e1a5f6cb46154fe9c36"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_source.py",
+          "version": "repo-file-v1:sha256:41687f522d82ddcafb9cdd4345f9c41cc2835571ffc78066bc1d3b57272c0706"
+        }
+      ]
+    },
+    {
+      "id": "claim_0e3e3185aa034ea9a5f258f427cb4082",
+      "statement": "find_source_citations scans the raw plain-answer text (not the structured LLM output) for [doc_N] markers and classifies it as SourceCitations, None (no markers), or UnsafeSourceScaffold when the text begins with leaked scaffolding ('Documents for citation context:', 'Document ID:', or a SYSTEM line); reconstruct_source_answer only succeeds when the structured answer's citation IDs exactly match the IDs found in the raw text, otherwise it returns None to detect prompt/response tampering.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation_source.py#L13-L67",
+          "version": "repo-lines-v1:sha256:fe25f8cb35d8cd24fd4c03b374d804af6da89e6e861edbc6f2253ccaaa41d924:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzODM4MTAzN2EzZDAzYzM4ODllMTE0YTcyOWQ1NDU0YTYzMjMxY2Y4OGQ5NTM0YTM0NGE1MjQyZmU1NGFjYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlN2M5NTdiY2I0NGZiNjczYzk4YjAwNTBhNzVkMzgwODJkYjgxZDkxOGRlMzEzYTNmMDdjMTIzNTMwNmQ3ZWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlZTMwYTQyZGU1N2NmNDZmOGU1YTg3OThkZGExNWM2YTllYjdiYmNmMDBjMDI0ODFjZWMxZmU0ZTk2MDQ2YjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2YjM2OWQ4YTc5NmNmZjVmNjVhZDQyYmQ2MjBkNDE4NDlmNjVlYjgzZDViZjNkYjk0M2JkNzJmZDhiOTllYjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2cdbbd574db9465a84dbe19e5f4582bf",
+      "statement": "In structure_and_validate_async, an UnsafeSourceScaffold classification, a None classification (no citation markers), or a None result from reconstruct_source_answer (ID mismatch) each cause the whole answer to be replaced with FALLBACK_MESSAGE regardless of what the structuring LLM returned.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L96-L120",
+          "version": "repo-lines-v1:sha256:dd78b81bc618c71ab4219f8c3c44fa76a2b0b106318c49a571bbcc7f7b70862d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1MTdlOTFjNDE1ODFlZDFiM2IwMjJlM2IxMDJiN2ZiYTk2ZGM1ZGY3MTMxYzExMzZlNDQ2NDg4YmY4MjJkZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3ODgwZjdhNWEyNWVlNzJlNGIwMzk2OWRkYzZkOGRhNmI1Mjc1ODdjNTJmYzcyZDQyMDE0NGRmNjc0MzM4MjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_263d6531a7cc452a9c270039da677912",
+      "statement": "format_documents_for_prompt assigns each retrieved QueryDocument a throwaway prompt ID doc_1, doc_2, ... in retrieval order and returns a prompt_id_to_original_id_map that is threaded through generation state as prompt_id_map; resolve_citation_ids uses this map to replace each citation's temporary doc_N with its original document id before validation, and an unresolved prompt id is left as the literal doc_N string.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L33-L48",
+          "version": "repo-lines-v1:sha256:12e61348efd2e99432e16f07e8d07a9a99c7cf3762ecba28f47d98100ca9b8d3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwNTU3NWU2NzBjMzUwNWU4NjI2OGQwNTIwYjU1OTFhYjkwMzRkNGMxYzNlNmI0YmJhNjEzYzZlZGE1MWRmZDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0MTQzZGQwY2JkMDQyMDIyZTMxZDk3ZWE0ZDFjOTAxODA3NTA4OTM1MGY1ZTdmNjAyYjRiOGZlYjM5MmZjYjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRhOWY4NmQyOGU3ODRmOWZkMzFmYjcyZDE1ZjYwY2JjZWFhZmRkNjY5Y2JkNWI2ZGE3ODg4YTAyMzMyMWViYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/generation.py#L10-L40",
+          "version": "repo-lines-v1:sha256:7c9709a8293fd1216f89c08e5e9e79bed206da7ceaf79f65d78e1cac44bf32ac:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MmE2ODZmNmNlNmY4Y2E1MWNiMTQzYmZlMGMzNDU2YWZlZTUwYWJlYzcyMGE2NDM0YjMwZWJlNGU4MDA2ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNjU2NjdjNjdkMTYzM2EwNzUyOTc2ZGYyMmQ4Y2ZmNDc5MzlhN2M0ODdiMzZmOThjMWY4NzI2MTY0ODI5MDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyYmQ4OWFhNjNhODY1OWNhNzllMjU4NDAzZjA0NDgzYTRkMDdhNmQ1Yjg4ZDg5MjhiNDU1Y2M0NjdlMTUwZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py#L54-L69",
+          "version": "repo-lines-v1:sha256:9c6f933bb08f7c916d81d3497db0ccd45a48ba628448a1ec2bacebf930a932a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1NDY5YjFiN2MyMGNjZjVlNWE4OWYwZmI5ODc5ZGRkNGI3Y2FkY2QxMjM4NzY2ZGRlOWQ4ZjI0OGFhYTdkMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZWVlY2ZhMjEwYTE2MzYyYjk5YWE5YmZjM2M5MjkwOGFjZjhmNmQwZTgyYTVlNDFkZjFkYmQ2YmM5NDdiOTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg3OTgwMGM3NDc1OTYyN2ZmZjE0NTQ4ODg0ZmU0NTk0Njc2NWQ5MzUyYmZlMDhkNzE1MWJkNTIwOThlNGM0ZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkZTBkOTVmMDcyOWRhYzAyZjhlOGIyMTkyYWE0MWU3OGVmMWJkODFkMDA5NTJlZjU1Y2MyOWJkMWMxN2MzMGEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_822ac450046d41258677242f45cfbd9d",
+      "statement": "For documents retrieved via the primary Weaviate-backed path, the real document id resolved from doc_N is the string form of the Weaviate object's UUID (doc_id=str(obj.uuid)); alternate retrieval backends (PageIndex, Pinecone) instead produce composite string ids such as 'pageindex:{collection}:{chunk_id}' or 'pinecone:{collection}:{chunk_id}', and citation validation's document lookup matches whatever id format the active retriever produced.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L160-L170",
+          "version": "repo-lines-v1:sha256:892bcc25b68cd524ccb4bb1b3f2d22f3c3ee84e89ea7fd96e9c16ea8a41a179a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5MTg2NTU2ZGU2YjNlNmVmYmMyN2EyYzQ3OGQxYzYwMGJkMDY0YjJjNTEwNGQ3NjMwMDNiMjJhMGJmY2E4NGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2OGQ1OTc4NTA0ZDRmOWY4ZjY5ZDhhMDBiNmE0YzRjZTgyZDZiYzNmOGMxNDVlYmZmNWViMjVmNDA4OGZmMDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5YmQ0NmVhN2QzZGUxYTBmOTllYWFhZDM4YmMxNGJhYmI1NDdmMmNiYzMxOWZiMjA0NzM2NmQ0YWY2YmI2MDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyMjUxYTdkY2ZhYjdiYTI1ZDM5MDAyODFmYWM2NjViNjAyZWU5MTc3OWE5Y2FmZWQ3NGZiOGU4YzM0NTkyOGIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pinecone_retrieval.py#L155-L162",
+          "version": "repo-lines-v1:sha256:4981c0a38f25605847bc0ae8e1c846a85c889b23a33349970d9a8bcedf830c07:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2E1YzI2YmM3YTg1MWYwMDc0NzJjMThkMTZmOTE0NDQ3N2U1NjRkYWFjMjk0NmU5YWU3N2UzOGRkM2FkOWQzMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDJiNmViM2ExYjM0MThjYzhlZTIzOGY3YTFhNjg3YWM1ZWRiODhiODZlMGI3MmZhMzk1YjZjY2FiOWIzZjlkMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTBkYzQ0MGQzMTc3NWEwMWNhNjNmMzMzZjdjYTM0NTJjNzYyZjAzMDA4MTAwOWQzZWE4M2MyNjYzOTVjODM1MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzM2ZjYwMWFjMzhiNjQ4MzExNWYzOGM3MmVmMmE5MjQ0NzY3Y2M1NzcyNzM1NGZkMDY0NThlZjliNTk2NDg2NyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/retrieval.py#L38-L58",
+          "version": "repo-lines-v1:sha256:381f82d0dba14e225fc20e95ddd71696630a18ffa21480b6b5df25a22aa26507:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5YTVlNDFmM2YxY2VmZWIzMDQ3ZGNhNWJmM2MwZjcyZTZhZDc1YzQxZGI5OTU2ZjZmZWY0NjMyZWQwM2EyNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkNjg2ZjQwMDcyMmY4NDRiMTEyN2U1OTBjMjgyZWQ4NTQ5ZmI2Y2ZlMWIwMjJlZjYwYTU3OGEyM2U5NzQ5MmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4MmMwNjQyMDQzMzI5MTZkOGU5NzM1MjViN2E1NGU2YTkyMGM2MzgwMzFjZGVlZDNmNzVmNzQ4M2VjNjQ2M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkNTNhZTlkODFiY2Q1YWU1YzQ0OTliNGRkZDEyZWQ2NTU3ZTA4ODlhYWQyZDg3MGE2MWZhMmEwNjhkYThhYzAifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py#L190-L203",
+          "version": "repo-lines-v1:sha256:70d8e035813b91d6ea8fa4e8ce499f8c6c10e77b6686c4d0ebcbdc4ba212dd3e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0YWQ2YmE5Y2NhOTNmZjJlNDc5ZTZjZGJkNmY1ODg3YTBjZDNkZDhlYjI0OTAyODQwZDU3MzliYmRiOTIyNjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZmNGNhZDBjMzIwMmU1ZThiZDBiNTIzMGVlYTE0NDFkMjJiYWQ2MGQ0Mzk3MDcwNDBhNmFhMzE4YjY2MWIwMTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5YzRjNGU5ZTViNmIzNzVlZWY2OTIxZmJlYzVmNjkxOTczNWIwYjRhYjVjZGU5YWE2ODUzZDhmM2RjMzY3NTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_12cc87d81a754cfcac116f305f5f6a3a",
+      "statement": "For each citation, _validate_citation looks up the resolved doc_id only among the documents actually retrieved for the current turn (_find_document_by_id scans retrieval_results.results[*].docs), so a citation can never validate against a document that was not retrieved this turn even if it exists elsewhere in the corpus.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py#L147-L203",
+          "version": "repo-lines-v1:sha256:9be958440f035848629c36bc596147c5c8fd892da9eb69c10e7a691c51f43f4e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzNzEwNDllYzQ3MjdhYzcwZTRiYWJiNWEwY2VhMTU0NjI2NmMzMDdjNDE5YjgzYzQwMDBiNjFmZWQ0YmViYjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjN2M4ZjFiZjY0OTBkM2MzZWViNDhlOWQ1MGIzODlhZGNjMDZlOTU4ZWIzYWJhZjViYjViNDUzZTBiMmRlNTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5YzRjNGU5ZTViNmIzNzVlZWY2OTIxZmJlYzVmNjkxOTczNWIwYjRhYjVjZGU5YWE2ODUzZDhmM2RjMzY3NTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b4106a59a4eb47459a91b0e98de666d9",
+      "statement": "_verify_quote accepts a citation's quote if it is an exact substring of the cited document's content, or if fuzzywuzzy.process.extractOne(quote, [document_content], score_cutoff=threshold) returns a non-None match; the threshold is a caller-supplied parameter of structure_and_validate_async defaulting to 85, and the graph's validate_answer node always calls it with quote_match_threshold=85. An empty quote or empty document content always fails.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L80-L88",
+          "version": "repo-lines-v1:sha256:bc5947d811b1abfac4d469796f593722b00274caa94ec799cd6d35332d44e107:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODgwNTUwNTYxZjgyYTEyYTQ2MTAyMTcyMWQ3MjNmMzg4YmE1OWNlMWNlMTJmMGJlZjg4OGU5OTkyODEwNTQ1MSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTkwOWE1M2E2MThkMDI4ZTFkMzAwMGMwYTdhYmNlZWNiZTVmYjM3ZjRlNTExZWZlNDY2NDNmYWQ2ZTY2ODcyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODgxODgwMWIzMjU0ZjlmZWQ5NmQ4MGY2ZDNmNDBiODIwNzhiYTFiNWUwMDU0ZjU0NzBkYmQyZDdjM2ExNDYyZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWJhZTI0MjFmYzk4NzZmMjRiNjk2YTcxZTgyYThkMjFiZjhjZDk0OTI4MzFkMmM1NzZlNzZiNWFjYzdhYjU3MCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L43-L58",
+          "version": "repo-lines-v1:sha256:1d34cac50831cc470f1faefc605b7b0aef2f5bae6513ca2dfaa781b6cdb7e824:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhNGU3NjBmNDdlNjE5MTZiM2UxMjdmNjBiYTc3NjYxMzVmZmZkNjNhODQyNjMwMTNmYjVkN2Q2MjY2ZTBkMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ODEyYjcxY2FmZTY5NmRmMmRjYmFmYTBiMDBlMTZlMTZkNGYyZDFlNWU1NzllYTYyZTk1MTcyNjYzNGUxOTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYwMWQ4YmRjMmIzZGRmYzFjNTkyYTg5NzI0NzY1MWRiMzg3MGVmNTgwYzFiZGM0NTY4ZDkzNzM4M2JkOWNmN2UifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py#L205-L217",
+          "version": "repo-lines-v1:sha256:312785519c1da54f6411060fcb0fc858769e8d0f3ebd0878a970ecd06da07aa8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4YjExZjdkZDkyOWVlZTM4ZjVmOTE3ZTk1MWNiYzEyYjU5NDVlM2I5ODY3YTBiMDlhYzI1OGE0ODk1OWUyM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_978c0f4464a84e73b24d02f4e225bf1c",
+      "statement": "Fuzzy quote verification scores the quote against the entire document content string rather than a specific sentence or span, so a textually similar but non-supporting or even contradicting quote can pass at or above the threshold; it only checks citation-to-source-text similarity, not statement entailment, factual/medical correctness, or whether the citation points at the semantically right (versus merely textually similar) retrieved document.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py#L205-L217",
+          "version": "repo-lines-v1:sha256:312785519c1da54f6411060fcb0fc858769e8d0f3ebd0878a970ecd06da07aa8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4YjExZjdkZDkyOWVlZTM4ZjVmOTE3ZTk1MWNiYzEyYjU5NDVlM2I5ODY3YTBiMDlhYzI1OGE0ODk1OWUyM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_59de64d35336439cb48f9c5d9a9a19f6",
+      "statement": "A statement with citations survives only if at least one citation passes verification (failed citations are individually dropped from a surviving statement); a statement with zero citations is treated as automatically valid and kept without any fuzzy verification; a statement whose citations are all invalid is dropped entirely.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py#L95-L138",
+          "version": "repo-lines-v1:sha256:2b7d83b02f12dc64ab9ee77da2a72a2a2da9de937324368207e28781c2b6e61c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkOTExMDJhMzRjYTU2MWMyYzViYjE4YTBmYWQ0NjhlMjJkYzA5MzEzOTExM2VhZmNhZjYzZTFmZWI3MjFjMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjczNDAwNzY1NWI1NTg3Yzc2ZGVmMDRhOGYzMTQyMzQxYmYyNzY0MmM5ZGJkNmU2M2RlZWViOGRiOGZiMDA5YjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhOGI5Y2MwZmJmZGU2Y2ZlMGRiNjFlMTBjOGFmYTkzNzg4NDkxZTY5ZWViZGRhMjJkNWZjOWUzODkxODNlMzYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d69c134463eb4f8f9c0946931f5bc75b",
+      "statement": "Kept statement text has existing [doc_N] markers stripped and replaced with sorted, deduplicated valid doc_N markers appended at the end (format_statement); only the literal linebreak values \\n, \\n\\n, and \\n\\n\\n are converted to real newlines, and any other/unexpected value is treated as no linebreak with a logged warning (convert_linebreaks).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation_rendering.py#L21-L48",
+          "version": "repo-lines-v1:sha256:2ca0963fb61741b9fd496b70b2ca714f15f5f32c61a67e8d22fcd3a7080cb0d9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2YzdiZTViOWUxNDMyMTg5Njk3MjZjNWFmNjIxOWI2ZGMxMDMxMmY3ZTE4NTZkMzI4MTIzNjhiNzUxZWM1NDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1MTIyZDNlYjdmZTA0NDM5YjJmYmJkZDU2MGZmZTc1OWM1OTFiZmNkYzhhYmY2YzNmOWFmMWViYWUyOTMwZmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZDE3MWRlNzU0MzFhMDIxYTBkOTRmYTc2ZmFiZjBkNzEzOWM4OThjMWEwYjQ0YjQzY2E2MDkwM2ZhMWI4NDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU3MGE5YTE2ODJjYWFkMGFiZDRmZTMzZWI1MGVlMzljODdiMzJmMzdjNmYwNWQ5NmYzNTYwN2ZiNmYxN2NiNmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_34d36a8af20b447abe7781f2ed6d857b",
+      "statement": "FALLBACK_MESSAGE is the exact string \"I'm sorry, I couldn't validate the information to answer your question.\" and is returned verbatim whenever join_statements receives no surviving statements, whenever validate_citations_and_build_answer receives a structured answer with no statements, and directly from structure_and_validate_async on the scaffold-defense and marker-mismatch paths; this string is truthy, so the turn completes normally and renders it as the answer rather than being treated as an error.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L96-L120",
+          "version": "repo-lines-v1:sha256:dd78b81bc618c71ab4219f8c3c44fa76a2b0b106318c49a571bbcc7f7b70862d:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1MTdlOTFjNDE1ODFlZDFiM2IwMjJlM2IxMDJiN2ZiYTk2ZGM1ZGY3MTMxYzExMzZlNDQ2NDg4YmY4MjJkZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3ODgwZjdhNWEyNWVlNzJlNGIwMzk2OWRkYzZkOGRhNmI1Mjc1ODdjNTJmYzcyZDQyMDE0NGRmNjc0MzM4MjQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_citations.py#L72-L92",
+          "version": "repo-lines-v1:sha256:a3b321811524f8d6d9bf72ae6e4c3694d6637a61e2bd8326c496cbc61d667896:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhNGYwNmNhMTg2MDFlNjk4OGY0N2RiNmUzYmVmM2M4MTM1OGFmYjBkMmE2YmFmYThiN2FhN2E0YjFhMjRkYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1OWMzM2VkZGM3NTcyMTViMTk2NmMyYjk4NjYyNjg0M2IwODg1ZDE1ZTdlNjlmM2NkNThkYTU3YzZmZWRjYzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVkNmQzMTE3NmFjZDg3MDA3MTY2MThiOWZmZDA2MDhjNDdlNTVkYzI2NDNkYWIyZGIyYjU4NjE5OGIyMjBjZWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4MWQ0ODc5NmE3OTA4NGMzNmE2NjRhNzMwM2FhOTVlYzdkZDIxNjQxN2E1NDQ3OGU2MjcyMTAzODk3ZjY5ZTAifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_rendering.py#L51-L61",
+          "version": "repo-lines-v1:sha256:1232835e8787fe85491b6bb3d11b3dd9d9bdc716f26aad3d801518d312849b18:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0N2M3OGUxZmVjMmQ0OGZmYzI5MmQ5Yjk5YWIzY2I4MDE0MmUzZGZlMWEzNmZhNWI2MGI2MzQ1YTRlMDgxYzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmZWVlY2ZhMjEwYTE2MzYyYjk5YWE5YmZjM2M5MjkwOGFjZjhmNmQwZTgyYTVlNDFkZjFkYmQ2YmM5NDdiOTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlNGQ1YTY2MTVmMzczNGRjOGI5OTk5OWI3NGI2ODIyMmQxZWE4MWUwN2FhMTUxNWVlNTNkOGJlNDExNGI4YTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_rendering.py#L7-L9",
+          "version": "repo-lines-v1:sha256:1d78e131f4cf85dae5d306e13211f3f7c816723c11cc42b07acb662fca7dab3e:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjdiNDIxNTY3NGNhMDU5MTZhNzNiZGU0MzgxOTc1ODYzMDk1MjM0ZTkwMjk5YzQwMjIxYWNmMDVhZjI3ZTRiMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDkxNjU3ZDAwOTM3OTNlODI1MTBiNzU3Njg2ZmJiNWUzZTZjYjA5NTIwNGVmYTI1NDY1YmM5YzQwYzc3OGRhZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDAwZmY5ZjIwNDk2NTIyNmM2ZTIyNGEyNzZjNDA4OGYyZTA1ZDYwNmJmMzA5ZTM0YTc2OTJmZDUzN2ZjODIwMyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_be998d0b1e5a4c64bcaba69d2fce4f9f",
+      "statement": "A distinct, exact no-retrieval message \"I'm sorry, I don't know the answer to that question.\" is returned by generate_answer before any structuring/validation call when no retrieval results/docs exist, bypassing AnswerValidator entirely because there is no retrieval bundle to validate citations against.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L18-L31",
+          "version": "repo-lines-v1:sha256:1fdb287040677281f5eea428ddb1d141c8d3815af91521508dce94ff11c0c0c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwZTExODhjMWIwYWI0MWZkZjg1OGMwOTA5OTVhMzk3ODM4MzIxYTY0YmFhYzEyNzNmMmI0M2Q0OGE0MmQ5ZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5MTY1N2QwMDkzNzkzZTgyNTEwYjc1NzY4NmZiYjVlM2U2Y2IwOTUyMDRlZmEyNTQ2NWJjOWM0MGM3NzhkYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4MTRkODZmYzNjNjRkOWMzMzQzZmZmNjk0ODFkMDVhOGIyMjdjMWM1OTg1NjM4MjkwY2RjYzczYjM4NTg2ZTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2cd9042d01764cf59c9eca6243d359b3",
+      "statement": "Missing required inputs (plain_answer, retrieval_results, formatted_docs, or prompt_id_map) or a failed/unparseable structuring LLM call return (None, None) from structure_and_validate_async rather than FALLBACK_MESSAGE, and the graph node validate_answer wraps the whole call so any exception is also converted to (structured=None, validated=None); validation must never fail open.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L80-L92",
+          "version": "repo-lines-v1:sha256:ce129691f38adad40a71e596b449bdf4fed50e1448bab9be8bd87954c8fb1e0d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MDU1MDU2MWY4MmExMmE0NjEwMjE3MjFkNzIzZjM4OGJhNTljZTFjZTEyZjBiZWY4ODhlOTk5MjgxMDU0NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxNDkyMjBiYmVlNGM0MDg2ZmMxZDI5OWUzZDZmMmU0MjZmZjU4ZjlkZjNmYWQzYmY1OTEyMDExMmYzYzJlMzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg4MTg4MDFiMzI1NGY5ZmVkOTZkODBmNmQzZjQwYjgyMDc4YmExYjVlMDA1NGY1NDcwZGJkMmQ3YzNhMTQ2MmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2ODE5MWRlZDMxODU5NDk4ZDA0YWUyYTcxM2YwMjEwNDJkY2NhZjE5MDVkNjMxODc2MTViNjI5MGU0MzZkZWQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L63-L96",
+          "version": "repo-lines-v1:sha256:b7d95b65e53ad476fee48abbad2660d7e405734723aee31d81be4109f3f0f071:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2NjY4ZGRkOTRlN2FmNzQ1YzFlMzEyYzYyNTQ5OGE3MTEwNDVlMDRiYzE3MGUwNWQ5Y2VlYzlkZGJjZjIzMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlZDVkNGZkYjU5NzQ0MWIzMTY0MDdiMjBlNDBkZWM5ZTRlM2ZjMjFkZTU4ZmU1Y2NlNDJlZDNiNGM3NTgyOTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMzN2QyYzI2ZDRmNDVkMWFkOWNkNjBlYjMxY2E0YTcwMWUxYTU1ZDMxYzZjNjY3ZDA4MDg1MWEwYzdkZDUwOWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bbfade2565f64fc9a338688d22214dfc",
+      "statement": "The validate_answer graph node scrubs PHI from every kept structured statement's text field and every citation's doc_id/source_name/quote fields via scrub_phi before they land in graph state, and separately scrubs the final validated answer string; with HC_RAG_DISABLE_STAGES=validate the node instead passes through the unvalidated but still PHI-scrubbed plain answer, which is ablation-only behavior not intended for production.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L53-L102",
+          "version": "repo-lines-v1:sha256:2f940da7abe3e102c258704b849fa1a879616904636982ff94c40fa1f05cd986:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmMTVlODEwMzNmZWJlOWQ3ODgxNTBjZDYxZjhkZTEwZjM1OGNhZTMzMTVjYjA4NWJkYTg1Njk4MjMyM2I2NTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiOWFiMjIzYTc2N2QwMDAxMTZlZmM0ZDg4YmJiYzZhNzY5MDY2NDZhMGI2NTEyZTg3ZDFmMTYzZGMyZjgyNjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee59681badb34c33a0af8f477111b78e",
+      "statement": "This citation-validation and fuzzy-matching behavior is covered by tests/test_answer_validation.py (valid/invalid quote thresholds, mixed valid/invalid citations, uncited statements, duplicate/misordered citation canonicalization, unknown/malformed citation IDs, marker-mismatch fail-closed) and tests/test_validation_scaffold_prefix.py (scaffold-prefix fail-closed variants and a benign-prose false-positive-avoidance case), exercised without any live LLM call via an injected llm_call callable.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_answer_validation.py",
+          "version": "repo-file-v1:sha256:fe4740d775663225b4392ccb487b3ba811a0986618b5507bc3bbd6124166e07d"
+        },
+        {
+          "resource": "repo://tests/test_validation_scaffold_prefix.py",
+          "version": "repo-file-v1:sha256:1b3e78a7db1323092044c0ed4c993b73804cbdd4c0fb16ca8885f47e2a1f7a0a"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

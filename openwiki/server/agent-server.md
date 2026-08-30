@@ -3,6 +3,55 @@ type: service architecture
 title: Clean-room agent server
 description: The clean-room server that exposes configured graphs through thread, run, cron, store, assistant, auth, custom-app, readiness, and parity-compatible surfaces, with a dual-backend (memory or Postgres) storage seam that runs Postgres in production.
 tags: [server, langgraph, api, parity]
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-dabcc1fcca4e6a749405a2dd
+    resource: repo://deploy/fly.prod.toml
+  - id: openwiki-source-98c2d416de5872823203ac78
+    resource: repo://docs/deploy.md
+  - id: openwiki-source-13c4710df7d746b18fb26f94
+    resource: repo://healthcare_rag/agent/perimeter.py
+  - id: openwiki-source-5bbba7b2a8ea8360ff233d63
+    resource: repo://langgraph.json
+  - id: openwiki-source-012f2c78e3b1446dfc35803f
+    resource: repo://Makefile
+  - id: openwiki-source-141c86ea716204370c1b7a2d
+    resource: repo://server/app.py
+  - id: openwiki-source-22bf4446b3c05d79d627bfce
+    resource: repo://server/assistants.py
+  - id: openwiki-source-4db6b56356e1a93a0a2f8d49
+    resource: repo://server/config.py
+  - id: openwiki-source-812740e2fdaa1dca218222f7
+    resource: repo://server/crons.py
+  - id: openwiki-source-a29b9af8e64e3d9e8444ac18
+    resource: repo://server/manifest.py
+  - id: openwiki-source-d6abcdd25a53d84200847786
+    resource: repo://server/protocol_events.py
+  - id: openwiki-source-11d5e4239063a0831a8d4744
+    resource: repo://server/protocol_stream.py
+  - id: openwiki-source-a7c96560a75972959888e56a
+    resource: repo://server/registries.py
+  - id: openwiki-source-5d7e6d6661f072b70ec3ef74
+    resource: repo://server/run_engine.py
+  - id: openwiki-source-f652ea1ec14b6ce2b92217f3
+    resource: repo://server/runs.py
+  - id: openwiki-source-d8bf193a74d78ce706478aa9
+    resource: repo://server/storage.py
+  - id: openwiki-source-b7ae4780729adcdb6ede49ba
+    resource: repo://server/threads.py
+  - id: openwiki-source-cec0578fc04091103b2b88d9
+    resource: repo://tests/agent/test_perimeter_copilotkit.py
+  - id: openwiki-source-e4ac02a3d20f13bf4c4e5d60
+    resource: repo://tests/server/test_assistants_store.py
+  - id: openwiki-source-c3b64d53b692081879795c2e
+    resource: repo://tests/server/test_postgres_durability_gaps.py
+  - id: openwiki-source-db1ceaf49ccc15868c14c8c2
+    resource: repo://tests/server/test_protocol_stream.py
+  - id: openwiki-source-08bbb2ba3e6102677b910e33
+    resource: repo://tests/server/test_runs_durable.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
 ---
 
 # Clean-room agent server
@@ -45,7 +94,7 @@ Cron schedules validate cron/IANA zone, poll once per second, enqueue due work, 
 
 Production (`deploy/fly.prod.toml`) runs `SERVER_STORAGE=postgres` — the flip shipped in v1.0.7 (2026-08-24) against a dedicated Fly Postgres cluster with the `vector` extension; see [deployment](../operations/deploy.md) and `docs/deploy.md` §§8–9. Threads, store items, and cron registrations now survive deploys/restarts/OOMs; in-flight runs, the pending-run queue, and open SSE streams remain process-local and are still lost on a deploy (`docs/deploy.md` §8). Postgres mode also redacts run `input`/`command` payloads to `[redacted]` at rest (`PERSISTED_PAYLOAD_REDACTION` in `run_engine.py`), while memory mode echoes them raw in process memory — code must not assume either behavior universally. Local/dev defaults to `memory`; embedding-index startup may fall back to lexical store search on recognized dependency/auth failures. `SERVER_LOCAL_DEV` is dev-only and the image sets it off.
 
-Focused tests: `tests/server/test_storage_postgres.py`, `test_threads_postgres.py`, `test_crons_postgres.py`, `test_postgres_durability_gaps.py` (need `POSTGRES_TEST_DSN`, run via `make server-test-pg`); the memory path is covered by the rest of `tests/server/`.
+Focused tests: `make server-test-pg` starts a disposable compose Postgres and runs `tests/server/test_registries.py`, `test_threads_postgres.py`, `test_runs_durable.py`, `test_crons_postgres.py`, and `test_storage_postgres.py` against it (plus `scripts/pg_lane_concurrent.py` for the advisory-lock race), tearing the container/volume down afterward. `tests/server/test_postgres_durability_gaps.py` (restart durability, store-API equivalence, erasure, orphan cascade, migration idempotency) is gated the same way behind a `POSTGRES_TEST_DSN` env var — via its `postgres_url` fixture — and skips cleanly when unset, but is not in the `make server-test-pg` file list, so run it explicitly with `POSTGRES_TEST_DSN=... uv run pytest tests/server/test_postgres_durability_gaps.py` when touching durability behavior. The memory path is covered by the rest of `tests/server/` under plain `make server-test`.
 
 ## ThreadStream protocol (member perimeter v2)
 

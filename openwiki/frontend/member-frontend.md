@@ -3,6 +3,71 @@ type: frontend architecture
 title: Member frontend and CopilotKit transport
 description: Authenticated Next.js member chat, its CopilotKit v2 proxy boundary, safe rendering and hydration rules, recovery behavior, configuration, and hermetic transport tests.
 tags: [frontend, member-chat, copilotkit, authentication, ag-ui]
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-e483fd3285d99d05c7b265cf
+    resource: repo://frontend/AGENTS.md
+  - id: openwiki-source-1047363cf615000e4c9bb694
+    resource: repo://frontend/package.json
+  - id: openwiki-source-2090dca405aa9c3acd6c7ff8
+    resource: repo://frontend/playwright.config.ts
+  - id: openwiki-source-ae1dbc927029f2cde98099cb
+    resource: repo://frontend/README.md
+  - id: openwiki-source-fae11993611d5a060003d374
+    resource: repo://frontend/src/app/chat/page.tsx
+  - id: openwiki-source-486d66a0d8142b4ce88c8e8b
+    resource: repo://frontend/src/catalog/AGENTS.md
+  - id: openwiki-source-b523d1d35e59778a1d9bd293
+    resource: repo://frontend/src/catalog/catalog.ts
+  - id: openwiki-source-95ab13cd52d2132f8a72fbee
+    resource: repo://frontend/src/catalog/dataRef.ts
+  - id: openwiki-source-e63309012e798f33c89e0e13
+    resource: repo://frontend/src/catalog/dispatch.tsx
+  - id: openwiki-source-773f9f2f8bf87c4597e69b6a
+    resource: repo://frontend/src/catalog/hydrate.ts
+  - id: openwiki-source-90db6eeba347d5a111ab680a
+    resource: repo://frontend/src/catalog/render.tsx
+  - id: openwiki-source-6841f51449e4b011b455db81
+    resource: repo://frontend/src/catalog/schemas.ts
+  - id: openwiki-source-e85166be5f3904349b9d6eaf
+    resource: repo://frontend/src/chat/__tests__/model.test.ts
+  - id: openwiki-source-81b9026172d083f672ef5219
+    resource: repo://frontend/src/chat/AGENTS.md
+  - id: openwiki-source-3a5f317c3b8c05408ef0c46f
+    resource: repo://frontend/src/chat/coachApi.ts
+  - id: openwiki-source-9025d495203e9b87c227b98c
+    resource: repo://frontend/src/chat/coachClient.ts
+  - id: openwiki-source-67f0114de680e014df397ca4
+    resource: repo://frontend/src/chat/coachProtocol.ts
+  - id: openwiki-source-ff55c625cc63b2ebebee5041
+    resource: repo://frontend/src/chat/erase.ts
+  - id: openwiki-source-f8a2bea9b3c716b7a001e58c
+    resource: repo://frontend/src/chat/featureGates.ts
+  - id: openwiki-source-089d87219db36e152475adcb
+    resource: repo://frontend/src/chat/model.ts
+  - id: openwiki-source-9d30521022b99961d1c3a829
+    resource: repo://frontend/src/chat/stream.ts
+  - id: openwiki-source-01f8c359c639151316beea83
+    resource: repo://frontend/src/chat/uploadFlow.ts
+  - id: openwiki-source-0f453506ec82480a876cbc71
+    resource: repo://frontend/src/chat/useCoachStream.ts
+  - id: openwiki-source-8d414eae33c0ee7d9eef64e6
+    resource: repo://frontend/src/lib/copilotkit-runtime.ts
+  - id: openwiki-source-4df575b808f08b21329f2bd5
+    resource: repo://frontend/src/lib/env.server.ts
+  - id: openwiki-source-f63803cd8a63e5b5344410a2
+    resource: repo://frontend/src/lib/env.ts
+  - id: openwiki-source-db8cb3b2584d72357059a49c
+    resource: repo://frontend/src/lib/supabase.ts
+  - id: openwiki-source-f6ccde2440cc497427ba6702
+    resource: repo://frontend/vitest.config.ts
+  - id: openwiki-source-012f2c78e3b1446dfc35803f
+    resource: repo://Makefile
+  - id: openwiki-source-05ccef8d4cf1698187f20464
+    resource: repo://pyproject.toml
+generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
 ---
 
 # Member frontend and CopilotKit transport
@@ -45,9 +110,9 @@ Request logging is deliberately narrow—method, pathname, status, and an unveri
 
 ## Chat state, projection, and recovery
 
-`useCoachStream.ts` is the chat controller and accepts injected network, timing, polling, and ID seams so component tests can run the lifecycle without a real server. The headless `useAgent` adapter waits up to its readiness deadline before a run or resume, refreshes CopilotKit authorization immediately before those operations, and projects AG-UI `user`, `assistant`, and `tool` messages into the wire model. Reasoning, activity, developer, and system messages are not projected.
+`useCoachStream.ts` is the chat controller and accepts injected network, timing, polling, and ID seams (a `CoachChatDeps` bundle) so component tests can run the lifecycle without a real server. The headless `useAgent` adapter waits up to its readiness deadline before a run or resume, refreshes CopilotKit authorization immediately before those operations, and projects AG-UI `user`, `assistant`, and `tool` messages into the wire model. Reasoning, activity, developer, and system messages are not projected.
 
-Only recognized top-level rendered nodes and specific top-level internal coach nodes may contribute messages. Unknown nodes and all subgraph messages are hidden and reported through telemetry. Switching threads clears the agent messages and state before the selected thread is reloaded, preventing the prior conversation from being displayed in the new one. Thread state reads are merged with stream messages by stable message identity, then split into HumanMessage-bounded turns for rendering.
+Two files form the browser protocol client that this controller wires together: `coachApi.ts` is the direct HTTP/SDK client, shaping every member-facing call byte-for-byte to what the member perimeter (mirrored in `coachProtocol.ts`) allows, and `stream.ts` is the pure `applyStreamPart()` reducer that folds one AG-UI/LangGraph SDK stream event at a time into `{messages, interruptValue}`. Only recognized top-level rendered nodes (`coachProtocol.ts`'s `RENDERED_NODE_NAMES` allow-list) and specific top-level internal coach nodes may contribute messages; the reducer drops updates from any other node and reports them through `chatTelemetry`. Unknown nodes and all subgraph messages are hidden and reported through telemetry. Switching threads clears the agent messages and state before the selected thread is reloaded, preventing the prior conversation from being displayed in the new one. Thread state reads are merged with stream messages by stable message identity (`model.ts`'s `mergeMessages()`), then split into HumanMessage-bounded turns (`buildTurns()`) for rendering.
 
 A send creates a thread when necessary, echoes the human message, and starts a run. While a run is active the controller appends later sends to a FIFO queue and drains one at a time when idle. It supports non-cancelling detach/disconnect and subsequent rejoin; selection triggers one thread reconnection rather than repeatedly stacking connections. A missing active thread clears local messages, interrupts, staged upload state, and title, refreshes the thread list, and presents a recoverable friendly error. `stop` asks the stream to stop, while v2 transport cancellation is covered by the stop route.
 
@@ -74,7 +139,7 @@ The browser can offer a small local `copy_to_clipboard` headless tool, but unkno
 
 ## Uploads, erasure, and direct member API
 
-The direct `coachApi` surface is limited to member thread CRUD, state/history, upload/status, feedback, and run-related endpoints. `createCoachFetch()` and the LangGraph SDK request hook retrieve the Supabase token per request; `supabaseAccessToken()` refreshes a session with under one minute remaining. This avoids relying on the page's initial cached token for direct calls.
+The direct `coachApi.ts` surface is limited to member thread CRUD (`createThread`, `searchThreads`, `getThread`, `deleteThread`, `copyThread`), state/history (`getThreadState`), upload/status (`postUpload`, `getUploadStatus`), feedback (`postFeedback`), and run-related endpoints (`streamRun`); a thrown `CoachApiError` always carries the HTTP status. `createCoachFetch()` and the LangGraph SDK request hook retrieve the Supabase token per request; `supabaseAccessToken()` refreshes a session with under one minute remaining. This avoids relying on the page's initial cached token for direct calls. Cron, assistant-search, and store endpoints are never called from this app.
 
 Attachments use the fixed document-review sentinel and server-reported stages (`uploading`, `scanning`, `extracting`, `done`); polling advances only from returned status. Erasure phase 2 begins after the server-side marker flow: the client waits for terminality, fully snapshots paginated owned threads in ascending ID order, deletes non-marker threads first, then deletes the marker-bearing current thread last. A delete failure fail-stops and preserves remaining IDs (including the marker thread) for retry.
 
@@ -90,6 +155,8 @@ bun --cwd frontend run playwright
 ```
 
 Browser configuration reads only `NEXT_PUBLIC_*` values: Supabase URL, Supabase anonymous key, public LangGraph URL, and explicit UI/protocol gates. `NEXT_PUBLIC_SUPABASE_ANON_KEY` is an intended public client identifier, not a secret. **Never place secrets, service-role credentials, LangSmith keys, deployment tokens, or other privileged values in `NEXT_PUBLIC_*` variables**—Next embeds them in the browser bundle. The server-only proxy obtains its deployment target from `LANGGRAPH_DEPLOYMENT_URL` (with the public URL accepted as a deployment alias); absent configuration fails when the proxy is first used rather than at build time.
+
+The frontend test command is `bun --cwd frontend run test`, which Bun runs as `vitest run` (jsdom environment, `@/*` aliased to `src/*`, tests under `src/**/*.test.{ts,tsx}`; see `vitest.config.ts`). This is a wholly separate JavaScript/TypeScript toolchain from the Python backend's `pytest`-based suite (invoked via `uv`/`make test`): the two share no dependency manifest, no config, and no invocation path, and neither substitutes for the other in CI.
 
 For integration changes, run the configured Playwright suite. Its global setup starts an offline scripted gateway, real `langgraph dev`, and production `next start` on allocated ports; it intentionally runs one worker because fixture state and the single ephemeral stack are order-dependent.
 

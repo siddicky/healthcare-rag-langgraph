@@ -1,0 +1,314 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:5ef9c96b7a8846389a780be88f0b343749c214ce7338b3b25d3f77930aafc0af",
+  "claims": [
+    {
+      "id": "claim_f08df77b40b842e0a2417c860e9e2a6e",
+      "statement": "The base runtime, clean-room agent server, and member frontend have distinct configuration owners: pyproject.toml/uv.lock own Python dependencies (the removed root requirements.txt must not be restored, per docs/decisions/dependabot-requirements-txt.md), langgraph.json owns graph/auth/custom-app selection, graph settings own model/pipeline knobs, and compose/Fly files own topology-specific environment overrides.",
+      "evidence": [
+        {
+          "resource": "repo://langgraph.json",
+          "version": "repo-file-v1:sha256:edc19183e919a8a0e015dd62f264c85e4975ebf6acc521875c44d73147abde42"
+        },
+        {
+          "resource": "repo://pyproject.toml",
+          "version": "repo-file-v1:sha256:5496b631d7c33f09d08176f5a4e94dfd868d47714155968911a0003b736bd678"
+        }
+      ]
+    },
+    {
+      "id": "claim_89d802ec84f84ab6b872edf3a7fcc680",
+      "statement": "Local base RAG docker-compose runs Weaviate on ports 8080/50051 with a persistent weaviate_data volume, anonymous access, and restart: on-failure:0; the server compose stack similarly waits for Weaviate healthy, exposes server port 8000, and uses a read-only filesystem with tmpfs.",
+      "evidence": [
+        {
+          "resource": "repo://docker-compose.server.yml",
+          "version": "repo-file-v1:sha256:a47c5599c8f2b9fc4586bdf743aa30230cd77f89014ed9ab96e4d6a5d9a32f0e"
+        },
+        {
+          "resource": "repo://docker-compose.yml",
+          "version": "repo-file-v1:sha256:de17b65adc18a797dac886d633472483a2b7181fb3a576b546d48d088764e011"
+        }
+      ]
+    },
+    {
+      "id": "claim_23f21618460a4095a4d7e427db798fe7",
+      "statement": "Fly production deploys the server as an immutable image digest on internal port 8000 with a separate private-DNS Weaviate app in the iad region; deploy/fly.prod.toml's LANGGRAPH_API_URL=http://127.0.0.1:8000 is a loopback used by reminder/cron tool calls back into the server itself, not a public endpoint. The [http_service] forces HTTPS, keeps one minimum running machine with auto-stop disabled, and health-checks GET /ok.",
+      "evidence": [
+        {
+          "resource": "repo://deploy/fly.prod.toml",
+          "version": "repo-file-v1:sha256:3951a0ad1dbb9813179643c31883b5903ed0471777b29a92340d6fa168273094"
+        },
+        {
+          "resource": "repo://deploy/fly.weaviate-prod.toml",
+          "version": "repo-file-v1:sha256:a0fceecf462f2822cd9461b8c2806c2d459468e12a7e556356b501c6063970f7"
+        }
+      ]
+    },
+    {
+      "id": "claim_cd9b4250d43a409f956e9e3aec38055c",
+      "statement": "Weaviate mounts the system's only persistent volume; production has run SERVER_STORAGE=postgres since v1.0.7 (flip executed 2026-08-24), so threads, store items, and cron registrations survive deploys/restarts, while in-flight runs, the pending-run queue, and open SSE streams remain process-local. SERVER_STORAGE=memory (in-process, wiped on restart) remains the local/dev default, and production must not enable SERVER_LOCAL_DEV (the Dockerfile sets SERVER_LOCAL_DEV=0 by default).",
+      "evidence": [
+        {
+          "resource": "repo://deploy/fly.prod.toml#L13-L18",
+          "version": "repo-lines-v1:sha256:d0ed24d89040b78ede9782d19a4618e0fd653d19bc3bf4a3c7a37348bbc81d0f:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWNlNDQzMjE4M2Y4MDYyMzg2MTFiYWY5MDRkZjVkOTViZDIxNTM5NzczODc0Zjk5ODUyM2Y5Mzg5OTBiZTUzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmRlZmNlMWQ4ZWVhOTVmZDEzMzg1ZjJiYzA1OTJhYTJjNDBlY2I4OTMxMDdiNjgyY2UxZjU3ZmIwOGM1ZTlhMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDliYzY4NDMzMzRlOTlmMzdmMDBmZTlmZDZiMWJmMTg3ZDE0ZjQxMGFiM2Y2ZGQ2Njc1NWZhODkyYWU5MzVhOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjAyYWRhNWQ4NTFmYWFkMTc5NGZlMWYwODQ5ODNjYTczYWQxOTdiZDRmNDAzZWFlNDU1ODJlODc5NDJlMzk5YSJ9"
+        },
+        {
+          "resource": "repo://docs/deploy.md#L10-L88",
+          "version": "repo-lines-v1:sha256:c04fd333c2d5d439eb0e46d602fa82fed80ef5b41d591a7752fbb7b033aad0d2:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkYzhlZjQ2ODQ5OWYwNTk1ZjY4OWQ2YzYwODlhMDRjYjJkMWM0YWM0MzU3MDc4NjUzM2EzNTNiNjJmMjViMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhODU1YWQ3YTE5N2NhOGEzZTBjNmQ3ZTA3OGI3ZTQ0ODU0OTVmNjc2ZmRjMGYyOWQ0NjU1ZGIyNjZhYzczZDAifQ"
+        },
+        {
+          "resource": "repo://server/Dockerfile#L33-L38",
+          "version": "repo-lines-v1:sha256:08160beb5be4c929d58898b2cdb4a1fcf6eb3cae47c57b0613b4d00ec25efa19:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjM3ZDhjZTc4MDIyOTRkN2ExY2NhNDE0YTMwNDhiOTMxZmVjOGEyMzljYWFhOGRjYjJjNjg0ZGJiYTBkNDI2NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDJhNDA4MjgyZWE4OWFlMTM5YjNkMWRmNDA1ZTI5NzhhYmQ5ZjkwM2U5NjU2YmI3YmJkNWYyYmRjOWE0MGJhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzZhMDkwZGVjOGVjNTAzOWJhZGU4ZTJjZTZmMGJiY2U0NDlmNDI3MWVlOWYzY2JmNDhiZjNiZWFkYzkxNGYxNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjJmYWZlODg1ZDIxMDQyNzgyZGJmN2JjY2RkMTU3N2VhMzRhMGJhYjViY2Y3ZjM3Yjk0NzBlODUzYTU5NzNiMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_bce0b0ddfa3e4a51834fc81d6e07c9ef",
+      "statement": "Production runs the member stream perimeter at HC_RAG_MEMBER_STREAM_PERIMETER=v2 (flipped 2026-08-25); the frontend build's NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER must be built at the matching version in the same release window or member chat requests are denied, because it is baked at next build time rather than runtime-switchable.",
+      "evidence": [
+        {
+          "resource": "repo://deploy/fly.prod.toml#L19-L24",
+          "version": "repo-lines-v1:sha256:88e761caf431caf35a9c7ebb730e22b0322080b60d698a6f89cead62bf26d5d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU5Y2ZjYTk5NDBlYTZlMzA3Mzc1YzNmYzgxN2FiMjk0NDAxMzhjZWRmZTI3NDBkNTQ3MzAyZTQzMjFhNjY0NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzkxNTdhNWY1OTg2YzdkOTViMzQ2YTg3MjE5MjkzZWJjYzRkMTU0MDBlNDkxMjU2NGM0ZGZhZTczM2E0M2VlMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWI5MGNlNjY5ZjNiMzMwYTRlZTM2NzMyYzMyOTQ4OGRiYmVhNTBkOTJhYjlmZTA2ZTg1OGU5NmY2NDI1MDcyYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDE4YjJjODQ4NTYzMzgwNjJlNDJlNWU3ZDMyNmFlMzJlZTM1M2U4ZTQ5ODExMWVmMTA4ZGE1ODQzZmViZTZhYSJ9"
+        },
+        {
+          "resource": "repo://docs/deploy.md#L91-L109",
+          "version": "repo-lines-v1:sha256:589766d11cd4db116bd525958e55e8afd4d75f1b2c9e5cabc1d81d4bf01d0a56:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxYWNkMzJlMGI0YTFmMTc0OTA4NGQxNzdjNWNjNWE5NzRhN2FmZmM2MGRmMjlkMzcyYmFhZmZlNzU5OGQ4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkNWE2NTI4NDBiNjQ5NWU4NGRmYmM2ZWE5NTg2OTNkZWFiOTM4ZWY4YjIyNTIzMDhmMTg3NDY1ZWY2YmM0ZWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwMWYyZWMxNzU5M2MxMDU0ZWI0NjM2N2Q4NDUzZWYyNGExNzNjZTk2YjcxMTdkOTFmOWE2OGQ0NGZlZjhiMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d63143deb27b41b2a5e51825ab242941",
+      "statement": ".github/workflows/deploy.yml is triggered by pushing a v*.*.* tag. It verifies the tag exists on origin, that HEAD matches the tag commit, and that the tag commit is reachable from origin/main; verifies GitHub Environment 'production' protection (deployment tag policy) fails closed if the check is inconclusive; builds and pushes the image to GHCR; mirrors the GHCR digest into the Fly registry as an immutable image; stages required secrets to Fly before deploying; polls GET /ok until ready; and runs a deployed smoke test with tracing off. Smoke failure fails the deployment and there is no automatic rollback.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L1-L90",
+          "version": "repo-lines-v1:sha256:420c77370cfad046d699ea70c920bf4d1fed1be069e49b40ffff20703f61f29f:eyJzZWxlY3RlZExpbmVDb3VudCI6OTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxM2NlNzgyZWI2Nzg2NTY0OTIzZDExZGEwNzkxNjM5NjhiYWMwNGZiMjI3YWRlNDVjNmRiN2QyOWQ1ZjM0NjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzJmOTc4Y2E4YmYxZTA0N2U2MWRlZTRiYjcwMDFkYmEzZTMzMjI0MDk2Yzk0NjY3OWRmZDc2OTFkMmRhMGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmOWI0MGU5MWIyOGZiMzBmNWYxY2M2M2Y2NzE4ODQ5MWNkZTdiYmM1MGQzMmUwMzE3YjE5ZmRjZDI3ODZmMjgifQ"
+        },
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L364-L510",
+          "version": "repo-lines-v1:sha256:770570afab28d667fbb01febd91505855b556641cbf0b4108defbde535f6bd6e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3MGY3MDFjOGFjNGU1MjkxM2ViODU2MTZkZjRlOTBiOTM1ZGQ4NzhmOTk1Y2YzMzQ3MDk1NWFlNjVjN2M2OTVmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJjMWE3ZWJhMWQ1NWQzNDM0MjNmNDViZmU3MGE4NjRhYzMyOWJkODk3ZWE3NTVlOTU0M2YxMWJkNzI0ZjcwZDE1IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3NTI5NTE1MjhkYzE0MmQ0NzE4M2Q5MTJkYmQ3Njc5NWVmNDE1NDg4Y2UwMWE0NTk4NTQzMDhiYjNjNDlkYWRlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlODlmNWUyNmJiNDFmYjVlNjVlMTZmMWRlMjBlOTUzZDRkZDZiNmY4MWU5MDdmNWI1NWUzZTdmZWU0ODY5YjgyIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_32fff78e8e374c7d818c97465374c550",
+      "statement": "`make release TAG=vX.Y.Z` and `make rollback TAG=vX.Y.Z REASON='why'` and `make release-digest TAG=vX.Y.Z` are hermetic local previews only (validate/print, or resolve a digest); none of them dispatch a workflow or push/mutate anything remotely.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile",
+          "version": "repo-file-v1:sha256:1159ccff3438fa9888d8c315f0b06072106250eaa0a4c52f09cc37aff9337d37"
+        }
+      ]
+    },
+    {
+      "id": "claim_6655df328156482fb284af5890e527bf",
+      "statement": "docs/decisions/release-tags-and-rollback.md defines a release as the immutable triple (git tag, image digest, that tag's deploy/fly.prod.toml); the git tag is the immutable release identity, the {{version}} GHCR image tag is the ledger mapping a tag to a digest, and only a validated sha256:... digest is ever deployed, never latest or a rolling tag. Rolling back redeploys the whole triple together so an old image is never paired with a newer storage configuration.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L512-L528",
+          "version": "repo-lines-v1:sha256:a3d6fcf99abd31647864845303f26701185b9e5a20fb3fded992d08b64c539bb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxNmMwNjNlMGJmZjYyYTEwNjYzZmM2ZmNmYzdiNjMyNzk1ZTVhZWQzYTRjMjhjMDQyMTQ5YjE3ZjZmYmFjODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5YWI3ODJiYTU2YTM0YzI1Y2UxMjViNzhiYzhjN2Y0MmQxNGIwZDE1YmMxMjM3MWY1YTFhZTFlNDdmYjMwYjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5OGM4MjM3YjlkZmRhZjUzYWRiOTg3ZjdkMTFjZDBjNmJiZTViZmZhNWRkZjUyMDY2ZGI2NGY1ZmM2NmI5N2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4OThhNWY2ZGE4ZDQ3MGFjYmU2ZmViZWUxMzY5YmJmYjQ4YzQ0MTBhODczNWYwODdlNjRhZjRmYmU2N2YxOTEifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/release-tags-and-rollback.md",
+          "version": "repo-file-v1:sha256:4bdcbf6eeaf4daff3618cb5ad572eb5e3f0368de7fbd93f6eb8dbf556d6252c4"
+        }
+      ]
+    },
+    {
+      "id": "claim_28371f3ed78941c4a591455578327ed4",
+      "statement": ".github/workflows/release.yml is dispatch-only (inputs bump and dry_run) and never runs on merge, because tagging every merge would queue a production deploy request for every merge against this repo's human-gated posture. It refuses to run from any ref other than refs/heads/main, checks out main with full history/tags, refuses to re-point an already-existing tag (tags are immutable), and requires pyproject.toml's version to already equal the computed tag before it will create the tag.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L13-L111",
+          "version": "repo-lines-v1:sha256:bf0cd673ea1768185eaa3f06e250b1948790c5515bd31d0a010189f4ef0c7581:eyJzZWxlY3RlZExpbmVDb3VudCI6OTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmRjNDgxNDlmNWE4M2QxZWQ2ZGJiMzliYmM3ZTJiOTAyYWEzZDM0ZDZiZDVhZTRiMjkxYjY4ZGYwY2E3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjYTMwNzZmZDgxM2I3ZTc3OTVhMzVlOGZmNzJkMmQ3YjU5OTgxYTA4YjFmYTNkOTkyODlhNzU2ZmUxOWY2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2YjQ5ODk1ZmY3NDBhZTcxYTk0MzJhMjhkYzM1ZTk1MjM1YTRjMmE3NmE4ZmZjOTY3MzllMjRlZWM0OGUxMWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjNDBjMTZlODM0ZTBjNGI0MDcxNDg2NDg2MTM5MDI3OTIzMTJjYmY4OTllZjE0N2QxZTNjYWVmMjZkZDRhZjAifQ"
+        },
+        {
+          "resource": "repo://tests/test_release_pipeline.py#L181-L221",
+          "version": "repo-lines-v1:sha256:89c418221c0d2ec4f0cf6160af46f5e6bc85c5d293fb61e8f8cbaa78461603c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzOTkzODAyMGZiNzJhN2Y0NTY1OTk2N2FiM2E5NWZjYWJiNTM2OWYzZGRkYWFiYzYxOTc1ZDg5ZTY5NjlmMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlOGFkMWQ4YjY2MWFmNTRhZjJiMzhmYjBmY2MwNzRiNGEyYzEzNGQyZjEwYjE4ZDRkNDNlNWI0NDFlY2MxNDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRjMDZjYmFiZTlmZjQ2YjgwYzY0ZjA5NzJhN2Q1MjA5ZGZlMDM0ZTA0YzZkYTg5YjIzODMzMTczZTM0ZmNkYzgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e60c603c72ec4ada9483b8a7a339b4b3",
+      "statement": "scripts/next_version.py derives the release bump from Conventional Commit subjects since the last release tag (feat!/BREAKING CHANGE: -> major, feat -> minor, else patch), except that a breaking change on a 0.x version bumps minor instead of major to avoid accidentally declaring API stability; it is shared by the release workflow and `make next-version --explain` so a local preview matches what CI will pick, and it seeds the first release from pyproject.toml's existing version rather than inventing 0.1.0.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/next_version.py",
+          "version": "repo-file-v1:sha256:f6bf59e0b3d0ce1f22b5fbdc9d9a3b20d91343afc2ab045b7617c9e44e741e63"
+        },
+        {
+          "resource": "repo://tests/test_next_version.py",
+          "version": "repo-file-v1:sha256:8fed85c4ddb5b2daa6b4691ace4ab3d6a303b67189f62a662f7145c0bb04daae"
+        }
+      ]
+    },
+    {
+      "id": "claim_eb990dd87398430282d2365b566f18cb",
+      "statement": "make release-prep BUMP=auto|patch|minor|major writes the computed bump into pyproject.toml/uv.lock and re-locks, so a human reviews the version bump as an ordinary pull request before the release tag is ever created.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L88-L111",
+          "version": "repo-lines-v1:sha256:55f7f64852b192a4e5ada1668576fb9985fab38fcdf1e6ccec4ba3b376a14dc1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNTVmYWE4ZWVhNTM1MmJjNjY1NWQ3NTZlM2QxZTljMWFjZmE3MjZmNmJjYzg1MWNhODZlNDAyZDMwMGRlNGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjYTMwNzZmZDgxM2I3ZTc3OTVhMzVlOGZmNzJkMmQ3YjU5OTgxYTA4YjFmYTNkOTkyODlhNzU2ZmUxOWY2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY3ZGQ2MDMwOTYxYzY2ZWRhNmQ0NjE5MzJiOGFmNjEyNTZhZTI4M2ViNDNlZjZiOTkyZDQ1YWY4NDc5MmEwZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjNDBjMTZlODM0ZTBjNGI0MDcxNDg2NDg2MTM5MDI3OTIzMTJjYmY4OTllZjE0N2QxZTNjYWVmMjZkZDRhZjAifQ"
+        },
+        {
+          "resource": "repo://Makefile",
+          "version": "repo-file-v1:sha256:1159ccff3438fa9888d8c315f0b06072106250eaa0a4c52f09cc37aff9337d37"
+        }
+      ]
+    },
+    {
+      "id": "claim_962cec89629e4ad4b10c14e3a8b689e5",
+      "statement": "release.yml requires the commit being tagged to be green: it fetches the commit's check-runs and workflow-runs via the GitHub API and, through scripts/release_green_check.py, asserts the 'Offline test suite' check (the one check required on every push to main) succeeded; a red or still-pending commit cannot be released.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L113-L126",
+          "version": "repo-lines-v1:sha256:da71e1e44884c558f5a3a6cb23c416daf13a9569e1043503ded8ec1ad084bc20:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwOTFjNTAwNjJmZTgwNTdjMjVkZWJlYWUyZThiN2Y2NzU5NjEyZWM4ZDhmODg5MmFkNTRkZGE5MzA2MzY1NjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0YWZkYjY2OTk5ZWRiYWViOTZhNWVkMjNkZmZmOTY5M2Q0MDlmN2VlNjc1NzBkNzRhOTgyZmNmMDQ0N2I2ZTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlmNmY2ZmY1ZmUzNmI0ZjE5ZTFjMmU2NTYyNmY4OGI5NjdhM2U4Nzg3YzUyMGVlMTAzOTIyY2Y5OTg4MzEyYmUifQ"
+        },
+        {
+          "resource": "repo://scripts/release_green_check.py",
+          "version": "repo-file-v1:sha256:de525b0228422c1954813b61f16cdfd3f534512b9b59b85a7b21267cda5471d9"
+        },
+        {
+          "resource": "repo://tests/test_release_pipeline.py#L223-L242",
+          "version": "repo-lines-v1:sha256:b6ccd7697559e36ddb182e6b8636dd83a7599c95e1dc16606377bd9e874d53ce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlNjFiYWQ1NzZjYjcwMmY0MmQ0YTQ0NjlhNjAxNDY2ODc2YzNlNThlOGVkOTNkODYxNjQ5ZjlhNjc2ZTc4ZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0ZWE0NzE1ZjFjYTlkMTkzNmU1Mjk1NDgxN2UyNzQ0YzAxOWUyNzJiYzQyNTg4YjVjYTAyMTliMTU0ZGRlZTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwMmQ4NzI5NDE5N2Q4ODA1YzVjMjI0MWEzZTNlYmQ3OGE0NzFlYjQ4MTU3MWFiMzA0MTQyMGMyZWFhMDk0NGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzYjU3YTZlZmE2MGY5MTJjZjlmMmI3YTA2YWNlNDQ3OGUwZWI0ZTkyZmJlNDc2NDk5NTY2NWJjMjNjNmMwZjQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fa327187f2724c4c93182fa04cb9db98",
+      "statement": "release.yml pushes the release tag using a RELEASE_TAG_TOKEN PAT rather than the default GITHUB_TOKEN, because refs pushed with GITHUB_TOKEN do not raise workflow-triggering events and a tag created with it would never trigger deploy.yml; the job refuses to create the tag if RELEASE_TAG_TOKEN is unset rather than produce a silently-dead tag. A successful run pushes an annotated tag whose message is the generated release notes and publishes a corresponding GitHub release.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml#L160-L198",
+          "version": "repo-lines-v1:sha256:4a6392ed470c21acd3d0a5ae19c5bc2a5c89f79c170f6221ba78eec96cf44f55:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlMWRjNzZjYjExNjUzYzNhZTgyMTNjOGM3NmQ4MjZkZmFlNGI4NThiM2FmNWI4MTQ1ZjdlOWM3MDE5NmMwYTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmNGI5ODI1OWJmZjU3MzIzYTkyOGQ4MGU0ZGM0YTU0MjE1YWE3N2FhYmNkYTAyNThkMTFjNzk2Nzc3YWI1NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2Nzc3ZDUyMTIyN2RjMGQxNGVjZjY4ZDg3ZmI4OGVmMTYzZTFiMmU1MThmZWJmMzRmMTQ0YTgyMzk0Mzg0ZmIifQ"
+        },
+        {
+          "resource": "repo://tests/test_release_pipeline.py#L245-L260",
+          "version": "repo-lines-v1:sha256:29371dd66535664d96b9d8c8a80018c2120b297c5798c039ff0e7a8165817474:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NDA2MzU5ZTE4N2I0ZDZjOWQ2OWUwZGM4MzUyMmNkMGZlODZjNmFkNThiMjdjYmQ4NWIwYmNjOTkzMGRiNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4ZmRkMGFhMjcwOWExZTM4YzJmMTg4YzZlZDE0M2M4ZjA4MjY3NjExZWUzY2VjY2QxNGJiNmQ2YWJkMTdjM2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3MmEwYTlmYWVhZjQ4NDBhNDU0N2ZmN2JiODFkYzQxNzIyODNiMmU5MzM2ODU1ZDk4ZjM3ZjgxYTQ5ODgzZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwOGQ5YTE3ZTNjOTBmYTlmNWRjMzViMjgxNTRmNjdlN2UyNmU1ZTZlYjliMWMyY2YwMGYxNDU1M2M2ZjhmNDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_62c15e4f091c45d3943866af7ea31132",
+      "statement": "Rollback is a workflow_dispatch on deploy.yml requiring a version and a reason (reason is mandatory and recorded as the record of why production changed), plus an optional break-glass image_digest override; it is gated by the same production GitHub Environment and the same deploy-production concurrency group as a tag-triggered deploy, so a rollback and a forward deploy serialize instead of racing.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L512-L529",
+          "version": "repo-lines-v1:sha256:2629869d68eaacce19529ee6c0bb799e25b4f7001148d2c67ad11e906857b6a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxNmMwNjNlMGJmZjYyYTEwNjYzZmM2ZmNmYzdiNjMyNzk1ZTVhZWQzYTRjMjhjMDQyMTQ5YjE3ZjZmYmFjODEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4OTk5MTEwM2Y2YmE4ODhlM2RlNzY1MWM1YTMwNWM3N2U1NTQ3Njc3M2FiYTgzOTU5MWVjYzViZDBmMmFiMWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5OGM4MjM3YjlkZmRhZjUzYWRiOTg3ZjdkMTFjZDBjNmJiZTViZmZhNWRkZjUyMDY2ZGI2NGY1ZmM2NmI5N2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVjYTc0OWNlMmJjOTczMWNlMzk2ODMzYTJmNjUzNzRmNDY1MGZkMDNjYWQzZDY4ODQ1NzI0NGI3YjhiNTljMGYifQ"
+        },
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L9-L33",
+          "version": "repo-lines-v1:sha256:66ba9f4954bc01c6c0821836df926d924f1fd1d3c09acba305cd248189116a12:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmMmZhNzNmMDcwNDg5ZDk3MjRhMDI5ZGZiNTAyYWEwODg1MDdkMDg1NzliYmJjYzk0ZWQ5MzVjMWEwNTMzMTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZlNzZkNDBmZTEyOTk1YmI4YTI1ZDExMTBhNDEzYzI1MzYxNjFjYzIwOWY4MmVjNzc0NmVkZTE0YzQ0ZTM1MzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwNmFiMzExNWUyMzRkZWY2NzAzZjc4MDk3YzU0Yjg5MGExNzZiYjRmYmM4NDc5ZTY1NTdkOWJmNTU2NDY0OTkifQ"
+        },
+        {
+          "resource": "repo://tests/test_release_pipeline.py#L50-L76",
+          "version": "repo-lines-v1:sha256:1b9b8d59aa9544aee3e076b5afe229ff72ac9ce24f71c2d06c61457f65bdf2b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1MDgzMmI2M2YwZTE4ODRjYmNjNTVlZWZkMDVhMWExYjg0ODBjMmY5ZDgzYzE1M2NhOGM0MWI3NzgyZjg2ZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlODRmMjkwZDQ3ZmZmYTUwNTMxNDM4YjA5MTU5M2UzMDliMjdmOWFmZTNkM2ZiYTMyY2Y5YzI4MjFmYjA5YmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjYTcwNzZkYjZmOWNiZDJmMDE3MmU3NGE2ZTJjNGY0MjY5MzQ5NGViNjk4NDkzYjMwOWEzOGJiMWE0YmU3N2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4eceac1b6cf64bfeb28afbd675fc9c16",
+      "statement": "The rollback job never rebuilds an image: it checks out the target release tag (pairing that tag's deploy/fly.prod.toml with its image), verifies the tag exists on origin and is reachable from origin/main, resolves the released {{version}} GHCR tag to a digest (or accepts the break-glass digest override), and deploys that digest with flyctl using --config deploy/fly.prod.toml checked out at the target tag — checking out the target tag is what prevents deploying an old image against a newer TOML.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L552-L663",
+          "version": "repo-lines-v1:sha256:d5cedd0d86450b2d39a257a7f65149da8cfacdb494da6aca7a10da3a7fc2f129:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5N2Q3MzA3MmI1OTFjNmRhZWMzNGI2NjU2OTMxZDkzMzQ2NmJlN2Y3NjRkNTViMmRmOGZkZDYyZTJmZTEwNjc0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJjODEyYmY5ZDcyZDdhODUyMDYwMTE5MmZiZWJkN2M4MzZlYmFjZjQzY2QxMTcxZmFmYzk3NWEwZTdjODBlMWY4IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiNjZiMzFhNWU3YzU0N2RlOWVlZTU4YTdlNjYyNmFiYzYwYzY5ODJjMjY1ZDRmNzE2ZTg2OTM3N2JhNDliMDRlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI5ZGZmY2NiMjU5NjEzZGM2ZGVhYmExNjkyODVjZWRlMzI1OWNiYThmYzE3Y2FjOWVmMjljNTcxMDM4MzQzMjcyIn0"
+        },
+        {
+          "resource": "repo://tests/test_release_pipeline.py#L108-L136",
+          "version": "repo-lines-v1:sha256:fb14cee3dc5e528af0b674d046912abb56b6725f8b502988bf4cbd45cae2180e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU3OTEyMGI2N2Y5YmY3MDNmYTYwZGY5Y2EwNzI4NmU0YjQzMTA0ZDFkMWM1YzkyZjExMTBlNjIxYWRiOTc5OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwZWQ2MDQ4MDA2MmJlMDEzZDU4MmM3M2M0MDk2OTJhYWVhYjlkYmJkN2IzODg0ODMwNzlhODNhOWFiYTliMDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjY2VkN2EzZjY0MTBlM2QwMGFhMzE0MTQxMTdkZTcyMjAyMTU2NjUzYjJkYWFlOGJhMDViMmVjYmNjZjkzZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkNmFiNDQyMDhiZThhYTc4NTUzYzAyNDZmZTkzZTEzOTEzMzhkM2U4OWZkMGQwMzkzN2Y0MDBjNzljYWNkNWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_728a8d865e5d4f92b2fb1809524b6fa8",
+      "statement": "The rollback path deliberately does not re-sync secrets to Fly, because a rollback must be able to recover from a bad secret sync rather than re-applying it; and rollback is never automatic — a red deployed smoke on either the forward or rollback path leaves the previously-live version running in production for a human to decide the next action.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L458-L461",
+          "version": "repo-lines-v1:sha256:404884b2af601684c40dc3e7427bb2456c5ca0d7fb367db8cc56c06f75bf19f3:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTg5NTg5NTU5OWI3ZWYyMzczZTA4YmRiZjQ5YTgzN2ZmNDM1YmJiZDYwMGUyYzExYmI5YTRmODg4MzE2NzBmMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmY1NTk3OWNlNzMwMjAzM2U2YjJmZDdkODhmNTM3YTNiOGUwOTFlYTMwNWM4MTFmZmExMjc0YmY1NzY0ZWE1ZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjk1MWI3OGUzY2NmOWFlZDhlZGE2NjI3MmM3OGRmY2UzZDNmYWNhODAyMjU3NTI0YTRjYWMyYWZjZDFhMzM4MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTU1ZTM1Nzk4YTgxNDQ1NjkzZTVkN2FlMjc3ZjQwNWZhNGUyMTI1M2UzNDVmYTljMjFkYTMyNjhhYTU4YzMxYiJ9"
+        },
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L629-L631",
+          "version": "repo-lines-v1:sha256:40d595c29d3103502b65e595d75050e595e390a7a8d63f4b76ef94b2eb3deee3:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzFiOTE2ODJhZmRkZWFhYzRlZTA5NmFlNzQxNWI4NTk3YTA3MzgyOWFmZGMwZmQyNGYxYzdjYzMzMWMxNzA5NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDMzZGUxNTUzZjkzZjNiZWZlOTM2MGZiYTllOTU0MmNhNjE1ZGM4ZGYyMWFjYTk2OWI1ZWQ2OWY0ZWU5OGNiNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGExNzBkZmUzN2QyNzQ0YWJlZDAxNjU2ZDc4ZDljYzJkNjA3NTg4NGY0YzE2MDZmODc4NTEwMjA3ZTEzZjAyNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTg2MmMzZWVkMzFjNzIwNjAxYWY4NzhlMzQxMTI3ZDUzN2E4ZGRkNDUxNTIyMWYwZDA4OTk4Y2MyY2JiM2NjMCJ9"
+        },
+        {
+          "resource": "repo://tests/test_release_pipeline.py#L120-L124",
+          "version": "repo-lines-v1:sha256:8f3692c939fdc70971e4f137688a799555f6f7e00f625484098b247740184cc9:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjE0NzgxOTdiZGQ0N2YxNThjNjJhYWZiMzI1YTcwMTQwNTIxOWMzYjI1ZDM3OTA0NjYxNmQ3ZWNhMmFmNmY5OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2QxMTNhYzJkNWUzNjBlMTI0MzczMjFiOTU4NGFhMGU1NTc1MTE5YzZjNmU0ZGMyNGNlN2IzOGY0Yzg3ZGUyNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzgyMzY1OGU0YTUzNzM1OTJjMTY0OGM4NTY4ZTUyYzlmYjBlN2QwM2ExNjQ3YmU1NTY4MzY0OGEyMzYxNzUzOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0bae4fe27ab94f7daf3ea182f8105758",
+      "statement": "Both the forward deploy and rollback paths in deploy.yml validate that a build digest is a well-formed sha256:<64 hex> value before use and never deploy by a mutable tag; the GHCR metadata action disables the latest tag (latest=false) and the rolling {{major}}.{{minor}} tag exists only for human registry browsing and is never used in a deploy or resolve step.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L89-L114",
+          "version": "repo-lines-v1:sha256:41d41669432cbc472aa4c30f2946108bd165565d6acc4bbb7b5aad7582f57938:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY4NmJlYWViODAwZjUzYzExM2MzODEyNWFmNGRhOWRjNDg4YTM0MjM0YTljNzZkYWM1ODUyNGRmYTk1OGQ4MjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2NGVkZDA1OWI5NjA0MDdiYzNjNmQ5NWVkODA2NDM2YjlhYmI4OTA4ZjZmZDU4ZjI0ZmE0MDVlMmE4NTY2MGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzMzEyNzI1OGYxYTFmMzE4NzJhMTZmNjk5NDIwZGNiYWRiYThlYmEyMTIwNmE0MWEwOWY3ODVlMWVmMTRiZGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NGE0MDY5YmMxNmEzMGIwZWIzNzM2ZDc5ZWRiZjMwZWM3MGYxZDJjNDY5M2Y5OWZhMTU0YzZlZDAwODQ4YjQifQ"
+        },
+        {
+          "resource": "repo://tests/test_release_pipeline.py#L79-L105",
+          "version": "repo-lines-v1:sha256:6500f22fbb4a9b996c73c268696194fa46e09e1f1cb1a0a0e1baa5fb1895d66f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyY2IyOTI4Y2UzZGJjZjI4YTYxMzFhYTYxYjFkZWQ1MjMzNzBjNWNjOTAyNzE5ZWE2OTE3MTA5ZDE3ZjVkMmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3YTUwZGI4ZmY4YTczOTBhZWQzODJlMjNlMzA1MjRjOGUzNjA3YmI5YzQxM2M5MzgwZmFlYTg1YjM0YmQ5YmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY2Njg2MzgwOWM2MjI2ZGUwNTRlZTEwNDA2YzlhZGNhZDNiMDUzZmJjY2I3NTFjYmVmMDI3YmI0ZGJlNjI4NjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg1Yzk2OGI5ZTYwZGZiODI2MzQyMGZjMDNhN2NlYTdmMmNiZjA3MWRkMDMwMGRlOTU2MTE4ZmRiZjgwODM5NmYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a291c9a96e2543a09ce8ee80529c2f19",
+      "statement": "tests/test_release_pipeline.py directly asserts the release/rollback contract against the two workflow files: digest-only deploys, no rebuild on rollback, production-environment and concurrency gating on both deploy-prod and rollback jobs, no secret resync on rollback, tag-ancestry checks on both push and dispatch paths, and redacted-log-only smoke artifacts (raw smoke logs never uploaded); it also asserts release.yml's dispatch-only trigger, main-only + full-history checkout, immutable-tag refusal, pyproject/tag version agreement, the green-commit gate, and the RELEASE_TAG_TOKEN requirement.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_release_pipeline.py",
+          "version": "repo-file-v1:sha256:24c7d9396a3e27d642df0b9313117c0d8f9d399b9c0dc7ba8b1f0ee5de9de623"
+        }
+      ]
+    },
+    {
+      "id": "claim_5f1902b2943549d2a834d7f8caefad62",
+      "statement": "tests/test_next_version.py exercises scripts/next_version.py's version ordering (a final release outranks its own prereleases, versions order numerically not lexically, non-release tags are ignored), Conventional Commit classification, and end-to-end behavior against real temporary git repositories rather than mocked git output, because the parsing logic is what tends to break.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_next_version.py",
+          "version": "repo-file-v1:sha256:8fed85c4ddb5b2daa6b4691ace4ab3d6a303b67189f62a662f7145c0bb04daae"
+        }
+      ]
+    },
+    {
+      "id": "claim_795bd10367794eada9703cd4877c9522",
+      "statement": "tests/test_deploy_workflow.py verifies deploy.yml's production-environment protection audit script (fails closed on an inconclusive GitHub API response, requires actions:read permission), that the manual dispatch trigger can never become a second forward-deploy path (no build-push-action or docker build usage in the rollback job, and its inputs are restricted to version/reason/image_digest), that the Fly deploy mirrors the private GHCR image into the Fly registry, and that runtime secret sync imports all values in a single Fly update via flyctl secrets import rather than flyctl secrets set.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_deploy_workflow.py",
+          "version": "repo-file-v1:sha256:ec5a4e3ceb52102361e0069f9d4df9e851a6fbf20269ecd7249d4c9c6d05c1b6"
+        }
+      ]
+    },
+    {
+      "id": "claim_54a9b927c61040a29063db8fc6c9c43c",
+      "statement": "The server production image is built from server/Dockerfile (not the root Dockerfile, which builds the base RAG app): it copies the healthcare_rag and server packages, installs presidio-analyzer/spacy with the exact package set mirrored in langgraph.json's dockerfile_lines, sets SERVER_LOCAL_DEV=0 in the runtime image, runs as a non-root `app` user, and starts with `python -m server`.",
+      "evidence": [
+        {
+          "resource": "repo://langgraph.json",
+          "version": "repo-file-v1:sha256:edc19183e919a8a0e015dd62f264c85e4975ebf6acc521875c44d73147abde42"
+        },
+        {
+          "resource": "repo://server/Dockerfile",
+          "version": "repo-file-v1:sha256:c9e8021657d9d261f4b5defb870be15a6e2b288cef7818ad13fe041365afaf57"
+        }
+      ]
+    },
+    {
+      "id": "claim_8948a53b104c4df9938dc752eb249fe5",
+      "statement": "docker-compose.server.yml builds the server image from server/Dockerfile and includes a pgvector/pgvector:pg16 postgres service (alongside Weaviate) for local exercise of the Postgres-backed storage path, in addition to the read-only, tmpfs-backed server container used for smoke.",
+      "evidence": [
+        {
+          "resource": "repo://docker-compose.server.yml",
+          "version": "repo-file-v1:sha256:a47c5599c8f2b9fc4586bdf743aa30230cd77f89014ed9ab96e4d6a5d9a32f0e"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

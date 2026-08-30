@@ -1,0 +1,418 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:3f245c0b139faebc4df27b1ff65e3aa22128d793c219627326b7358ff5bed880",
+  "claims": [
+    {
+      "id": "claim_bbfdfc5501454ca49727661a021299aa",
+      "statement": "The member frontend is the browser-facing Next.js App Router application for coach conversations; it owns session-aware UI, member thread operations, chat projection, and presentation, but it is not the authorization authority — the downstream member perimeter authorizes the Supabase identity and thread ownership, while browser checks and the proxy's bearer-format/thread probes only improve the boundary.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/AGENTS.md#L14-L20",
+          "version": "repo-lines-v1:sha256:ecdeceffd0d24c50c40d3bd88e4d4e7cfe24dd0d87b1ea07aef37dfc46eecdb4:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjAxMmEzNWUyM2JmZWI0YjFjYWJiYjY4MTFjYjMwYjU0MDRjNWEwMTczZDc2OTFmZmFhYzlhZTllNTMwNzkzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTE3ODhlZTYwYWUwNzE1ZTNmY2RmMjZmMDA1YmI2MzhmMjNkNTBjMzkwZmUzODJiODdkYWYzODczMWVlNGJkNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWFiMDgyYWZmNjE1YjExMTY5ODAzODJmODNkZTQ1ZjRmY2E3NDk4ZGFjMDAzODI2MjVjZGYyMDRlNjQ5ZjQyNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzAwNjZhMzk4OTI0ZWNiMGUxN2M3Y2M0MzE5ZTNhMDdlYTNkM2YwMmQ3ZjljZGY0MjRkMTc2YjQ2ZTA2YmFjZiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/lib/copilotkit-runtime.ts#L59-L98",
+          "version": "repo-lines-v1:sha256:685f3a89d116fc8724b81991bd6c257fc00c621461c321d88e7ce2386b7148c0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkYmU3NDUzYTY2MjcxMDA3ZDZmMDhiNGQ3ZGQ4N2U4NWM3OGE4ODc5ZWQ2YTk0OTI2NTQ2NmEzM2FiOWE4N2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhYmE5ZjM5NTJmZjgyNTY3ZTBmNjYyYTY0YmIwYTUyYzVkYTU5MmY5MzY3M2Q2NjQwMDk2ZmMyYjE1MDZlYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkZWY0YzMzOWI4M2YzYTQ3YTViMjY5OGRlNTUwYzQ2NmYxYjBkOWVmZjY4N2VkZDJjYzkwNjY5MWFmYmJjYWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9035131048dc4d39b9e2f8dc4a98e50b",
+      "statement": "`/chat` first obtains the Supabase session in the browser; a missing email or session lookup failure redirects to `/login`, the cached CopilotKit Authorization header is refreshed before rendering, and only then is the CopilotKit v2 provider mounted in multi-route mode (`useSingleEndpoint={false}`) targeting agent `coach` at the same-origin `/api/copilotkit` endpoint, with production dependencies constructed only after this gate.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/AGENTS.md#L17-L17",
+          "version": "repo-lines-v1:sha256:2c6326da4dd2ab488eeb0790edb6e0e11aedcee16cf90d76a5c414221820a9f3:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmM2MzI2ZGE0ZGQyYWI0ODhlZWIwNzkwZWRiNmUwZTExYWVkY2VlMTZjZjkwZDc2YTVjNDE0MjIxODIwYTlmMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmM2MzI2ZGE0ZGQyYWI0ODhlZWIwNzkwZWRiNmUwZTExYWVkY2VlMTZjZjkwZDc2YTVjNDE0MjIxODIwYTlmMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzMwOWVmZjkwOThhZmJmOWRlYzE4MjQ5ZTMzYmY3ODAyZGE1YzA0MzJlZjQ4ZWYyZjBiMGI2ODIyMDk4NTM2NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODJjN2M1M2FhNzhkMzdmZmNkMmZlY2I2ZmI1MGM2YTBjNjE2YTM2Y2ZjZWVjMDQ5OGE1OGFhNjU1MTNmY2E5MSJ9"
+        },
+        {
+          "resource": "repo://frontend/src/app/chat/page.tsx",
+          "version": "repo-file-v1:sha256:b1dab486d86983ee717f06b0842075956671108ef9ac75b664fea7a16ec36c47"
+        }
+      ]
+    },
+    {
+      "id": "claim_541b588a0bc24ab999b54d7c692e33e0",
+      "statement": "The catch-all `/api/copilotkit` route builds a CopilotKit runtime with a `LangGraphAgent` for graph `coach` and an `InMemoryAgentRunner`; its `onRequest` hook is the sole every-route gate rejecting any request whose `Authorization` header is missing or malformed with 401 before routing, and default header forwarding (not a platform key) carries the bearer to the LangGraph deployment.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/copilotkit-runtime.ts#L1-L52",
+          "version": "repo-lines-v1:sha256:f2445b54ff2db04e7c3225b68c388df1c98cda8236caa47ac160ef83b782c918:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgzZTVjMmZkYTVkMWIwZDJhMDdkM2FiZmI3YmRlOGIzMGJjMjlkNzhkNWE3NWM3NjViM2I4OGEzZDlkMDExNTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_5ff309b2e55e4ca593fe5af538e521f2",
+      "statement": "`CoachLangGraphAgent` overrides `getSchemaKeys()` to return a pinned member-visible schema (`question`, `attachment_id`, `ag-ui`, `copilotkit` inputs and `messages` output) because the OSS agent server keeps `/assistants/:id/schemas` at 501, preventing AG-UI's HTTP-error fallback from dropping the question and adapter markers.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/copilotkit-runtime.ts#L34-L48",
+          "version": "repo-lines-v1:sha256:e74238a4f953f3d721b0c75bca0fb825a9eefd6682642e730002a98fe5033d35:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhYWYyM2YzNmYyMDllN2Q0ZTBlMmRjNDFjZWFmYzFjZjc3ZDg4OWE3ZDI4ZjgxNjkzZDVkMmU4YmE0OWIwZjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhNzBkMzdmZDNiMjNkNTJhNTllYTBhMThiZTVhZGMxMWY4Yjg3MTJhNTYxMTQwNDJkMzMxYzhkZWVjMjdhYWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkOTdmMWYyZWI5OWFiOWY0MTA5MTM5Y2QwNmVhNTRkMTY5MTg2MWNlYzc0ZjRmMDQ2MjE1Zjg0OTI0N2Q2NjIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_25655a8d038a479ab8b20422fb2e0a68",
+      "statement": "The runtime's in-memory thread list is global rather than member-scoped, so `GET /api/copilotkit/threads` is intentionally answered as an empty page while the sidebar reads threads through the direct member thread API instead.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/copilotkit-runtime.ts#L88-L98",
+          "version": "repo-lines-v1:sha256:0606f218f6c1583536832cf9e88b81b6a5e86817ab8a05041ccb488a59cfe038:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkYmU3NDUzYTY2MjcxMDA3ZDZmMDhiNGQ3ZGQ4N2U4NWM3OGE4ODc5ZWQ2YTk0OTI2NTQ2NmEzM2FiOWE4N2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNTgwZTk2NGY4M2E0NzNmNDNkNDQzODQ2Mjk0OWQ2OGI1NjAwZmRhNzg3ZjE2Mzc0NWQwMGRlODljYmYzNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkZWY0YzMzOWI4M2YzYTQ3YTViMjY5OGRlNTUwYzQ2NmYxYjBkOWVmZjY4N2VkZDJjYzkwNjY5MWFmYmJjYWUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_cb456d44f6c84229b1117b004119a77e",
+      "statement": "For any URL-addressed thread, stop operation, or run/connect request naming a body `threadId`, the proxy first performs `GET /threads/{id}` upstream with the same bearer via `authorizeThreadAccess`; an inaccessible or erased thread is answered with a uniform 404 (same shape as a perimeter denial) before the runtime can read, stop, connect, or recreate it, because every legitimate thread is created through the direct member surface before its first run.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/copilotkit-runtime.ts#L59-L99",
+          "version": "repo-lines-v1:sha256:edae3f303a798fc4b04efb2b96f7898ba764a4167b7cdbd75cd69951957fbb86:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlN2NkOGI5ZmU5YWY0NGRlNWZlOWNiMWQ5NzQ5YjUxNWE4Y2UzZjcwMWMyZGFlNjYwOTM4YzRkNGI5MTFlMjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhYmE5ZjM5NTJmZjgyNTY3ZTBmNjYyYTY0YmIwYTUyYzVkYTU5MmY5MzY3M2Q2NjQwMDk2ZmMyYjE1MDZlYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2NzEzMGM0MmFlM2YyMzBjMjk3ZmQ3MzhlNGNmNmUyYmE4ZDk3NDhiNzdlNDM0MzcwYzU5M2YzZDIyNjFhODAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_749e11058bc54a36b354a390ece0c56b",
+      "statement": "The `/api/copilotkit` proxy logs only method, pathname, status, and an unverified JWT `sub` used solely for correlation; it never logs request bodies, query values, or bearer tokens, and the decoded `sub` is never used as an authorization decision.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/lib/copilotkit-runtime.ts#L12-L18",
+          "version": "repo-lines-v1:sha256:5212c3ab62069f224c37c60e7c1e29a8ac99b481282003207b16c62248d10a7b:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzkxNDQ1MTg3Mjg1MGE1ZGRmMmE3YTVmZDJkOGQwZTc0YjRjNTcxZmFmZDc4MGQzZGVjOWMzMjMxNWIwZTk1ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQ5MmE3ZDgwNDQ0YTdiNWU1OWViMmQ1MjNhNGE4ZWE0MWYyNTcxYzg1NzNlZGI4YzcwZTdhNDRkYTcwYjJjOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWJjNzg2MjJkMjUxYTAwMjViYWY5OTE0OWNhZWI4ZTQxZmIxMzQxMGIwMjI3NzI5YWU2OWNjYmRjZjNhMTFmYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2I0OGU0ODM2NGM4Y2IxZDEzMGNmM2U1ODM0ZTlhOWZlOTE3NDA5YzM5OGIzYjYwODAxYjNiOWIzZjA3NzA0MCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a6290479f6b54e72a68fac757d412051",
+      "statement": "`useCoachStream.ts` is the chat controller and takes an injected `CoachChatDeps` bundle (network, timing, polling, and ID seams) so component tests can drive the full lifecycle from scripted fakes with zero real network or timers; production wiring is constructed once in `coachClient.ts`.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L27-L27",
+          "version": "repo-lines-v1:sha256:4d414024e109105fb4a853f94af71f8880df06cd96c9285cb5e4e4b398e1d346:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ0MTQwMjRlMTA5MTA1ZmI0YTg1M2Y5NGFmNzFmODg4MGRmMDZjZDk2YzkyODVjYjVlNGU0YjM5OGUxZDM0NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ0MTQwMjRlMTA5MTA1ZmI0YTg1M2Y5NGFmNzFmODg4MGRmMDZjZDk2YzkyODVjYjVlNGU0YjM5OGUxZDM0NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTE4OTg0OGU0YmQ4MTNlNDEwNzgzOWUzZTNmNmQ3NTgwMjgyMmYxZDZjMTU0YWNjYmExMTY4MmNiOTBmMDkyNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTcwY2E4MWZlYjE1ODM1NzE1MzY1M2JkNDZhZTI4MGQ5OTRmZGVlNDA2M2E4YTdmNmZlYWQ4MGExNDkyY2E2OSJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L7-L7",
+          "version": "repo-lines-v1:sha256:1e08803f9f59315f9afb614d0c65211e69cebfdaf0275999ee2837f7c956d9d9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUwODgwM2Y5ZjU5MzE1ZjlhZmI2MTRkMGM2NTIxMWU2OWNlYmZkYWYwMjc1OTk5ZWUyODM3ZjdjOTU2ZDlkOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUwODgwM2Y5ZjU5MzE1ZjlhZmI2MTRkMGM2NTIxMWU2OWNlYmZkYWYwMjc1OTk5ZWUyODM3ZjdjOTU2ZDlkOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzY4YTdlMjBhNDU1ODZhZjBlYzlmNDczMTM4MTMyMTViYjMyNzRjMWJmOTYxYzI2NzkzZjk1NGU5ZjQyZWRiMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDMwZjc5YmFiNjZhY2I3ZmI5YmFhMTZlOWI3ZDA0ZDhlY2EzYTM5NzZhYjk1NzViYWI2M2MyOGU2ZmRjMjQyOCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/coachClient.ts",
+          "version": "repo-file-v1:sha256:f1121b53cb6bd4065b1d00bbb1b4c093a5f4962e061a4835c4ded4871cd91af9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a55b0235a5e64b759ef5807270658d23",
+      "statement": "The browser protocol client is split across `coachApi.ts` (the direct HTTP/SDK client shaping every member-facing call byte-for-byte to the member perimeter contract mirrored in `coachProtocol.ts`) and `stream.ts` (the pure `applyStreamPart()` reducer that folds one AG-UI/LangGraph SDK stream event into `{messages, interruptValue}`), with `coachClient.ts` wiring both plus the CopilotKit headless engine into `useCoachStream`.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L7-L7",
+          "version": "repo-lines-v1:sha256:1e08803f9f59315f9afb614d0c65211e69cebfdaf0275999ee2837f7c956d9d9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUwODgwM2Y5ZjU5MzE1ZjlhZmI2MTRkMGM2NTIxMWU2OWNlYmZkYWYwMjc1OTk5ZWUyODM3ZjdjOTU2ZDlkOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWUwODgwM2Y5ZjU5MzE1ZjlhZmI2MTRkMGM2NTIxMWU2OWNlYmZkYWYwMjc1OTk5ZWUyODM3ZjdjOTU2ZDlkOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzY4YTdlMjBhNDU1ODZhZjBlYzlmNDczMTM4MTMyMTViYjMyNzRjMWJmOTYxYzI2NzkzZjk1NGU5ZjQyZWRiMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDMwZjc5YmFiNjZhY2I3ZmI5YmFhMTZlOWI3ZDA0ZDhlY2EzYTM5NzZhYjk1NzViYWI2M2MyOGU2ZmRjMjQyOCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/coachApi.ts#L1-L58",
+          "version": "repo-lines-v1:sha256:d9ac7c323b264c58cadfb60d3dc915a7daf7ed0ed11a0b322736979f6916bfce:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3Njc3NWNkMTllNmQ1MmIxNjJjMDhjM2JkMzNhNGVjMWNkOWVkZDI1YjZiOGQ1NzMwOWFhZWI3NWZiYTk1MzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3MGNlZDYyMTM3MmM1ZTA1MTVlYTUyNzYxNWY5ZTg3MzdjNjNmMDc1NzViZWMyNjVlMjE1NWM5MzU1ZTAzYjYifQ"
+        },
+        {
+          "resource": "repo://frontend/src/chat/stream.ts#L1-L45",
+          "version": "repo-lines-v1:sha256:a2762bd2dec3a99469f8046160d33a329bdb3081a5049f3ca0e347cb96c6e700:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzYmNmNTBhZGQ5Njc3YjZiNzk5NDBmNDMxYjA3MzRlZDUyMjE2MGUyMjI2YzlkNjViOTFhODBiOTU4NGQ4MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE0N2NmMjdkMTRhN2E1NTBhMGZmMzUwNDY5NTg5OGQ2ZDMyYjRiZTlmNzQxNWFlZjlmMmQ2MzUxZjNlOGE4NWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_203140c574174d3f9ea10d13a8f53026",
+      "statement": "The stream reducer only reads updates for nodes in `coachProtocol.ts`'s `RENDERED_NODE_NAMES` allow-list (`coach_gate`, `coach_agent`, `erase_my_data`, `reminder_delivery`, `claim_document`, `review_document`, `finalize_coach`); updates from any other node are dropped and reported via `chatTelemetry({kind: \"unknown_node\"})`, and human messages arriving through the stream are ignored because the human bubble is a local echo.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/coachProtocol.ts#L21-L41",
+          "version": "repo-lines-v1:sha256:a665756cf57c14c47741b36a5fe134c2f3e37d8ac664154a08708a65499542d8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZjIyY2YwNzMyNTkyYzI0NzE0MWNiZTYxZWZhMTEwMTI2MTJmNWEzMTIyYjlhZjliYmFmNTJmNTcyNGQxOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViMjZmNmI4YzQzMTc1MzMwMDE4ZTZlMDZiMzc0NWRkOTc5MWQ4MmMyZGVhYzI2MWIwZjRmZDMwYzJkYWE3YWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3ZjY2N2Q2NDAxNGIyNTA4ZmM4NjIzYjNhNWRkZmYyOGI4MjUxYmM3MjVhZmZkYTA4ZjM3NmM2Y2JiNmQ0YzAifQ"
+        },
+        {
+          "resource": "repo://frontend/src/chat/stream.ts#L1-L82",
+          "version": "repo-lines-v1:sha256:7b9d7b0c5459e3b2e3543c6601ebc7c13706e41d3459cc0cd261bc6d27df7f4a:eyJzZWxlY3RlZExpbmVDb3VudCI6ODIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzYmNmNTBhZGQ5Njc3YjZiNzk5NDBmNDMxYjA3MzRlZDUyMjE2MGUyMjI2YzlkNjViOTFhODBiOTU4NGQ4MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c38d3ddb72a436b81077c23e158d662",
+      "statement": "The stream reducer treats the AG-UI `__interrupt__` event and an in-band `{\"__interrupt__\": [...]}` payload inside an `updates` event identically, both producing an `interruptValue` via `firstInterruptValue`, because the Agent Server delivers interrupts inside the updates stream rather than as a distinct event.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/stream.ts#L46-L82",
+          "version": "repo-lines-v1:sha256:035b42d68fcddd7cc4a128d953a6de1b85ac312f19ddfe347acdb19d7a9ff103:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4NDNlZTQ1YzZlNTBjNGE0ZTJiNzhkMTU2YzAyN2Q4N2Q5MWYxNTE3ODQ5YmZjYjU3MGJjMmNkNGY0MDllN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4ZGQwMzU5YjY4NTQ1Y2E5MjI2ZTUzODg4NmY3MjNhM2NkYjhiNzdjYzIxZGFlMmI5ZmE0NzcxYzIyY2JiNGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0d30104e5d3e47c0b88ac57782d08d3e",
+      "statement": "Thread state reads are merged with live stream messages by stable message identity via `model.ts`'s `mergeMessages()`, then split into HumanMessage-bounded turns via `buildTurns()`, which also extracts per-turn DATA envelopes for catalog hydration.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L15-L15",
+          "version": "repo-lines-v1:sha256:b553f1315ff699fd01807b92184d2a8b73433cb478087324e470840418de7137:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjU1M2YxMzE1ZmY2OTlmZDAxODA3YjkyMTg0ZDJhOGI3MzQzM2NiNDc4MDg3MzI0ZTQ3MDg0MDQxOGRlNzEzNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjU1M2YxMzE1ZmY2OTlmZDAxODA3YjkyMTg0ZDJhOGI3MzQzM2NiNDc4MDg3MzI0ZTQ3MDg0MDQxOGRlNzEzNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODU4OTdhMDZhNzZjODZkNjdiZjA5NDhhODEyZTgyN2RlMjI4YWI0ZWMzMzNkOGVlODk3MDI2NTVmODIwNTQzNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTcwNGRmOWY0NmZlNjU4YTFjZTVjZjJhZjliMjdhNGQzYjI4ZjA4Zjk4NTA0MmUwZWViNzAyMGFkZjhmMTEyNCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6ecc5c6e5e8c46f6832d5bdc90b9237d",
+      "statement": "Switching threads clears the agent messages and controller state before the newly selected thread is reloaded, preventing the prior conversation from bleeding into the next one; selection triggers exactly one thread reconnection rather than stacking connections, and the controller supports non-cancelling detach/disconnect with subsequent rejoin.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L20-L20",
+          "version": "repo-lines-v1:sha256:ab3e751c671fa73aebf2b9068d03670231c1ab6ab0be12c0e7f66049aedced67:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWIzZTc1MWM2NzFmYTczYWViZjJiOTA2OGQwMzY3MDIzMWMxYWI2YWIwYmUxMmMwZTdmNjYwNDlhZWRjZWQ2NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWIzZTc1MWM2NzFmYTczYWViZjJiOTA2OGQwMzY3MDIzMWMxYWI2YWIwYmUxMmMwZTdmNjYwNDlhZWRjZWQ2NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzNjYTEzNmQ5MWM0MDFiMzhmNzljZjU5OTdiOTQzZTA0N2VjNGMyOGJhNDNkODM2MWIwODVjOGE0NzFjZTdhZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTQ0NTI5MzJkMmY4ZDZlNGEzNDVjOWUzMDY5NmNmYjQ0OGJhNTc4NjcyNDFhMzI4NTNhOGJjZjUzYjNiZDkyZiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/useCoachStream.ts",
+          "version": "repo-file-v1:sha256:8fbfae482b3405aa5db63e54570b2f8a5d87a95d97204fe1c27583e55454c945"
+        }
+      ]
+    },
+    {
+      "id": "claim_1cbbc41bcf6445b0a70d1d2fcbdb9ca8",
+      "statement": "A send creates a thread when necessary, echoes the human message locally, and starts a run; while a run is active, later sends are appended to a FIFO queue (`enqueueSend`/`queue` state) and drained one at a time once the controller is idle, avoiding overlapping runs on one thread.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L31-L31",
+          "version": "repo-lines-v1:sha256:11e35375a1607c1b2356731782fbeef760370541445714a509b0bcbdfaf9eafd:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTFlMzUzNzVhMTYwN2MxYjIzNTY3MzE3ODJmYmVlZjc2MDM3MDU0MTQ0NTcxNGE1MDliMGJjYmRmYWY5ZWFmZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTFlMzUzNzVhMTYwN2MxYjIzNTY3MzE3ODJmYmVlZjc2MDM3MDU0MTQ0NTcxNGE1MDliMGJjYmRmYWY5ZWFmZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTcwY2E4MWZlYjE1ODM1NzE1MzY1M2JkNDZhZTI4MGQ5OTRmZGVlNDA2M2E4YTdmNmZlYWQ4MGExNDkyY2E2OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDM1NzkzZTMwMzhhNGYwOTBmZmFjNjNhZmI2MTAxMzg1MzgwZGMwOTY5MmZkNmFkNTRlZDgxNWQ3OTIzMjI5OCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/useCoachStream.ts#L644-L1196",
+          "version": "repo-lines-v1:sha256:d303dd316fb2512b4f6742203984399a29921e704ea13e6187ce90628469bd02:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiNTczNjE0YjZkOWE0MzNhMjliMDM5ZDZhNDgxMTc1YmM5YjFjNTljYWVjYmNjNTA1ZTQ1OWNmYzllNDhiZDFkIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI5YjI0ZmNkOGQxMDRiZjdiZmRiZmExMTI1NDJiZGE1OWRiNTQzOWFhZTM0M2NkMjEyOTg4NTc1N2EwOTlmMDUzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJkZTY0NWI4ZDU0YmU4ZDMyMTI4MjQ2NWNiOGQ2OTdlMDAxMDcyN2QzNjE4YTNiNTkwOGRmYTNiYjg1NTRhODg1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzNDY2OTdkNTExYzcxNjEwMmM4ZTZhOTdhN2EyZDQwNDJhOTUxMzhkYjhjZmFlYTNhYWIxNzAzNjIwOWVmODRhIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_93628223296649cd9c4274df439d705b",
+      "statement": "`regenerateEligibility()` restricts regeneration/branch/feedback to the latest HumanMessage-bounded turn only: it is disabled when that turn has tool activity, a ToolMessage, a pending interrupt, an erase marker, an unanswered question, or the document-review sentinel question — never an older turn.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L30-L30",
+          "version": "repo-lines-v1:sha256:7170cff98efb4057ca57cb3078f0b2f61abe63f60bef3e3275607ad070a1f7a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzE3MGNmZjk4ZWZiNDA1N2NhNTdjYjMwNzhmMGIyZjYxYWJlNjNmNjBiZWYzZTMyNzU2MDdhZDA3MGExZjdhNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzE3MGNmZjk4ZWZiNDA1N2NhNTdjYjMwNzhmMGIyZjYxYWJlNjNmNjBiZWYzZTMyNzU2MDdhZDA3MGExZjdhNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNWMyYjcxYWE4ZWUwY2UwNzQ5YmQxN2VjOTdhMWUzY2VkZmQyYzNlOTdmOGQ0NDk4OGIwZThmOTQ4M2UyNWMzOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzVlMDZhY2Q3Nzc5NjVjMDVlOTdlMzNjMjJkMDdlNzhkNjRmOWM2ZDAyNDAxMjQ4ZTYwNmJhNWVjODVhMGNkNyJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/__tests__/model.test.ts#L154-L235",
+          "version": "repo-lines-v1:sha256:f11c46ff8338cb8d1d76b4b9e715578b87564886ecd6c8b40eaeb1b40be04aa7:eyJzZWxlY3RlZExpbmVDb3VudCI6ODIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmY2U5ODhiZjcwMTc1YjU0ZmQxZjFiMDJkY2ExNDRhYmRmMTI1MmFjNjY5Y2JlNjFlMzdlYTUwNjVkNmY4ZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4NjJhNTQ4Zjc2YTJmMTFkY2Y1Y2YzY2NmMDc4MzJlY2NkODk0MWQyYjM3YTYwMmNjNWVkYzA4Y2NiYjRjOTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI3NzlkMTE4ZDZlM2NiZjQ1MDUzOTc0OGRlZTdhNDMwN2FjYmU2NDQ2Y2JhMjk3ZjI3NjBmYTVkMGJiYTFiYzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3NzlkMTE4ZDZlM2NiZjQ1MDUzOTc0OGRlZTdhNDMwN2FjYmU2NDQ2Y2JhMjk3ZjI3NjBmYTVkMGJiYTFiYzIifQ"
+        },
+        {
+          "resource": "repo://frontend/src/chat/model.ts#L255-L255",
+          "version": "repo-lines-v1:sha256:eb0c2989809c5d3ed52ff3e4c8bb019e97de507a641c81a5e068085baf74e3b5:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWIwYzI5ODk4MDljNWQzZWQ1MmZmM2U0YzhiYjAxOWU5N2RlNTA3YTY0MWM4MWE1ZTA2ODA4NWJhZjc0ZTNiNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWIwYzI5ODk4MDljNWQzZWQ1MmZmM2U0YzhiYjAxOWU5N2RlNTA3YTY0MWM4MWE1ZTA2ODA4NWJhZjc0ZTNiNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWUzNTM1MWZiZjE1MmE4YmRkM2NkYWQzMWRmZTcwYmUzODBmMzBhMzlhY2JkNWJmYjAyNjBiYTI0NWUxNDBlMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGU4YmE2M2JjZjZmZGRlOGVlM2I2MzdmYmI5Y2E2NDZkNDU0NTUwN2Y4NjRhMGVmZmIyZmQwZjZiZmMxYTJhZSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d7dcb174b3cc48c09ccb7e3197a29e26",
+      "statement": "`NEXT_PUBLIC_HC_RAG_MEMBER_STREAM_PERIMETER` is a build-time public compatibility flag whose value must match the deployed member perimeter's stream protocol: the default/v1 mode streams updates only over non-resumable streams and rejects multitasking, while `v2` streams updates plus messages over resumable streams with `multitaskStrategy: \"enqueue\"`, enabling rejoin and checkpoint-based fork/edit/regenerate paths.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/README.md#L42-L51",
+          "version": "repo-lines-v1:sha256:ff11c19379d5d7cbe81ebc317922c8c8e48aee82549201f14d8d8ac111ed879c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5NTAwNzJiNDRjODcyYWE0YTliNGU3Nzc5NDAxNDU2NGIwMjdjODY1M2RhNjU3YWEzZTY3NDYyZGM5OTBiMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2NDk0ZDQyMmU2YjRkNzQwNmZhNjUwMDAwODA2Zjg1NjkwOGQ3ODk3YzUwODcyNDhkOTM0ODg4YThjYTRmYzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZDY0NTk1YTU0NjFmYTg4ZTRiOGM4YjA2NDVjMmRiOTRjYjM4NjcyNGZkMjRjNDU2NGU5YjhmOTQzMTY4ODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiMjQ5MDJkZWY2MjgzNTY5OGZjMTdkMDU3OWYyM2IzNmZhMTI1MzJlYjdhODYxZDE5NWJmZjdiMDcwYWM5NTUifQ"
+        },
+        {
+          "resource": "repo://frontend/src/chat/coachProtocol.ts#L75-L110",
+          "version": "repo-lines-v1:sha256:3a5f1e5a43bab664f698ecd0bd53dd7a16761736359a024a2475aa27bb7623f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhNTkzOTU4YWUwOTNlMWFiN2Q2NTFlNTU3OWI3NjdmOWFiZTQ5ZjNiZGQwOWJmMzZkOTUwMTJlYTE4MDBhNTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjliMGVjMGM0NGY5ZjNlMjEyODQ0NDZjOTczMjNlYzkxMDcwMmJiNzJmMWEwMjBkMTk0ZWY0OGFmZWJjMTJlYTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyZjFmM2VjYjIwZjI3YjRhODkyMDM3NjMyYWMyYTA0MTY1YWQyZTdiM2NmNTBhOWNmZGJlN2YxMjMyZWM0OWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dea5be8b5b6441eca6c58f218526e888",
+      "statement": "History, time-travel, and visible branching controls require the separate opt-in `NEXT_PUBLIC_COACH_HISTORY_BRANCH_UI=1`; the underlying controller operations remain callable when this UI gate is off.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/README.md#L42-L51",
+          "version": "repo-lines-v1:sha256:ff11c19379d5d7cbe81ebc317922c8c8e48aee82549201f14d8d8ac111ed879c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5NTAwNzJiNDRjODcyYWE0YTliNGU3Nzc5NDAxNDU2NGIwMjdjODY1M2RhNjU3YWEzZTY3NDYyZGM5OTBiMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2NDk0ZDQyMmU2YjRkNzQwNmZhNjUwMDAwODA2Zjg1NjkwOGQ3ODk3YzUwODcyNDhkOTM0ODg4YThjYTRmYzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZDY0NTk1YTU0NjFmYTg4ZTRiOGM4YjA2NDVjMmRiOTRjYjM4NjcyNGZkMjRjNDU2NGU5YjhmOTQzMTY4ODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiMjQ5MDJkZWY2MjgzNTY5OGZjMTdkMDU3OWYyM2IzNmZhMTI1MzJlYjdhODYxZDE5NWJmZjdiMDcwYWM5NTUifQ"
+        },
+        {
+          "resource": "repo://frontend/src/chat/featureGates.ts",
+          "version": "repo-file-v1:sha256:f67387d13b224f726ac91b53c0a58b8c67207bb4bf578d3b86bb05c2960afffe"
+        }
+      ]
+    },
+    {
+      "id": "claim_c0af1a1f0f854bd68461cf16cfa0afe0",
+      "statement": "`CoachToolRenderers` is mounted once inside the CopilotKit provider (in `app/chat/page.tsx`) and registers the tool, interrupt, medical, envelope, clipboard, and fallback renderers via `useRenderTool`/`useInterrupt`/`useFrontendTool`.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L21-L21",
+          "version": "repo-lines-v1:sha256:501b07f81d5d8d035b4a9823fa49e2c2d3913fd7011ed949a0af9097d46d412a:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTAxYjA3ZjgxZDVkOGQwMzViNGE5ODIzZmE0OWUyYzJkMzkxM2ZkNzAxMWVkOTQ5YTBhZjkwOTdkNDZkNDEyYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTAxYjA3ZjgxZDVkOGQwMzViNGE5ODIzZmE0OWUyYzJkMzkxM2ZkNzAxMWVkOTQ5YTBhZjkwOTdkNDZkNDEyYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjc5MDUwYzI0ZjY3MWQ0ODhkY2JiZGRmOWI1MDg3YjIxMWM0MzlhN2Q4MjNkNTAyNDA3ZWZiNTYwZTdjOTYwYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjYzZGM5ZWExMTllNDVhZmIzMWJiYTc1ZjNlZGYwNzJkY2NkMDhjZmVkNWNiNjJlYTEzZjM5MzVhOWU4Nzg3MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_39051c5a43c4495fa5d9857a59ce7a5f",
+      "statement": "Catalog rendering is fail-closed end to end: `compose_ui` trees must pass the wire schema, render only after a correlated successful ToolMessage (a correlated error suppresses the tree in favor of textual output), hydrate `__ref` fact props only from a same-turn-scope DATA envelope with RFC 6901 pointer resolution (cross-turn matches are explicitly rejected as `cross_turn`), dispatch button/action ids only through the fixed `DISPATCH_ACTIONS` map (unknown or unregistered ids are telemetry no-ops), and any failing node renders nothing while sibling nodes still render.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/catalog/AGENTS.md#L7-L37",
+          "version": "repo-lines-v1:sha256:f28f2544f4b8b6ef8eb053bd6f9243a3af98e3dfbf4e9c651d9c97ab90c10554:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlN2RiMTM4ZjE4YjlkZGQ4NWQwMWM3YmNjZGU1NzQyZjQwMjNjMTAyMGY3YjkwNGE4YjQ1MmM4M2Q1OGY4YTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiNDI3MmY2MDZjYjhjMDg1MmU5YzczYmFhZjFlY2IzMWQyNTQ3OTc5NzAxOThiM2EwZWMzZjg2NjUzZTdhZWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxY2I5NzY1NTEyNGQ4OTNlYzlhMWE5NGQzYjQwMzRmNjIzZGU3MTZiZWJjMzYxNzdiNzY3MzQyMGE5ZWNlMmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3NDJhZTRjMzIwMDBiYmY5YjhkNDFhZDZiMjg4YzczOTdjMmQwODc5OWFlZTgxODczYzAxMjk4YWI5OTM5NjkifQ"
+        },
+        {
+          "resource": "repo://frontend/src/catalog/dispatch.tsx",
+          "version": "repo-file-v1:sha256:826cd357e2393a6e51f7b8f178d60ea93805aa694e7446cb1ee58e6d43ec7044"
+        },
+        {
+          "resource": "repo://frontend/src/catalog/hydrate.ts",
+          "version": "repo-file-v1:sha256:987addfd76d0cb0fcfb91f37e7fd4e9d95843a37545e80edcb680eb9a640ea4b"
+        },
+        {
+          "resource": "repo://frontend/src/catalog/render.tsx",
+          "version": "repo-file-v1:sha256:03513f1a11c0d34c373d9a44e5951bc2806c9d654a3ca23467d193f9da7cf44f"
+        }
+      ]
+    },
+    {
+      "id": "claim_ccc423c7e9fc475da906ebf87409036c",
+      "statement": "The composable catalog registry is exactly 11 components (`InjectionTracker`, `MiniCalendar`, `TrendCard`, `ActionCard`, `StatRow`, `ScoreRing`, `Timeline`, `Card`, `Tag`, `Label`, `Button`); the four fixed-contract cards (`CalendarChangeCard`, `MemoryExtractionCard`, `DocumentIngestCard`, `ReminderCard`) are explicitly not part of this catalog and instead render directly from interrupts, upload status, or envelopes.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/AGENTS.md#L51-L51",
+          "version": "repo-lines-v1:sha256:aa2db57a788170a8a996aa59c24ca950192b91b98d311e47ef0b1a2edac46b6f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWEyZGI1N2E3ODgxNzBhOGE5OTZhYTU5YzI0Y2E5NTAxOTJiOTFiOThkMzExZTQ3ZWYwYjFhMmVkYWM0NmI2ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWEyZGI1N2E3ODgxNzBhOGE5OTZhYTU5YzI0Y2E5NTAxOTJiOTFiOThkMzExZTQ3ZWYwYjFhMmVkYWM0NmI2ZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzhmMGE5NzlhNmRkNDY0Nzg5YzA0OGE2YTk5ZTgwMmVkZGVmZDMyOWE5NjI0YmNjZjM1NmZjMDA0NjQyZDJlOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTgyODlkMzc3ODljMmM1ZmM4MzI0NTY5NmIzNjVhMmRmYjcwNGU1YmMyYWE0NGU0YzlhNTQxZTY0YmI4YzM3YiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/catalog/AGENTS.md#L7-L7",
+          "version": "repo-lines-v1:sha256:8e7db138f18b9ddd85d01c7bccde5742f4023c1020f7b904a8b452c83d58f8a5:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGU3ZGIxMzhmMThiOWRkZDg1ZDAxYzdiY2NkZTU3NDJmNDAyM2MxMDIwZjdiOTA0YThiNDUyYzgzZDU4ZjhhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGU3ZGIxMzhmMThiOWRkZDg1ZDAxYzdiY2NkZTU3NDJmNDAyM2MxMDIwZjdiOTA0YThiNDUyYzgzZDU4ZjhhNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDFjYjk3NjU1MTI0ZDg5M2VjOWExYTk0ZDNiNDAzNGY2MjNkZTcxNmJlYmMzNjE3N2I3NjczNDIwYTllY2UyYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDMwZjc5YmFiNjZhY2I3ZmI5YmFhMTZlOWI3ZDA0ZDhlY2EzYTM5NzZhYjk1NzViYWI2M2MyOGU2ZmRjMjQyOCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/catalog/catalog.ts",
+          "version": "repo-file-v1:sha256:2eb6b1a036a8e099be53edddf712c36e3d4a2418922d252a879c9b4de87acc80"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b45c03d94784315beb584460ae66815",
+      "statement": "Every fact-bearing catalog prop must be a `{__ref: {turn_scope_id, block_id, pointer}}` data reference (`DataRefSchema`) — the wire zod schema rejects literal fact props — while static labels/actions remain literals under a fixed allow-list; only schema-recognized calendar-change and memory-extraction interrupts display approval cards, whose `{accept, fields?}` responses are validated before resolve.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/AGENTS.md#L50-L50",
+          "version": "repo-lines-v1:sha256:35354086fc5eadf21e843552df509998a9cb48551d4dcc0a3b321fc450b725d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzUzNTQwODZmYzVlYWRmMjFlODQzNTUyZGY1MDk5OThhOWNiNDg1NTFkNGRjYzBhM2IzMjFmYzQ1MGI3MjVkNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzUzNTQwODZmYzVlYWRmMjFlODQzNTUyZGY1MDk5OThhOWNiNDg1NTFkNGRjYzBhM2IzMjFmYzQ1MGI3MjVkNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzE2MTdhN2NiMTI3NmM0NTAwMGVhNjQxMDMyZWMxYzc0NDM0ZGZlYzZjMGM0MzI0NzQyNjM2ZWJlYmFmMjVhYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDgxNDYyMTU3YmRkMjYzNGQzMzliOTZiZTRlZjE1ZDAwZmUwMTI5MDQ2NTJjOTVmZTkwM2IyZTNjNjBmNGNiMiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/catalog/dataRef.ts",
+          "version": "repo-file-v1:sha256:7dca08e16e5ba0d1f4fa492f5c0e92a6dc78892ddb10681ede4f3b225cfab2bf"
+        },
+        {
+          "resource": "repo://frontend/src/catalog/schemas.ts",
+          "version": "repo-file-v1:sha256:eb39fde0178d9a4c7b6b41a9f11f0e40882e30999c014109332c6e09fee4b0d8"
+        }
+      ]
+    },
+    {
+      "id": "claim_6698e6a7030e4ac1973d4dae6d41ad39",
+      "statement": "The direct `coachApi.ts` surface is limited to member thread CRUD (`createThread`, `searchThreads`, `getThread`, `deleteThread`, `copyThread`), state/history (`getThreadState`), upload/status (`postUpload`, `getUploadStatus`), feedback (`postFeedback`), and run-related endpoints (`streamRun`); a thrown `CoachApiError` always carries the HTTP status, and cron/assistant-search/store endpoints are never called from this app.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L12-L12",
+          "version": "repo-lines-v1:sha256:dad1a7298097c43c1bfd10eb948b91981deb7fdacb100039e390afca6425b4dc:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGFkMWE3Mjk4MDk3YzQzYzFiZmQxMGViOTQ4YjkxOTgxZGViN2ZkYWNiMTAwMDM5ZTM5MGFmY2E2NDI1YjRkYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGFkMWE3Mjk4MDk3YzQzYzFiZmQxMGViOTQ4YjkxOTgxZGViN2ZkYWNiMTAwMDM5ZTM5MGFmY2E2NDI1YjRkYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODRlMDI2NGJkODI3OGI2ZGRmYTZlY2QwYzRmODhkYjMzNDU5MGViYjJhNWEzZjhkNjUzOGEwYTI3NjM5NWFjZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzRhNmJjYjM0ZTBhNDMwYTIzMzBjZGI5YzA5NWRiNDJjOWY5ZTY5NTYyNjdkNDQyNzY2OGZmZjZlOTVkMWJhZCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/coachApi.ts#L19-L103",
+          "version": "repo-lines-v1:sha256:45fe22837a458e9611c969bceaeff7f2efd551dcb8d1b1fb93457a9dc9ef5090:eyJzZWxlY3RlZExpbmVDb3VudCI6ODUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZjZjOTYxNzM3MzkxNjI2MGMxOGNlNzk1NWNmNzE4NTY3ZmMzODU3ZTFmYjUzZGQzNGUxMTcwZWIzYzliYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMjgzZDRkMjJjM2EwMDdlZWFmNjU0ZGQ2ZmJjODIyMjY2NjU0NWZlNWViYjM2YjIwZjdhY2JjYzYzYzZkYzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljNDBiNDZjNWM1OThkYTdlYzY4MGU2Njc2NDJkNDQ3NGQ5M2FhNGFmOGVhYWNmODg3ZjI3NjliZmJiZDc0ZDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5MWEzN2YxZDliY2EwM2U2YzA3MmVmNjYyMWI5MzgxYTkyY2FkMzgyNWMwMTEzZDU4MTY4YTVmYzNkNmQzNTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_afdd1d49b4c245b7b976288cb0e56b0e",
+      "statement": "`createCoachFetch()` and the LangGraph SDK request hook retrieve the Supabase access token per request rather than relying on a page-load cached token; `supabaseAccessToken()`-style refresh triggers when under one minute of validity remains, so direct member API calls always carry a fresh bearer.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/coachApi.ts#L45-L58",
+          "version": "repo-lines-v1:sha256:0c94eafb45d386604a8ae95187da65bc52c718ca5a09d3a572b520ad3c37780d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwN2EzMTMwMGUxM2JiMDg0NTJiNjhmMTdmYzVlMGNjZTcxZTYzZTY1MTEwMzdmYjAxOTRlYTc2ZDMzYTI1MDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiYzIzMTA3MWRmODVkZjUwOTI1YWU0ZTliNDViMmFhNzlkNmRkZDM4ZGI2YTA3MjI2ZGU2YmU4ZjUyNjBmODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3MGNlZDYyMTM3MmM1ZTA1MTVlYTUyNzYxNWY5ZTg3MzdjNjNmMDc1NzViZWMyNjVlMjE1NWM5MzU1ZTAzYjYifQ"
+        },
+        {
+          "resource": "repo://frontend/src/lib/supabase.ts",
+          "version": "repo-file-v1:sha256:51945903584848f4569044ddf775752466fc5422ab028ff6fe5c7f1c0e462ada"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc381b9ee3b34679ac03a19610100baf",
+      "statement": "Attachments progress only through server-reported stages (`uploading`, `scanning`, `extracting`, `done`) using the fixed document-review sentinel question; client polling advances state solely from returned status, never from local timers.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L18-L18",
+          "version": "repo-lines-v1:sha256:3be6aedfcd2b4e87b110060b8725162dd87601ee780f8167f57b2583ebf0d031:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2JlNmFlZGZjZDJiNGU4N2IxMTAwNjBiODcyNTE2MmRkODc2MDFlZTc4MGY4MTY3ZjU3YjI1ODNlYmYwZDAzMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2JlNmFlZGZjZDJiNGU4N2IxMTAwNjBiODcyNTE2MmRkODc2MDFlZTc4MGY4MTY3ZjU3YjI1ODNlYmYwZDAzMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWVjYjlmZjNmZGY3YjhjNGM1Y2M5Y2M3OTVjMDJiMmE2ZTVjMWU1Y2MwZjYzMDkxY2U0ZWY5ZmMzMWY0NTVkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzUxZjdiNmMzNDQwNDdiZThmYTQ2NmIzOTc5ZmFmMTkxMTZiMzc1MTRlOWJkYTE0ZGZiNDc4YTJkMjgyY2Y4ZCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/coachProtocol.ts#L9-L16",
+          "version": "repo-lines-v1:sha256:20da82823d1143ae030769ba5d1b2ac83e41787bb47efd43db133d0a95464f58:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjM5NmUxMWVhMWY0Yzk5MTYzNDY0M2QzMDY3YzViZjE2YmRmNjI1NTAyNDk0NjBjMTk5NzA2NThiNDc5M2JkOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzc1NTVkYzZlOTI4NzU2MDU1ZTM1YzE5YmY5MDdlZGQyMDU3NGZkYTcwMjAwM2FkOTNkYjE4ZDFiZThmM2U3NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjdkZWYwOTMwMzRmZjk0NWU4YzhmMmE1YmUwNmUwYjA1MTRiZGMyZTYwYTBhZTFhYzgyNDQ2ODdjNjg3ZTM0NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTNiMDYxMzk1NGEyOTBjYWIzZTEwMDllYzliNDQ3MmY2ZTk4MzZmZTkyOWJjMjcyYzY3NTZkNGVlOGI1ZTgxYiJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/uploadFlow.ts",
+          "version": "repo-file-v1:sha256:582193242c5cc6903b0ab6cfc0cf7bd6cef68af2d5ec76a07dde00df5b3b4294"
+        }
+      ]
+    },
+    {
+      "id": "claim_a61b9dfe8bec4a838e3e0f3908c6e5cf",
+      "statement": "Client-driven erasure phase 2 (`runErasePhase2`) begins only after the server-side marker flow reaches terminality; it fully snapshots paginated owned threads in ascending thread-id order, deletes non-marker threads first, deletes the marker-bearing current thread last, and is fail-stop by design: any DELETE failure preserves remaining IDs (including the marker thread) so a retry can resume from the persisted marker.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L17-L17",
+          "version": "repo-lines-v1:sha256:4d8a493895b83a0d4d37bae48b8fa3f58f81b8ff03e4c132c3334eddef104f54:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ4YTQ5Mzg5NWI4M2EwZDRkMzdiYWU0OGI4ZmEzZjU4ZjgxYjhmZjAzZTRjMTMyYzMzMzRlZGRlZjEwNGY1NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ4YTQ5Mzg5NWI4M2EwZDRkMzdiYWU0OGI4ZmEzZjU4ZjgxYjhmZjAzZTRjMTMyYzMzMzRlZGRlZjEwNGY1NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjRjNmZiMTNhZGFlYjgwOGY4MjE5Zjg3MjBhOTlkMzU2YjI3YjQzOGQyN2RkMTY0N2U2NjY1MzljZmU4NTNkMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjc5MDUwYzI0ZjY3MWQ0ODhkY2JiZGRmOWI1MDg3YjIxMWM0MzlhN2Q4MjNkNTAyNDA3ZWZiNTYwZTdjOTYwYSJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/AGENTS.md#L32-L32",
+          "version": "repo-lines-v1:sha256:3e9fe9849f3c7a98743795a5218feff0091842a0519d8106075f2fa65444725b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2U5ZmU5ODQ5ZjNjN2E5ODc0Mzc5NWE1MjE4ZmVmZjAwOTE4NDJhMDUxOWQ4MTA2MDc1ZjJmYTY1NDQ0NzI1YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2U5ZmU5ODQ5ZjNjN2E5ODc0Mzc5NWE1MjE4ZmVmZjAwOTE4NDJhMDUxOWQ4MTA2MDc1ZjJmYTY1NDQ0NzI1YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDkzYmQxYTkwMmE2N2YyYjJkNThhMzAzN2Q2YTBkOWExMDRlZDE2OTZjNzMxN2MxMDc2YjM5NmQ1ZTFiMTM1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTI3ZDYwMTZhZDUzNjRkYjNlMzdlOTVmZjllZjI0OGE4NmZjZjQ4ZDQyNDc4MTE4NTM4YWIzZjE5MzhjM2Q5MCJ9"
+        },
+        {
+          "resource": "repo://frontend/src/chat/erase.ts",
+          "version": "repo-file-v1:sha256:538cd3f62d4ccb6e4c9461521686a228e3e6ac0f62b14ef5c098b747cf276d16"
+        }
+      ]
+    },
+    {
+      "id": "claim_28d6633789d84493ba6c50b1fc128b80",
+      "statement": "The frontend runs on Bun with scripts `dev`, `build`, `start`, `test`, and `playwright`; the test command `bun --cwd frontend run test` executes `vitest run` in a jsdom environment with `@/*` aliased to `src/*` and tests collected under `src/**/*.test.{ts,tsx}` per `vitest.config.ts`, and this JavaScript/TypeScript toolchain is entirely separate from the Python backend's pytest-based suite (no shared dependency manifest, configuration, or invocation path).",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L64-L67",
+          "version": "repo-lines-v1:sha256:6b5dd5c4661b9c61116c79606e29ceea553e6275cd7925a74093f2416074f32b:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2ViMzU3Y2ZjYzk4NjA0Y2RlZWVlNWNiYjk5ZTgzMGE2MGQyYzhmMDU3NjRmMjY3MzYwZTYxYjc1ZTUwZWRkMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4Y2VkZjRiY2NmOWIzMjZjZTRlMzU1MTVhZmM2NzNkYjY3YjQ4MDMwNzFmYzc0N2JiNDNkY2I5OWIwYzIxZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGJjZWE1ZDdjYWMyY2NhYmNhOTQ0NjZlMTEzZTQyMWE4ZDY5NDI5N2M1ODQxOTc5MjgzOGMyODlhN2JlYzYxMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTEyZTFlY2RlMTVhOTFhN2E5YzY3NjU2Y2YxNGM2ZDY1MjM1OTQ4MjZlNjA4MWQzYTlkMjIyYTU5YmRiYjVhMiJ9"
+        },
+        {
+          "resource": "repo://frontend/package.json#L5-L11",
+          "version": "repo-lines-v1:sha256:891edd332268e08ade209d86c81bb3ff15f01ac613f96e2eed6b35449d3572ee:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzQ4MzNkNTk0OWMwM2E0MGNhOTUyNDkxNjEwYTY2NTk2NDRiM2FhNDY2MzYyZjc5OTAyMGRiZjE5ODE1NDdkYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDliYjE5NjEzNDg5NWYwZTMwMDA1N2Y5NzlhNmE4YThlMGZkNmY4OGExNzcyNGNiZTI4ZDFlNzJmMGJiOTc0OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjBjN2NmYmFiZGY2YjE5YjZmY2VlMDBkMjQ4YjA4YjgzMTk3MDYwNjBlZTVjZGY2ODA1ZjY1MDhlMDJiNDZmZSJ9"
+        },
+        {
+          "resource": "repo://frontend/vitest.config.ts",
+          "version": "repo-file-v1:sha256:b77da09919a563bc6f35178f65873e0db90f584198f65bc0af065adc245b50ee"
+        },
+        {
+          "resource": "repo://pyproject.toml#L89-L100",
+          "version": "repo-lines-v1:sha256:94ca5727ce73e69a930efe9e0e2854cf0a6b0532170a15d6655fb9fda1bf421f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NzZlNjQxNDY1YTY1NTFlOWU5Y2ZmZDdmYWExZTZhNDJmOWI3MjQ4MDk4MTNjOTAzZDdlZGNiNTJmMzAwNmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjZjQ4MjA5MDhlZmUxODNmMTI4N2I0M2FhM2M4OWI0ZTgyODAwZWM5MzJlMmFlOWQ1MWYxMWUyYjY0NTVjZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk4Yjg3NGY2Y2JkMTZkMzAwYzIzZWViZjFkMzFkODQ4NDU0YjQzYjk1YWZjZTExMWU4MTE0MzAwMTRiYjZiNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlYWJjMzg4NWQyYWY4OGE1NzFjZTQzMDE4ZWQ5ZWMyNTg1MDdhZThjZmNkMmJjYTQ5MTQzYTczZTQ2ZjExMjUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ff5c49cdb1954eb19794a6149641ddda",
+      "statement": "Browser-visible configuration is restricted to `NEXT_PUBLIC_*` values (Supabase URL, Supabase anonymous key, public LangGraph URL, and explicit UI/protocol gates); secrets, service-role credentials, LangSmith keys, and deployment tokens must never be placed in `NEXT_PUBLIC_*` variables because Next embeds them in the browser bundle, while the server-only proxy obtains its deployment target from `LANGGRAPH_DEPLOYMENT_URL` (accepting the public URL as an alias) and fails only when first used if unconfigured.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/README.md#L25-L57",
+          "version": "repo-lines-v1:sha256:ec088afd9b5f36b8ad113a7cf56e7a56baa652d2780b763366d20b01df6a29ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxMjBiMDcxOGVkMDQwNmVmMzc2OWViMzRjN2E4NjNkNzNmMzlmOWE5N2JmYWRhZTE4NjRhMzdjY2RmMDgxZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI0ZGEyYzJiM2I4Mjg3MDE1NTg0ZDA0NjU2YjVmY2I2YmMyNjVmOGU2ZWVlNDJiMjY4MDAyNWFjMjkxYWM4ODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNTQwYTc5OTg3NWQ0MWMxODliMzhlZGU1OTA5NzEzODMyNDZiYmJhODI4Nzk5YmVjNmM4MWM0YTZlMWRlZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlYzkwNjg1NjgxYjQxYzI2ZjQ3Yzg1M2RmYzljM2EzMjFhMGI0NDg2MWRmNTE3ZjZkMzQwNDdkZjcyNjVlNTQifQ"
+        },
+        {
+          "resource": "repo://frontend/src/lib/env.server.ts",
+          "version": "repo-file-v1:sha256:929d210bedcbd96078f15b8e08189990d3caa97c3a4faaac2b10b004e1ec3277"
+        },
+        {
+          "resource": "repo://frontend/src/lib/env.ts",
+          "version": "repo-file-v1:sha256:e661b38583366334b1a5cce90c7b084d084459290184b5b78ab509fe646bc726"
+        }
+      ]
+    },
+    {
+      "id": "claim_38ada6e9d5014c3286c4d549e0e97d07",
+      "statement": "The hermetic Playwright suite boots an offline scripted gateway, a real `langgraph dev` server, and a production `next start`, all on allocated ports, with zero external network calls; it intentionally runs with a single worker because fixture state and the single ephemeral stack are order-dependent.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/AGENTS.md#L57-L57",
+          "version": "repo-lines-v1:sha256:8b021fa93efb98ad9403ef77ec5d96ec9d13e1f39abb0b59bf19b8bfbebca0b1:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGIwMjFmYTkzZWZiOThhZDk0MDNlZjc3ZWM1ZDk2ZWM5ZDEzZTFmMzlhYmIwYjU5YmYxOWI4YmZiZWJjYTBiMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGIwMjFmYTkzZWZiOThhZDk0MDNlZjc3ZWM1ZDk2ZWM5ZDEzZTFmMzlhYmIwYjU5YmYxOWI4YmZiZWJjYTBiMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2I0ODUwM2MyOThiMzc1OTQyYjFmOGVkZWY4MzlhODQ2ZWZjMDBlYjI1OTc3NTVjMDEzMDFlZDIwODc2MjllYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjg4MjUwNjg2ZWE4MjZhN2ExMzcxOTlhMGMwNDU5NDllYTA2N2E0NzViYWM4NTI1NDYxNWJkMzVmY2E1ODdmMiJ9"
+        },
+        {
+          "resource": "repo://frontend/playwright.config.ts",
+          "version": "repo-file-v1:sha256:a3d1b736283cd2e1af0ed39231b3a1df19b8cc69c2af44f00e4486690de6f3b3"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

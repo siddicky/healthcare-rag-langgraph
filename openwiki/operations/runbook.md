@@ -3,9 +3,46 @@ type: runbook
 title: Local development and Weaviate operations
 description: Set up with uv, operate the local vector store, ingest corpus chunks, run the CLI, and recover safely.
 tags: [operations, setup, weaviate]
+verified:
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-b79fbbd921df689b4bbdc82f
+    resource: repo://docker-compose.yml
+  - id: openwiki-source-d6dbe2ca06d9e4feabdcde4d
+    resource: repo://docs/decisions/dependabot-requirements-txt.md
+  - id: openwiki-source-9ea0ad09734f76a2a018f757
+    resource: repo://healthcare_rag/cli/ingestion.py
+  - id: openwiki-source-5c711a56e5188717c4713fff
+    resource: repo://healthcare_rag/cli/interactive.py
+  - id: openwiki-source-184fc99d49c5faae867575f7
+    resource: repo://healthcare_rag/graph/engine.py
+  - id: openwiki-source-9b0965dd12a5f2c42ed4d2a7
+    resource: repo://healthcare_rag/graph/settings.py
+  - id: openwiki-source-e388d26ca384c3908b72d915
+    resource: repo://healthcare_rag/models/answers.py
+  - id: openwiki-source-904a6ad11b7380a83f2adb25
+    resource: repo://healthcare_rag/models/queries.py
+  - id: openwiki-source-54388b396a525f7713df8466
+    resource: repo://healthcare_rag/storage/vector_store.py
+  - id: openwiki-source-5bbba7b2a8ea8360ff233d63
+    resource: repo://langgraph.json
+  - id: openwiki-source-012f2c78e3b1446dfc35803f
+    resource: repo://Makefile
+  - id: openwiki-source-05ccef8d4cf1698187f20464
+    resource: repo://pyproject.toml
+  - id: openwiki-source-5bb7d0b1a38391514c8323ce
+    resource: repo://scripts/verify/AGENTS.md
+  - id: openwiki-source-3acebc4115d4367a1b6d536d
+    resource: repo://scripts/verify/f2_quality.sh
+generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
 ---
 
 # Local development and Weaviate operations
+
+## Verification status
+
+This page is compiled from the Makefile, `docker-compose.yml`, `pyproject.toml`, CLI source, and repository decision docs; the commands below were **not executed as part of authoring this page** — no live `make venv` / `make weaviate` / `make ingest` / `make run` / `make test` / eval run was performed in this session, so treat their described behavior as documented-from-source, not freshly re-verified. Two things narrow that gap: `docs/decisions/dependabot-requirements-txt.md` records that the "full offline suite" was actually run against the current dependency graph when `requirements.txt` was removed, and `scripts/verify/f2_quality.sh` is itself an executable gate (`make test`, scoped `ruff check`, scoped `basedpyright`, frontend build/test) that CI or a contributor runs and reports PASS/FAIL per stage — it is not merely descriptive prose. If a command's behavior matters for a safety- or release-affecting decision, re-run it locally rather than trusting this page alone.
 
 ## Configuration ownership and first run
 
@@ -20,6 +57,8 @@ Configuration has several owners: `pyproject.toml` + `uv.lock` define the Python
 5. Run `make ingest`, then `make run` for `python -m healthcare_rag`.
 
 The CLI shows a raw preliminary response after up to 30 seconds and later a verified response. The preliminary response is not citation-validated; do not use the CLI as a safety boundary ([safety posture](../safety/posture.md)).
+
+There is no root `requirements.txt` in this repository, and none should be added or restored. A frozen `pip freeze` file by that name used to sit at the repo root; it was deleted because its pins were mutually unsatisfiable (nothing could actually `pip install -r` it) and it was the source of 136 of 142 open Dependabot alerts against code no build or deploy path ever consumed — see `docs/decisions/dependabot-requirements-txt.md`. `pyproject.toml` + `uv.lock` remain the only dependency source for the application; the separate, deliberately preserved `tests/server/oracle/requirements.txt` pins an unrelated, isolated oracle test environment and is not a substitute.
 
 ## Make targets
 
@@ -53,6 +92,10 @@ The CLI shows a raw preliminary response after up to 30 seconds and later a veri
 | `make next-version` / `make release-prep BUMP=...` | preview the next release version / bump `pyproject.toml`+`uv.lock` to it (reviewed PR, not a tag) |
 | `make release TAG=vX.Y.Z` / `make release-digest TAG=vX.Y.Z` | print the tag-push commands / resolve a released tag to its immutable image digest (both hermetic, read-only) |
 | `make rollback TAG=vX.Y.Z REASON=...` | print the exact `workflow_dispatch` command for a production rollback (hermetic; the actual rollback still requires the gated dispatch) — see [deployment](deploy.md#release-identity-version-bumps-and-rollback) |
+
+## Lint and type-check
+
+There is no `make lint` or `make type-check` target. Static checks are run ad hoc via `uv run ruff check <paths>` and `uv run basedpyright <paths>`, and both are **deliberately scoped**, not repo-wide: `scripts/verify/f2_quality.sh` (the quality gate for one specific plan's own contributions) only lints `healthcare_rag/agent`, a short list of `evals/`, `tests/agent`, and `scripts/` files, and only type-checks `healthcare_rag/agent` with `basedpyright`, expecting `0 errors,` in its output (`scripts/verify/f2_quality.sh#L17-L50`). The rest of the repository predates ruff/basedpyright adoption and is intentionally not retroactively linted; do not widen that scope without a separate decision to adopt these tools repo-wide (`scripts/verify/AGENTS.md#L18-L27`). `make test` (offline pytest) is the one check that does run repo-wide.
 
 ## Weaviate hazards and recovery
 

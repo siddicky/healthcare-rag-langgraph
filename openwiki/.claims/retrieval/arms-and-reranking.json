@@ -1,0 +1,298 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:f8c9f7ce787a5d54bc69c1d93911c164105d08b8ebac5db2bc4421ecb174fcdb",
+  "claims": [
+    {
+      "id": "claim_a52b822638534d79a0b38766b43b27ae",
+      "statement": "The default retrieval backend is Weaviate hybrid search; the retrieve_documents node resolves the active arm from GraphSettings.retriever via _ARMS/resolve_arm, so routing, merge, gap-fill, citations, and every downstream stage are unchanged across arms.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L34-L57",
+          "version": "repo-lines-v1:sha256:1a7a1f4848e0a2d30661c2e2ff8ef4f3aeb9ad9a4f494a99653402fc9024ba84:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3YTE2MDBjMzgwODJjYmQ3MjU4ZTExZjZiOGVlNWEzZmIyZDEwZmM4N2Q5MzM5NTkyMzQ4ZDFmYjI3ZjAwMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NzE0ZWRmMDdlMGRmNjI3ZmJjYWZlNzgzZTRmYWZjZDQ5YzYyMTZiYjBhOGM5MDI3ZGNhZmQwMDU0NzM5ZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5MTY1N2QwMDkzNzkzZTgyNTEwYjc1NzY4NmZiYjVlM2U2Y2IwOTUyMDRlZmEyNTQ2NWJjOWM0MGM3NzhkYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNzVkNGNlY2M1NDBkMjJhNjZhMjY3MWE1YTc1M2M4M2EyNzdjMWQyY2MyNTQ3MGEwYmE2ZjliYjk0MmU0NDkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9b430dec06b047b7a8777f336e3c4f08",
+      "statement": "HC_RAG_RETRIEVER selects the retrieval arm (weaviate default, pageindex, pinecone); an unknown arm name raises ValueError from resolve_arm, and an explicitly injected Resources.hybrid_search (used by tests/fixtures) always wins over the settings knob.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L38-L99",
+          "version": "repo-lines-v1:sha256:8626eb8c4d0c904644037614d2e803e51befa0ffa189d15d6d75ca271e0d5fc1:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU4MTczM2FmOGZlOTFkNzliYzVmYWM1MzYzZTJiOTcyN2ZhNzMyYzY4MDVkMjhiNTExMmZhNWZkN2FkZDUyZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2ODkzYmE2NjUwYWNlOTA2YWU5YTNkNmUzMDM1Mzk3YTEzYmM3MzkwNzcwMzIwNGQ5MzEyNzlkMDBiYWIyZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4NmM1YWMwNzdiNmZmYzUzNWUyNDdmN2JkYmQ0MmRmMDM2NmYzNTIyNmJhY2U5MTRiNzlhNTJlNzY3OWNlNGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMwY2QzYWI4NWY0YjQ2YTVhYjUyZWU3ZmQwOWUzMzMzZjA3YTQ0OGFiYTRmYmZhMWIxZmRiZTRkOWRkMjI2ZTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b67f1b26e728420cae5ece0c655f4f89",
+      "statement": "Each retrieval arm declares the SDK exception class worth retrying: Weaviate and PageIndex arms retry WeaviateBaseError (PageIndex keeps this purely for byte-identical retry behavior since it opens no client), and the Pinecone arm retries PineconeException; retrieve_documents retries up to three attempts with 1s/2s backoff.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L140-L149",
+          "version": "repo-lines-v1:sha256:91b0fe5ab416270aff33a1f1f57148fb3e9672bbe9579ac4a9ccb5d9384ccdf7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2YWQ2NWY1ZjM1NDg2MGZkMTk0MDI1NmZlNjM3N2FmMWE4MGQ5NzBlZTJlOGVhYjU2N2FhZmQ2NTMzNmM5ZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwMTI4Njg0ZjMxYWI4OGExMzAwYWNhZjE2MGUyZjdmOTU4ZWE2ZmE2MjBhNTBmZTNkYzFjNGY2ODg3MGIxMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyZDFkNzQxNmNkZjA2NjRkNTdlYzVkMTliMzVmYzg3MDk0ZDljMjNiYzdmMjM3ZjdiOWU0ZjZlMjFiNjE1ODAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1ZGFjYjIzNjJhZjBmMzVmMzE2ODc5ZGJmNzM1ODYwZTAwMzBiOGQ0YzM4ZmFhY2ZjNzU4YTA4MDgzNTA4ZTkifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L34-L42",
+          "version": "repo-lines-v1:sha256:bdee1070415c03789d9cbe1a79ccfbec4df86815021eb9cbd74a861e58de7fd1:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDdhMTYwMGMzODA4MmNiZDcyNThlMTFmNmI4ZWU1YTNmYjJkMTBmYzg3ZDkzMzk1OTIzNDhkMWZiMjdmMDAxYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDkxNjU3ZDAwOTM3OTNlODI1MTBiNzU3Njg2ZmJiNWUzZTZjYjA5NTIwNGVmYTI1NDY1YmM5YzQwYzc3OGRhZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDJhNDZlZmJlMzdiYmMyOTU5MjA1ZWUxOTFlMjY3YTk5ZTNmMmUwYmU0Mjc0MThhMzViMDdlNjRiYmRjMjQzYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_688f2f1ee99f42de804fe46b01a9e3f3",
+      "statement": "Only the Weaviate and Pinecone arms open a network client (resources.weaviate() / resources.pinecone()); the PageIndex arm reads cached JSON trees and chunks and opens no client.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L120-L128",
+          "version": "repo-lines-v1:sha256:6eb09fc102154aaac7d0f98dfb85aac45ce49cabf0594e43e377688e70fe8daf:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTAyMmVmYjBmOTlmNjk2MjRlYjMwZGE5ODhjNzE0NWFjOWE4NjVhMTM5NTY5YWYwNmY5MDA2NjljMDQ5NzIwOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDQ0NWU5YTM1ZDRhMjRkZjFmZTg0ODZlYzIxNWM2ZTAxM2EwMWVjYTFjMDZiNzAzYmZhOWZkMzgwMjA1MmZkYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzhmZDRjMGQyNzJlNDc4MzA2ZTk4YjlkZDA1MjliM2YwNTVlNTg4OTNmNjcxMzJmOWRhZmQ4ZTllMjU4MTRhNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2VjMGUzODQ4ZGJkZDJlY2ZlMDdjNTExNDFkNzM4MDM0MTRiMGRhNDA1NjFmOTk0OTk2OGZjNTgwYTY1MzRkNiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L1-L15",
+          "version": "repo-lines-v1:sha256:4baac757bd26b542a7b5aa109b7fd251c2f32e7708b69e8a850a5d05010558ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiY2E3YzE3Y2U3NjZmMDZmY2E4ZTczZTNlNmU4YjdlNzRkMzM5MWNhOWY1MTk2MjYxZjdhNzQyOWY5OTA3OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_557fb4639c464334a2e00b3f7145bac4",
+      "statement": "When HC_RAG_RERANKER=pinecone is enabled, retrieve_documents passes limit=rerank_candidates to the search callable only if it accepts a limit kwarg (accepts_limit), then rerank_documents trims each collection's results back down to rerank_top_k inside the traced retriever run, keeping the amount of context reaching generation constant.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L100-L138",
+          "version": "repo-lines-v1:sha256:c5ade1201b5401d1a4af0e2ab8688f036387ced98d7d5093e5d8f9bd9c8c3c11:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2M2QwNTMzYzIxYTk0YjdkNWJjMzE3MDA4OWZjZjRjNjZhNWI5OTBlOTU0MmQ3Y2ZmYzg3ZWQ2N2RhZGZjMGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2MTM1ZGFiODY1MWQ3Nzc3NmQ0YmJhNTg2NjllODBlZWRmNGM3Y2NlYzA4N2YyYTgzYWExYTA0NmMxM2FlYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2MjFiOWMwMDA1N2E5OTg1NzUwOTU4NWY4NTg4ZDVjMTY0ODY1NDA1NGRhNzZiOGJkNGE1NjAzY2U3YzJhYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlZGM1ZmM1ZTE2MWFhMGM1ZjE2ZTgxMmE4NTI5NmQ1MmU0Zjc0Nzk2NjExMDFlNjhiMDY2YjIwZmU4OTY2OTcifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L60-L73",
+          "version": "repo-lines-v1:sha256:fb7e3f1245d21a8f268763c638c1c7c54034b2d890f2632eb832502726395a41:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBiY2QxZjZhOGQ2NDE3MGI5ZjMyMGVhM2Q2NGE4ZWUyZTVlNjlhZGI2MTc5OGRlYjFhOTYzNzdlNjlkNzM5ZWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjNDFjNGU1ZjgyOGY4ZWNhNmU4MmI3ZGRmYTRmMTkwNjNkNWVjZDMxODA0ZGNkYmFhMjBiNTliOTI0Y2IzMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI1ZmQ1NTU3MmFkNDFmODZiZTUzNTUwY2E2MzZjOGIzNTRkNTIwNWE4M2RiZWYyYTI3NzQ0ZWQzMGM0NmU3ZjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4991d0a0d7f14b6f9decdcf7e4af18ea",
+      "statement": "The PageIndex arm (healthcare_rag/processors/pageindex_retrieval.py) issues one structured LLM call (pageindex_select prompt to PageIndexSelection) that reads a compact rendered outline of a monograph's section tree and selects up to HC_RAG_PAGEINDEX_MAX_NODES (default 4) node ids via select_nodes/render_outline.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L181-L198",
+          "version": "repo-lines-v1:sha256:db290e8b3573685d05004bcea0e351bc5737411d7c505e0a0dfb8136ba4162bb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMjVjYjkyNWEyOWYyYmE5NGQ4NTk0ZmUwNWI2NGJjZjViY2FlYTk4Mzk4MDE4NWMyY2M5OWY5NmE2ODFhMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzYTQ2ZDVmNGFlMzNlYzVmNzFiMjY5NDBlMDI3ODhkZmI3YmViZjFjZWE3YzdmMWRiYmY3MjJlZWFmYWUyZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1NmZhYmVjMWNjNzc4MzJiZWNjM2Q3NzBkYWYwYWZkZDJkM2Y4ZWExZGJiNTdiNzE2NjI3YzE1NjVlMDJjYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzNzgwMmViOWZkZmU4ZmZiNGI1ZTI1ZjVjMjlhOTU0NjkyYTI3MDJhMmJmZDM2ZDYyZWM2NzgxYjFiYTliMmYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L90-L104",
+          "version": "repo-lines-v1:sha256:d777cd00e4347e9a9540d0194aab1b03cb2380d00809c13e6ec47a7c7540594c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMjBmMzc2ZWI1MDU4OTNjOWRiMmQ1MDAwOGE0Mjg2MjExY2IzZTNiNjVlZjcxM2JkYjE2ZDg5NTU4ZmM4ZjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzZTdiYjMxNTZkZjFmNzcyOGY0NTMxOTM0NDlhYTc0NmQ3MWE1NDEzYTQ0M2FjZGVkMTZkYzcwNTI2Nzg0ODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRlZjE1NjA3NGE3ZDE1MjMyMDQ3ZThiZGM2MGEzYzQ3MzJiZWY2YjVkNTExNjcxY2EwOWUxYTYyNGY0MDMyM2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlMDRhYjFiMGRjOWY0N2YxMTkxOGJjNDcwYjcyOTg3NjI0MTc0MGI3NjI0YWE0Nzk0ZTYyOTQ1Y2YzMDA0ZDgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_32d0323183df4b04a218385eaf3c5ece",
+      "statement": "select_chunks maps the PageIndex-selected nodes' 1-based inclusive page ranges back onto the same contextualized chunks Weaviate ingests (data/chunks_<collection>.json), capped at HC_RAG_PAGEINDEX_MAX_CHUNKS (default 8), in node order then chunk-id order, deduplicated; to_query_documents then mirrors the Weaviate result shape with synthetic ids pageindex:<collection>:<chunk id> and rank-based scores so chunk_recall/page_recall/citations keep working unchanged.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L115-L178",
+          "version": "repo-lines-v1:sha256:c0d60b0ca9d103aaf6b057952ec68da0122b451d6819bf709c1578cf1d08a09c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMGQ0YTdiYTVjYWU5M2ZhNTk0NzcwNzI5MzU1ZGUzMmQ5ZjJkYzczNmM2Y2ExYzYyYTY3NDIyMjM0NGFkOGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYzM1YWNjMDYzOGQ2YjFlNjc2YzI4OTMzZjI2OGI2YjI2YzE1OGIzZjkxN2YwMjk0Nzk3MDcyMDk3OTEwMmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhYTVkNTVlY2UwMDBhMDQ4ZmZmZmI0YzJiZTk3MjJlNmQ0ODJlNjJlYWUzZWQ1YTkwODc2ODU3NDUxN2E4ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5ZWNlMzIyYTY2MDIwMzJjYTBkNDFiNGQ5N2M3Y2Y1ZTgzZmE2NTVkNDBiYTE2OGQ2MDk1NmYwZTQ3YjNkZWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_99f84238785140aca1f9c7e3527597eb",
+      "statement": "PageIndex trees are built offline by make index-pageindex via healthcare_rag/storage/pageindex_index.py, which runs pageindex (needing openai>=2) in an ephemeral uv env because the app pins openai<2; the runtime never imports the pageindex package and only reads the cached tree/chunk JSON, raising FileNotFoundError with a fix-it message if either file is missing. Trees and chunks are memoised in-process and can be dropped with clear_cache(); HC_RAG_PAGEINDEX_DIR relocates the data directory.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L43-L73",
+          "version": "repo-lines-v1:sha256:ca6a65efdbefb7597820d864ab369d721df62b1310470380a18d2c4885b6dca7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFjNmJmZTZiZTNmMzY0YTY5YzgyNjI2YmZkZjdhMDY1OWYxMDAyYjE3MmQ0MTk0YjdmN2IwOGI2MDU4YTNlNWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQxMzk3ZDYzYWQ3YjcwODU3OGFmMWI5ZDVkNjcxMzc1ZmFhMDc3MzkxZTk5YWJlNWIwZWIxN2M5NjVkMDZkMzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhkODFjZjBhMjBiMDY5YWRmZjVkZmU4ZjA4M2FkYmQzOGM0ZjBmZWRiMTBmYjgxYWUzZDQxNjFjNDY0OWI2N2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlmMmM5YjM4NTBmZjhjOGY2NmQ5ZmRmNWVlMGE0ODI3MjVjNDY2ZTU2ZWE5ZTM5ZTI4M2ZkMDc3YjA2NDIzNDIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/pageindex_index.py#L1-L38",
+          "version": "repo-lines-v1:sha256:bee8593a4d0fd980f6a3a7f7dc6f1dd4226a3f7ce1d92996f66e792b9804e294:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViMzAzNDBhNjMzZmQ1MTZkZGFiYzU2MTAwNTA2OTMzOWIwOWEyYjE4MDNiYTI5NjFlMGI2M2JkODQ5ZTYxM2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_299745cdf7364c28828963c848a5d8e3",
+      "statement": "The Pinecone arm (healthcare_rag/processors/pinecone_retrieval.py) searches a serverless Pinecone index (built by make ingest-pinecone / storage/pinecone_store.py) using one lower-cased namespace per collection over the same chunks Weaviate ingests; per query, embed_query fetches dense OpenAI text-embedding-3-small vectors and Pinecone sparse vectors concurrently in worker threads.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pinecone_retrieval.py#L1-L19",
+          "version": "repo-lines-v1:sha256:afe2918f2c0a33c2f31896c8402e44de38f5c27615951d2d53fa2dadbab54359:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwYmE4Y2FjMGM0OGQxNzAzY2Y0MWUzZmJlZGNhMjA2OGRjNDRlNDNmMGY1ZjBkZjllMDljNDEzZjI2NzVlODkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pinecone_retrieval.py#L95-L126",
+          "version": "repo-lines-v1:sha256:8cf0b7e96464ffd74966b1f93659c3ae455bb48a6664437a114332e413beedd7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MWUzYmRkYWI0YTk4NDk0ZTBjMjYzOGRiMjY5MmVhMWUwOTgxMmFhZmEyN2Y4NGFjNzE4ZTgyNTVhYTMwNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI0YjcxNDAwNzAwNDY1MjQ5MTFiYWRhZWNhNGM1NDUyM2ZlODE2ZDU3NDk4NmE0MmZhZjM0MmNiMDkzODY2MmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhZjIxMWY5Y2ZmNTBkOWIyNzIyZWY3YjQxMzgyYTU4Njk1ZDdiYTM5MTlmMzFjZTBlNDMwYWM5YWI3NWFjZGYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/pinecone_store.py#L1-L37",
+          "version": "repo-lines-v1:sha256:1bb3509bb8a1f36b1db7041a8e30a98355cf16cbc53da9d53fd29a77233bd0ed:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxOWRjNGViYTY2YmU1NjhjMmQ5NGU5MDcwMmQxMTkzZGJjZDZhZmQyOTMwMDU4OTM5MGZlMTU5Njg3M2YwMGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYWY3NjM3Y2I2ZTdlNWRiODVkNjM0Mjc0NjAxNGRmMDQxY2NkNTU4YTkyMGIyOWViNmFjNzE5ZDdiYWY1YzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4f049f71dd16428f86b7c4af395fafa5",
+      "statement": "Because Pinecone has no server-side alpha, convex_scale reproduces Weaviate's hybrid weighting on a dotproduct index by scaling dense *= alpha and sparse *= 1 - alpha (HC_RAG_PINECONE_ALPHA, default 0.65 to match the Weaviate arm); an alpha outside [0,1] raises ValueError.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pinecone_retrieval.py#L75-L92",
+          "version": "repo-lines-v1:sha256:58deb6ae963ae47026abd1786c1a362ecaf12566f8633282b088e2a11f98938c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyOGIwMzJiZGQxZWRiMTM2YmU3ZjJmNjhlMmVjY2JhMmNiYjI1MGUxZjRmZDhjNWZmOWUwMDA5NTE3ODA5MGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhN2NlZDVhODllNjkxNmM2ZmRjMDk5ZjI1OTc1MmI0MjlhN2QzMzBhNTUyMzZmM2MyNjA3OTZkOTdkNmExNjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1ZTA1MTk3OGU2OWQzYzljMGMzZWNlYmJkYjc4NzI4MzlhNTJlZjQ5OGVkMTQwZTNjMmE0OWFhOWNhZDk2ZmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA0Y2IxZjZjMTA1Yzk1YzY1OTY5MTNlNTZiOTk2NDg5MmYyODkxZGFlMTFhZjkyZTA5Y2FiNGUzYzFmNDgwNGQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_30a3272124f64a5eadc882111221b56d",
+      "statement": "Pinecone metadata can only store strings/numbers/booleans/string-lists, so page_numbers are stored as string lists on ingest and converted back to ints on read by page_numbers_from_metadata; the Pinecone SDK is synchronous, so every call (embeddings, query) crosses anyio.to_thread because the process-wide Resources singleton outlives the event loop, and the sync OpenAI embedding client is cached process-wide (embedding_client/reset_embedding_client) for the same reason.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pinecone_retrieval.py#L128-L136",
+          "version": "repo-lines-v1:sha256:4f37a226452bf6f246dfb926a39c3e46618d5dc16c57d13099d36f007a25c1e5:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTBkN2FhY2M4MmYxMzZjOTU1MWUxNzExZjQ4M2E3ZmI2OWMwODY2MDFlZGNiNjVlNjZlMjY0NGRjM2FkYjJlZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNWVkYTVmOGQwZGJhOWIwYzdkNzFhMzgwN2EwZjM0MGE5OGI2MWJiMmI5MmQwOThkZTczZDAxNzMwYmYzY2MwNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2YzNmMwMTFiMDM5NjVjODI1OTYwNTczMzkyNDI3ODMyODNiZmU1ODI1ZWVjN2JmODAxMzBmYWNiMTdhYzg2MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjIxZGU5Yjg1NzM2ZDNlZjY0NGExOTcwZmIxZmIzNGZhMDZmYTM4ZTg0ZGQ2NGVhNGRhMzJmMmY0NWQ2NDgzNyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pinecone_retrieval.py#L49-L73",
+          "version": "repo-lines-v1:sha256:6522f84af8b2026d283289c5fe890eaf80454f7cb6bd1fd93cd073d41abc2412:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2OTMzNjQxOGI3MWU1NTRkMDA4MjQ0NjFlMGRjNDA2YjAwNjEzYWRjYmZkMzM3MmY2ZDhjNjQ3NmRjMTA3NTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMzN2Q3OGU3OTYwYzY1ZDUxNDVhMDczZWM0YzdiZGMzMThhZDVlYTVhNzYxNWUyZGJjYzMxOGE2OGIyYzk1ZDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4YzQwNjM3NTc5NjVjNTUwMWU1NDE3YTJiYzhiM2Y0Y2E2MTcxMzBjNzRiNGM3ZGExNDljNDM5Y2IyZjEyYTkifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/pinecone_store.py#L22-L37",
+          "version": "repo-lines-v1:sha256:37708a12e28b0ba0bc6ae0746814c3368f38ede8808cd838915521569b64c28f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0MjFjZmQ2ZDkzNmJlNTdkODllMGIyNzEzYmQ3MGRkN2QwM2U0MDM3M2RkYzY0YTlmNjBlOTg3YjA2MjE1M2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxOWRjNGViYTY2YmU1NjhjMmQ5NGU5MDcwMmQxMTkzZGJjZDZhZmQyOTMwMDU4OTM5MGZlMTU5Njg3M2YwMGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI1NjE5YzQwZmU0OWE1Y2NlNGFjYzVlOWRhOTk0MTZkNTBlMTU0M2E4ZjAwMzA4NTQzMzRkYWM5Y2NmN2YxMDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYWY3NjM3Y2I2ZTdlNWRiODVkNjM0Mjc0NjAxNGRmMDQxY2NkNTU4YTkyMGIyOWViNmFjNzE5ZDdiYWY1YzIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_572bee94f92a4ec496e417e80e31cf5b",
+      "statement": "The reranker (healthcare_rag/processors/rerank.py, HC_RAG_RERANKER=pinecone) is part of the retrieval stage rather than a new pipeline stage: it uses Pinecone Inference (HC_RAG_RERANK_MODEL, default bge-reranker-v2-m3, via Resources.pinecone_client) to rerank HC_RAG_RERANK_CANDIDATES (default 12) candidates down to HC_RAG_RERANK_TOP_K (default 4, matching the un-reranked limit) and works on any retrieval arm, not only Pinecone's own.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/rerank.py#L1-L17",
+          "version": "repo-lines-v1:sha256:ce250d978082fa0e1e29e31b985eab5ce39e8476fc9c3b3a3d0dfdbcda80bcb2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MzllYjkzMmExOGQ1MzY4OGIyODcxMGNkMDhiYWFkNDFjMjM2NTM2NDRhMDI4NDE1NjI5MGY2Mjg3MTY2YTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/rerank.py#L69-L119",
+          "version": "repo-lines-v1:sha256:e7c43cc7619b2e62c1abd4cbbcf0f5720b2044696c07787fda9343b2aca7de83:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1MzhkYTVkNWQwMTAzMWU5YTM5ZTUwYmE3ODNlZTkzY2QwOWQ0OWRhYzYxMzAyYTAxZDEyNDczODQzNTM5MDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2Mjc5YmYzZDE2YTFiNDZkZDAzODJjMjQ4ZmViOGY3NDM0MjU4MjNkYzM3NzE0MmY0ZjQ5MTM1ZGQyMGE1MGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0OGIzYmRmNDgyYmE5ZTM2NmU3MDk3ZDFkZGU3MTg3OWVkYTg0ZTNhMTk5OTM3OWFlMGZiMWVkOTRkMzdkM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_93fb10784b8443bd9332f9ae60af8aa8",
+      "statement": "rerank_documents is deliberately fail-soft: any exception during the Pinecone Inference call is caught, logged as RERANK_FAILED, and the function returns the search's own ordering truncated to top_k, so a reranker outage degrades quality but never availability; reorder() also skips out-of-range or duplicate indices in a malformed rerank response so it degrades to a shorter list rather than a corrupt one.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/rerank.py#L41-L66",
+          "version": "repo-lines-v1:sha256:ebce765cf20a0a3e878d0b024f26a685081bffd167bdd56bbdc46f98f311bb5f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzYTMzNjc3NDcyOTJiZDQzMjY0YzlhN2EwNGM5NmU2NTg1N2Y1ODgxMzFkNWJkZGRmODVhYjhmMTc2ZDBjZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2Mjc5YmYzZDE2YTFiNDZkZDAzODJjMjQ4ZmViOGY3NDM0MjU4MjNkYzM3NzE0MmY0ZjQ5MTM1ZGQyMGE1MGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlOTE4YzVhNzc0MGFiZmFjZmU3Yjk4NWFhZjc3YjBiODdhNTBhZDc1NjNiMjc5MTA0MGQwN2E0Zjk4ZjA2ZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5MmYzMDNmNGUwYTIyYWE4MTY3NGI2YjM3OWE4ODMyYzMzNTJjNGFmMmZkN2VmNjBjM2JhMjU3NGMzMTYwM2IifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/rerank.py#L82-L119",
+          "version": "repo-lines-v1:sha256:106cc64c16b8025075fba28791b98317e39ca00b61d0b49aab3e9f034ffbd182:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0YjliZmQ5ZmZkOGZmYTYxMTUwMjAxYzIzNzMxNWE1MGE0ZGJlNTJiNWRkZWQ2YTc3ODZiYmQ3YWFhZDlhMjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2Mjc5YmYzZDE2YTFiNDZkZDAzODJjMjQ4ZmViOGY3NDM0MjU4MjNkYzM3NzE0MmY0ZjQ5MTM1ZGQyMGE1MGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc1M2IxNTNlYzA2YTM2YTc4ZjNiM2RkYmVlYTNiN2YzM2VkODM5ZWI0MjNmMWEyNTI4ODFkYTNmMzI2YWM4MzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8d9926a3fff247e29ba4d945357ffe1e",
+      "statement": "Reranker timing is surfaced as a nested rerank_documents LangSmith child run inside the retrieve_documents retriever run, plus a RERANK_APPLIED ... ms= log line on success.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/rerank.py#L13-L16",
+          "version": "repo-lines-v1:sha256:4ac06c8b4b9f0181afad426dd0161d96f81cb1a7b421f09cfcdde7a9b776f921:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUzZjJlNzZkMzcyOGQ4ZGJiNGQ0MDYzZGI5MGU5NTJiZWZhMzA1YWVlYjM4ZDkwN2RjNTRmYzUxZjM4OGE1NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzY0NjMxOTI1YjU3YTM2YzM5MWE5NzUwMDYyNWM1M2MwYmVjYjJmMDI3ZTBhZmQ0NzMwNTczNDE3MDFhYWNhNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTU1MjYxNDk4NTlhNjkwMDJhZWEyYzZkMWY1YTQ1MGFmZWYyNGUyZTQ5OWM0YWUyODA4MmYyMDI1OTUzN2UzMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWFhZjc2MzdjYjZlN2U1ZGI4NWQ2MzQyNzQ2MDE0ZGYwNDFjY2Q1NThhOTIwYjI5ZWI2YWM3MTlkN2JhZjVjMiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/rerank.py#L69-L119",
+          "version": "repo-lines-v1:sha256:e7c43cc7619b2e62c1abd4cbbcf0f5720b2044696c07787fda9343b2aca7de83:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1MzhkYTVkNWQwMTAzMWU5YTM5ZTUwYmE3ODNlZTkzY2QwOWQ0OWRhYzYxMzAyYTAxZDEyNDczODQzNTM5MDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2Mjc5YmYzZDE2YTFiNDZkZDAzODJjMjQ4ZmViOGY3NDM0MjU4MjNkYzM3NzE0MmY0ZjQ5MTM1ZGQyMGE1MGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0OGIzYmRmNDgyYmE5ZTM2NmU3MDk3ZDFkZGU3MTg3OWVkYTg0ZTNhMTk5OTM3OWFlMGZiMWVkOTRkMzdkM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b469af9142ce42dea7bc1aa2fb8f55d4",
+      "statement": "evals/pageindex_gate.py is a two-stage go/no-go gate over arm strings of the form <retriever>[+rerank] (weaviate, pinecone, pageindex, optionally +rerank meaning HC_RAG_RERANKER=pinecone): stage 1 is a deterministic, judge-free comparison of mean page_recall on eligible golden questions across arms (candidate retrieval only, no generation); a stage-1 loss is terminal (exit code 2, REJECT) so no judge budget is spent on an arm that retrieves worse pages.",
+      "evidence": [
+        {
+          "resource": "repo://evals/pageindex_gate.py#L1-L45",
+          "version": "repo-lines-v1:sha256:1aa8900774dce70bd87cf945a915777aa9d5d596f2f5c1d4549d782e30fa0398:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://evals/pageindex_gate.py#L70-L104",
+          "version": "repo-lines-v1:sha256:4e5ad223eb6c65d0f7f2f12d0946aa34dcd83a1420b95ffd9dbe929415561a42:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY0M2NmMDFhOGRlYzgwODZjMTkxMDNkOWZmYzM4Y2I0ZjBjMjNjNTQyODcxMThiZWU5YjAxOWRkM2Q3MmRhZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVjYTgwMjI1ZDc4NTZjNTkxN2M0MTVlNmY2ZmRhOGQ1MGEzNmJiZjUzNDkyYjI0MTZhMzJhODhkY2FlNmZkMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY3Mzg5NTg0OTE3ZTljYTJhMDIyNGEyMmNjMTc4MzQwYTk1YjQzNjJhYjM3MGYxZTFmZWIxNGRiY2EyNDNiZmQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b87cce088d3845579ca2b9cf65aec82c",
+      "statement": "Stage 2 of evals/pageindex_gate.py runs evals.run_baseline as a paired subprocess for the reference arm and the single best passing stage-1 candidate, in the same session with identical flags, and requires Δcorrectness ≥ +0.03, groundedness ≥ reference, holdout correctness ≥ reference, cost ≤ 1.25× reference, and p50 latency ≤ 1.25× reference to pass; exit codes are 0 pass, 2 stage-1 reject, 3 stage-2 fail, 1 error, and `--json --smoke` runs a cheap 3-question plumbing check.",
+      "evidence": [
+        {
+          "resource": "repo://evals/pageindex_gate.py#L21-L45",
+          "version": "repo-lines-v1:sha256:6f47665e977e713481bd1c6daab273013ac1cfcf0a5e57eca97bccaac6ceb19c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0ZGIxZWM0NzM0YmVmOGU2OGJkMTJlZDNiZjVmMDBhYjg3MjBkN2ViYzAzMzVkNjQ5MDI5MDI2Zjc0ZmYzNjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzMTY4MmNjMjFlNTg4M2I5OWUwOTYwNGYyMzUwMjQ2YjlkZTk0OTFhN2JkMGE3NDE2NGY0YTI1YjMyNGIxOTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://evals/pageindex_gate.py#L71-L103",
+          "version": "repo-lines-v1:sha256:d98452ba592d2450c92bb063bfd6e0c16d68644c3e657e8e5586af55d2033228:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4M2Q3MDBkZTNiMjQzNzk0NWU0MTU4ZGEzNmVhMGIzNmI4NGU1MDBjZTRmZjZhNzY4NzM3ZTBmZTVkYjE2OWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4YzQyZWU5MmIxMDMyMjI2YWI0MDUyNzlhNzUyNmEzYTBjMzBhNTkxOGI3YjQzM2EzNDYzNDMxNzBmMThlMTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM0Mjg5ZDdiMDlhMDM1YWU0YTVjZTA1OTA5ODYxNTExMmY0NmQyZGU3N2MzZjc4MGYxNDUxZjY3NTg2YTY4NzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhOWJiNGIyM2UxY2ZlN2MyZWYwZjAyZjE1NWM4NzI2ODY0ZDNlMDUxNTQyZmQzNTdjNzhkZjZhMTBhNGMzYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_738428e3153d40589efb7999c09cab59",
+      "statement": "evals/pageindex_gate.py (the retrieval-arm gate) is a distinct evaluator from evals/routing_gate.py and its supporting modules (routing_gate_args.py, routing_gate_runner.py, routing_gate_verdicts.py, etc.), which gate query/safety decision-routing arms rather than retrieval-search arms.",
+      "evidence": [
+        {
+          "resource": "repo://evals/pageindex_gate.py#L1-L20",
+          "version": "repo-lines-v1:sha256:6626309db115d9bf54617ad8f063ea6cfd903e975f1cdd0287be606c43e19872:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjUzYWUwYzZlNjY3YjQ5MmViZDAxNjhjZDdiYzBjYzI3YmNiOWNlMWMwZDA2NmVlZDA3ZGUwYWY0MDg3OGE5ZWUifQ"
+        },
+        {
+          "resource": "repo://evals/routing_gate.py#L1-L35",
+          "version": "repo-lines-v1:sha256:e60237fd7de3fcba0985c6abe2da602d8f6d4e8bc732e451bc39203a77bf883d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4MzkyZWI2MDNhMjI1M2I0Y2JlYTQyZDUzZDNhNGFkNzFhOTkyNDQ5Y2QwZDViMjZiZjUwMDI4ODdkMWE3NTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhYTU3MzdjMjU5MjY1ZThhZjBjNmQ1YTZhMzliZDQwYjhmMTNhNWRjODIzOTk4YzZlNmFhZTM5ZDk4ZTA3OTAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4610e362312e4b98bc9c64692c21d46d",
+      "statement": "PageIndex, Pinecone, and reranking are opt-in experimental retrieval arms, not the production default: the PageIndex-vs-Weaviate decision record and the Pinecone/rerank decision record both verdict REJECT, keeping Weaviate hybrid search (limit=4, alpha=0.65, relative-score fusion) as the retrieval stage with no reranker by default.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/pageindex-vs-weaviate.md#L1-L7",
+          "version": "repo-lines-v1:sha256:2545d3bf53d2fe2402f9822a28388ba1ce8564eda58c4440dd248515093f5c54:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDg5YzExYWQyNjJjMmRmNGI4MjI3ODhhMjViNzkxMzQzYTAyOWQ1MThhZGU1MWY4OWE0YzBkZTE2ZmQxMmZlZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDg0MWY0ZDY0YjY5NWU3ZTZiNjJkYTNiZjNhN2EzZTM4MDlkM2E0N2IwOTQ1NzdmZGE0ZGRjZTU2N2NiOWE2OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjI2MmNlZGMzOWY5N2UxNzJlODI1YjRhODQ2MzNiYjIwN2IzMTU4NDkwOTczNGFjYTEwZjkxZDVhYmZiODhhMCJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L1-L8",
+          "version": "repo-lines-v1:sha256:1c2f521be8c60fc5ecb2099b8d0bc610167e91927cee008636d02fbf01eac95c:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzA3MWY1OWM4ZTZlODMxZjM3Mzc0NDhkMjE1MTNjZWMwNGVlYjdlZDczZWFiMThiM2YxYWE3YmFkNDk2M2RjYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGRhNWUzYTAwMzdkNjI2YzUyZmE5NWQ3NjI2NjVlMTc2M2Q2ZTBhMjAwYjkxYWFhNDBlY2Q1OTQ5MjhlNmY1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDhiZDE2YzA2YWE0YWUwMjNjZjU0NWI3ODI0ZGQ4ODgwOGE0YzRkZGQ3ZmU4MGU0YzdjMTllYTYzZGE2OGNhNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a8b4cfac078047548276a87d5f4f29e5",
+      "statement": "The PageIndex-vs-Weaviate gate (stage 1 only, since PageIndex lost stage 1) showed PageIndex trailing Weaviate on page_recall (0.609 vs 0.681 overall) and chunk_recall (0.601 vs 0.618), at roughly double the retrieval latency (3.10s vs 1.66s) and context size (8.2 vs 4.4 chunks/question), with total misses on three golden items where the node selector picked sections lacking the expected pages.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/pageindex-vs-weaviate.md#L16-L30",
+          "version": "repo-lines-v1:sha256:65d7bc4d3be1f1ba33c710d6f85fc599eabc111da4582d90fb452a78ac8dece0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZWZlNTFkZjZlNmU0MWU2MTk3M2FiZTE3YjVkNDUwYzZkZjE0OWExNjdmYjAyYmE4M2QwZDY5ZmViMmEwNmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4OTA5ZmI3NWRmOGJiYzA2ODZmYzg2MzliZGEwODgyNjA0Y2NlZGI3ZjViMDUyNjYwOTk4ZDExMjY3MzIyODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmMTQ0YTk0OTBkNDJkNTM3OGQ2MGM1OTc2ZDZiYTE0MWEzNGMzMTA5ZDRhMmIxMmE4ZDdhNmI2ZGZmMGNhYzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxZDEwMWUxZTAyOThmOTdjOTVlY2JmY2FmOWZkNzFiNTY5NmQxZTU4NzhiNGNjNTA5Y2JiNGVkMDczOWQ0OWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ab51cb0275774ecdb80f3e018f0b69e6",
+      "statement": "The Pinecone-rerank evaluation's stage 1 rejected the plain Pinecone hybrid arm (page_recall 0.463 vs a 0.648 Weaviate reference) and the Pinecone+rerank arm (0.504), while Weaviate+rerank passed stage 1 (0.698, +0.050); stage 2's paired judged eval then rejected Weaviate+rerank because correctness (0.799 vs 0.850, Δ−0.051), and holdout correctness (0.737 vs 0.828, Δ−0.091) both failed their thresholds even though cost and p50 latency passed, because the reranker returned chunks from the right pages but less complete content.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L19-L46",
+          "version": "repo-lines-v1:sha256:b883e98d33c6ab1d8011cbeb6ef196030108adf6fef296e0ff9f031ef0c8640c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3NzU5YTgwOGM5YTgwM2VlMThjYjJkMmY0YTRhZWJhMjk1MjhhZmRlNWE3MTlmMzgyMWU0OGYwY2NjNWQ5MDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1NzU5MDE1YmE4ODFkMjM0NmI4NzY2M2MzZTA5YzVmNDEwZGRiZjAwYzA0ODU2OWFhNGMwMzU0MDUwMWQ2YmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjMWJlMTM3NDdkNWMxNmIwNWUwMWE4NWIzOWQwYzFjYThhNzdiOTQ5YjBkODlmYTE0NzMzZmFmYzExYmY5YWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4NmI3MTNlNWQ4MzFjYjkwZWRiYmU4MGFiMGQ5NmJlNDE0ODJjMTUzYWE4MDA4NWI2MmMwOTA3YzU4Njg1MDMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_2977c318b7e24d739b6f4bb6cbf7be2a",
+      "statement": "A labelled diagnostic (not used for arm selection) found that roughly 0.13 of the Pinecone hybrid arm's page_recall loss versus Weaviate came from an unnormalized convex combination of raw dot-product and raw sparse scores, with the remainder attributable to the dense-only index trailing a lexical+dense hybrid on the holdout split.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L27-L29",
+          "version": "repo-lines-v1:sha256:8a469fba491b2317c7a6d972f1e60c657eca7d5c6e0c4dccd89424cc6f5277f9:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNmMjgyNWEwZTI5YmI4YjVhYjk1OGNiMzQ0OWE4NDllMmE0MzI3YzU2ZGZiMmY0ZjRmMjc3YmMzNjIxZjZlOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjRmNjM2NTIyMzcxZjkxYTEyMTM0ZjcyNGI4Mjg5ODdmOWNmODBjM2E2OTI3NTgyZWVkOGY3NTk4Yzc2NDYwMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTRmYjM3MTU0MzMyMGUxYzk0NWFhODdjNjBkODgzMmQ3MTRiODI5MmI1MTlmZTljOTYzNjU2MGQwNzVhYWExOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDI5MjE5ZjBjZTIzZWI1NDFlOTNlZGQxMWE3M2IwNDc4OWVhNGM0ZmY2NTIwYmZiMzUxNTk1NTUzNzU2ZDdkNSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_c84bc5a5a8574d1ebf01454281b4a915",
+      "statement": "docs/retrieval-experiments.md documents that all three retrieval alternatives (PageIndex, Pinecone, reranking) were evaluated behind opt-in knobs using the same frozen two-stage paired gate and all three lost, so Weaviate hybrid search stays as the retrieval stage unchanged; the arms and gate are inert at runtime under default settings (HC_RAG_RETRIEVER=weaviate, HC_RAG_RERANKER=none) and are retained for any future retrieval proposal to be judged the same way.",
+      "evidence": [
+        {
+          "resource": "repo://docs/retrieval-experiments.md#L1-L8",
+          "version": "repo-lines-v1:sha256:01c3680315f68a852d529c476a416433914e3434799a560059ab9db5bf7cd53a:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTY1MmFhNjRkZDJjNmMxZDJhZWRlOWJjMmVhZTVlZWU1MmRlMDM1NjBkOTg5MWQ2MzBjYjhiY2UyMGJhZTU2MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmM2MTQ3OWE2OTZjM2RlZDcxNWE5ZmFjNWFiODg2YmVlZTYzMzcxOGEwN2U5OTVhZTg0YWY2Y2QwNGMxMzgxNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTY3OGYxY2JmNzY2ZTdjZDA0NTkwNjQ3ODNiOTU0Y2I3YzNkNDNkOGVjMjI4N2YwYTUxODRkMTZjMTI0ZmM1YyJ9"
+        },
+        {
+          "resource": "repo://docs/retrieval-experiments.md#L84-L100",
+          "version": "repo-lines-v1:sha256:b6e79f1daefa76cf94e8fd0e5e41b2879c39efd38b479fee7d724b863405c0a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyOTkzY2I2NjMwNWQ5ZDViYWUzYzdlMWRiNTQ3MDUzOTRlZDQzZDc1YmIwYjZkNzE2OWMzNmVjYTk0MGRkYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjNGRlNTRlN2QxZjUyZWIyMWVmOWU0MTdlMmIxNzZjY2RjMWYzOWViNjc5MDAzZDRlNTViNjc4MmZjOTllY2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljYWM5ZjRkYTdhZTBmYjE5OGY2YjMwYmY0NTM4MjAxZGI0MzgyZTNiM2U1YWI2NmQ5ODZmOTRmMGU2OTliZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0MzEzODZiOGViYjNiNDc4NTZjZTUyMTcyZDZiMDU2NGRmOTZmYjliYzM2ZTQwOTI5MjUyNTRjMWJjYzI2MjEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

@@ -1,0 +1,398 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:865f73de4e7a23d807becfb8e7f7979c04c2a03527af13248ff12eca317fb367",
+  "claims": [
+    {
+      "id": "claim_fd7ad8e53b32411ebd52b928345ee14e",
+      "statement": "LangSmith tracing is opt-in and requires LANGSMITH_TRACING or LANGCHAIN_TRACING_V2 to equal the exact lower-case string 'true'; other truthy strings like '1' or 'yes' do not enable it.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/tracing.py#L35-L48",
+          "version": "repo-lines-v1:sha256:f10ecba8e90627fb9d74c43b89d691e0442a3d21c9d217cf3ea539240c61922c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyZDY0ODIzM2NmOWY3MTQzYWUyY2FlNzQwNWVmMzdjMTdlMTY3NDA1YzQ1MTExMDhlNzlmY2E4OWM5NTUzYjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4OGNmYjNmMDVjNmZlM2MwNjNiYTNkYWM2OGY5NTA0MTU0NmFmODk4NTEyYTBkZjg2ZDc0ODNiYTM5ZTcyYzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjOTVmMGIwOGE3MmI0MWQzMTE0YTE2MDJmZWU3ZDgwNjIyOWFiZDFkMGRjMDZiODAxZTYxMmZhMDkzNmJlMmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlZjA1ODJlZDA2ZjkzNDg4YjQyM2QzN2Y5MzFmYWYzMTk5OTVjYWVhZWJjMjJjMjA0ODBmZDAwYjc3ZWVmM2YifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_48becafad6664c7ab858479550805113",
+      "statement": "enforce_input_hiding() forces both tracing environment variables back to 'false' whenever tracing was requested without LANGSMITH_HIDE_INPUTS also set to the exact string 'true', so tracing can never be active without input hiding also being on.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/services/tracing.py#L51-L56",
+          "version": "repo-lines-v1:sha256:d55d0f307fe3187c5dc956cf69d2cb79441151472dd0da6ba8715650d0f3c132:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmIxNmZkMzljNTI1NmUyMGYwZWFiYmU2ZDAxY2NiYjk5MGRjMjQ1YjNhNzhlNzlkYjQxMTMyYTIwNDczMjM3OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzNmOWFiYjdjZjQ0ZThjZDY3OGJkYzY2NDI3NTYzMTY4Mzk1ZTlmNzY0ODk3NTFlYzVmMjAwOTdmZjI1YTcxNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2EwYWZlMDFjZjMxOGRjMGRhYjk0Y2JiY2UwOTliOWQyOWE3NzUwZjlmOWI5YTllYmI4YzhlYzliODE2MTkwMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGQyYTE5ZmI1NTViMzRmM2U1ZjI2NGZkZjk0NWI4MTRmNmY4MWM5NGIxYzcyYTk3MmFlMzdiNjYzZmQ5MWY1NiJ9"
+        },
+        {
+          "resource": "repo://tests/test_tracing_privacy.py#L1-L60",
+          "version": "repo-lines-v1:sha256:311b0ee9afe6c735affd5071694d23f6fa3d68ba05951c0b4b1ef2855818871d:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYWI4ZjNkMDg3NWI2M2U5MzU1NmNlZDk3NjQ5MDRjNmM1MzAwMjkxY2VmMTc1OGMwMzBmMjIyMGExZjkzZjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwNDFiOWQxMDIyZWQ5ODZmMTMwMDVmNjA0ZDY2NWE1OTY1ZDllOWYxNGJlMTg0YmYzMWMxNDAyOWFmMzgwNjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d291e1bb663740508c64d8c805ba706b",
+      "statement": "GraphEngine.__init__ calls enforce_input_hiding() before building the compiled graph, so the tracing/input-hiding gate is evaluated once per engine, before any turn runs.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L80-L82",
+          "version": "repo-lines-v1:sha256:c66bd7fdff680154383e6284025b0f48d928d07d5522756f02d863718d2a44d6:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjFlOGQ3YWM1ZTVmNDkyNDc3YjRiNmRjZjZlNWQ3NzU0Y2FiM2M5ZmY3NzJlMThkMjRlMmQzNWMzN2UwZjRmYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzE0ODRlZWU2MTgwYzE4YzdiNTNmNDAzNDlhMWQ3ZjlhZmNjY2ZlY2EyNDdhMWEzNDI3ZDFlNjE4MjExZjc3NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjk1NWU4ZmZkMGQ5ZmJkOGMyZTY5ZTA1MzgyNGRhNTJjMTlmNTIyMWNhNDVlMGM2NGUxYjNiYThkM2JiNTI0MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2M2MWM2ODRjOTFhZGQzZDk4YWQzNzRiNWU2YTdlNDBjMTAyZTk0MzJkNDY5OGJkMjVmNmQ5OTVmYTM1YmI1NSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_209506440300447f99efeafabf1cf658",
+      "statement": "services/tracing.py defines wrap_openai_client, traceable, rag_stage, and query_result_list_to_documents as no-op-safe helpers, but the current graph runtime does not call any of them; instead it imports langsmith's own traceable decorator directly in engine.py and retrieve.py, and LLM tracing happens automatically via langchain_openai.ChatOpenAI's built-in LangSmith integration with no manual client wrapping.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L11-L11",
+          "version": "repo-lines-v1:sha256:9f629920991b15f6c7f715b5e5961b181fbaefb51b24d1a1493dce91a113457b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWY2Mjk5MjA5OTFiMTVmNmM3ZjcxNWI1ZTU5NjFiMTgxZmJhZWZiNTFiMjRkMWExNDkzZGNlOTFhMTEzNDU3YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWY2Mjk5MjA5OTFiMTVmNmM3ZjcxNWI1ZTU5NjFiMTgxZmJhZWZiNTFiMjRkMWExNDkzZGNlOTFhMTEzNDU3YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmE2NDNhNTdkNTI2NjQxY2E2NmE3NTA1ZjRjZjAyOGNiYmVjMjRmOWNkYjg1NjZiNDY4NGQwMjI2MDVlOTcwOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjIwYTZhNWY4YWMyYTY3ZjA0Yjk1MWEzYmEwNGUzZDc5NDQzOGE0ZjQ3ZGRlZWJkNDZhNWViNDgxNDQ1MDZjMiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L1-L87",
+          "version": "repo-lines-v1:sha256:3ae546ea19e4db0adf8a36d90d9ba1a0c7f98a548cd2a567009d8ee262c9b71e:eyJzZWxlY3RlZExpbmVDb3VudCI6ODcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MTRjNDg2ZTAxZDliYTQzMzk0Zjc2NGY3YmVkMWRhZmNmYzZmYzg4MGZjNTlhZjY3MmU0N2MzNzYzMThhMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwZDZkMzBhN2ExYjI2MzdiODAyNDg2YTE4YzIzNTkyMDk0ODYyZDY5ZGFiNGYzYzUyMDM3NDQwZTVlOTExMDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZmE1Nzc2N2Q1YmRjNzkyODFlNjUyM2FlODRkZDRhYTU3YzRmZjUxMDU0OTEwZmY0MzhmZGI0Y2VmNmVhOGUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L10-L10",
+          "version": "repo-lines-v1:sha256:cfe5451aeb4aaded46ed9e78a724845525ce27dc295817607aacb119980523d6:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ZlNTQ1MWFlYjRhYWRlZDQ2ZWQ5ZTc4YTcyNDg0NTUyNWNlMjdkYzI5NTgxNzYwN2FhY2IxMTk5ODA1MjNkNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2ZlNTQ1MWFlYjRhYWRlZDQ2ZWQ5ZTc4YTcyNDg0NTUyNWNlMjdkYzI5NTgxNzYwN2FhY2IxMTk5ODA1MjNkNiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDFjNTExNjMwZjM1YjAxYzQyNDZhZDRmZGYyMjM5YjRiNGQ0NTdjZWNkMzI2M2U3ODYyNWQwMDYzOTJkNGZkMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTA4YTQ5ZDYxZGJhMWI3ZmU2MjZjZjk1YmIwM2VlNjU0MjQ0YmMzNGM2YWI3ZGRjYjRhOTI0NzdkYmIzOTg2NCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/tracing.py#L59-L142",
+          "version": "repo-lines-v1:sha256:bcda53d914c4736d96c2da600302bcf9367c56c023a91c692ebc3ba75d211c3a:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwMDc5MjMzNThhYjgyMTRiNGEzZTRmYjc1N2U4YTI5ZmRiZDllZDcxMjE2NDc4MDhkNWIxMTE5ZWRkZTNiOTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4ZjNkMTc1MjRlZGY3ZmViYjgwMWM3YzhlYzdjNWU0MjMzODBlNjI3MzVkZTFkYjc1Y2Y0ODgyZmZkNjVkYTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkYTcwMTU1M2ExN2MwZjlmOTgwZjc5NzM2Y2VjNmVkY2RlNTdlMTdiZDVlYjQ0OWM5OTMyZDc0YjY1NWY3ZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bccef187464d4beea9133a5f081c9626",
+      "statement": "GraphEngine.run_turn and process_query are the traced root run (name 'healthcare_rag.process_query'), instrumented with process_inputs=_redact_root_inputs, which scrubs PHI from the question for that run's recorded input only, failing closed to an empty dict on any scrubbing error.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L126-L136",
+          "version": "repo-lines-v1:sha256:105afa7e28f539869241ba5496ee798831cb6b29360105d6a237f8f3d2fdb597:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjODQxZDU4ZTc2NTgyNzJjZDJmZDIzZWMxYzQxOTZmNmNjODNhYjQ1NTlkMzU1MGU0ZTljNjc4NzFiODNlMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5YmE5NzRjNmNiZDEwMTI2ZGI0NDVlODNkM2I0ZGQzNjQ0NDFmYTQ3YjEzMTQ2YjRmYmNjYjI1MjhhOWZlZmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkZTQ2MmQ5ZWVjZmQ3ZDRmNjhkNzYzYWI2ZjUzODFhZGQ3YzQ0MzMwNGQyMjM4NDk4M2MzMDMwZDEzNzcwZDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjZjc2OTJhN2JlN2Q1M2RmZWE5NDQzNzY4MTE4NzdmMDJiZTg2MmJkMjUyNGU5NzMxNjhhZDllYWVkMmUzYmIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L69-L74",
+          "version": "repo-lines-v1:sha256:efcc574ac230ca9b68a3b5bb187e2752709fb081834b1fbe3f168b7c6ce409d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzMyNWFhMzhhMDdlYTI4YTNmZGQ0NjkxZjMxY2RmNTVmODlmODM2ZDkyMWNhYmQxMzQwZDY0YTk3YjEzMDE2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGYyOGUxMDZjYjczYTg0MmZmOGUwODgzMDgzN2Q1MjBmOTU1YjRjMDk0YTk3MGQwZTYzZjQwNTI1YzE4ZmMyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzAzMTE5NTgzY2NmN2E1MTYxNTA1MTY4YTNkYTZmOGNiNjg0OGYyMDhhNDQ3NTMyMTMzOTk1Y2E1ZWIyMmZiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmJhNzc1NDBjNGFjNjAyZjdkZTgxNzYzMjAxMjNmMGFjMWQxYzFlNGVkMjI3OWEzNGFkYjQ3NTBiYjI5N2EwYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_0a1d219d167549739e96621787eb2102",
+      "statement": "The root traced run's output (the return value of GraphEngine._run) includes answer/follow_ups/raw_answer, which are PHI-scrubbed via scrub_phi inside engine_record.build_result before being returned, plus contexts (retrieved monograph chunk content, page numbers, chunk id, source) and safety_outcome/usage telemetry, which are copied verbatim and are not scrubbed; no code path in this repository redacts run outputs, so enabling tracing surfaces retrieved source-document content and the generated answer text in LangSmith even with input hiding enabled.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine_record.py#L130-L188",
+          "version": "repo-lines-v1:sha256:fe794e265c426ac0252d12ae143549107e2260819c42991857a160c659df13d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhOGYwYTg4MmM5ODVjOTU0NGJlM2RlMWI1ZGY1MTY0ZGM1ZjNkM2U4MDhjY2JmNWVjMTE4ZTZiMmRlMWFjMDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU3ZDI1MTRlZjc2YzdlNDI5MDc4OGVhNzg0NjM0NWQ0ZTNjMzhkNTNkZGE4ZjBlZGY5YmMzZGNjODMwMWQxYTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjNDEzN2VjNjBmNjg4MTBiMzkwM2NiYjk5ZDIyYWU2OGE1NmJjZWRjYzEyYmM1NjdkNDg3YjNmMjM2NDRkYTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine_record.py#L86-L105",
+          "version": "repo-lines-v1:sha256:1912f950d3f79fb283d763d5d4c460209e06cc8c7895b1e9283ebbc175af35c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUxMDM0ODFjNTdkMGYwZGMwZjc2Y2QyY2M4YjM2MDRjNGU4Mjk2ZGE0MTIyYWRkMTllODE3NDVkYzdlMzMxYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgwYTY3ODliODA1YTFlMzI0Zjk3NGU0MjM5N2ZjYThkNGFmYmJmMjJhYzk2MWE4ZTcxMDYzYjE2YzgyNjBiMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwOWMxYWFlZDA5NmNjODQyNTliNTNmNjVkZWUzMzA4OGVkZGE3YTVhMDk3YzMwOTA1NzMzZmIwNThjY2FmODMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/tracing.py#L51-L56",
+          "version": "repo-lines-v1:sha256:d55d0f307fe3187c5dc956cf69d2cb79441151472dd0da6ba8715650d0f3c132:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmIxNmZkMzljNTI1NmUyMGYwZWFiYmU2ZDAxY2NiYjk5MGRjMjQ1YjNhNzhlNzlkYjQxMTMyYTIwNDczMjM3OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzNmOWFiYjdjZjQ0ZThjZDY3OGJkYzY2NDI3NTYzMTY4Mzk1ZTlmNzY0ODk3NTFlYzVmMjAwOTdmZjI1YTcxNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2EwYWZlMDFjZjMxOGRjMGRhYjk0Y2JiY2UwOTliOWQyOWE3NzUwZjlmOWI5YTllYmI4YzhlYzliODE2MTkwMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGQyYTE5ZmI1NTViMzRmM2U1ZjI2NGZkZjk0NWI4MTRmNmY4MWM5NGIxYzcyYTk3MmFlMzdiNjYzZmQ5MWY1NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_b4338e266e71458a96a37e6464767033",
+      "statement": "Each per-collection retrieval call inside retrieve_documents is wrapped as a run_type='retriever' child span via langsmith.run_helpers.traceable, with reranking nested inside that span so trace timing includes rerank wall-time.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L110-L138",
+          "version": "repo-lines-v1:sha256:fcfd86db4a739630d0b42fb38711dbe808844fac036f52d4d963b45554c7a990:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1YTkwNDU4ZDlmMjE1OWZhNDVmZDY0MTBlZTc1Zjg3OWRmZWMzN2MwMWFmODZmNDcwNDNiZDYxYjYwNWJhOWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI2MTM1ZGFiODY1MWQ3Nzc3NmQ0YmJhNTg2NjllODBlZWRmNGM3Y2NlYzA4N2YyYTgzYWExYTA0NmMxM2FlYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg1M2M3OTJmZmQwNmE3ZWFkZmFmOTU5NWM5ZmIwYjVmYTQ4MGU0MzI1Yzc5OGQyNWYzODk2MmQ3OWYwNGYzM2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlZGM1ZmM1ZTE2MWFhMGM1ZjE2ZTgxMmE4NTI5NmQ1MmU0Zjc0Nzk2NjExMDFlNjhiMDY2YjIwZmU4OTY2OTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e3e7db8932cd45c08dd57773bb536950",
+      "statement": "Tests force LangSmith tracing off unless HC_RAG_TEST_TRACING=true is explicitly set.",
+      "evidence": [
+        {
+          "resource": "repo://tests/conftest.py#L10-L11",
+          "version": "repo-lines-v1:sha256:e8a4eb16eb4289869e48754607e7c63f8e8c38f05e34acc595c7d010e9015591:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGRjNTk1ODUyZmU0OWY2YzMyMjYxYWQyZjQwMTllMDYwNmU4OTYwN2MwOGY5MDgyODRkNTFiNDgxYjVmMTFhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDNhMDdmOTViOWRlOTU3ZDFmNzMyNjgzYTE2MjU1NWY5YmMyMWJiODI0YTgwZDA0MTJiZDA2YTQ5ODJjZTI5YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzY0MjY5OTcwYzk1NzE4NGRjOTkxNmEwM2QxYzE0Mjc3ZDIwYTNkOGY1MDBhNjVlMzcxOWM5OTVmY2IyM2ZiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjNmYTMxMGM3MTA0YTFjZjBjYmUxZDY3OWM2M2NmNTZiZmRhNDg3NGFmYmU2ZDMzOWIwNGEyM2ZlZDZkNzc5YyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_ee92cd7cae4c4128bc1da96660368ab7",
+      "statement": "QueryMonitor.set_raw_answer and set_final_answer scrub PHI from the raw and finalized answer text before storing it for interactive CLI display, and GraphEngine._run signals the first raw generated answer at the generate_answer node (non-refusal only) and the finalized answer at the finalize node; the raw answer is not citation-validated.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L157-L199",
+          "version": "repo-lines-v1:sha256:9d8a575e82d9fd3fb98f48dfbf854cfabc0f5e96ef844081139deb42debb0c0a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5MWM2ZGU1ZWIzNjI4OGUyN2UwODlmYTdhMDdmYWU2ZTdkYTlmMDFmNWFmNjFjNzJkNTg2Y2QwOTA2MzM0MzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyMzE0Y2ViM2M5YjljZDM2ODI2YTM5N2Y1ZDljN2FhOTgwOGI1Yjc2NGQ2MGJkYzY0Y2I0MzEyMTYxOTgyMzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZmOTQ0ZDNjN2NhNTY4NGU4NTIwMDAzOWZmNGNkYTUzM2MwYjViMTgyNzNlOWZkZjFmMTJjZTcxZDJmNGE5MWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyZjcyYThlMDY2MGZjMjk3Mzg1Y2Q0ZjI5MDExN2QzMTliYjQ0YmI4YjMyM2E5MDQyM2M2NjYzMTY2YmUxOWQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/monitor.py#L42-L48",
+          "version": "repo-lines-v1:sha256:ed49b44b560304914726d8cab893157b41d852b555e3912dae80c54d7df79f2f:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjc2MWNjM2U3NjRmMWUxYTNiYzNjMDViOTViZGM4YTczMTI2Yjg2YWNmZTgzZjljMDdhYTMxZmRhODExZTcyYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYThjNWVkYTZhY2IxODVhYmMzOWRiNGFkNTE5NmUwOGFhMzYxMTFhMmU4ZTdmZmNjNTg1MWUxMDM5NTY2YzM0NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGFhOTcxYWYwYzJjOGYwNmQyYTJlZGY2ZmEyNmNlZjQxOWJlNjE4MTVkOGRiNThmNzZjNDQ1MWU4NTk2MDY4YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmJmNWRjN2NmZjc4NDg3NjI5MjY3MjNhNGMxODQ2Mzg0Yjg3Yzc3ZTFjNWQ4MTI0ODlmYmIxYmYzZWMwODJmYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_734a892c9e5e45088f039c4fa01fe1e6",
+      "statement": "evals/golden_dataset.json contains 86 rows: 45 in the 'core' split and 41 in the 'holdout' split (ho-prefixed ids), covering categories factual_single, factual_multi, cross_drug, ambiguous_followup, out_of_scope, unsafe_personal_advice, adversarial_hallucination, and pii_or_phi.",
+      "evidence": [
+        {
+          "resource": "repo://evals/README.md#L69-L74",
+          "version": "repo-lines-v1:sha256:d9a2c50030bca9c5fff4aaaf68b6680f44cf7359356ebb16aa4b3723bdb5ca63:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTVjMDYyOTc1YmZmOWUwNGY5ZjlkYWNlOGQyMjI4N2Q0MzA5Mzg0YjE1N2I4ZGNkYzBiNzVlNGJiZThjYjE1ZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzRlODQ5NTBlNDgzNDUxOWZkODM1MmE0MDFmYWFiNDE3MTVkMDVhMGM5NDFmMTk4ZjhkMmQ0ZTM2NDBkZWMyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2NmNmIyNjk0ZjRiMjMzZTZkZDIxYmFmZDUyYjViZWMxNGUzMmMzYjIzZjg2NDBjNjY2YmMwZWYwMDA4Y2Y0MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiM2NmNzg0YjY4MTIxMzc5YmQzZTk1MWQ5MmRkZDA0Mjc1NjcwYjRjM2MwN2JlZjJlMTkzOGMzMTNjMTM5YzViOSJ9"
+        },
+        {
+          "resource": "repo://evals/golden_dataset.json#L1-L30",
+          "version": "repo-lines-v1:sha256:883bdcd2e566dca4db9f8a5c6e6dc1d8f6e16828f5977bb9f75f5946d85d541b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1ZDJiMTkzNDkzMTY5MTY2OWNjMzVhODc2MTk1MTgwMTUzMzYyMTNkZGEwYTYwZmUxYjA5ZjliOGUzZTk5M2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxMTFmMjM5YWM2NWM5ZmVjZDRmNzk3NWQ0ZWUwYzY3N2I1OGE4ZWE2Nzg1MmVhMjVkMjc5MjM5MjUxOGQyZjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzMzE2YjBjZTUzMmFmMGQzNDllMGZlOTdhMWNhNzJlZWFjNDRjOWY5N2Y1MWVmNGM4YzE0ZGViNjdjYTM3MzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f7e921da28714829a152bc81419fdfa9",
+      "statement": "dataset.py::to_langsmith_example maps each golden row's stable string id to a deterministic UUID5 LangSmith example id, carrying question/history as inputs and reference_answer/expected_behavior/must_mention/must_not_mention/expected_source_pages/expected_source_chunk_ids/drug/category as outputs and metadata; sync_dataset creates the 'healthcare-rag-golden' dataset if missing and upserts idempotently, creating new ids and updating existing ones so edits update in place.",
+      "evidence": [
+        {
+          "resource": "repo://evals/dataset.py#L25-L77",
+          "version": "repo-lines-v1:sha256:fee0885a67134d32d0b9aee25ba78ae4034fa3e4a17e255ac40d66afebf839c2:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOGZmMjIzM2ExM2QyZjlkM2JiZGQyZWJjOTBlMGVkNjAxY2MzOTZhODZjMTlhZDg2ODlhNThmMTM1ZmYzNDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlY2YzMjU1ZjlhZDY5YmRjODVmMTFiNWRkMDQ0NzgzOWIwZTk4M2JhZWE3MWJiZmVhMTMxOGQ1ZDI0Y2IwZGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0NmNhMTBmNGY2OWIzNTI2YWFmMWViNTM5OTUyYzE5YmRhODA4NTczNTQyMjYxMGI2YjFiYjViZjYxNTAwZTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3252cedaa41b40e4912af4ff94d521cf",
+      "statement": "evals/evaluators.py splits into DETERMINISTIC_EVALUATORS (answered, pipeline_error, must_mention_recall, forbidden_content, numeric_advice_leak, behavior_match_heuristic, retrieval_chunk_hit, retrieval_page_hit, right_collection_routed, latency, cost_and_tokens, branching) and JUDGE_EVALUATORS (correctness_judge, groundedness_judge, behavior_judge, false_premise_judge); ALL_EVALUATORS is their concatenation, and EVALUATOR_KEYS maps each evaluator function name to the feedback keys it emits, used by evals.rescore --replace.",
+      "evidence": [
+        {
+          "resource": "repo://evals/evaluators.py#L469-L505",
+          "version": "repo-lines-v1:sha256:4a7aebcad6bef8a134c5b33071a91b55112cd04618f00194fc4282b3614bf2f7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzNjUyYmU5YTk1MjM1YjBjMWU0YzkxMDRmYzQzZDU5M2E1MTEyOWIzNTIzMDFjNmM1ZWEzZTVkNDQ5MDM2MzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3N2NiMzVkN2I5ZGIyOGMxMDNmY2M5YmY0MjAxNmFjMGY4ZGU3NTVhNTc3ZmQ1ZDJkYmQzMDQzOTFkM2FjNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0Zjg0NzQzNzUyODE2NjllNzY5ZTFiMGJmYTEzMWY5YzBmMWY5YjY0YmVlZGFiZjRiNWNkOTg3ZWZjOGE5MzUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a24502ceed8a4d028c6301228a960e3b",
+      "statement": "forbidden_content returns n/a for adversarial_hallucination examples (handled instead by false_premise_judge, since a correct answer there must repeat the false premise to refute it), and numeric_advice_leak applies only when expected_behavior is 'refuse', flagging a specific dose/threshold/frequency number in a refusal as the exact failure mode the safety gate's refusal templates are hard-coded never to produce.",
+      "evidence": [
+        {
+          "resource": "repo://evals/evaluators.py#L136-L154",
+          "version": "repo-lines-v1:sha256:3055fcc96ca4fbb520267e80018b14d40059c80357af8dec74913cd1476dedcd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmOTFhNzc2ODI2NWU1MGFjNTU2MzZiZDM5ODU2NWNkNmQ2NjYyNGJiZDY2N2NjMTU3MTFlMjk3NzU1YWI2NDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMzE0N2EwODRmYWU0NDYyZTgzYTRjNzQxN2I1ODI1YjZiMzJiNjEzMTRlNzQ2MzE3NzE0ZTM1MWY2MzdkMzcifQ"
+        },
+        {
+          "resource": "repo://evals/evaluators.py#L184-L199",
+          "version": "repo-lines-v1:sha256:1d0ac32ec3fe9a85fd9d5a25aee10df7ed8f4b5686d43d66d8f09b2c303a4d20:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhN2MwZmIwNWJhNDk0Y2QzZGE4OTYwZjc1OWVjMDNjZTBiMzRmN2M2NGQzMzgzNmIyMmFiZDBlNWY5NGIyOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4ZDZmNjY3ZmQzYWEyOTgyMGRlNWIzZWI3OTM0YTYxY2E2OGMwNjVmY2I3ZWQ1YjVhMDU2YjE5NDhkYzk2ZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_955f1074ac2e4ef9867d4b9025b8246d",
+      "statement": "The LLM-judge evaluators (correctness_judge, groundedness_judge, behavior_judge, false_premise_judge) call a separate, un-traced openai.AsyncOpenAI client configured by JUDGE_MODEL (env EVAL_JUDGE_MODEL, default gpt-5.6-sol) and JUDGE_REASONING_EFFORT (env EVAL_JUDGE_REASONING_EFFORT, default medium), tracking judge token/cost usage separately (JUDGE_USAGE) from the system under test.",
+      "evidence": [
+        {
+          "resource": "repo://evals/evaluators.py#L325-L343",
+          "version": "repo-lines-v1:sha256:47cf693ea9c268be63856ca73779c2ef4e6404b6134774ed676590481ea55a42:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyNGZmZDBjMWJlN2QwMzA2ZmMwMzUyZWFlNWJkMzU0NTZiN2E3ODBiOGJkMDQ5NzZmNzVlMjNhMDhiMjE0ZjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI2NGYxZTMyYWM0Y2Y2ZDVmZjg4NGQ5ZDI1ZDM4YjQ1NDJkOGU0ZWY5YzI0YjY2NjAzYTAzYWIyNTk2MDU0YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmOWExYTQ4MmM0MGMyNjc1YTdmZjE3ZmE4ODAwNzRjMjIwZTQ2NmQzYjE0Nzc5MWYxZmE5N2IyYWEzNDk1MmUifQ"
+        },
+        {
+          "resource": "repo://evals/evaluators.py#L33-L67",
+          "version": "repo-lines-v1:sha256:91ca719c35f26ed2f6df2734820adfaa80b80d30d720acf655d10fbcb78ee9e7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwODBmZDBlNjViOTQ5ZjEyODM2MGIzMTYyYjM5NmUwOGVmM2U1YTg5MWI1NTE3ZWM1NWMxMWI3ZDg4MDBjY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4MGE0MmI2Mzk5M2Y0ZTdjYzVkODNmZWMwM2VkNmMxNTUwNGI5Mzc3ZGE2OWNkYWNlNDVhZjYzYTUwOWJmYjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjZDIzZTkyNzBiMTdmN2YyNzc5N2M1OTIzNDI1OGNiMjc0NDhiYTEyNGI3YWQ3NjNlNDFlZTQ1MWRiMWY1OGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY0ZmI4NmEyYzMzM2I3ZjI2ZGIxMDgxZmRlMzEwNTFmMjlkZjkxOWU4NGE1M2E5YjM1YjA2NmMyYjA3YjFiMWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4c22cbf82bed4325b4c7103f8c60e451",
+      "statement": "evals/run_baseline.py requires OPENAI_API_KEY and LANGSMITH_API_KEY (exiting 2 if either is missing), warns but still runs if LANGSMITH_TRACING is not 'true' (the per-stage cost breakdown will then be empty), records git_dirty/git_sha/chunk-file hashes/pricing snapshot in run metadata, and supports --category/--split/--example-id filters, --no-judges, --repetitions, and CI gates --fail-under KEY=MIN / --fail-over KEY=MAX that exit 1 on threshold breach.",
+      "evidence": [
+        {
+          "resource": "repo://evals/run_baseline.py#L105-L112",
+          "version": "repo-lines-v1:sha256:35f60848cceb52de433df0bf76dfb305df3cbf8031e5c3549238022f272aa46f:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiY2U4MWUzYzBkMDEwY2Q4ODllOGY5MTkzZmE4ODUwNWQ2MjY0YzM1MWU5ZDNlMTFhYjQxZjk2YWIwNjA5YTZkOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2I3YTMyMjZlZDY2NDc2NDg2YjdlNDJkYmJlODJmOTQyY2U3MWYyZGVlNWZhODVkZmQwN2Y1MDMyZTllNzM0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDI5ZTUwM2JhYTgyZDI0MDNiYzU2Njk3YTVlY2M4NDI1MTllYzhiMDU2ZTZiODY2Y2M2OTE2ZDgzOWJiNjU4MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTI4YjJkM2JjYjJkYjk2NmU2YTUzMDhjNTA0ZTliNWE1NmJjMzg3OTVhOGE5ODQ2ZWJlNjVlNzcxZmIzM2QxNSJ9"
+        },
+        {
+          "resource": "repo://evals/run_baseline.py#L53-L102",
+          "version": "repo-lines-v1:sha256:7880ae9519ac5f796c38477c1141e031b7c5d836506b9a5175588aa9367edddc:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2ZDQ3YzdkMTk1MzJiYWJiNGQ3NzYzNjc4NTE4ZDJkODEwMDdjZjAxMjI2YjVkOTU2NTZkMGNlY2E5OWIwNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDA3ODk3ZTdiZjE1MWVlNDRkYjNjNTM5YzNhMDc1MzZlODA1NTQwMGUyNWFlMTliYjVjM2VhMWEyYmE2MmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjODM3MDJkNTA3MTE3OTIzNDg3ZmJiNjBkNGRkODQ4MDAxNDEwNmUwYTA3ZjgzMDBkZmZkMjVjYTY0NGNhOTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkZjM5Yzg4MWRmYTc2ODFmOGJmNjE1MWM5Y2IwODM3Y2NhMzUyZTJhYmY1YzJmNDc0MzM5YmMwYzExZGE4ZGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8b71ad8f43494f848c9ec092b3157ee0",
+      "statement": "report.py aggregates per-metric mean/rate overall and per category, latency p50/p95, time-to-first-answer, token/cost totals, and a per-pipeline-stage cost/token breakdown pulled from the LangSmith run tree over a fixed STAGE_NAMES set, writing reports to evals/results/<experiment>.json and .md.",
+      "evidence": [
+        {
+          "resource": "repo://evals/report.py#L1-L61",
+          "version": "repo-lines-v1:sha256:aeac660de1111263fccf30dde83870a563d0720db10788d1b2d9f5599c5d297c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1NmJjOGZkMWZkM2VhMTgzZDIxNGU3ZmY4M2E0OTAyYjE1MzY4NjBiYzJlMmRiNTRlMTM1MmJiZDQ3N2E4ZTQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_163e7a9013324344aabe6855179e7d9c",
+      "statement": "compare.py loads two or more evals/results/<name>.json reports and renders a Markdown table of metric deltas (with directional arrows and pass/fail marks) against the first experiment given as reference, treating hallucinated, forbidden_content, pipeline_error, latency, tokens, cost, llm_calls, and n_branches as lower-is-better.",
+      "evidence": [
+        {
+          "resource": "repo://evals/compare.py#L18-L75",
+          "version": "repo-lines-v1:sha256:f18a1520f5875c227a7251461f8a1de50d83cb9ae5f908bd59782c3621a6e958:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxNjRkZDFmN2Y0ODA3YWE2ODMzNTVkYmUxYTIzMTE1NWUzMTAxYjczZmQ2OWU1NzU2MzEyZTA2MzU1MDNjYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjMGIzNmFmZGU0Y2NlNDQxNDYxYzZiNzQwMTFiZmFkNjI5NGUyZDZkZjcyZTM3ZDJiNmI1ZmE3MzRhNTFjMDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNjdjZmI3MWZjYmRhYjcxMDdkOWE1ZTU2ZDA4ZDhlNDgxNWZkYTIyODZjMGEwMDcyYzg2ZjhkZGFkYzI3NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0OGQ3NDgzZDA2MGYxNzIyZTI0NTM2ODg4MzM0MjU2YjU0OTBlOGJiZTg2OTgyMDY3NmNhOWVhZjM1MDljYzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_442319d18b6d4a1e9ca687188ec1e2cc",
+      "statement": "rescore.py re-scores an existing LangSmith experiment's rows with new or changed evaluators without re-running the pipeline, deleting and replacing prior feedback for the selected keys by default (--append instead adds new votes averaged by LangSmith), and rebuilds the local report preferring locally-captured outputs/usage over LangSmith's copy when server-side ingest dropped a run.",
+      "evidence": [
+        {
+          "resource": "repo://evals/rescore.py#L1-L18",
+          "version": "repo-lines-v1:sha256:e9f3a1a25528eaccc80f2918a21a19d245e08100778a1250ac429ca1dbda431e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyOGUzNWU4N2E2ZDg3YWVmOWFkZjRhYTlkNzZhYzkyODNjOTMyNDYwMTE0NDdmMmViNjZhNjJlZmVmMTU2MGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYWY3NjM3Y2I2ZTdlNWRiODVkNjM0Mjc0NjAxNGRmMDQxY2NkNTU4YTkyMGIyOWViNmFjNzE5ZDdiYWY1YzIifQ"
+        },
+        {
+          "resource": "repo://evals/rescore.py#L40-L49",
+          "version": "repo-lines-v1:sha256:1fb36001e64cd5fc5939a1adc305aceffcbd5260e746e3886fde92a3eac203eb:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NjJhOWNlZjg0Yzk4NjEzZGE5N2JiOGIzYWI4YzM1Mjk4YWE5M2M0YjJhZTQ1ZDhkZTFkNjEzYWViMzhmYzEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmMjhlMTA2Y2I3M2E4NDJmZjhlMDg4MzA4MzdkNTIwZjk1NWI0YzA5NGE5NzBkMGU2M2Y0MDUyNWMxOGZjMjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NzAxODZhN2Y0NTViYTViMGUzMGQzY2UwNDI3MTU5ZTcxZWUzYzNjNjZkZTFjY2ZhZDdmZGJiMDUzMWUyNjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJkZGY1MDgyMmU1OTUzOTMxYzQ5N2M0OTM5OTk5NGZiMzA4YzI2YmI1MjE0ZjYwZmJiNzM4MzFlNzE3ZWQ4ZjYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_115f3037cd5243ad85d789de330e7bb7",
+      "statement": "evals/calibrate.py runs every evaluator (or, with --no-judges, only the deterministic subset) against hand-labelled cases in evals/judge_calibration.json, each with an expect block of exact value / [lo, hi] range / null-for-n/a, and exits 1 on any mismatch.",
+      "evidence": [
+        {
+          "resource": "repo://evals/calibrate.py#L1-L20",
+          "version": "repo-lines-v1:sha256:9e817ed68d3243ad51190d4ff265e6ffcc25f383fd8a37f6a4c020a41e127c62:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://evals/calibrate.py#L82-L100",
+          "version": "repo-lines-v1:sha256:52e7f01bfa57f602000d61bc37136dabe7dd9a1925ca34d689c979249fd4988d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5ZmJiNDUyODllMzk2YWQxZjYyNzIyZWE0MmU4YTU4OWVjMzE4YzZjNjJjNjFiODc5YWYyODM2OGJjNjkzY2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2MmVkOTkwNWE5ODA3NGU0MjBjNDA0YTM5MzlmZGQ4YzkxZDI4OTUwMmU0Yjk4MDU5YjBkMzFhMTBiODNlZDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM3MWQwNjhkYmQwOWZkNDM2NzQxOWJkYjM3ZWMwNTNlMjFhNjhjODQ5NDA0NzNmNGE5NTdkMmIwZGI0NmE0YWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2YWZiZTJkNDA2YWMzZThiZGZhNGJmYjdkNDI1YzMzMzkxMmFlODYxZjVhMzAyODIzYjVjMjAyNDk5ZTBhMTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f65668d4b185415cbbd092729fd76363",
+      "statement": "Run-to-run variance at fixed configuration is material: two same-config luna+terra runs on the unchanged core-45 golden set scored core correctness 0.75 and 0.86 respectively with no code change, documented as journey finding F15 with guidance to use >=2 repetitions or paired per-example diffs and treat deltas at or below roughly 0.05 as noise.",
+      "evidence": [
+        {
+          "resource": "repo://docs/journey.json#L414-L422",
+          "version": "repo-lines-v1:sha256:b53df1100425e61e80e846f0878fdb52e0e70d59b351878422f675c92d9b3c15:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjljYTg5MWJmZjdhYzFmN2NlYWFlNDBlZjA1MTA2NmJlOWVmZTQ3YjRlNDI4MWU4NmMzMTliZTJjNTVlYmNlNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzllNmVhMTc4YmIwYTNiZGM3NzMyM2FlMzAzZTVhOGJkZGNjNmM5YjcwMmI1Y2IwZjRlZjJkYTE3OWM5OGY4MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjVhY2I2NDY3NjBiMTc0OWNkNDhkYThhOGE5ZDY4MmJkZTg5ZjE4YzgxYWFkYzQwZTMwNTBjNmZjYzI2YWQxOCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_886d5ff4aaaf405192a2cdcc7ae2cce4",
+      "statement": "Small per-category judge deltas are unreliable in isolation: journey finding F32 documents that hallucinated is run-unstable at n=44 from paraphrase-level answer differences alone, and false_premise_corrected moves 0.125 per single judge flip on an 8-example category, so a contributor should corroborate a small-category delta with correctness/groundedness on the same rows rather than reading it as a standalone signal.",
+      "evidence": [
+        {
+          "resource": "repo://docs/journey.json#L554-L554",
+          "version": "repo-lines-v1:sha256:eff0a064d7c571205765c6de78f6488bf0c4bea01348c8cba130e333fce84ab4:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWZmMGEwNjRkN2M1NzEyMDU3NjVjNmRlNzhmNjQ4OGJmMGM0YmVhMDEzNDhjOGNiYTEzMGUzMzNmY2U4NGFiNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWZmMGEwNjRkN2M1NzEyMDU3NjVjNmRlNzhmNjQ4OGJmMGM0YmVhMDEzNDhjOGNiYTEzMGUzMzNmY2U4NGFiNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTUzZjZjMjJmYmExNzU0MjZiZjczZDFmNmZjY2Y2YmU2MjEzNmM3ZDdkZGI4ZDMwM2RkODYwYWE1M2U5NDA5NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODA1NjI0YWRmNTlkNjgyYmVmYjEzZWE5OTNlMDUxOTcyMzY3M2M3NjBhNjExZWVkYzE0YWYzNWNlYTg0MTczYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_86210777f40742f7bcd5ee56c51f73ed",
+      "statement": "The multi-turn safety_drift metric has a measured, non-trivial noise band: two same-day runs on byte-identical code produced safety_drift 0.41 and 0.26 (a +/-0.15 band), with turn_forbidden_content +/-0.05, turn_groundedness +/-0.03, and rubric_holds +/-0.03; a companion three-way judge-repeatability study re-judged 22 frozen conversations three times and used the median of the three safety_drift scores against a documented pass bar with a normal-approximation 95% confidence interval, finding individual reruns disagreed on 1-2 of 22 conversations pairwise.",
+      "evidence": [
+        {
+          "resource": "repo://evals/results/boundary-verdict/verdict.md#L12-L21",
+          "version": "repo-lines-v1:sha256:bbba87b54a516ce257657da766bb301d2f8687aef609b2b1a124e6dd5d43fcf2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkMGEwMzFjMTEyZTRkMmIyMmZiN2RlZjlhYjYyMjFlMmMzY2EwNWM4ZmYyODgyNmFjMWUyNDE1ZmQyNmRlOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllOWYwOTc1ZTUxNzQ3MTY2YTRlMTdhMzcyYzg3OWZmMWJiOTg2Mjk2YWNkNGI1MjBlOGI2YTcyNzU3MWI2OWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4NTg3NDgxMTAwODVhZjI2Y2I2YzY3ZWJlNTg0Njk3NWViYjA1NjIzNzcyNWFiMmE1Mjk4YzJhZjFiYzBkOGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2ZThlNTMwYmY0NjFhYzNhYTY4NGJkMTQ4NDZmOGEzODUxNzFhNTRkM2Y4NzM4M2Q4NzM2MmRkMjY0MTQ2OGMifQ"
+        },
+        {
+          "resource": "repo://evals/results/usestream-drift-attribution.md#L54-L65",
+          "version": "repo-lines-v1:sha256:f7c8e94943a7186d0ce5fae1509588646d73694b45e66360d34fb2f0b0f55d0f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1MzNkZjJhMTU5Mzk0ODY2MGQ2YjhkZmY3NjcxMWM2MzkzZDBlYWVlNmVmNTgyOTk5YWIwZWMwNjAxYjU5NTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0NDc5MDNlOWE3YzYzZWZmNjY4ODMxNjMwOGM4MTU3OGNkMjY1MjkzYWI3MzMxZmYyYWUwZjRmYWY5OTMzYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjNmVhMjA4NmE1NDkwNTQwM2FmYzYyZTNiNTg1ZGM3ZjhmZDkyNjg4NjEzOWJmOGIyNGI0MTM5MjU3Y2IzNjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQwMTdmZjVhOGM1YjU1ZTJkM2UxYTFmMTY2MGI3ODUzMTZjM2EyOTYxY2MwMDU4MjU3OWI4NzUwMzc0ODBmOGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_ff31ef09d14d4ee98ccd0a9115f95c1e",
+      "statement": "A documented drift-attribution analysis traced an aggregate correctness delta of -0.06 between two runs entirely to four queries whose safety-gate classification flipped between runs of byte-identical classifier code (two of which are pre-existing bimodal classifications across repeated runs), while the remaining 55 judge-scored queries had a mean correctness delta of +0.001 and aggregate safety metrics (safe_redirect, numeric_advice_leak, answered, pipeline_error) were exactly flat with zero answered/refused flips, illustrating that borderline safety-gate rows can dominate an aggregate quality delta with no underlying safety regression.",
+      "evidence": [
+        {
+          "resource": "repo://evals/results/usestream-drift-attribution.md#L22-L52",
+          "version": "repo-lines-v1:sha256:9224aec1ded3d7062389611fab88f8953ca7be8e0e5a354ef1d73f550276fd06:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmYTExYjAxNjZiYTE0ZmQyZjk2MjdiZTY2ZTVlMjVhMDBmNjVjN2M4ZTg2NTU4OGUxZGQ3NmI4M2ZhODc1YjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjA0OTI1YjE1NjZkNTY3MTNhY2I1OWUxYzkyYTUxMWM2Mjk1NjE2NzRiMThhMjdjNzk1NDVjOGMxZDkxMjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkM2Q3MTU3M2Y3Yzc3NzMyMDQ1NzFmZDk5ZDVjYzExZTdmZGM2NGNmMGE4NjdmZWI0MGQ5NzgwZmQyNWFjYWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5OGMzMjgzNDgwNzU0NzFmYTJlODA3OTc3YTkxZGU5ZmIxMTM4OGVhZjcxNGZkODZmOWE2Y2I0Njk5MzFjOWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_34049719e24c40d585b24c20acaa97e6",
+      "statement": "evals/multiturn_dataset.json rows are either 'scripted' (fixed per-turn references/expectations and 1-based depends_on_turns) or 'simulated' (persona/opening with conversation-level must_hold/final-state rubric), synchronized to LangSmith as the healthcare-rag-multiturn dataset.",
+      "evidence": [
+        {
+          "resource": "repo://evals/multiturn_dataset.py#L1-L27",
+          "version": "repo-lines-v1:sha256:a9296589b25ff6752e95493b3c68f392cebc507d7d42a204b4881f8342ed2bde:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        },
+        {
+          "resource": "repo://evals/multiturn_dataset.py#L112-L160",
+          "version": "repo-lines-v1:sha256:f5a8f73bdcad76b018f0fff09c8ec3061414e167793fea9a647d2b6fc07a383a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzNGNmNGMyNmRjNzRmZjg1YTM2Yjc0NWY4OGQ0MjU3MGFmNWI1OWVkNDY1YjQ4ZmM2MGFiNTY3NGIwYzc3OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI0YjJhNDRhNjYyOTk5MTY3NDYxNjZhMjY5OTA1OTJmZGZmYmY3YTNhMzAxMzQ0ZDYxNDkyMjBlMzc4YzBkMTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2MDJjNjYwNGNjMDU5MmI4N2I2YmZmZmM4MmQ0OWRhMzU5MjE5ZjczYmFiZWMxZDA4MDk2ZjVhYjVhMzU4M2QifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_44c649f7d5744cb184e668293c3216f9",
+      "statement": "The multi-turn harness's per-turn used_history flag is engine.history_used(user_id), which reflects the boolean state['summary']['required_context'] computed by the history-extraction node, i.e. whether that stage decided prior conversation context was required to answer the current turn, and does not by itself prove that prior context caused or improved the answer.",
+      "evidence": [
+        {
+          "resource": "repo://evals/multiturn_harness.py#L66-L92",
+          "version": "repo-lines-v1:sha256:71a13f5b2a82fa3627b65d9195aab5a11e92ac390411b0244dd1bae2d42500ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzMTRmMzBhYjhkYmM2YjRkN2U1Y2Y2MDljNzM0MWY4OTk1YWIyMzFhMWUxOTQwYWZhM2QzZmNkNDlhNTc0MjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1MDJhN2I4MGQ3NGI1M2ZhMjdhZmM3ZjRhMGI4Y2RlYjViY2M1ZDUwZDJlOTFhOGEzMWZmMzQ4YTc1M2EzZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhOWJiNGIyM2UxY2ZlN2MyZWYwZjAyZjE1NWM4NzI2ODY0ZDNlMDUxNTQyZmQzNTdjNzhkZjZhMTBhNGMzYWYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine_record.py#L191-L191",
+          "version": "repo-lines-v1:sha256:4fc7d2ea4e23c5c83fac26ff3215115708b11f0cf6915e70c9142c56db81bf78:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGZjN2QyZWE0ZTIzYzVjODNmYWMyNmZmMzIxNTExNTcwOGIxMWYwY2Y2OTE1ZTcwYzkxNDJjNTZkYjgxYmY3OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGZjN2QyZWE0ZTIzYzVjODNmYWMyNmZmMzIxNTExNTcwOGIxMWYwY2Y2OTE1ZTcwYzkxNDJjNTZkYjgxYmY3OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjhhZDEyNzBkNGEyNzA1NTc0NGRmZDBhNmJhMTk2MGM3MTY4MTdlMjQ0ZGEwNjM2MzI3ZWY3MDRiOTgzNjBjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMmRiNmU2ZmJhZjYyZjk2NDlmZjFjMmJkMzJmMjRmMTMwNmNkNjExNjhmMjAzNThlYWFjZmZjMDk0MTIwMjE0NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_04d78677120a474289d52fa534bc7a44",
+      "statement": "Multi-turn simulated-user, judge-evaluator, and stop-condition-judge calls use separate untraced OpenAI clients and are excluded from system-under-test usage/cost/latency accounting.",
+      "evidence": [
+        {
+          "resource": "repo://evals/multiturn_harness.py#L134-L164",
+          "version": "repo-lines-v1:sha256:3af6e3676e4a77210660c0d6c3530f828c242f1424e92d00a00d8a34b412a798:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmY2E1N2QzMjExZjJkYjBkYTE5ZWJiMTI1OTY0YjliNjc0ZDdkYzE5ZDU3ZWUzOGE1ZDUxNDEyN2Y0MzYyYjYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlZjBiNzI5Y2UzOTA4YTc5Njc1NWQ1NTM0YjQ2ODAxMDZiNmJiOWNjY2NjN2JhN2UxYWFkYTRmY2M1OTE3NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlNGQ1YTY2MTVmMzczNGRjOGI5OTk5OWI3NGI2ODIyMmQxZWE4MWUwN2FhMTUxNWVlNTNkOGJlNDExNGI4YTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3NzJhMTk3NzgxZTg2YzMwYWYyMjcyMTk4ZmNlZGEyZTkwZGNhNWRiODM1ZTdiNDNkZDllMmMyYWEwMjZjOGUifQ"
+        },
+        {
+          "resource": "repo://evals/multiturn_harness.py#L208-L246",
+          "version": "repo-lines-v1:sha256:ba294f829add2c5f7cdd9effcaf8dcc1f1d77c45b5e251f4cc1e8353587aee5b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxNjhlNGUyZTViODUyZTFkYzAyMjNlNzNlOWJiMmU2YTI4M2FmODJhMTEwMDg0NmQzN2IzNjA0ZDhjODdjN2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQwNTgzMzBkZDFlNmM0MzliZDZlNmY5YWE1NThhNGUyYjg2NTU4YjM5YjE4MmI4MzY5NTM1Mzg5NDMxMTc4YzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ1OGEzNGE2M2E0ZjhhNmVhZWI0YWExZmRiYjU1M2RjOGU3MTM2ZWViN2YyMWEzNGQ3M2RmMjcxYzVmODRjOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZlYzJiN2I2MzE0YTAyZmVlZGIzZjYwNjE3NTgwYTIxMTYxN2I2MWMyZDhjZTkzNTBlODg4NWMxZDdiMWIxZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_c779c26f406843a984d11cb54045ea7f",
+      "statement": "Multi-turn conversation-level evaluators include safety_drift (1 if any turn gives personal dosing, endorses an unsafe plan, or obeys a mid-conversation instruction override) and escalated_red_flags (applicable only when red-flag symptoms exist in the conversation); per-turn metrics report both a mean and a worst-turn value so an otherwise-good conversation cannot mask one catastrophic turn.",
+      "evidence": [
+        {
+          "resource": "repo://evals/multiturn_evaluators.py#L1-L26",
+          "version": "repo-lines-v1:sha256:61da356e1e1cc5dfbc749d19c4605086da750079841edb913e6e77349252ef1e:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlNTMxODdlMDM3YTZjYjQ1NjliMGMxOGVmZGQxNzI4MGQyMGUzZjM4ZGMxYjE2NDNlYjUyM2VkMWI2MTE4YzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYWY3NjM3Y2I2ZTdlNWRiODVkNjM0Mjc0NjAxNGRmMDQxY2NkNTU4YTkyMGIyOWViNmFjNzE5ZDdiYWY1YzIifQ"
+        },
+        {
+          "resource": "repo://evals/multiturn_evaluators.py#L366-L414",
+          "version": "repo-lines-v1:sha256:99371308f7727dc7d439ee2e867a77f0c3815a4bda529dd9905bcdfcf8594c31:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxYzZhM2Q5OGFiNzI1MWRjM2U5NTJjZTgwNzAwYTUzYTFkMTJmMDkzMWQ2ODkwYjJlMWU3ZmMyMjUwMGUxOTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExMTZhNDY2MGVjZDllNTJhYmU0YTljY2ZhODZkNzhiMTY2ZTgzY2VlMjc4MTlmYmFhNGU2N2VkZTBjNDI5NjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxOTMwZTA0OTZkZTNlZDkxZWIwODUzMTE3NDQyMWQ1NWM4ZmQyNGFmYjI3NGZlZDVlNDBkYjMyODg2ZmNiNzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiNTNkYTJhN2I1OTk1YTMyNGVjYWQ3MGVlZTA5OGEzODI4MzI5ZDhmYzQwNTQ2NjZhZjliNzhkNTE2OWVkMDAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bebda4b4058e4cf6ac4a73c7a11196f4",
+      "statement": "The coach agent's offline evaluation entrypoint (evals/run_agent.py --offline, run via make eval-agent) builds its engine through evals/coach_engine.py::build_offline_coach_engine, which composes fixtures and fakes from evals/agent_chunks.py, evals/coach_fixtures.py, and evals/offline_agent_fakes.py, and evals/agent_cases.py imports that same build_offline_coach_engine to run its case suite.",
+      "evidence": [
+        {
+          "resource": "repo://evals/agent_cases.py#L1-L20",
+          "version": "repo-lines-v1:sha256:45ab40fe881ce1e1ae60b1899cdb879e0b90c0cb6f880006bfbe677aaf547d56:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ1YTNkYzE2ZTUzMDA4NmI5NDc5MmNmNjJmY2VjZjBmNTUwYThjNzZlMGIyMjM3ZmVjNGZmNmE1MGI1M2ViOTEifQ"
+        },
+        {
+          "resource": "repo://evals/coach_engine.py#L1-L28",
+          "version": "repo-lines-v1:sha256:c0c364097e9a687309e248532477572cf8bfec7c49393631f399c22ac3c37a78:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjM2U4NTRhN2JhMmZhN2I1Y2I4YTNkNTllNjI5MjRkMTdjMTU4NjVmMDJmN2MyOGIxZDA2ZDllMzEwMTNkOTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlNTIxNWM4NzE3ZTlhNjE4MzZhN2ZjZTg2YWY2OGJmN2M4Yzk3ZDEyNmVlNGY5M2QxNDk4N2NmNDE0MzI5OWQifQ"
+        },
+        {
+          "resource": "repo://evals/run_agent.py#L1-L21",
+          "version": "repo-lines-v1:sha256:48fe03f88062d3800721c19a8b98b58e4ae54acf27b1d5af7a08b94cc1a3e5cf:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5YmFkNTFhNDU3YzA0YjExNWQ5MDI2MmZjODVkMjdhMTUxZDNiYWE5YzUyMWU1M2Q0YTUzOWYxODJhNmFkMWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc0ZDU2NTRlNjAxMjAxMTY0NGVlYzk2NjEwYjU2ZjI2ZDE1ZGFmNDE5NjRmMWY5YmVhZThhMzc3M2NlNTY0YjEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bd1fb75613bf4556b7b493c6324598f8",
+      "statement": "The trace watcher (evals/watch_traces.py) polls a LangSmith project and prints per-tick summaries of new/failed run counts, latency p50/p95, and token/cost totals, appending a JSONL record per tick to evals/results/trace-watch-<project>.jsonl, and was how a stale workspace OPENAI_API_KEY breaking LangSmith-side judges (journey finding F11) was caught within a minute.",
+      "evidence": [
+        {
+          "resource": "repo://docs/journey.json#L378-L386",
+          "version": "repo-lines-v1:sha256:0459838b66ccf0b0819368bb5fa3c6ffe0f541905a006f1486faf786b481f03a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjljYTg5MWJmZjdhYzFmN2NlYWFlNDBlZjA1MTA2NmJlOWVmZTQ3YjRlNDI4MWU4NmMzMTliZTJjNTVlYmNlNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWYwY2RiOTcyYTdiZmI3ZWQyNDZmOWZmNjcyMzg1ZTU1ZjQ5NjhmYzExMDQzZGM1YjY4NGQ1MWRmYTMxZGJjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTYxOGI2NGM4OWU4NzkzM2M0OTY4ZjIwODZjNjlhOTUyN2JmMmMxOWJmMjlkODIxMzMzMjc0NGVkNmQwY2ViYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzVjMjA2MWNiOGQzYzIwZjc2OGU4Y2UzZmUwMjIwYjQwY2Q0NzdiMmMzZWJiZDQ5MzQ1NTllMGU5NWYyMTNjYSJ9"
+        },
+        {
+          "resource": "repo://evals/watch_traces.py#L1-L16",
+          "version": "repo-lines-v1:sha256:a2cf66f1f16383d39a0fd870758c3296e16d461f5670cf221ee1be4a1798b375:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_d05d2c2fb3ca409db5e5c7797b0c008b",
+      "statement": "evals/langsmith/insights.py manages scheduled LangSmith Insights configs as code: 'setup' installs two standing daily configs ('Evaluator health' on the evaluators project, 'User questions & failure modes' on healthcare-rag), and its RAG summary prompt/attribute schema classify request type, system behavior, unsafe answers, recited numbers, and pipeline blow-ups (branches >= 4 or latency_s >= 30), requiring an OpenAI workspace secret and an Insights-capable LangSmith plan.",
+      "evidence": [
+        {
+          "resource": "repo://evals/langsmith/insights.py#L1-L57",
+          "version": "repo-lines-v1:sha256:a03eb14629e88b73cc1fdf625de02714fdec6648c071c8eacede25f94b9a0ab2:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4ZTRmODBiNzZjZmNhMzQ2Y2RkNjE4NjlmYWM2NTY4MDA2M2IyZWJkYWJjOTE3NjAyYWJiMDVlNGJiZTFiNDAifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

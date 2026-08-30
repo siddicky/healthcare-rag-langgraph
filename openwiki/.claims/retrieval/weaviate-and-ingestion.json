@@ -1,0 +1,218 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:7b44dca446852e9e4c8724925a3c146bd455b45f2bbe57321f14e633d8cca240",
+  "claims": [
+    {
+      "id": "claim_a2988f7945ef4e72808bd64a323b7af9",
+      "statement": "Routing builds one OpenAI function tool per configured collection named `query_<collection.lower()>` via `build_routing_tools`, and `retrieve_documents` maps each returned tool call's name back to a collection name (e.g. `query_lipitor` -> `Lipitor`) using its `query` argument as the search text, so collection names must stay consistent across runtime configuration, ingestion targets, and evals.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L110-L112",
+          "version": "repo-lines-v1:sha256:71b079e5a0685c62b86b3d99bfaf10d1c1b1ed0c6c7653db60049089a1b84d4e:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNzVhOTA0NThkOWYyMTU5ZmE0NWZkNjQxMGVlNzVmODc5ZGZlYzM3YzAxYWY4NmY0NzA0M2JkNjFiNjA1YmE5YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzZmNTVmNjNiODU3NzRmZjE1M2UxNjdhNTkwMGVhODFiNTE1MjkyYTBmYjljMDM4YmYzMGJhNDE2OTc5OThmYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODUzYzc5MmZmZDA2YTdlYWRmYWY5NTk1YzlmYjBiNWZhNDgwZTQzMjVjNzk4ZDI1ZjM4OTYyZDc5ZjA0ZjMzZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTU1YjAwNzk0YzcyN2I4ZjQ1ZGU3YzgyNDNkOTE4NDRiMjk4YzU1OTdiYzc3ZTVhYzQxZWUyY2UzMjFiNDQyYiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/retrieval.py#L13-L35",
+          "version": "repo-lines-v1:sha256:33ed8ca13164c1e105e103de3e7db2a3e4563ff9da22bd1a19cef87a87c25af3:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmYjJmMmQxNTY1YmRhNDIyNTkzOWYyZWU1OTQ3NTQ1NDY5MmMzNWI1MWI0YmFjNWEyMjdlY2E2ZDBlMWQzZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImExNDZmNDMzMDcyYWIyMzk5NzJiMzFhNmNiMmQwMDdjYWU2MWU5OTUzMjAwZDhjM2E1MWY0ODBiNzlkMDE4ODMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyYmQ4OWFhNjNhODY1OWNhNzllMjU4NDAzZjA0NDgzYTRkMDdhNmQ1Yjg4ZDg5MjhiNDU1Y2M0NjdlMTUwZjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjYTVlZmQ4MWUzNGZjZmQzN2FkMzFkYWI3NTZmYmI1MTIyNTJkYWRhMTY5YjBmNWM1NzdjNGY2YzM3ZmZkMTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b781b620c12a420eb02dbcc2063dbbff",
+      "statement": "A routing failure is caught and degraded to an empty tool-call list rather than aborting the request, and each per-collection search is retried up to three times with 1s/2s backoff on the active arm's transient SDK error class (WeaviateBaseError for weaviate/pageindex, PineconeException for pinecone).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L38-L42",
+          "version": "repo-lines-v1:sha256:66d31fd39ac0e6762f7829a25a8dd03abc12d9876a198fd27e5c68ccc87abb4d:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTgxNzMzYWY4ZmU5MWQ3OWJjNWZhYzUzNjNlMmI5NzI3ZmE3MzJjNjgwNWQyOGI1MTEyZmE1ZmQ3YWRkNTJmNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjg2YzVhYzA3N2I2ZmZjNTM1ZTI0N2Y3YmRiZDQyZGYwMzY2ZjM1MjI2YmFjZTkxNGI3OWE1MmU3Njc5Y2U0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDJhNDZlZmJlMzdiYmMyOTU5MjA1ZWUxOTFlMjY3YTk5ZTNmMmUwYmU0Mjc0MThhMzViMDdlNjRiYmRjMjQzYiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L85-L149",
+          "version": "repo-lines-v1:sha256:51224eeb84495e7b71ad747f6ff0f39b6465e2090e019555705cfcf613af1be5:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4MGJmM2VmZjBlZGYyMmQwZDFjYzJlYzVmZDBmNGIyYTgzMzYwMmYzZDZjYWVkOWZiZDA5NjQ5ZjEwOGM2ODYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwMTI4Njg0ZjMxYWI4OGExMzAwYWNhZjE2MGUyZjdmOTU4ZWE2ZmE2MjBhNTBmZTNkYzFjNGY2ODg3MGIxMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQxMGJmMjI4NDZlMTA1MjY5NjY5YWE0NjJmMDljZmI3NDc5ZWU4Mzc4YjU4MWUzMzNhZmFjYjA2MWQ5MWRkZTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY1ZGFjYjIzNjJhZjBmMzVmMzE2ODc5ZGJmNzM1ODYwZTAwMzBiOGQ0YzM4ZmFhY2ZjNzU4YTA4MDgzNTA4ZTkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fa6a4be87a22411b889229ddf0035cf7",
+      "statement": "`hybrid_search` calls Weaviate's `collection.query.hybrid` with `query_properties=[\"contextualized\"]`, a default `limit=4`, `alpha=0.65`, `fusion_type=HybridFusion.RELATIVE_SCORE`, and `return_metadata=MetadataQuery(score=True)`, so the hybrid query targets only the contextualized chunk text, weights semantic signal over keyword signal, and exposes the Weaviate relevance score.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/retrieval.py#L61-L84",
+          "version": "repo-lines-v1:sha256:f3b9e6e56b1bf256b8e07f3f84654b0fd76ac222d5ee32768b29ec5e1de1ab7b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwNTY5ZTliMmE3MDY1ODg2YWYwMzUxZjMxZGRkYjIwMTYxNDBhYWY4MTljMWU4Y2UwNzU5NjFmYWQxYWRmYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwY2M0NmQ0MzAwY2E2ZDJiN2VkMTVlODM4Y2U3MGU0NmQ4NzQ4ZWEyY2RjOWJmYTZjNTc4OTBiOTZlZmVlY2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhY2QyZjM1YTFjM2VjNzZhN2JjNzRlNTBmNGJkY2E5MmU5OTFhZWVmZmNiZDVmYzk5NmQ3NzcxOGY5N2VmZTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_193896c77a154ddf933b9af32bec2cf5",
+      "statement": "`to_query_documents` sets `QueryDocument.doc_id` to the Weaviate object's UUID string and packs all remaining returned properties except `contextualized` into `QueryDocument.metadata`; that UUID, not the ingested chunk `id_`, is the durable runtime document identity used for citations, while `id_` survives only as metadata used by eval chunk-recall.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/retrieval.py#L38-L58",
+          "version": "repo-lines-v1:sha256:381f82d0dba14e225fc20e95ddd71696630a18ffa21480b6b5df25a22aa26507:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5YTVlNDFmM2YxY2VmZWIzMDQ3ZGNhNWJmM2MwZjcyZTZhZDc1YzQxZGI5OTU2ZjZmZWY0NjMyZWQwM2EyNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkNjg2ZjQwMDcyMmY4NDRiMTEyN2U1OTBjMjgyZWQ4NTQ5ZmI2Y2ZlMWIwMjJlZjYwYTU3OGEyM2U5NzQ5MmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4MmMwNjQyMDQzMzI5MTZkOGU5NzM1MjViN2E1NGU2YTkyMGM2MzgwMzFjZGVlZDNmNzVmNzQ4M2VjNjQ2M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkNTNhZTlkODFiY2Q1YWU1YzQ0OTliNGRkZDEyZWQ2NTU3ZTA4ODlhYWQyZDg3MGE2MWZhMmEwNjhkYThhYzAifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f3529ea1c8b949da8bb6142dd7db2f87",
+      "statement": "`storage/vector_store.py` creates each Weaviate collection with the `text2vec_openai` vectorizer and exactly five properties: `id_` (INT), `text` (TEXT), `contextualized` (TEXT), `doc_source` (TEXT), and `page_numbers` (INT_ARRAY); any other JSON fields present in an ingest row, including chunk metadata, are discarded on import.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L101-L136",
+          "version": "repo-lines-v1:sha256:c40775ce5f256e19798d28b0fa988f5accce6120868da246e24115d07420a5e8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmZGQyMzViZGMyMzUzYmZiNmIyZGU1ODg2OGQ3Mzg1NDliZGI2Yjc0MWZiNTJjYjZjN2RlMTYwN2RhNDdmNjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxMGI1MmE4YmY0YzkyMjM5NTQwMjc0YTY5MjA2ZjdhYWVmZjE5NzIwMmEwN2M0NzA5NzVlOTc1NDQ3NzRmNTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5ZWZkOWUxNzJlNTE2NDhjYzY1N2RiZWEwNDYxM2ZiNzc5M2Q2ZjZjYmViOTIyZjE2YWVkYTZmZDRhMTlmNTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRjMDE4YjVhYjVhNzYzMjIxZGRjMDQyZDg3YzhiOTFlNTBhMDk0NTliMGYyZjVlY2Y4ZGNhNDkzYjFiMWEyOTYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L41-L50",
+          "version": "repo-lines-v1:sha256:18d34a6dc6012d9a9447532bb479b58c352251e358e6374094e3509d2ad1f1c2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiZWJiMzMxOGIxM2Q3ZTZjNjYzYWMwN2I3MmE4YTBjMjFmODhmOWZmZWU4MjFmOGQzNjgzYmI3YWZiODI2NGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzNjFmYTM1Mjk2MWQ0ZmNjYjU0ZGI5N2ZkMzZmNTI0MGVmZWZiNDBkODI3NzlhNDM0N2EzMDc2NDE5Y2Q2M2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjllMzUzMzkwZmU2NGY1NzZlYWY2NTYxNjg5NWY1NWRiMmM3NTE0NzQ3OThhNzVlZGRiNzQ4MTdlZGVkZTQxMDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_34dba2d6559f44ff9c6be0f65e8ebc7c",
+      "statement": "Weaviate reserves the property name `id`, so the schema uses `id_` instead; `prepare_data_for_import` bridges a legacy input field named `id` to `id_` when `id_` is absent, otherwise every imported object would silently have `id_ = None`.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L144-L163",
+          "version": "repo-lines-v1:sha256:df291e4ebe87bdf6605047959badce2b6607dbeb556bd4e31cdc4278c63acc0a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNTE0MTU5Y2IwZTg5MDBiYWFiYjZkNDU2NWEyNGJlNThhNzhkNWI1NmYxOWYxZDRjMmI3OWFmN2ZiNWZjNmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5ZWZkOWUxNzJlNTE2NDhjYzY1N2RiZWEwNDYxM2ZiNzc5M2Q2ZjZjYmViOTIyZjE2YWVkYTZmZDRhMTlmNTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5YWY3MTg3NzI5NmY3ZTg0MjE0NWI0MDI3ZWQ4MDAyODU4MmJkYzI2Y2Y5MDg5MjJiYzBiNjVhYjJmOTBlMTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_23f5e88118b0472188b2de11878bfc90",
+      "statement": "`data/chunks_lipitor.json` (119 records) and `data/chunks_metformin.json` (54 records) are checked-in, offline-produced build artifacts (never written by the running app), each a single top-level JSON array whose elements share the ingestion row shape: `id_`, raw `text`, LLM-augmented `contextualized` text (the field actually embedded/searched), `metadata`, `page_numbers`, and `doc_source`.",
+      "evidence": [
+        {
+          "resource": "repo://data/AGENTS.md#L1-L20",
+          "version": "repo-lines-v1:sha256:cf2212c487520cfaa4de2c652cd81021aad3a7be0708ba373558c3a7168fca92:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0Yjc3MmRhMjg4YTIzYTMwNTAzYjhmMmE2MWU5Y2RlYTM2ZTFhZTU2MGY3YjlmNTJmY2NiMDhjNTk0Y2NjYTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2YzM4NmZkMTliZjVkZTljYTcxODllYTBjZThjMDdhMmU1OGRkZDJhZGQ5MzllODM4MjVmZDE5YmVmODI5ZGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkYWJmMTY4ZjBmMGNlN2U0YWQyMmEzZDljMTFiMTQ1OGZlZGFmODkzYmI5NmJlNzZkMWJhZWRmYzkyNWI2NzEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pdf_chunker.py#L166-L189",
+          "version": "repo-lines-v1:sha256:8abcc7373b2ab9d7a65152838c021d4f419890148439c5a0abcfacb2d075a42b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4ZDIyMjZhZGNkNjZhNTRkNWQ4NTBkZDQxYTljZGEyZDVlOGU1YTIyMDc1ODcyOTkxOTg2NzMzZjkwZGQ5NDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkYTRlYTM1OTdlYzYyYTFiN2VkMDA2NTJlMmE5ZmUwYTY0ZjMwOTZmMTYwMTdlNzZjMTgzMGVkNzZmNTQ3ZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5NjgxZmQ1NTRlMTM2MWI2NDhkNjkxMGJmZTgwZmI5YzA3ODgyOTNjOTRmNjg5Y2YyYWNkMzdmNGE4Zjk4NWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1ZDQ3ZWVkOTY2Yzg2NGIwNWI4NTE4NmU1MjdkNzgxNmU0N2Y4YTQ2OWQ3YWVkZGRhMzJlN2QyOTUyN2UwMWEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_434a0b42abfd4d0c969ae07f896656b8",
+      "statement": "Chunk artifacts are produced by `DocumentChunkProcessor`: Docling PDF conversion with OCR disabled and table structure enabled, `HybridChunker` using a MiniLM tokenizer with `max_tokens=8192` and peer merging; a post-processing pass additionally merges chunk fragments sharing the same table reference and merges adjacent same-heading sentence fragments that were split mid-sentence.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/pdf_chunker.py#L28-L154",
+          "version": "repo-lines-v1:sha256:32680c4180cbaedf068cd73fb088e220cc2ece4e11ffebd7dc72ae2fd103f774:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0MmFmNWIzNzI4MGY3ZmUyY2FmMTQ5ZDhlNjU5NWZhOGFiNjMwZGFlMTg2N2Q4MDY5MmJkOGY4ZjQ5ZWUxY2NhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MDJjOTVkOWIxZjU1ZmIyZjU3NzY2ZTkyM2ZmNjBlYjRmOWU4MTg1MTZkYjRhOGNlNWNmNmY5YTA0OGFhMzIzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2ZjA4YTY2YTA2OTEyM2VmZjEzOTU2N2Y0OWQ0OGNmMTMwMWNmZDAxNjRmNzMxYTg0ZTE2YzY5ZGUwZjE5YmU0IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjNDRiYTQzYmU5NWNiMTlkNzgxNTI5YzU5ZDhmMWIyMDM0NzUwNGNkZjcxZTg3N2Q1MTlhNjFkMDVhYjdkMWI3In0"
+        }
+      ]
+    },
+    {
+      "id": "claim_ad535e92287f483ea7642eeb45fc29b6",
+      "statement": "`make ingest` runs the loader CLI with `--delete-all`, which calls `client.collections.delete_all()` and erases every collection in the persistent Weaviate volume, not just the collections about to be reloaded; `ingest_json_to_collection(delete_existing=True)` is narrower and deletes only its own named collection before reloading it.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L31-L35",
+          "version": "repo-lines-v1:sha256:695c29606233256f1daf81dea91577770c8f1b6e6eb7a7c1711b2b552cee31f1:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODNkYmRmNjkzMjAyMGZjNjA1ZjA4YmRiYThmYWQzYmM5ZGIwYWZjZDFjN2EwZTNkNmYzYjE3Zjg5YThiZWZjZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDA4ZjUxMTFiYTU2ODZlMWVhNmJlYjBmN2VhNThiZmQyMDhiNWU2ZDI5NjdhYzZmNjliMjY3NzQwODkyYmQ1OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDE5NzgzZmQ4ODYzMjRhYjdjMDE1N2RlNGI1ZDEzMDg5Nzg2MGM0N2RjOGUwNjc4MTUxYzc5OTQ4MGYxZTIzNyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L273-L327",
+          "version": "repo-lines-v1:sha256:460c7071c13c08ff2beedf0a161851719d77e9a3c92c0eaf2f99f5de35398193:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMjkwYzcwNjI0NDJiYTk2ZmUyNWRhNzljYzMzY2YyMzNhOWM5ZjJkZTU4NzBlNDI4ZThlYmYxYTNiOTEyNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllNWE2YTkwMmUwM2M5NTJhYmU3NmI4ZjM4MjYyZjM5Yzg2OWM2ZWFlOWI5MTE4YjMwMDAxN2VjODI0NGNkNGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljZmUwZTM4NDQ0MmNhZWE5MzRjMDM1MzVhZGJlMjljM2U1MzI2ODBjNGU1YmI1ODU1NjQ2NjQwMjQzZGIwMDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5M2JkNjZlMmJiNzFmM2I4YTkyNDA2NGJiZjdiMDdjNTkwM2E3NzNmYTRmOGMzNTQ2MDYwMzg2NjcxZDNhNzMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L379-L386",
+          "version": "repo-lines-v1:sha256:dfe1fe96869a8ecdcfbb2360bbf7720607318388237a6baf0ebdc067c39abcc3:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODBiMWZlZTBlOTA5Y2VlN2M0MzcxZDRkZTc0MWM1MzdiODMzMDU3OGY3MmQzMDU3MDQ2NmQ1MDJhMDg5ZmFlNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGY0ZTJlMzk4N2NlOTMyZjEyYmViMjk2ZGY0YTUyZGQ5MzljZmNlYTI0ZGIyZTkxMGU1MDIzZDgyMGFjNTQzMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGYwYjJmNTQxMGY2NWVjZGRhYjc4Y2RkMjg1NTY0NzQyZmM3NzIxZGRkYjJiYmVhNTE3NmYyMjQ3NTI0MmQ3NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWIyNjM0OTU0NDQxYTM1OWVhYWExNmRkZjFhNTYxZGY2YjVjM2Q5M2VjZmM4NTkxNmZmZjA1NmY0MDNjY2QzMSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b7dd865a724414299c74b6b42945e22",
+      "statement": "Import validates only that `text` is nonempty, batches at 100 objects, stops after more than 10 batch errors, and reports only an approximate successful count, so a completed, non-crashing ingestion run can still leave a partially loaded collection without failing loudly.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L166-L240",
+          "version": "repo-lines-v1:sha256:3b19b34ebd26080a63b2562d95672146aaa0a74b244daaa33c97735a399af7db:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM3YmZlZjg2YjU3YzIxNWM0YmZkMzA0NmNmY2FlMjM4YTAzNjMyMWM2YjIwNDFkODY2YmVjNzY4NTdiZjRjMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU1ZmQ4YWJiZGM4ZDg2OTk3ZjFkYTM0ZDBlNWZhYzczM2M1NDFmZWQ3YTEzZTczNDE4NGQ3N2UyMGNlNDAzODkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_28db740829e148c9a5332fb61d89e8f6",
+      "statement": "Docker Compose persists Weaviate's data directory in the `weaviate_data` volume mounted at `/var/lib/weaviate`, so ingested collections survive container recreation between `make weaviate` runs.",
+      "evidence": [
+        {
+          "resource": "repo://docker-compose.yml#L15-L16",
+          "version": "repo-lines-v1:sha256:a48773de871b853fa97045fcfec90fa705772eaf31adaf6cbb6be1ce7e4ad1f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEzZjRkOTY2MWU5ZDJjM2UxYTI4OWU1ODMyMjk5YmVhMTRjZGI2NGJmODg2NjFkZjcxN2IxMmZhMDJkMDExZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjYxMzM2OTg0ZWFlZjgxODVmMDgyOGUwZmE3MzgxNmFlOGE4MTIzZTI4NzVjZGI1OTVmZDAxNjhlMzM5YmEwNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGJjNWNiOGNhN2M1NDVmZTA3MTFhYzRjOTc4MDAxMWI3NmE2YjAwZWUxNzZkM2Q2NDAyMmZlNzI1ZDQ4ODNjMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWU4M2FkMDhjOWJmMTRkNmI4NjdkNDhlZGMxNTc3NjU4Y2Q5MjkwMjEwZDhmZjViNzJmNmRkYTk1MzgwZWY4YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_137c86f61eb647328ea37bf96bbed389",
+      "statement": "`evaluate_retrieval` sends merged retrieval context to the `retrieval_evaluation` prompt and only triggers one capped gap-fill round when the parsed result has `is_sufficient=False`, `additional_queries` nonempty, and no gap round has run yet (`gap_round == 0`); additional queries are capped at three per round.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/evaluate.py#L41-L85",
+          "version": "repo-lines-v1:sha256:96595607e48b7b206c242d82bc6b90303bf18c4f2b9d244582334500a0f289ca:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4M2FjYmVjNjM3ZDc5OTliYTM5ZDEwYjY4NDQyMjA4NzkzOTYxYTQ3OGE5ZGVkMDhiOTZkYzZiMGM1YTk2ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYyNGRlOGRiYzU4YmIyMmRjNDIzNjhlODY3MWMyNmJhOWQ1NGVhZmEzZWE5OWJkYzM2N2ZlZmFiOTJhMzE2OTEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5YzI1MTU4NTEwMjZkZmQzMmM3NGRkZTUyMTFiOTE1NTEwZTNjN2NhYjFkZDVhMTE3YTNlYTQxY2IxYjgwZWMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L145-L178",
+          "version": "repo-lines-v1:sha256:8975c050f889f6c0b84e956c402e7a2099fab7e8581390a3ac524240713fe570:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmOTU4NTU2YzkxYWJjYmYxOTdiZDUyNWQ4NzZlMGE4MDBmMDM5ZjdkNDZiZTRhNzgzYmQ3ZTUzY2RmODJmMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDI0NDU4MmI2ZmIwM2QyM2I4NDE1YWJlY2QzNDZiMGM5ZjQ2NmI2Zjc1MmIwNjgxODljZTdlOWEyZGMzNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMwMWFjODMzMWY3ZDFkZjNjYjhmZmY4MDRjNjdlNGUwNDZjMzEzYmVhYmRjMWIxZDY3YjU5YzkxZmZlNGRmODQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdmNDI1MjVhYWYxNDIxMWU4NTFmNGQ3MTAyZmE0MjJhNTEyZmMyYThkNDhlYjEzOWU4MDlhNWY0ZGUzOThkYmMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9e2609d8a4954365a8f49c022c39188e",
+      "statement": "When the merged retrieval has no documents at all (routing failure, empty hybrid-search hits, or exhausted retries), `evaluate_retrieval` short-circuits to `is_sufficient=True` without invoking the judge LLM, and `generate_answer` separately short-circuits to a fixed \"I'm sorry, I don't know the answer to that question.\" string without calling the generation model or `AnswerValidator`.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/evaluate.py#L27-L39",
+          "version": "repo-lines-v1:sha256:2887f4847b0bbf85277c719ec907ca3cfe0c31183b764d0503bff4a44940d93a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmOGRkNDEyMzBjNTdkMzhjMTNkMjZiMTBiMDcxNzAxMmMyNmViMmE2NDk4NDI2MzcxMDBhYzdjZmQwYjQ4NWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4MTU2OGMzOTI3NTc0OWMyOTI0MTc2NWUyNzkyMzE2NzM3YzUwNzVlYmRlMDcxODBkZGEwOThiOTg0MWFlZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjMzc5YWQ4M2I2NzAxNzUyMmFiNDZmNGI4NjQzMmRiNTFmOGJhMzgyZmU4NjMyZGVlMTcyOTI1ZTIwMGNjZGMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L18-L31",
+          "version": "repo-lines-v1:sha256:1fdb287040677281f5eea428ddb1d141c8d3815af91521508dce94ff11c0c0c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwZTExODhjMWIwYWI0MWZkZjg1OGMwOTA5OTVhMzk3ODM4MzIxYTY0YmFhYzEyNzNmMmI0M2Q0OGE0MmQ5ZjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5MTY1N2QwMDkzNzkzZTgyNTEwYjc1NzY4NmZiYjVlM2U2Y2IwOTUyMDRlZmEyNTQ2NWJjOWM0MGM3NzhkYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4MTRkODZmYzNjNjRkOWMzMzQzZmZmNjk0ODFkMDVhOGIyMjdjMWM1OTg1NjM4MjkwY2RjYzczYjM4NTg2ZTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_4882e6ff8df74c95bc0701dcf42bdcfc",
+      "statement": "`union_results` deduplicates documents across retrieval envelopes by `doc_id` on first occurrence and groups survivors by their source collection in first-seen order; `merge_retrievals` first sorts the envelopes to merge by phase then by retrieval kind (`initial`/`clarified` rank 0, `decomposed` rank 1, `gap_fill` rank 2) before merging.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L179-L221",
+          "version": "repo-lines-v1:sha256:178f1771c77b682135cd4fce4d07ff95fc687a9f49fa87af9c4d793b0bb700a6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjYWRhOGYwZmQyOGZiNTAzN2ZkMDUzYTRkMDdkNzE1NzM5MDBhNTBlMGRkODA1NjE3OWFmZDExNWI3NWE5ZjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQwNTNhMWZhZTU3NDExMWEwY2QxZjRmMDZjOTBhY2Y2NjM2MGJiODIxMzVmYmUzZGY1ZmVhNGRlODUxMzA4NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L76-L81",
+          "version": "repo-lines-v1:sha256:7220a1a1c5bf2edafa4a7555b719da24a7b7e0f5ffb5ab42f94c2c2ea86b026a:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzI4MzhhYTI5MjAzMzYyMDM3N2M4ZmI2YzgzMTRkNjA3YWM4MzMzMTkxM2Q2ZDk1NWZmNDJjYWQzN2I5OGNlMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGNjNGE3ZDFjYzc5NmFiYTNlNDY3MjMzMjdmNTE3ZTlmODExOTgyZDI1MGYwNzAyOTg2ZTRiNTc2NGFkOTU4OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDEwYmYyMjg0NmUxMDUyNjk2NjlhYTQ2MmYwOWNmYjc0NzllZTgzNzhiNTgxZTMzM2FmYWNiMDYxZDkxZGRlMSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/retrieval.py#L87-L109",
+          "version": "repo-lines-v1:sha256:c28407673cac5a69040de4e560f56279b514eb2afc16f14a5d11becd93c57d38:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNGU1NmU4MzAyOTliNzlmMWU0YTExZTAzNzliM2M1N2JiZWZjMzJhYzlkNjdmMGZhM2FmNGQ4NWJkY2IyZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyYzc3ZDdjMTM1NTRjMDBiZDNjMjJlYWU2NWNlMzVmYWJkNzMwNjAxZTM1MGU4NGNlYWYwYTI2YzJkMGZmNjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/graph/test_union_results.py#L18-L58",
+          "version": "repo-lines-v1:sha256:13218a0c553e4b9627903201ce024038a87d50d3ddeef272274a07490936ea38:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MTk2NDRjMjNkNTAyMGM3MzA4YjMxMzc5ZTVkZjZjZjNhMzdhODY2MTQzMGU1NWM5ODYzNjZjNzM3MGUyMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4Zjg2ODFlNzIwMzliN2M3YTVkMmUwYTE0ZmU1MWY2MDlkNjY2MDgxOGExOWQzYjE5ZWYwNDY3ZTM5MjA4MjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE2Y2Y3YWE4NjY3MTAzZTgwMWE0OTVmOTlmOTA2YjczNWYyN2VmNTc3MTQ5ZTE2ZDA1NThjN2UyN2E3YjA4MWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_563f7f8de4d540d398775a660847d97d",
+      "statement": "`route_after_merge` sends control straight to `generate_answer` once a gap-fill round has already been folded into the merged results (`gap_filled=True`), skipping a second evaluation pass; otherwise it routes to `evaluate_retrieval` for judging.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/routers.py#L137-L142",
+          "version": "repo-lines-v1:sha256:0fdc1ecc40112e6306fa337b6a9714f798158304bb963099d635902129316284:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmJkNDY0YTIxMjYyMzZiYmQxMGRkNWQ4OWNkNGJhMmQ3YmY4YmZlZWY0NjNlZDRhOTgxMjFiYmY0ZDgxM2E5NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2VhNjc4ZTdkYTQ0NjI4ZDdiYjlhZDU0YjNhMmUxNjBlYzIzYWJiNmJmYjUyNTlhMzhjMWY3NGJjY2RlNmIzZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDExYTA0MTczY2IyNzdhNDU0YjRlMjNkMmZkMGZhYWVlYmUwYjQzN2FkMWVhZWNmZGM1MWQxZmYzMDQ0ZTI1ZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWRhNGZlZjgxMDEwNWYyNzU5NjhhM2Q4MjVhMzdhYTZiYjJhZTk0M2MzYzZmNjlkMWViMmM1MTE5NGFiZDdjYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_d318be67a0814b01a0cf6a717540d730",
+      "statement": "When retrieved documents exist but are weak or off-target in a way the retrieval-sufficiency judge does not flag, the flow still proceeds to generation and citation validation, where an ungrounded citation is caught downstream by fuzzy/exact quote matching (dropping that statement) or the whole answer is replaced by the fixed FALLBACK_MESSAGE string if no statement survives.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L1-L27",
+          "version": "repo-lines-v1:sha256:993519fc15dc1d1e50af0cfaba171f16c7cc6e37744b1be6fd44c2176315cf61:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwMzA3N2VmYzg1NjU3ZmYxNjI3ZGExYjMxNTY1ODA5N2ZiOTI3N2IzMDA0MmM4ZTE0YjUyNTcwNTdhYTk2NTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3ZTllZTk3NmY2NDAwMmE1OGM3NDU3ZTljYzVjMjE0NjdkNzJjMGY0OWJhMzY3YmEyMGRkOTYyYTQyZWE1MWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhZDM1ZWU5NWQzZDJlYjQwMmU0OTJmNWI1NzY4YzFiNWJlOWExMjdlMTUyMjZiYTgwZjU4NzhhYzgxOTQxN2YifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/validation_rendering.py",
+          "version": "repo-file-v1:sha256:0c2bc0e0a1c028c6af353b87bc9a59f49207e8cb02c84e1a5f6cb46154fe9c36"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

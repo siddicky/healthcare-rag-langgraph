@@ -4,8 +4,45 @@ title: Coach decision routing and data-bound UI
 description: Deterministic dispatch for the coach graph, model-driven Route B tool use, medical relay constraints, and the validated catalog contract for member UI.
 tags: [coach, langgraph, routing, safety, catalog]
 verified:
-  - by: openwiki/0.4.0
-    at: 2026-08-26T20:21:43.477Z
+  - by: openwiki/0.4.3
+    at: 2026-08-30T08:22:08.381Z
+sources:
+  - id: openwiki-source-72192e22cbed07e3c286ba8f
+    resource: repo://healthcare_rag/agent/__init__.py
+  - id: openwiki-source-1023a45f940f1e5eca5e2264
+    resource: repo://healthcare_rag/agent/build.py
+  - id: openwiki-source-32b0d84a28d0c3a9400c33f6
+    resource: repo://healthcare_rag/agent/coach_agent.py
+  - id: openwiki-source-9c5110aad67a3172df0c534c
+    resource: repo://healthcare_rag/agent/compose_ui.py
+  - id: openwiki-source-5e0755c8ff6a8e85e09445f9
+    resource: repo://healthcare_rag/agent/documents.py
+  - id: openwiki-source-5af35859605c281ce5d89393
+    resource: repo://healthcare_rag/agent/finalize.py
+  - id: openwiki-source-2f29eb2ee6c317e5dc414836
+    resource: repo://healthcare_rag/agent/gate.py
+  - id: openwiki-source-d29afe87b08650650d8273b0
+    resource: repo://healthcare_rag/agent/rag_relay.py
+  - id: openwiki-source-cb7ba7ed3ec280ec465c45f1
+    resource: repo://healthcare_rag/agent/reminders.py
+  - id: openwiki-source-6e4a4e3edd59cc3a02e3fe82
+    resource: repo://healthcare_rag/agent/short_circuit.py
+  - id: openwiki-source-0c12d6d3f3cb2bdf9aec0686
+    resource: repo://healthcare_rag/agent/state.py
+  - id: openwiki-source-41053dbcc53bce885d449e65
+    resource: repo://healthcare_rag/agent/static_copy_allowlist.py
+  - id: openwiki-source-029ad9418d65d39851d3f024
+    resource: repo://healthcare_rag/agent/tools/medical_lookup.py
+  - id: openwiki-source-747fe211c57cda1f480279d1
+    resource: repo://tests/agent/test_coach_gate.py
+  - id: openwiki-source-c70608235131d10003b8921c
+    resource: repo://tests/agent/test_documents.py
+  - id: openwiki-source-7f5bd85e9de277b0fdf4042e
+    resource: repo://tests/agent/test_rag_relay.py
+  - id: openwiki-source-7b98e37b0c09a39ace9819e4
+    resource: repo://tests/agent/test_reminders.py
+  - id: openwiki-source-bd1d4fb105885c214333eced
+    resource: repo://tests/agent/test_route_b.py
 ---
 
 # Coach decision routing and data-bound UI

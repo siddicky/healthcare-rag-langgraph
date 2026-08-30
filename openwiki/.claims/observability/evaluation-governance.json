@@ -1,0 +1,192 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:7dfe218730b2c48881b32092a97fbe88d28530b8880ee4a2ef2c89d6a4964224",
+  "claims": [
+    {
+      "id": "claim_1d7e9224f2554d42b38894bb4bfa6d08",
+      "statement": "A candidate evaluation report is comparable to a baseline only if evals/parity.py's Metadata equality check passes: concurrency, disabled_stages, llm_model, validator_model, judge_model, reasoning_effort, pricing_as_of, chunk_file_hashes, judge_usage.reasoning_effort, and (for multi-turn) sim_user_model must match exactly, or the comparison is rejected.",
+      "evidence": [
+        {
+          "resource": "repo://evals/parity.py#L163-L181",
+          "version": "repo-lines-v1:sha256:459b3333a8ccc271299f18b28cc1eef4ec690a89157ee67afaf3968051b9bb9b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3MWVjYjJlYzM1YmFmMTE0ZmFlY2I2YzFkNTZmMWRjYWQ0N2MzYjQyYzk3N2Q3NDgxZDI5ZWU4YzRiNThlOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNzZjNzkzYjNiOGQzZmE2ZDVkMjI4YjkyYTVkNTVhY2Y2MWMwYzA3YzdlYzRlZDBmNTY5YjI5MDRiODljNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzNmJkMzQzYjM2NWFkNmI3ZDMwNzMxMWM5NTVjYjZkMGE1ZWQ0ZmMxYzk3YWRlY2U4MTNmNjkwNmYzYmIwNTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2ZTg0OTEwMTFjYWI1NjZmMjYwOGI1YWQ4OTYwMTYxNWVlMjE4MWFiMTExMjUzMGNkODcwMzM5OTI0NDhhOWMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0d7066a7cf9445d68cac87b0c607d17b",
+      "statement": "evals/parity.py's population check requires equal row counts, an equal example-ID multiset, equal split and category distributions, and equal n_examples/n_conversations; for multi-turn reports it additionally requires equal row-kind distribution, equal n_turns_expected per example, and that every scripted candidate row exposed exactly as many turns as expected.",
+      "evidence": [
+        {
+          "resource": "repo://evals/parity.py#L183-L199",
+          "version": "repo-lines-v1:sha256:3aeae34b5e685140c8db6ec210e08a78a92025664209ce9a008f164548c94b09:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTYyMTk2NjRmNjZmMTNiOGQ5YWFiZjQ5ODQ3ZmFjOWNlODc5YjAyNTBiMjhjOWU0NWJmNzI3Mjk4ZDcyMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3OTk3NTY2OTRiZTIwMTM3NmRlYjgyZjY0YjhjYjMyNmMzYTAyMWYzMjcwOTU2MDUzYjg2ZjYxMDIwMzBiMzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNkNjE1MTc5YjljNmNjOGI0MWNjM2E3OWVlZWYyNDQ4YWViZWYwYjBiOTY0NTFjY2U1OTg4YjE0Yjc1NWNmZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiYzEzOTMxNGMwZTI2YzA2ZGYyZWNlMmEwY2VmZjJlYmQ1MDhhYjA3YTFiZGMzNmEyOGEwYzUzM2VmMTFhNzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_34cc7fd474f5403db573021a3854ca70",
+      "statement": "The retrieval-arm gate (evals/pageindex_gate.py) enforces comparability by construction: it re-runs the reference and candidate arm together in one session with identical flags and never diffs a candidate against a historical committed report, since only the retrieval stage differs between arms.",
+      "evidence": [
+        {
+          "resource": "repo://evals/pageindex_gate.py#L1-L45",
+          "version": "repo-lines-v1:sha256:1aa8900774dce70bd87cf945a915777aa9d5d596f2f5c1d4549d782e30fa0398:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YjZlODcwNmI0MzA0N2YyYTZkYjY3ZjEzMjYzODU5NTYwNGU2N2YzNjk2Njg3NmNlMDE1OGYwMDUzZTZiZDEifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_68c2476f626d4334af55a7ce64410b78",
+      "statement": "evals/seal_clean.py's is_clean_status accepts only an allowlisted set of untracked artifacts (evals/results/*.json|.md|.log, and paths rooted at .omo, .claude, dist, __pycache__, .pytest_cache); any tracked modification, any untracked .py file, or any untracked executable file is treated as dirty regardless of path.",
+      "evidence": [
+        {
+          "resource": "repo://evals/seal_clean.py#L11-L50",
+          "version": "repo-lines-v1:sha256:ff80e35cf78b9e27427301d26f58b78ec4053aba791838c00bf13c17ae9665bf:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjOGQzOTczNTdlMzQ4MDkwZDQ2ZTBiMGZiNTVkNzM1MDZlZTlhY2Y4ZmI5YTAzNWQ1YmIwNjQ3YWQ1NzU5NGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwZTJhNDY1MDA5NWZhOTVkMGUyYmI0MWIyZGIyOTA5NGQzNDA0ZDI4Y2UxMjMzOWVjODhiYjRiNWM1YmU4ZjYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjllYWNmZGViMTBkN2UxMzQxNGU3YWExYTUxNzVkYmEzMjAxOGVlMTc0ZDlhMWRkNzI5MGQ3NjQ4ZDlkMDgyNDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI4NDYxZmZhZThjNzYxNDdhYzcwMzc3M2RhOWQwMWFlNDViZWFhYmJhZDU1MjY1MDRmMTIwNDBiZDA1ZjA0MTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_407bc7ca81d145d3b0bc0462c5fe4eef",
+      "statement": "evals/run_baseline.py and evals/run_multiturn.py call seal_clean.check_clean() to compute the git_dirty field written into report metadata, and treat a GitStatusError (git itself failing) as dirty rather than passing silently.",
+      "evidence": [
+        {
+          "resource": "repo://evals/run_baseline.py#L80-L84",
+          "version": "repo-lines-v1:sha256:7147d83195bf73f93d760d4ff312d798c3d72ab836dbcf9fd6c5f5beafb1efdf:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTA3MGZlNDBkOWM3MGU0N2VhYzQyMTA4M2ZmNDM4NWI1NTU4YmFlYWMzZDBiNjJhNWFmNzVkYzNmMGM1N2ZmNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDEwNDI0YmRlM2FkOTFmZjhkYWVhODFhNGFhNTA0YjJmZTlkMzc5MjNmNTkzNzkxNTJkNTQzZDdiNGRlYWY3MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDU5MGY5YjQxZDNhM2ZkMTFlMWFiMjIxZmQ4YjNiMTgwNmZlNmE1OTg1NzY1MDJiZGIzYjMxNDYxZmJlYjk4MSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmU3MDcxY2IwZTk5M2ZmZmVlOWNlM2Q5MjJiNjQ2YTBiN2EwNTY1YTIyYjAyN2JhNWUwMjM5ZWE2ZDIwZTNiOSJ9"
+        },
+        {
+          "resource": "repo://evals/run_multiturn.py#L60-L69",
+          "version": "repo-lines-v1:sha256:afec93cc088a3691486b7a9e55295e2d810e744552bbb908f23ee0eaa77c8839:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2ZDQ3YzdkMTk1MzJiYWJiNGQ3NzYzNjc4NTE4ZDJkODEwMDdjZjAxMjI2YjVkOTU2NTZkMGNlY2E5OWIwNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyNTc1NzA1YzhlZDNiNTQ3ZWNjZjZhZGI1ZWUyZTk4Nzk2MWZlN2YxMTc1ZWMzNDRlMDY5YWZlYmZiOWNlMTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjODM3MDJkNTA3MTE3OTIzNDg3ZmJiNjBkNGRkODQ4MDAxNDEwNmUwYTA3ZjgzMDBkZmZkMjVjYTY0NGNhOTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5MzlkOTkwYTQ4YjAwYWY4ZjFmYTg1MzA0YmY1YTljZDJhODFiMzU4MzFmNDYwMjI0MmZiMDY3YjVmYjk2MGUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_6ff03ae669d44ee7afea00b3576885e4",
+      "statement": "tests/test_seal_clean.py and tests/test_eval_seal.py cover seal_clean's exempt-path classification, untracked-executable rejection, and explicit GitStatusError propagation on git failure.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_eval_seal.py#L71-L97",
+          "version": "repo-lines-v1:sha256:16e421f85ad02ea12c36650c1618a812c8e697b7f0be478e81f7023d93c4e0cd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2MDU4NmFiODZhMDVmZmQzZjE4ZjQyYTg1MzQ5YjYwYzY3YjJmOGQzOGNmMDYzMzc1ZDkxMzJiN2U4M2NiMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZmNWRmNmE0MGU4MjdjMzZlMGM2NGUwYzA1MzIzZGE2YjRkZjhiMzhiODVmOWE0MjI4NDY5YWMzMGFkM2E4ZWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhlZWRhMTRjMDQzNjk1OGZhNGM0NTkzODgyYTdmNjdlOThjZDgxMGFiNjUzMDNhNzNlNzY5NjJhZTU5OWJlYjgifQ"
+        },
+        {
+          "resource": "repo://tests/test_seal_clean.py",
+          "version": "repo-file-v1:sha256:6665eb6f57c129ed5f07defd236d43c2fb3f29f549b57792302db38d29445847"
+        }
+      ]
+    },
+    {
+      "id": "claim_2fe3839ce70a43649cb35c0db7dd1bb1",
+      "statement": "The coach-agent offline parity gate (evals/agent_parity.compare_reports, invoked by evals/check_agent_parity.py) reduces each metric to either one finite value or the median of exactly three judge-repetition samples, raising MetricShapeError on a wrong sample count or a non-finite value, and treats a metric missing from either report as a hard failure.",
+      "evidence": [
+        {
+          "resource": "repo://evals/agent_parity.py#L44-L64",
+          "version": "repo-lines-v1:sha256:c4c863ba2593016c51a7bf6d84c2c71aa073f0fe5e78993f3f527e8bc1f2d602:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjZGEyOWE0NjkxMjdmZjZlNjNmNWUwODMyMDI2OTMyNzQ0ZmYwZDA5M2VlMTg0MWZmOGRkZDUzMTY4YTE1NWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZGE0ZTRhNGU1ODc1MDAyNjc1MGM0MDE1YjU2MGM0MDVjODYyOTY2NzkyZDAxMDkxNmI0YzU1NmY1NzJmY2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3ZmNhZWMwNDg0NmM5YTFlYzRkYWQ3OWJjZGZmYzU2ZjZjYTg5OWU1OTVlNTMyZWYwMjhmZTI4ZTEzN2IwYzAifQ"
+        },
+        {
+          "resource": "repo://evals/agent_parity.py#L81-L95",
+          "version": "repo-lines-v1:sha256:95cde60e9f6ee07e45e6f412e0e30c324fdaef712c0aa0b5d846eba56380de08:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhNzAxMWEyZjI1N2YyZDAxMmRlYzA0ZjFlYmExYTM1YTYwNjkxODYyMDZiOGEyYzk5YzgzOGNmY2M1Y2IyZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdlMjE2YzQ4Yjk2MWMzNTkwYWIxOTQ5Y2QxODM5NDU3OWU0ZGI3MDFhNDlmNGVjYzA2NTIyOTA2N2Q5NjQ2ZTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ2MmM0OWQyYTY2NDg5ODI3MDUzMWQzY2IxYmY2MjgyZjAzZmQ5YTA1M2NhNzU4MmZkYzU4MmZjMzYzZGQyMTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_bc2bb4a1586e4ba1af21cf0000077328",
+      "statement": "The coach-agent offline parity gate's default single-turn comparison checks chunk_recall (+/-0.02 tolerance) and judge metrics correctness/groundedness (+/-0.05 tolerance) as higher-is-better; its multi-turn invocation instead requires zero-tolerance non-regression on safe_redirect/behavior_match and a zero-tolerance ceiling on forbidden_content, numeric_advice_leak, safety_drift, pii_persistence, and boundary_violations whenever either report carries them.",
+      "evidence": [
+        {
+          "resource": "repo://evals/agent_parity.py#L31-L109",
+          "version": "repo-lines-v1:sha256:3827a1afa70cb1ecf9ec07c691136eacc9c0d82f1358e94c8329fba9e9fefbf5:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyNGNjODk2YjU0MzQ1OTVlY2U5Y2I0OGZkOTU0NGEyNDBlZWIzOGVlNTM0OWIyYzNhNzAxYjE0YmFhOTRmMzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzNTU0NGE5YTc3NWI5OGJkY2IzMzNkZThkOWI1NDExZTNkOTJjNjRlNDJmNjQyNTRlYTY0MzFlMDI4YzZjZGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzZDFjNTNjMGY1YmYwZjVkNGFlMTQ0NjI0MWFjODJkYTNkYThjOTczNDNiNjkyZDhmOTA3NzVhYWI3YzA3NDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkZjhlMDQ4MWZiNWJiODRmMTFmOGYzOTI4N2IyYWVhNWU4NjgzMzJmYjA2OGZhZDI2YzU0YTU3MjVkMDViNDgifQ"
+        },
+        {
+          "resource": "repo://evals/check_agent_parity.py#L54-L68",
+          "version": "repo-lines-v1:sha256:c7edd21579c25ed8c322f9b32bdc75fa9cb0272c61f99247af5c8fe17d71c485:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiMzk3OTMzYTI0YTgwMWVlOTIzMzI3YmQ2OWEwMTA0OWMwNzc5MTUwMjFjZjJlYzM5ZGRhNGY4MWFhODM3ZTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2MjMzYjNmZmVhMzJhMjNkZjUzMDY1MzQzNDhmMmRlZTc3NmE1YTZmNzRmYjUzMzE3NWRkYzUzOWE4ZmU0NjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDEzNDBjYzIzOWExNTljZTliNjAyMmU5ZjYzMjI4MzJlMmVhZDc2Y2FlOWU0NzU0ZDIxMGViOGZiNmQ1ZTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_1d9db0d723d64e35b3311bc175113323",
+      "statement": "scripts/parity_gate.py (backed by evals/parity.ParityGate) pins each sealed baseline report and the evaluation source files that produced it (golden_dataset.json, multiturn_dataset.json, evaluators.py, multiturn_evaluators.py, pricing.py) to the git blob recorded at a given base_sha before comparing any metric, so an edited baseline report or an edited dataset/evaluator without a matching pin update fails the gate before metrics are read.",
+      "evidence": [
+        {
+          "resource": "repo://evals/parity.py#L155-L162",
+          "version": "repo-lines-v1:sha256:6c3b130e3d745a25c501dcb38664e6be075e51647364bc8bc96866af7f9cedf3:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjMzOWQwNzQwNmY5ZjE3MTQ3NzAwMWY5Y2FiZTAxYTBhMGIxNzBlMzQyNzdkZGViOTBkNWM0ZTFkZTdlOTY3NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGI0NjZiY2E4NDVjYmRlODBkZTNhZWJlYTI2YWU1YWIyY2Q3NTAxNzE1ZTFhNzI3NTEyOGFhNTZkYzBlMmMwNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmQ1MjEzMzA3OTJlOTEwNmYyMjM3YzE2NDNiZDIyZDY0NjY3MWNjOTNmMjc4MDM5ZDQzMGQxZDI1ZjRiZDM1OCJ9"
+        },
+        {
+          "resource": "repo://evals/parity.py#L16-L24",
+          "version": "repo-lines-v1:sha256:e8167b3bb4d8027645fc3f2a74a45e8eff8d1cfbf46e2197a8dbf57c58c5a0db:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODc1MzVlZTdjZjA4ZWQ5NjQwMzJlODY5MWQ3YWVlNzY1MzE3OTZmZGZiODU5ZmM1ZGZjMGRkYjRlZTMwYTAzMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2M0ZGYwMWU0YTEwOWYyZjg1MmY5YjMxMjQ5OWEwMTA2NjM4NmNkZTJjZWY3ODAxMjdjM2RiZWQ2YmZhZDY5ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWU0MTA0MjJhZWExMjk1ZWYzMDIxZWNiZTZkOWIyMjJlYjBkMDc2NzVlYzc0MjRjM2FjOWZjMWZhNTViZDMyNiJ9"
+        },
+        {
+          "resource": "repo://evals/parity.py#L293-L301",
+          "version": "repo-lines-v1:sha256:1650521f4911934633d01136a7d633fedc6de09afcf05d25a7bd7e883a94185e:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmUzYjM0YmUzZmUyZjg2MmM5NTI5MWRkYjM2MDk1Mzk3MjkxYWNiZTBjMTQ2YjZlMzhlNDZhZjhmM2Q5NTlhYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTMzZWRmNDA1YzAzMDNmZTk2MDQ3MDk0MGQzZjcyMmNhZTJhNTFiYTA2MGZiNGI2YWEwYjcyOTcxZDEyZTUyYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjI2YzRmM2YwNzIzMjM4ZDhhZWY0ZDEzM2VlM2FhMmY0NGQyMzc1ODRiMmQ4ZTFkNDA4YjEzNWVhOTI3YmRhMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmYwMTM4YzQxZDI1YTI0NTAxYzI0NTRlNDU4Yjc4M2ZhYTg0NzMyNDBjZmQ2OTY3OGFiMjgwMWZmY2YzN2M2YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f64be3b075e54ba08316b77bc3b8f7f0",
+      "statement": "scripts/parity_gate.py requires the candidate report's metadata.git_sha to resolve to the current code SHA, metadata.git_dirty to be False, and a fixed set of pipeline settings (engine=graph, safety=True, max_subqueries=3, decompose_only_complex=True, structured_strict=False) to hold on both the single- and multi-turn candidate before running metadata/population/metric comparisons.",
+      "evidence": [
+        {
+          "resource": "repo://evals/parity.py#L302-L313",
+          "version": "repo-lines-v1:sha256:efbacef5486d55bdda74ae72bc3ed803ffac5ec3d8c1ad815f548b863a68a3c8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0YjEwMzAyYWVjNzA5MTJhMGQwNjBlNjVjMTRlYzMxMDFkYTI2ZDgyNGMzNGZiNmUzZDYyYzFmZjAxOGE5ZGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZGQ4Nzc5YTNlNmU4YmZhMzNjMDY4NmE1MTUwMTU0ODE2ZDJlYmUxZGUxMmIxN2JhNDRmMTA5OTUxOGM5ZjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhMjFiYTY4MGRjNDYzZjVjNTA5ZmMxYjU0MTNiZTliYWYzMDZhOWU1YTQzZWIxM2Q5M2U5NWY0MWQ2NTViZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFmNmI1ZjA0NzNiMTZkNjc1N2ZlZTNiOTUwNDQ3NzQwNjVhOTJiMjBlZDkxNzU1YjkyMDVkMDc2NTQwNzE4ZTMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_a3fc7035eac24349821935a7ab86b432",
+      "statement": "The code-sealed parity gate encodes two accepted tolerance amendments rather than ad hoc slack: Amendment A1 compares the hallucinated metric only over examples both engines answered (reporting newly-answered examples as an informational note instead of shifting the denominator), and Amendment A2 gives safety_drift a +0.15 ceiling and latency_p50_s a x1.35 ceiling, documented in-line as accepted judge-phrasing sensitivity and the accepted conditional-pipeline redesign.",
+      "evidence": [
+        {
+          "resource": "repo://evals/parity.py#L222-L249",
+          "version": "repo-lines-v1:sha256:77c8ef0bfe85d84e1dc398afb1a84cb61f9b480182872c9ec9e167bda6b55491:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExMDA0MzE0YmNmODZjZjQwMzA3OWY1ZDU0Y2I4MDMxM2Q0YjY5NjQxZmY5ZTkwYjAxOGYwNjk2NDIzZGQ0YjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiMTdiYjA4NmE4ODEyYWJlMzQwMWNkMjdiY2MwNWEwZDEzYjcxMWQxYzcyZTZiMmM2NmFjZmZmNjI0NDM1ODgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlOTdiODU5ZDcwMTcxMDFjMDk5ZWY0OGIxNjJiNDBmY2NlYWExZTlkZjc0ODQzZmM3ZDA1N2JmZjcwZGE2ZTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1YjY0ZmFkZWFiNWViMmI3N2EwY2U0Zjc2MDliMDlhOTE0MDgzMTU2OTAxMzQ0ZDkwNzVhZmY3MzYxYzZkNGUifQ"
+        },
+        {
+          "resource": "repo://evals/parity.py#L252-L291",
+          "version": "repo-lines-v1:sha256:67f32ba29e39a79097dd05e5f0033ac4fb6a7221938c6ff470234ee39fd36471:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ZGFjZjc2YzM4NDU5ZjY4MjE4NThjYTQ4MDkzMjNkMmVhODViMWI0YmIzYTgxMzYzYjk2YmIxMTJhZGYwMWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3NmY2OWNmYjdhY2QwMjE0NTcxYzc5NGU1ZjJiNTcyNGYzMjFmZjRkMWEwN2U3NzRlMTk0ZGJmYTYwNWNmNGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFkNWRlZmQ5ZWQxNWJjMjA3NzA1NmIxOWEyOGVlMTcwNTMzMjUzNDVlMzc0YmZlYjk5NDgzY2FlZTZkODViZjcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_8bcde47060e34bdaae06be159c687bf1",
+      "statement": "evals/parity_drills.py builds a real temporary git repository with a committed sealed baseline and a matching candidate (the sealed_reports fixture), which tests/test_parity_gate.py uses to run scripts/parity_gate.py against a positive control and negative drills for a metric breach, a missing metric, a duplicate example ID, an unresolvable candidate git_sha, a shortened scripted multi-turn conversation, and a non-finite metric value.",
+      "evidence": [
+        {
+          "resource": "repo://evals/parity_drills.py#L1-L189",
+          "version": "repo-lines-v1:sha256:932b8a9b675866d8edb2211493ba9d1f88f92aeb95e9c338405c2c63639db759:eyJzZWxlY3RlZExpbmVDb3VudCI6MTg5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1Mzg0YmZkYjJkZjM4MGI2NTU3Y2M3YTcxZDE2ODkxNDE1YmNjYWE4NzY5OTQwNmUyMzZmNzUyYzY0MTUzODlmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyZGNhMTA2OGRhN2ZiYjk2YThiMWQzNDY1MmQ3OWZkMGEwNGMyZTllZDgwZmVmZDEzOWI3ZjIzMDVhN2NhOGYxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MCwicHJlY2VkaW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MSwiZm9sbG93aW5nQ29udGV4dEhhc2giOiI5ODc1MWJlNjQ0YzA3ZGRhMWExODlmOTkyYjZlZmZlYTljYTE4NTVhYmY4ZDk3YTJmZjZmMWQ2ODE5OTliMjU4In0"
+        },
+        {
+          "resource": "repo://tests/test_parity_gate.py#L56-L100",
+          "version": "repo-lines-v1:sha256:3aa46f3ad67155f60615563b8b91039beb154a612de557c23cadf63ba4b6baf4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjYTI0NmE5OGU3MzBlODc0Y2ZhMDU3MGE3YjVjMWQyMTFjM2FhNmZlODUyMmIzY2FhODM2MGYxYWM4Y2RlNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NTIzMmJlMTNhMzRmMzFjYTg1ODIwM2UxMmMxZDcyZjAzNTRjMGMyY2NlYjVlOWE0N2QxNjc3OTFlOTc0OGUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjYzRhN2QxY2M3OTZhYmEzZTQ2NzIzMzI3ZjUxN2U5ZjgxMTk4MmQyNTBmMDcwMjk4NmU0YjU3NjRhZDk1ODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3OGI1MmFjNzkzNzU2M2ZkNjZkZTM5OGRkMGQ2OTU2NWQzODQzNWE4MGNlOTczMjEzYjZkNGVkNjdmNTI1MmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9a045673842340d3ac34c056b790806c",
+      "statement": "evals/routing_provenance.RoutingProvenance records git SHA, cleanliness, arm environment, local/remote row-ID populations, per-artifact SHA-256 hashes (code, dataset, multiturn, prototypes, thresholds, evaluators, prompts, uv.lock), experiment identity, semantic-router/encoder/judge versions, repetitions, and concurrency for one routing arm run; ExperimentRows rejects a manifest whose local row-ID set does not exactly match its LangSmith row-ID set and canonicalizes both to a sorted tuple.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_provenance.py#L25-L65",
+          "version": "repo-lines-v1:sha256:624940a8490836ae4ba063efc79a2262f48627d7067f3617a69e068e89a2676a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhNGNiNWZjNWVlY2I0MWUwZDg0MTU2NTc3MzMwMjdmMDBmNjJlZjcxZGNmMTQxOGU4ZTg4NGFjZjIwYzk1OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYWIwOTBiY2QxNjIwZmE2MmVhZWUxNTdhNzRmY2E2MzVhYTI5ZTEyY2JmZmQ2MThiNTc5MmQ4N2JjMDNhM2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4Y2RhM2Q1NmNjODdjYTA1ZjEyYTY5ODkwOGMyNWJlZjg0MGQzOWMwNjBiOGIyNTlkYTM3MzJmMTFmYzc2ODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU5Yjc4OGUwZTBmYjg0ZTliZDU5OTYwNGQ0ZGY1YzJiYzRjZWNhOTQxZmYyNmY1Y2JiODRjOGE5M2M3MjE0NTgifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_fc70b0a15c8f4588924f638fb57bc236",
+      "statement": "evals/routing_provenance.compare_manifests() requires every manifest in one routing-gate run to share the reference manifest's git SHA, artifact hashes, row-ID population, repetitions, concurrency, judge model, encoder model, and semantic-router version, raising a typed ProvenanceError naming the diverged field, and separately rejects a lane-contaminated arm environment (a query-lane manifest whose safety classifier is not llm, or a safety-lane manifest whose query arm is not current) via _check_lane.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_provenance.py#L103-L142",
+          "version": "repo-lines-v1:sha256:b65e201884600509ab890e1b49132eb5e61580b24cf6b3cd2852774d87919aee:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxOTY3MmZmNWNjYzkwODY4MWQ3Mzk5ZDMxM2MxZGZhYmZiYmYxNTRmMjQ0NmYzMTY5MzA2N2NhYjI4ZTkzNGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhMDRmZWIxYjE1NzlkYmNjYzkyNjU2MDJkZDUyMTNjZjhlNjRkYjc4OGJiNjhlNjVhY2ZkYjQ1MTFiZmZmYjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxMDY3MzZiMmJlMGIxYjVjZGE4NWZjZmIwYmViOGQ4MzRmZmJmYzkyYWY1MjU5OTgyMThjMTEzMWJhZTAxN2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_64d58133157a4af088720c1198d85aa5",
+      "statement": "tests/test_eval_seal.py exercises RoutingProvenance/compare_manifests rejection paths for git-SHA mismatch, artifact-hash mismatch, row-population mismatch, stale LangSmith row IDs, row-order canonicalization, a missing experiment_url, and a mixed-lane arm environment.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_eval_seal.py#L99-L176",
+          "version": "repo-lines-v1:sha256:e1c426b53d262d80a32a6a633dba572fa721c1e57fb9d98d38df483df997289d:eyJzZWxlY3RlZExpbmVDb3VudCI6NzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmOTBkNDE4YTI2NTk0YjQxNDAyN2VkOWM3NWRkNGJiMDk0ZjU2YWJlZjVlZWQ1YjNkMWJmN2E1YmM3ZDM4MmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2YzhhYTAwOTk1MmQ2YmMzYzczMmJmOGQ1MDcwMTdiZGM1NDQyODc4NmFkNDlmOTgxMmEwOGNjZmU5YzFjYzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmZjQ4MDBiNjUwOTIxYWJhYTIzNWM4YmVhMTI4Nzk4NzU4NDlhZDQyZGU0MGVkZDIxNGU1ZjI3Zjk2NGUxODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

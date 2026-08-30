@@ -1,0 +1,290 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:fb695071b60bb69421d9c92b6277a10a96865f453e2a36a128ee3affd357d5c5",
+  "claims": [
+    {
+      "id": "claim_4704cac4f796451596db2e51d9f17866",
+      "statement": "PrivacySanitizer (healthcare_rag/processors/privacy.py) is the single process-wide recognizer of personal identifiers; scrub_phi in healthcare_rag/processors/safety_signals.py delegates to get().privacy.scan(text), so the safety gate, graph nodes, history scrubbing, the CLI monitor, and the coach agent's persistence writes all redact through the same analyzer, owned by a single injectable Resources.privacy instance.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/resources.py#L37-L144",
+          "version": "repo-lines-v1:sha256:e22edee027ea51877c019e4e646a4e35fcef01522bc798275075ba8a44c409ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMTUwOWJmNWUyOWUyMTYwZDU4ZWFkZTQwN2IzMTA4MTIwNTlmZDI2MjA1ZmIyZmY0YzI5MGU3OGYzNjhlYjQzIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJiM2JjNTE1OTZlODQzMDU1MDRiMjYzYzUzOTc5ZGNlODFkMThkMjZlMWMyNTc1YjA5ZWZlYjE1MDNiYzM3YTUzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3NWRiMzk5NjdiYzJlNmJhMGIxYjAzYjMzODQ5NjA1ZGE3ZmVjOTA5MzdlODVmZWE3ZjBmNzhhMzEwNmQyMmZhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyYzM4MWUzODMwNTExNjkyMWMzZDY4N2JkYTI4ZWQ0OGY2ZGIwMTdmMjQ4ODk5NmU0YjgyZDI3NTRkZDhhOTQ4In0"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L120-L133",
+          "version": "repo-lines-v1:sha256:0b4a8269211237ffaf226f1e864ec468643b5e33c9daf48ac9344bdedd97fc4d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA5OWJlYWI3ZjBkYzQ4MzBiM2Y5NzI1ODVjM2ZlMzE0ZmY5NmY0MjQ0ZWUwY2Q2NzNkYWVlYmQyNTQwYzI1OWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0YTNiYWNjMWEyMzI1ODFlMGI4YTE2NzJhZjI3NDA0ZGY2NjE3MmVkYjlmMzRiNmU1NzJiMGYyZTBjZmZkZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhM2ZlMzEwZTM4OWJjYTk0ZmI2YWY5M2ZiNWJkNzAyZTQ2NmVlZTU5Y2Y2MjAwNDZiMDg3NmExNDRmNGY1YjMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety_signals.py#L113-L122",
+          "version": "repo-lines-v1:sha256:15277491bf74c9729d7bfc7822bc8e7ccfaa7f5eed6bb34811b91c3374166fd8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmY2JhMzMzZGU1ZDc0OWIxMDA0NzQ1YTZjYTFkZmFjYzNkZjIwZDgwMzAxMjdlYTI1NDY2MWIxNTE3MDhlZWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5OGIwNjNkOWI0N2U2NTM3OTYyNTU3MmNjZTE5NzY2OWQ1NzY3ZTEyYzE4YmUwNzU2NTJiOGNkOTgxY2U4ZDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlZDI0MDUwZWRlMzRmMzljM2Y2OTQ4OGJiMTI4MDI4NzVjYTk1NDI1NTVhM2M2MDZlOTBmMjRhNzlkMmRiYWYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0f7a129ec2654fb092ba01aaa91ade66",
+      "statement": "scan(text) unions three sources and merges overlapping spans via union_spans: the Presidio AnalyzerEngine (spaCy en_core_web_sm NER restricted to PERSON, plus recognizers for CA SIN, credit card, crypto, IBAN, IP, MAC, medical license, CA/US phone, URL, US bank/ITIN/driver license/MBI/NPI/passport/SSN, score threshold 0.40), deterministic regex patterns from privacy_patterns.py, and a clinical_code_intervals carve-out that protects clinical codes from redaction; overlapping spans of different kinds collapse into one REDACTED_IDENTIFIER token.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L161-L198",
+          "version": "repo-lines-v1:sha256:bed1e24a91f30d423a3b101c6002a2dd67ef1c268e21fa4bcd168a861f11f4f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlYjVjMmVlNTYxYzg5ZTI2ZWM3Mjc2ZmZiMTIzNjczOTIyM2M1YmEyZWM5MzkyMTYzZGY2OWFhOTc1MTA0NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjNzA0OWJmMzhhOTYwYWIxNzZhZWIwNjcxMTgyZTY4YmM4NzMwMzQwNzg3YWUzZjc0NTBlODkwZGNjYmVjZmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1NzYzY2IxN2U4ZjdkYjcwYzc0NDg0YjhlZjUwMDZhNWFlMjk2MTQ4YjhkYTQ4OTkzMzhkYjY1MWFlNjk1NDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNmIyNjQwMjM2NjE4NTFiZjU4ZWYyNTViNjExYjIzYTViOTRlMDAxZWQ1MWVjYThlOTQyNmRkOTM4ZDI0NTgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L36-L52",
+          "version": "repo-lines-v1:sha256:07144578e64902c1d8553a9f1c63f262ad0e2a0240ca897cb2c91d687c59707f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxMWI2M2UwMzJkNzkxNTRjYWQ1MjBjM2VhYzY4N2ZlNTIyMmFhZWQxODJjYjkyYjE0YTM4ZDgyZWQ2ZTFhYmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3M2U1Njg1MGY3MzE0NTZkMTdiNTYyMTRjMTU2MjMzYWI0NjgwZmU4MWM2NTc3Y2YyMWZkNWYzMDRjZmMzMDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjMmFlNWM1MTQyNWQxNDY1YmQ5NzAyMjZmNDE2YTU5YWU5ZDdlZjRkODQ1NmQ4ZWI4MzgwNGEyMGJiNTQ0MzUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L96-L117",
+          "version": "repo-lines-v1:sha256:2f7c83cdd5153f75d11efc42aaa824dc372eae31fba26cbcd985c3e74b13a86f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1OWJkZWM3YmRmYzU5ZDQ5Mzg5NjMwM2MxOGFlZDM2NDdjMmQ5NDc2YzY2YzQxMTVjMjI0YWIzMDc0MDMyZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MjE1ODE2NDg3YTEwNGMyOGM0NTM0ZDY2Nzg4OTU2NDYxMGM0MTQwZTFiMjFkMWUwZDUyMjFkOTdmMjExMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmZDU0YzhmY2E3N2MwMDViYzM4NTgyYzQwYTMwMTg2Nzk3YWRhZWM5YzU4MjkzMDE3ZTliZmFjNTYwNGJhM2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4OWMyOTY0ODI5NWFhODAyYThkNWE2ZWZmZjQwMzc3ZjMyMmE4MzQ3ZGZhZTBlMmYxYTc3Y2Y1YjVmODY2NjMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy_patterns.py#L115-L132",
+          "version": "repo-lines-v1:sha256:ec6e6b33aef9d65ed2ca2284f68378230cf1733b1184c9847a61e58f4b6c6734:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjYWU5N2VjMmVjODMzNmFiYzBlZGE3MDhjNzRiZjZmOWFhY2VkNmQ1NTQxMzdkYjQ4NTlmOWRhYzA1OWJlNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY2NjU1MDMxODdjNzdlNDgzMzU4M2Y4MDc3YjYwYzU1OGZjMzE2MDc3ODViZjljMWY0MjhhYmUwMWVhNjIwMWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFiODBkNzRjYzMyZmNkYjAyZmMxODY3NDk5MDA5NWE4Y2RmMTc4YTZkMTJkN2FiNmY3YjI0NWNkZGUzMDg4NTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdhZGNkNTkwMGM2ZjdhYzMxZDQ5ZWMxMmUwM2I2ODdjOGE0Y2M3MTc2MWE3Y2E5ZjU1OWQzOWZiOWU2MjZlMDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_968f6df9dd624978a578640ae041f4eb",
+      "statement": "The deterministic pattern layer (privacy_patterns.py) is a cue-bound floor covering contact fields (email, phone, postal code, street address), biographic fields (cued names, DOB, admission/discharge/appointment/visit/encounter event dates), and healthcare/administrative record identifiers (health card, MRN, patient account, claim, prior authorization, prescription, referral, accession/specimen/lab-order, encounter, device serial, vehicle/plate identifiers), each firing only next to its labelling cue word so free-standing numbers are left alone.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy_patterns.py#L25-L113",
+          "version": "repo-lines-v1:sha256:5ca05be1da7c34d46a2b90dbd62e9aa3f87ff161ccbfe94e9fe1b1837f06a21c:eyJzZWxlY3RlZExpbmVDb3VudCI6ODksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NzE1YmM1NThkOTAwOWFhMjM5ZjNhMTRmZjIxNzA0YzQ4MzhkYzRmYzE4MDI2MzgzMjNkZTUyZWU0OThlMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU4NTBjZjliZWFlY2Y4NjAwZDM2NDY3OGUyNGFiOTEyZmY0OGJhYjc0ZDc3MjVkYmQ1ZGNlZDhjYjhmMjU4NmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3ODI2Mjk1OGU3NTBiZDAxMDI4NTZmZWI2OTQ2YWExNzYxMDNjNWQ3N2EyMDVjZjJjZjQ1MGZkNGEwZjVhNDIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3e3701770e8a421f81711f0544c0bb35",
+      "statement": "clinical_code_intervals protects clinical codes (RxCUI, NDC, DIN, ATC, LOINC, SNOMED, ICD(-10), CPT, CCI, HCPCS, device model) from redaction so dosing/code answers survive scrubbing even adjacent to an identifier match; tests assert these codes remain in clean text while adjacent healthcare-admin identifiers are redacted.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L178-L188",
+          "version": "repo-lines-v1:sha256:958e2beb4f067ff07dae3f1b5311f5173c0df0ac00e1423327bdc4b788e080b0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyYWZlNTFmMzNjNDM5MTFjNWQzNzFmOWRjNjUxNjExOGYwZjIxMjNiZmE1MzU3YzAyODUxNzVlZDEyMTdhMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MDlhNTNhNjE4ZDAyOGUxZDMwMDBjMGE3YWJjZWVjYmU1ZmIzN2Y0ZTUxMWVmZTQ2NjQzZmFkNmU2Njg3MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0NzEwZjVmZGQ2NTdjN2EzNGJhOGRmMWM4NGM5NDQ3OGI5Mjg2ZWZiNWNiN2JmZGU0ZGE3ZjYzMmJlMjBhOTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3NzNlODg1MTczYWIyYjVkZjMyYmY1ZDhmZjY3NTY0NzgwM2U2ZDQ0NDNjNGYyMDlhOTNiZjY0YzQyMTM1N2IifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy_patterns.py#L115-L119",
+          "version": "repo-lines-v1:sha256:e59334e772c1b22ec5bf9cfe7d6a9ae07a47c79a9d83677258a177a3bad86222:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2NhZTk3ZWMyZWM4MzM2YWJjMGVkYTcwOGM3NGJmNmY5YWFjZWQ2ZDU1NDEzN2RiNDg1OWY5ZGFjMDU5YmU2NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWI4MGQ3NGNjMzJmY2RiMDJmYzE4Njc0OTkwMDk1YThjZGYxNzhhNmQxMmQ3YWI2ZjdiMjQ1Y2RkZTMwODg1NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDcxNDhkNzY5NzY3YWQ1MzE1MmM4Njk1NDEwZGMyYWJiOWM5NjZhY2NiYWVhMjFiNmIwZDA5ZTBkOGY2YWY3NCJ9"
+        },
+        {
+          "resource": "repo://tests/test_privacy_sanitizer.py#L52-L67",
+          "version": "repo-lines-v1:sha256:54622e5af2f3263118e267230839f03211fd5a4acaaaee183c85edc9d3ba1a8b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5Mjg3MDA2ZTNkYzJiZjI0MDdiMmZjZjYyZmZhOWIzMzU0ZmUzZmY4YTU2OGZkM2E4MmEzMzhjNmQ2NmYyNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxYzNjZTg3OTdiMWM5YjRhN2FmYzZjOGJjOWE3YzAzODkxNjFhNjJkMzcyN2MwZGY2NjU0YzJlNzc2YjA4ODMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVkYTBkMDU5YTA5ZDkzYzgxYjliYTY3MzE3OGUwNTI3ODhmMjE0YzdlYzk1ODA0NTBhMDA4OGMzOWVkZDhjMGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2ODBiMGYyOTI4YWMwZGJmM2RkNGEzMWQ1YzE2ZTkxOThhMjlhNjA4NmQzOWNmYjU3YzIwZjYwYmUzM2E2NWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_da6a6b2da2aa4378ad76fca8058ec343",
+      "statement": "scan() returns PrivacyScan(clean_text, kinds) where each redacted span becomes a [REDACTED_<KIND>] token (or [REDACTED_IDENTIFIER] for merged mixed-kind spans); inputs larger than 16 KiB (MAX_INPUT_BYTES) raise PrivacyScanError(\"PRIVACY_INPUT_TOO_LARGE\") with no bypass.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L161-L198",
+          "version": "repo-lines-v1:sha256:bed1e24a91f30d423a3b101c6002a2dd67ef1c268e21fa4bcd168a861f11f4f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlYjVjMmVlNTYxYzg5ZTI2ZWM3Mjc2ZmZiMTIzNjczOTIyM2M1YmEyZWM5MzkyMTYzZGY2OWFhOTc1MTA0NGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZjNzA0OWJmMzhhOTYwYWIxNzZhZWIwNjcxMTgyZTY4YmM4NzMwMzQwNzg3YWUzZjc0NTBlODkwZGNjYmVjZmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1NzYzY2IxN2U4ZjdkYjcwYzc0NDg0YjhlZjUwMDZhNWFlMjk2MTQ4YjhkYTQ4OTkzMzhkYjY1MWFlNjk1NDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyNmIyNjQwMjM2NjE4NTFiZjU4ZWYyNTViNjExYjIzYTViOTRlMDAxZWQ1MWVjYThlOTQyNmRkOTM4ZDI0NTgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L36-L37",
+          "version": "repo-lines-v1:sha256:5559b65f21c2f3ebbb6a920449abda58705461f9ecb1544faf8adbd009c85f71:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODExYjYzZTAzMmQ3OTE1NGNhZDUyMGMzZWFjNjg3ZmU1MjIyYWFlZDE4MmNiOTJiMTRhMzhkODJlZDZlMWFiYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWU5ODRlMmQ5MTZmMDZjY2Q1Mzg3YzQ0NjE4YmNmMjM4OGFkZjFkYjQ5ZTQwYjBjZGY0NTcxMTg2NDQ3N2M3ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjczZTU2ODUwZjczMTQ1NmQxN2I1NjIxNGMxNTYyMzNhYjQ2ODBmZTgxYzY1NzdjZjIxZmQ1ZjMwNGNmYzMwMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGU2NWQ1YjM2NDg0YmI5MDhhYjUxMTEwNDRlNjZiNjJhOTJjYjc0ZDM4ZTZhZGQ3ZWQwMjlhOTMwYjY5NGZiYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_66618fcf9a4a4207af947e6378ac0346",
+      "statement": "Scrubbing is applied redundantly at every graph boundary rather than once centrally: individual nodes (preprocess, retrieve, evaluate, generate, safety, safety_finalize, history) scrub their own inputs/outputs before writing to graph state, and engine_record.build_result re-scrubs the final answer, raw_answer, follow_ups, and router telemetry (dropping sensitive-keyed telemetry fields via ROUTER_SENSITIVE_KEYS) before assembling the turn's result, which becomes checkpointed state.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine_record.py#L1-L44",
+          "version": "repo-lines-v1:sha256:e0787921733e65c250daebaef1c7b0690abab908c44c1d69a2e5343f319af843:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlMjViMmI2ZmNiZTA1NGM4OTM2YTIxZjZkMWY0YmY0YWEzZGQ3YWVkMjc1NGQzNzI0NGUzN2M1MjE3YzNlNmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5M2ExMzA2MmYxMGVlNGYxMjE4ZDkzZTM3YTZmODFkMzQ2ZmYxMWVjN2U1NWRkNTQyZTJkMmQyZWYwNzExZjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5MTgwYzM5MWM0YWNmZjg1MjNmMjdkYmRlYWVhNmZhNzYxMjNiYjJjYWZmY2ExZDNkYzZhMzMwZDA1YjZlZTYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/history.py#L26-L79",
+          "version": "repo-lines-v1:sha256:13a2ce7a016760109ff296f495f8411cc686f3934a7d857af2ac220eaca58151:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJmYjM5YWVjOTE1ODQ5YTgwOTQ3MTRjNzc1OTY0YmQ5ZDhkZjVjYzc5MjY3NWQwOTY1NzUxY2IyZmM5YjEwM2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlNDA3ZGUzNTVmMmRkZDFkYThlNTI2Y2MxNjhiMTdlOTQ0YjIyMDkyMzQyMTJlODA1ZWU3MzU2OTYyZGQwOTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ4Y2YwZjExYmU1Nzk5MmY0MjgwN2E3ZGMwYjc0OWYxOTk0M2M0NTRmNjc4MzAwZjdhNzU0ZjZlZGFlMjE2MTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlOWE5ZGRkNWY4YzZkZmFmYmRjN2E5Mjg0Mjg1NGQ3YjNmMTBlY2IzNGVkOGJkNjNkMGU4NzRlZGIxNWMzZGMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/generate.py#L43-L101",
+          "version": "repo-lines-v1:sha256:27496663a046ce8ec199223d47c511a744a9714914af5f6786e4b9df9117a49a:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZiMDI5NTg4MDI2NTFhMmIzOTRkOTJlNTUzYmE4Zjc3MDkxODg3N2YxZjQwZGEyMDJlYmRmNmJlODBmM2EzOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlMGI2ZTY3NDRkY2UzY2YxOWM5ODg3MGFkMGY0OTM4NzY1NGI3M2FiZjU2NDQ3YmM5NzcxODM1NGNkMmJkNDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkMDAwNjZhM2YxYTEzNGFjYmNkZDdkM2VhMTljYmVlMGY5ZTYzMzIzMGFlNjljY2YxN2M4NjBhYWQ4M2M4MDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L87-L112",
+          "version": "repo-lines-v1:sha256:427b3bc763e9e7aff21b0e28bebf81576a1436df41d0582b437afd8fbd3cac4b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMmQ4ZGZiMWNiYjM5MTQxNmQ5MGFmMjI3MjIwMzBjMDQ5MjFkODJiOTJjOTZjMmI0ZmZhMGU4Mjk2ZGVlZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2ZjU1ZjYzYjg1Nzc0ZmYxNTNlMTY3YTU5MDBlYTgxYjUxNTI5MmEwZmI5YzAzOGJmMzBiYTQxNjk3OTk4ZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIwNmNjOGY3OGJmMjNmYWQzYTNiNGRmNDc0ZGZiMjI2MTc0N2FjZjA2ZmJkOTY0MmQ0MjVhYTBmNThhZjYyNmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1NWIwMDc5NGM3MjdiOGY0NWRlN2M4MjQzZDkxODQ0YjI5OGM1NTk3YmM3N2U1YWM0MWVlMmNlMzIxYjQ0MmIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_95dbd29f3b464db297af6b4bf73533f6",
+      "statement": "tests/graph/test_graph_privacy_persistence.py and tests/graph/test_validation_privacy.py assert PHI/identifier canaries are absent from both the graph's returned result and the LangGraph checkpoint state, not merely from the final rendered answer text.",
+      "evidence": [
+        {
+          "resource": "repo://tests/graph/test_graph_privacy_persistence.py#L48-L60",
+          "version": "repo-lines-v1:sha256:4444b1925ec07eb27e56ef66fd720d10bc3f75de6656dd5cdea922c4e2910c94:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOTk0MmRlYjdkYmFiYzExNGIxYzQ4ZDAyZGE0NjM4NmU5YWNhNTE1YTUyZmI3YjNjNDEyZGM2Mjc5MjFiMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExMWM3MjM2NWMxOWRkNjViMDE1NDA2YjMwYTc1N2QwMDk2ZmJlMjAzM2FiMjZhNjM4ZDliZGE5YTlmYTY3YTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRmYmQwMDkzMTRiYzI3MDg0MTY3MzRhMDJhZTVmZjM5YTFlNDhhMDUwYmU5MWY0M2IyZmFhOTIwMDJjNjJiZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM5MDc4MWE4NzgxNWVmZGQ0MjExMjk1YWQ0MGUyOWMwNThhZjAyODA5YTc5ZTM5ZGFkZjEwYWU1YTc1Y2IxODEifQ"
+        },
+        {
+          "resource": "repo://tests/graph/test_validation_privacy.py#L15-L20",
+          "version": "repo-lines-v1:sha256:97928217e9f940be20e71e874787fbe9bad0f92dca516fbcc6170bb6e2d445ec:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmQ5OTQyZGViN2RiYWJjMTE0YjFjNDhkMDJkYTQ2Mzg2ZTlhY2E1MTVhNTJmYjdiM2M0MTJkYzYyNzkyMWIwOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTg5M2UyYWViMjRjZDBiMTQ4MjI3MjZmNzllNDQ1ZTk3YmJjYTdmNDVmNWJkOTZjYzhiMDUwZmFiMTRhMDQ0YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYWQ5NWFkMTQyYWE2NDIxN2JmYTg2YWFiMWQwZjFjYzYxYTUyYjVmOGU3YjM5NGM3NTc4YTI0NzkyMDFjYjZlMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzM5ZmZiMmJmZmFkMzI4NDE1YTg0MDVjN2UyOTc2MDdmNTE2NGI0ZDYwNGQ0MDg1ODhiMWNhOTc0YmM1ZWE0MiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_5b6ca54c513d452895b0f92ffbe5525b",
+      "statement": "tests/graph/test_graph_privacy.py asserts a PHI/identifier canary never appears in log output (caplog), and QueryMonitor.set_raw_answer/set_final_answer/set_follow_up_questions scrub PHI before storing text the interactive CLI will display.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/cli/interactive.py#L108-L141",
+          "version": "repo-lines-v1:sha256:5f311354ac84c6d949b5a4bccaef897da2b846f79e62a0019feff1eb49c68566:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzZmQyODZhZGZkYjA4YzcxYTc5ODZiNmRhOTYzN2I5OWE1ZjQxZDMxMTI1OGY2MmJhNmU5MmVjZTU5ZThlODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRiOGY1ODFiM2ZjMDc2N2RkZWQ3ZmJmMzRiYjhiN2YyOTVhMmMzNDk3NGViYzJiNmM0YWM0MWU5ZTJiNWE3MmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0OTU1NGVlZDljMzIwYjYwNTdiMTJhODgzMzhmNzNmNThjNDY3NTNlNGQyZGMxZjNjNTY1MDQ2YzAxZTQyMTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMwMzViNmFkOTUyOWVkZjAwOTcxM2UwMGFhNGMyMWQxNDUxYjU3MzAyNmIzOWMxNTAyMzBkMWRiN2NlZjVmNzYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/monitor.py#L43-L51",
+          "version": "repo-lines-v1:sha256:e7d8a74f9fec7e7cb42572666a9d7d0c632dfa406498158d641d063c569b8335:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjJlYmZhZTQzMjQ0NDdjYjk3MmMxODViMzllZTNhZWJmMmJhMGI5MjQyY2QzYTNhM2Q2M2RmZmE1YzYxOWUyMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGVhNzc0ZjlhM2MyZTVmNjM3YmJmM2U0MmEyZTdmMjNkMWM4Yzc1Y2VmMGQ0ZDQ0NGQ3YWMwOTI5MTA0MzVjYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2ZjOWE1ODBmYmI5ODczYWQ4ZDNlYTdkYmU1NzkxYTFmM2ZhMzE4ZDhmOGFhYjExZjk4YmJlYzM4MWE0MTNiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODMwZmJiOGU0YjFlYjI2OGY0MDZiZGExNWExNzY1Yjc3MmJjZTdiZDkyM2NhOGVjZjlmZjM1ZWU5YjJhNzk0MSJ9"
+        },
+        {
+          "resource": "repo://tests/graph/test_graph_privacy.py#L214-L235",
+          "version": "repo-lines-v1:sha256:e173662502115d55742008c8da2f566570aeeda6a98853bdd99ab6e9831108d8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlMzRkNzg3OTBmZGU2ZmMzZWY2MWE5NjE2ZjkzNjE0MzcxYzI3YmZkZDM2ODUwNTg4ZWMzNThmN2M0NDE1MGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxMTkzMjJmYmExNjY0ZWQxMTY5MTBhNDJmYjI1ZDI5NGQ2MWVlZGZiNzM5MzEzM2NjNDkzZDBiNDEyOTAxOGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhZDE1MjRmMTJkMmY3NjczMzI5ODBiNjc1YzRmYTBiNTVjYzYxYjE0MDBlN2E5ODE4OWU3ZDRmY2Q1YjRjNGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZjZjA4MTM5MTlmZTYzZWE3Yjk4MTQzODZlZTMwOWE5NmFiYWM1NmU2MzQyNGM0MDljMjM3NzkxMTJjMWJiYWIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_45976a75198946cfabb1d74eebaa27de",
+      "statement": "Tracing is opt-in and gated: enforce_input_hiding() forces LANGSMITH_TRACING/LANGCHAIN_TRACING_V2 back to false unless LANGSMITH_HIDE_INPUTS is the exact string \"true\", checked once in GraphEngine.__init__ before any graph is built; on top of that, the root @traceable span uses process_inputs=_redact_root_inputs, which independently re-scrubs the traced question with scrub_phi and fails closed to {} on any scrubbing error.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L126-L136",
+          "version": "repo-lines-v1:sha256:105afa7e28f539869241ba5496ee798831cb6b29360105d6a237f8f3d2fdb597:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVjODQxZDU4ZTc2NTgyNzJjZDJmZDIzZWMxYzQxOTZmNmNjODNhYjQ1NTlkMzU1MGU0ZTljNjc4NzFiODNlMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5YmE5NzRjNmNiZDEwMTI2ZGI0NDVlODNkM2I0ZGQzNjQ0NDFmYTQ3YjEzMTQ2YjRmYmNjYjI1MjhhOWZlZmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJkZTQ2MmQ5ZWVjZmQ3ZDRmNjhkNzYzYWI2ZjUzODFhZGQ3YzQ0MzMwNGQyMjM4NDk4M2MzMDMwZDEzNzcwZDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjZjc2OTJhN2JlN2Q1M2RmZWE5NDQzNzY4MTE4NzdmMDJiZTg2MmJkMjUyNGU5NzMxNjhhZDllYWVkMmUzYmIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L69-L82",
+          "version": "repo-lines-v1:sha256:df504736e9d835382421eaddb390ecd463fd45874114fc5c2a2d98da8ddc5fec:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMjVhYTM4YTA3ZWEyOGEzZmRkNDY5MWYzMWNkZjU1Zjg5ZjgzNmQ5MjFjYWJkMTM0MGQ2NGE5N2IxMzAxNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMxNDg0ZWVlNjE4MGMxOGM3YjUzZjQwMzQ5YTFkN2Y5YWZjY2NmZWNhMjQ3YTFhMzQyN2QxZTYxODIxMWY3NzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMwMzExOTU4M2NjZjdhNTE2MTUwNTE2OGEzZGE2ZjhjYjY4NDhmMjA4YTQ0NzUzMjEzMzk5NWNhNWViMjJmYmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdjNjFjNjg0YzkxYWRkM2Q5OGFkMzc0YjVlNmE3ZTQwYzEwMmU5NDMyZDQ2OThiZDI1ZjZkOTk1ZmEzNWJiNTUifQ"
+        },
+        {
+          "resource": "repo://tests/test_tracing_privacy.py#L12-L60",
+          "version": "repo-lines-v1:sha256:68782c5a39d9438f5f41c519e8511dabd0bbecd7959a4be2d44701604f6c41c5:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MzgzMjVmMmM1ZGUxMmU4Y2M0MThmOTIxYWFiYTA2Mzg1ZDMzZjQ3MDAyNzJhNGMzZmJjMTBkYjY4M2ZjNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYWI4ZjNkMDg3NWI2M2U5MzU1NmNlZDk3NjQ5MDRjNmM1MzAwMjkxY2VmMTc1OGMwMzBmMjIyMGExZjkzZjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5OTQ2NTdiYmEzMjJiZWZjMDU2MTJiNmRlZmQ1YjkwNmVkODc3NTQzYmE0MGQ1NzA0ZGU0MDlmZGUyNzQ2M2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwNDFiOWQxMDIyZWQ5ODZmMTMwMDVmNjA0ZDY2NWE1OTY1ZDllOWYxNGJlMTg0YmYzMWMxNDAyOWFmMzgwNjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_f40562eb7a044c24990613a7d6f9abca",
+      "statement": "The tracing input-redaction mechanism (_redact_root_inputs / LANGSMITH_HIDE_INPUTS) only covers the root run's recorded inputs; it does not scrub the root run's outputs, so a traced turn's contexts (retrieved chunk text) and safety_outcome/usage telemetry are copied verbatim into the LangSmith trace.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L69-L74",
+          "version": "repo-lines-v1:sha256:efcc574ac230ca9b68a3b5bb187e2752709fb081834b1fbe3f168b7c6ce409d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzMyNWFhMzhhMDdlYTI4YTNmZGQ0NjkxZjMxY2RmNTVmODlmODM2ZDkyMWNhYmQxMzQwZDY0YTk3YjEzMDE2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGYyOGUxMDZjYjczYTg0MmZmOGUwODgzMDgzN2Q1MjBmOTU1YjRjMDk0YTk3MGQwZTYzZjQwNTI1YzE4ZmMyNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzAzMTE5NTgzY2NmN2E1MTYxNTA1MTY4YTNkYTZmOGNiNjg0OGYyMDhhNDQ3NTMyMTMzOTk1Y2E1ZWIyMmZiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmJhNzc1NDBjNGFjNjAyZjdkZTgxNzYzMjAxMjNmMGFjMWQxYzFlNGVkMjI3OWEzNGFkYjQ3NTBiYjI5N2EwYiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine_record.py#L1-L44",
+          "version": "repo-lines-v1:sha256:e0787921733e65c250daebaef1c7b0690abab908c44c1d69a2e5343f319af843:eyJzZWxlY3RlZExpbmVDb3VudCI6NDQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlMjViMmI2ZmNiZTA1NGM4OTM2YTIxZjZkMWY0YmY0YWEzZGQ3YWVkMjc1NGQzNzI0NGUzN2M1MjE3YzNlNmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5M2ExMzA2MmYxMGVlNGYxMjE4ZDkzZTM3YTZmODFkMzQ2ZmYxMWVjN2U1NWRkNTQyZTJkMmQyZWYwNzExZjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE5MTgwYzM5MWM0YWNmZjg1MjNmMjdkYmRlYWVhNmZhNzYxMjNiYjJjYWZmY2ExZDNkYzZhMzMwZDA1YjZlZTYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0fbbf4d5c9514b438140763df7b69d86",
+      "statement": "The coach agent reuses the same PrivacySanitizer before persisting member data: memory facts, reminder titles, metric units, and injection-log fields are scanned and refused with fixed strings on PrivacyScanError (agent/memory.py, agent/reminders.py, agent/tools/log_metric.py, agent/tools/log_injection.py, agent/store_data.py).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/memory.py#L17-L106",
+          "version": "repo-lines-v1:sha256:252b8d67d9ec0237262ba8ab21389f8f3bf1c7cc5cdd2500da97dd49d809de91:eyJzZWxlY3RlZExpbmVDb3VudCI6OTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhNGRlOWIxMWQ1ZTkwMGY3NDNhMWVhZGQyYmZhMmEzMWRhZjc0MTY4NGIyYTJkMjZhZDBjMmY1NGM1ZDRiMDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlZDU0MjlkN2Q0NDgwNGRhNWVlNjExMmU4MzliMWEzOGQ2YjJkNGE2MmY1ZjMwYjE1MTliM2IyNDY5MTVmMTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMxMWM3OGM0NDFlNDBlMmE0NTYwZDk2MmI4YTMzOGEyNjg0MjkyNDIzYTQ3OTkzYzAzZWM0ZjYwMjQ3OGI5ZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBjMmFkMjQ5NGZjMTk3YjI3NGM2MmVhMTg1ZDJhYmU1MDAzNmI2ZGRkMmI5MmZkNDVhNjZiZjIxMDEwNGVkZjYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L25-L49",
+          "version": "repo-lines-v1:sha256:26da2ddefc3b67e8571654bc918b868be49690a759271d9fb167d4b8b98f6f0c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZGQyZmEzZDcwNTM4MzAzZTc4NmZlYjEyYmVkMTQ1MzI2YWE2MWMzZWNjNWIyOWY4NGI4MGY4M2Y5YjhlMmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkYmZmYTYyNjk0NDg2OTEyMzg4MjE3ZDI0ZTUyMTBlYmIyYTIzYzM3ZGU1YjMwYzM1OTE5MGFjNzcyYzI2NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4ODJkYWFkNWQ2NWNjOTFlNWU0YWQwY2QyMDNmZDRjZjMwZWJkMmJlNGYyMzlmM2Y3MjZjYmIyMTM3NDFjNGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwMDdlMWRiZjBmYTk5NTZmMTViZWJkNmRlOWMxZDNhY2M3NzgwZDIxYTljNjNjMjY2YTIyN2M5NzNlMTFkNWEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/tools/log_injection.py#L37-L169",
+          "version": "repo-lines-v1:sha256:8e0a6f3a110b87deee8f006c147b90c7b91832e1cf45a053a8dacf8a193a0428:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4YTRkZTliMTFkNWU5MDBmNzQzYTFlYWRkMmJmYTJhMzFkYWY3NDE2ODRiMmEyZDI2YWQwYzJmNTRjNWQ0YjA3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJlZWQ1NDI5ZDdkNDQ4MDRkYTVlZTYxMTJlODM5YjFhMzhkNmIyZDRhNjJmNWYzMGIxNTE5YjNiMjQ2OTE1ZjE5IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmMjhjMjZiMjc5OTA3Yzg4MWVkNTIyOTZmNzExNzkzMTIzNzhiMjdiMDcwZTA3ZmE2OTlmZWE4ZGRjOTM2ZTljIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0OTc2YTZlMzU2OGYyMzJkMjI4NmQwZmM4YTk3ZTJjYjFiYzJlODYzYjZhODhlYzAwNWU1YWQxZTU0MDIwNTAyIn0"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/tools/log_metric.py#L34-L138",
+          "version": "repo-lines-v1:sha256:2a2a0c812a9d9b2b2e5fa42a363531644d27220f80f4b71baba61eb375e13cd4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4YTRkZTliMTFkNWU5MDBmNzQzYTFlYWRkMmJmYTJhMzFkYWY3NDE2ODRiMmEyZDI2YWQwYzJmNTRjNWQ0YjA3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJlZWQ1NDI5ZDdkNDQ4MDRkYTVlZTYxMTJlODM5YjFhMzhkNmIyZDRhNjJmNWYzMGIxNTE5YjNiMjQ2OTE1ZjE5IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJiMDk1MWEzZmZhZDAwYjQ5MDQ2YWEyZDE5MDNlNzUwZjczMjYzMmFjM2QwMWUzYTFkZjk3MmZjNjYwOTE1NWJjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJhNGQ1MmQwZmE0MmM0OTJjZWM2NjBkYTdmYjkyMzk5MjI2OTNjOWFkZjVjOWEyMDI0OGU2ZGZkMTEyNTkzMDRiIn0"
+        }
+      ]
+    },
+    {
+      "id": "claim_52d97649299244f0991cfd2e8f4e4f03",
+      "statement": "PrivacySanitizer has a fail-closed lifecycle: initialize() moves UNINITIALIZED -> INITIALIZING -> READY only after the analyzer is built and _validate passes (pinned presidio-analyzer==2.2.364, spacy==3.8.15, en_core_web_sm==3.8.0, full ENTITY_TYPES inventory, and a sentinel scan finding PERSON and IP_ADDRESS); any mismatch or exception moves the singleton to FAILED permanently, and a concurrent Condition variable makes overlapping initializers wait rather than race.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L134-L159",
+          "version": "repo-lines-v1:sha256:720d31538db2e872c0edc6e7296235ebccc18fa1a22b64db394cd9567503c091:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwNDcyNGEzMGFiYjAxZDA2YzIxYWZhYjI1N2MyM2UzN2E5NjRjNjRjZDViODU5YmU2OTIyNmQ0NTFmMTAzNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmNjg3ZjFhNjBiY2M0ODYxNWEwYjBjODQwNTRlODFjZjFmNmEwOTE0NWIxZGJlYTZjMzdmZmMxNWU3OWYyNjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU1YjQ3ZTI2OTc2NGZmNzQwM2I3Y2ZjZDI2ZDdjZmQyOTY2MGY5ZmM1MzQ5ZTkyYWFmNGEzYjhiZGJiZjliYWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM3Y2I5MTc5MjcwMmQ2NDhhNGNjODNjZWI2NmU5YTJlNjhiZDU4NjY1OGJhZmRkZTI5MGY2NGM5NDEwYzJkZDgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L241-L259",
+          "version": "repo-lines-v1:sha256:0033e844b442fd0d2d381663ab422e2198ae312ce516038937d7cc3c00b09743:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUwNjEwZWU5ZmE1MWI1NTBkZDIxZmI0MjQ4YzE0NGMxMDJmYTBjZDVhMmZjYmMzM2JkZGU0Nzg4MjNmZTFiMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4MWVkZWI2NTRlM2I0NWIzY2EyMTlhMzQ1MzE0MTlhMzI1NDEyMWQ1MTAyY2I2MGI4MzRkMzc4NDNhYmI3MDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlYWI2YzQ5ZjMwNTBlZWNmMzBmODRlNTQzYTEwZmY2NzhiM2I2YTNjMmI1YzBjNGI3MjUwZDBlMDVhZTU2NTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b0f4ea919aff408ab70d5f1a2a55c0ee",
+      "statement": "GraphEngine._initialize calls privacy.initialize() before compiling the graph, and every scan() call lazily initializes too; a PrivacyScanError raised during a turn makes GraphEngine._run mark privacy_failed, emit only the error code (e.g. PRIVACY_NOT_READY), and return empty state so the user gets no answer rather than an unscrubbed one.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L100-L101",
+          "version": "repo-lines-v1:sha256:eac5ccb130d492f18aeed3b4c64179077be42ed798798686744506e0e2a3549f:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTIxZmQzYjg0YThiNzFhNWZiMTNlN2E5ZThjMGRmYWNjN2M1NmU0NWU3NTQ0NDQ3YTczYmEyNDc4OWY4ZmNiYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzhkZDQ3OTgxZmUxMTI2MDg3ZjFlNzlkMzg3YTFhNTdmMzVlMTUyMWU1Y2M1OGIyOGVjYTQyOWVjMGExMjRkMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDcwOGYwODczYTM5YjVmNzA0OTc4NjY2ZDkzYjJkMzhhNjM0Y2VkNTZjOTBhMjU4ZmI1NGNmMDViYTNlYWU0NyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTRjY2I0OGUxMTYwZjgwMWJhYzQ2NzM3OTExM2MzZGQzZjc3MzhjNTg1OTY4NTA5MzU2YjA3OGI4ZGExMmY5MiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L177-L193",
+          "version": "repo-lines-v1:sha256:eb3acbf0bcff702488e699869d9703a888bb8426cbc42667321cfad5885d0d00:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0ZTU2ZjdkZjQzZDRiYzM0ZDkwMWJkYTFlZjYwMzI1NTQ2NGU3MGVlNDlmMmJjMGQ3OThiN2FhNTZmYTdiZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MjQ0ZjU4ZmE5ZGJjMjgyMTVkMzg2MDI0ZDRkMzc4MmMzNzljZjdkYzY2MDIzNDM5YjRmMGUwZmU4Y2ZlNzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYwNGM2NDJjNzA5OTUyMmU5ZjMwZjMyZGQxZjc3NmQ5NzBhYWM1N2YwZTkwOTQwYzVjNDFiM2QxMWY3Mjg4NmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwYjQzYTI3Y2FlMDU2MDlhNzEyNTNiYjgxMjAwYzVkNTQ4MDRiZTI1ZDIwN2VlMjc4MDliNGYyMzlmY2EwYTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_353685396826468cb6d1c57cbd4e94d6",
+      "statement": "evaluate_generated_output (processors/direct_output_policy.py) gates the tool query-response arm's direct-answer text before it is ever shown, denying with privacy_error (over MAX_INPUT_BYTES or any scrub hit), unsafe_direct_content (injection_flags match), or clinical_direct_content (a NUMERIC_DOSE match, a clinical-unit token, a clinical action/target instruction pattern, or failing the social-only-output check); only a clean pass returns the scrubbed content with no denial reason.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/direct_output_policy.py#L247-L266",
+          "version": "repo-lines-v1:sha256:1a69f4ccfd15b3d49c6f3c1513d870e0ad7e9d5745fd6980aeb89642a0c4852a:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1M2U3OTBlYTE5N2IyZDdjOTYyOTc3YTY0MmIyYzhmYWY5YWQyNmU4NzFkMGMxNTI5MDdmMzg5MzUyYmFiMTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNTc4MDdmNjNkNjM1MGJhZjZiYTViMmI5NjJjZGNhNzFmNWE3N2QzYTk3MTdlMmE0OGFmZjAwZTc0NDYyMDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlNzU3NWMzYjc3NzZjZjJmOWMyYmZiY2E0NGYyMTQ4MTNhNzgyN2VhYTljMzg0NTRjNzAzYjY4OWE3NDQzODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://tests/graph/test_direct_output_policy.py#L1-L73",
+          "version": "repo-lines-v1:sha256:38125a8a435f964cb9c39b009ce577a2282b5ce67580ce4284ec3d2a7813a910:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyMWNhMGQ4NzVlMzk3ZGJkMGY1NWZlNDUyNDhjNzcxZThiMTNiNjYyNTYxMGM4N2Y5NWFiYzU5OTdjNDJkNWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2ODBiMGYyOTI4YWMwZGJmM2RkNGEzMWQ1YzE2ZTkxOThhMjlhNjA4NmQzOWNmYjU3YzIwZjYwYmUzM2E2NWQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_0c2ca1d0dc1d47b2bc1f25c28e3e2651",
+      "statement": "History entering the tool router is projected through _project_history/scrub_router_text (human/ai string content only, each message scrubbed and size-checked) before being bound into the router's prompt, and tests/graph/test_query_or_respond_privacy.py asserts PHI canaries never appear in the bound prompt or truncated history.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/query_response.py#L52-L111",
+          "version": "repo-lines-v1:sha256:9fd338d5702d44b5c407a71d524fbc5558f6d38aab9e7201b4e61390e03351fc:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwOWNmNTliMGExOGVlYmUzMTJiNTQ4ODQzMGVjZTkzOGFhY2Y4ZjhhZmZiMjU1OGNmMjc3ZmY4MzExYjlhY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkYWEzMzVhY2I1MDg2YjRjNzI2Y2U2YmQwZTgxNGNhZDNlMWJlZjM2MTIyYzc4MWVkMTY3MjZmNzU5NGI4M2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjODIyZDE0MmE5MzQxZmFkMDY4NTViNWUyOGQyMTcyOTA0NTU0Y2Q2OTU4YTk4OWViMThhMWU3MDExYjk2NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzYzE3MjhjMzQ4Yzc0NTk2ZTg4ZjcxMDFkNzljNzRkZTEyN2E5ODM1MGY2OTgyMjIxNjZlZGM1ZjI0OTUxYWUifQ"
+        },
+        {
+          "resource": "repo://tests/graph/test_query_or_respond_privacy.py#L12-L61",
+          "version": "repo-lines-v1:sha256:b975a538de44f354b6fb4e7aeec4d20a3e9f678afe898d68a2e120c1f9efb98c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkOTk0MmRlYjdkYmFiYzExNGIxYzQ4ZDAyZGE0NjM4NmU5YWNhNTE1YTUyZmI3YjNjNDEyZGM2Mjc5MjFiMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyYzAyZmUwZWJkMDhiZDQxMzQwNDViMWU1M2FiYmQzOWM4NGY4NDZhYTg3N2YxNjg4YmNiMmU4ZWYzZWYzOTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjNjE2ZTBmYTU3OWFkMzJjNGIxZDAyNmE4OGEyYTQxNjU4YTNiMjFlNjEwYWMzMmQ3YzUwYjU2MmViNDRhNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhYjdiMjcyYWI0ZTI1MTc1YjVmZDI0YzEzY2ZlNTYzNDI1MTRjMDI3OTQ2ZjAzYjUzMDVkZjIwMzM3ODc5ZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_aee80c0520bc403ca4b4081333a96cb7",
+      "statement": "The Presidio analyzer requires pinned versions (ANALYZER_VERSION, MODEL_VERSION, spacy version) baked into the Docker image via langgraph.json dockerfile_lines with an import self-check; bumping any pinned version requires updating _validate and the wheels together or the sanitizer refuses to start.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L241-L247",
+          "version": "repo-lines-v1:sha256:7f4c7f5b520c3c6b48ce3875f747f5c315635ed77c11fb02802b44dd062209ff:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTA2MTBlZTlmYTUxYjU1MGRkMjFmYjQyNDhjMTQ0YzEwMmZhMGNkNWEyZmNiYzMzYmRkZTQ3ODgyM2ZlMWIyZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGM5OGVhMGFjN2Q0M2RiNjJmNDdmMTUwODgxMDU3NTg5MTdiZjdhNWQ1M2YxNGJmODE4ODVjNDk5NTU5NmU2NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZGVhYjZjNDlmMzA1MGVlY2YzMGY4NGU1NDNhMTBmZjY3OGIzYjZhM2MyYjVjMGM0YjcyNTBkMGUwNWFlNTY1OCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzkzOGFiNTViMWVlYTQ2NDhmMTEzMzgwNGEwOWM3YjgxYmM0N2MwMThkZTkwMjBhNzlkNGQ3NmIwMGZjZDI1NyJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L38-L40",
+          "version": "repo-lines-v1:sha256:0e65d5b36484bb908ab5111044e66b62a92cb74d38e6add7ed029a930b694fba:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjFhYzkyM2QwZDgzZDRlNzJkNGQ5ZTBlMzBiMTA2NzdlNWFjOGNhMmYxYmI4MTIwZTE4ZmM5NWJkMDQ3ZjdiZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzgyZTVkMDFmNzNiMTRkNzQxZTgyZGU4MzllMzdjMmI5OWM3YmU3ODMyYWE3Njg3NzlhZWU1ZjAxY2E5MGViMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTQ5ZTA3YjNjOTY0ZTI4MDljZGY5YTZmMDliNjA5OGQyYjY0YTMwMWIzZTE3ZGFhMmRiZWFiMTNmNDMzOTYzYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTMyYjRkMTkxYjBhNTQ4MmI3YmE3ZGJlNWJiOTE3N2FhZGFjZWRiOTljNDc1ZjU1Zjk0MmYzNTUzZTAwMTA2MyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_295cc7f286264fbc8f0c59fffe3c604e",
+      "statement": "scripts/redact_smoke_log.py is a separate, regex-only redaction layer protecting CI-published deploy smoke-test logs (not model/log/trace/state boundaries): it masks credential shapes (bearer/API-key headers, lsv2_/sbp_ keys, JWTs, named env-var tokens) and truncates over-long lines to status+length before an artifact is uploaded, invoked by deploy.yml for both tag deploys and rollbacks.",
+      "evidence": [
+        {
+          "resource": "repo://scripts/redact_smoke_log.py#L1-L58",
+          "version": "repo-lines-v1:sha256:efa89b090333adc49672e5f3a6e08efeae472b8330d25d7f102e895ae44d4f9c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1OGM3N2JhODcwOTY0YzYyOWFiNDhmM2VmNmIyZmE2MDM5MTNhNGU1OThjOTMwYTA4NDM3N2I1NTg4NmI1ZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzZTdiYjMxNTZkZjFmNzcyOGY0NTMxOTM0NDlhYTc0NmQ3MWE1NDEzYTQ0M2FjZGVkMTZkYzcwNTI2Nzg0ODEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0OGQ3NDgzZDA2MGYxNzIyZTI0NTM2ODg4MzM0MjU2YjU0OTBlOGJiZTg2OTgyMDY3NmNhOWVhZjM1MDljYzkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_97cbe13a38764b22b080dc08d962b707",
+      "statement": "tests/test_redact_smoke_log.py asserts secrets never survive smoke-log redaction, header names are preserved, long bodies are truncated with a [TRUNCATED len=...] marker, and a missing source log is handled without failing the step.",
+      "evidence": [
+        {
+          "resource": "repo://tests/test_redact_smoke_log.py#L19-L90",
+          "version": "repo-lines-v1:sha256:299e44494c8a226787347bb4170f440d37b0c283cf87ffae6673860e11a6925f:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNTJmMzFmODBhZmUxOGY0ZGNkOTE3YTlmYWY5MGM5OGVhMjNhNDhjZTgxOGNiZDQzNTRkYWZmYmI5NTg4MTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllZjNiYTlkMmFmNzYxMThjMzVlZGNkNWU2YTgzMzIzOTczMjdhYjU5Yzg3Mzc1NTMxNWI0N2NhYzRlNGQ1MzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwZmY2NDY3MmNhMmRlNDlhMWRlNWMyOTdiYTk4OTFlNWQzYWFlNjQ3NDc1NzkxYjY1OTYxMTRlMzI1ZGJkMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}

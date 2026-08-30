@@ -1,0 +1,222 @@
+{
+  "schemaVersion": 1,
+  "pageVersion": "sha256:b22f7a1f686b4f8d60d7ad98b2636c5e4d259e3dc5dcbf3eec9942391421f7d2",
+  "claims": [
+    {
+      "id": "claim_13e8d9f28f2249638f15907553b95894",
+      "statement": "The repository contains two related LangGraph products: a healthcare RAG graph over Lipitor and Metformin monographs, and a separately deployed member-facing coach graph with a protected HTTP perimeter.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L1-L12",
+          "version": "repo-lines-v1:sha256:b9d6eed4980b19b9539a570ef85faf43a2ea0d2c88dfaa2036e15aaf0e5fb7a8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmNTVkNDU1ZWI2OTEyMzc5MTA2MmI2OTlhNjE5MTU2OGE1NGFkNmJjZGNiMzVlMDc2MDYwZDg4OWQ4NGFiNjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQyNDA5ZmUzZWQ4MzcwMmRmMmIwMmZmMTI2MTdjYTAxMzA5MzY4ODE1MmZmOWU2ZDQxZmQ4MzVjYzhkZTc5MDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc5NjU2ZjYxN2U5Zjk5OGM0MWIyMGZmOWYzZDQ1YWIyMzJmNmQ5YjM2MTM2MWJhMDkxYzhiYjE3NGFkNzZiMTYifQ"
+        },
+        {
+          "resource": "repo://langgraph.json#L1-L6",
+          "version": "repo-lines-v1:sha256:b4a482b402c242d259b769678d2b840c8c106ae8082f1e74ac048bca7f106690:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTZmYjA4ZmRhMWFjYjk1N2I2MTE2YmQzNzgxMWExZmU0MWEwMTYxMWMwNjMxZWRiZjc4NmQ2ODg5YTI3YTU1YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGQ1Y2QyZmI0ZjNkZjg4NDUxNTI1NWIzOTUyM2YyZjhiNTQ3MmJlZWE5ZjU2NmZmY2EyMDRkYjgwMjU2MTA0MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTM5ZDE5ODY4NGQ2NTUyMDRkM2RjNGZiYzZiMGI3MTVhNzhiNGNiYzFlYjliYjE4NGZhYmI4OTY3OWYwMzAwYiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_a663d3afc019428281a2d8efc4d65473",
+      "statement": "The public StateGraph built by build_graph() in healthcare_rag/graph/build.py (wiring safety_gate, add_pipeline's clarify/context/decompose/retrieve/merge/evaluate/generate/validate/follow-ups nodes, and finalize) is the only RAG runtime.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L60-L134",
+          "version": "repo-lines-v1:sha256:1e9cf97799a1fe13e86c32cea2591f71b994cc2a400058a74e01e92fa92650d9:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmNjczYzZjZDM4NTI0NTA1MzA4MzViMTBhNWVmZWIwMzUxOTE3ZTBjODc3Yzk3MmEwZDdiOGE0OWYxZGM1OTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNTdiMWM4Y2FjYzgyZGQwZGRiMGYyZWJkMDg5MTlkNjgzZTdkZTdlZmRlMjZmYzc1NzE3NjUwZDg0M2YxMTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxN2ZhY2E3MzVkNTllMjM4ZDVkODI3Yjc4ODIyZTg1NzAxMmJkYzFhMDA4ZWUzNGVhYzRmYmE2MDUwZTI1MzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b4ad21ccf42344e288ba940c663a4846",
+      "statement": "The pre-port speculative-execution orchestrator that formerly lived under healthcare_rag/orch/ was deleted in commit 3435caf during the Phase-2 cleanup and is not part of the current architecture; contributors should not plan changes against it or restore it.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L7-L12",
+          "version": "repo-lines-v1:sha256:23374393f01e139e4cc339c746b1843b2eaabc92e958f05710c2b1931a1e3473:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDZjNGNkOGU0NzQwODFmZWVmNDQ2MmY1NTE0ZTQ4NDA3YjJhMjAxNjg3N2VhYTNhOGUyMjM0NWEyZjE5OWY5YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDI0MDlmZTNlZDgzNzAyZGYyYjAyZmYxMjYxN2NhMDEzMDkzNjg4MTUyZmY5ZTZkNDFmZDgzNWNjOGRlNzkwMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWE3NTMxMzE0YTBhZjRmMDk1MTFjYWQ1OGZhYWQ2ZjYzNWYyMDhhZTYyYzdkYmU3NGNmYzJkNGVjNDMyMTJhZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzk2NTZmNjE3ZTlmOTk4YzQxYjIwZmY5ZjNkNDVhYjIzMmY2ZDliMzYxMzYxYmEwOTFjOGJiMTc0YWQ3NmIxNiJ9"
+        },
+        {
+          "resource": "repo://docs/journey.json#L253-L253",
+          "version": "repo-lines-v1:sha256:e000de798dbea4438a0285f078d17a6517ecec7084da283e09dc20cb1e0116e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTAwMGRlNzk4ZGJlYTQ0MzhhMDI4NWYwNzhkMTdhNjUxN2VjZWM3MDg0ZGEyODNlMDlkYzIwY2IxZTAxMTZlOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTAwMGRlNzk4ZGJlYTQ0MzhhMDI4NWYwNzhkMTdhNjUxN2VjZWM3MDg0ZGEyODNlMDlkYzIwY2IxZTAxMTZlOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTU4M2JiZjcxOTE0YjlhMjE1MzRjODRlOTMzZjFjOGVlYjg0MjE5MmY3OWQ4MjVhOGMyM2ViNzcxOWViNzEzNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjNhZmRiNTE4ODBmNzliMDIyYjYxYzM2YTg0MTY0YWY2N2YxNWVlMzYyZjViZGZiZmVlNmY0Yjg1NzFiMDgwYSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_f1862ece9e3d471b85312dde12a20ff4",
+      "statement": "The obsolete root requirements.txt was intentionally deleted (136 of 142 Dependabot alerts were raised against this frozen, mutually-unsatisfiable manifest that nothing built from); pyproject.toml and uv.lock remain the sole dependency authority and the file must not be restored.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/dependabot-requirements-txt.md#L1-L36",
+          "version": "repo-lines-v1:sha256:04c003de4c9ef32643aed113315b493bf13641793a04ed96674ab1ca3e6a628d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1ZjAwNzRiMWVhNmE4YzgxOTUzYjQ0OTYyMGU3YWU3N2FkYjU1Mjc0YTQ4N2QxNDFjY2YyZTU1Y2I4ZjlhNTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhZTE5ODgyYjRmZmVlOTY4NzRjMWZlYzNhNzg2ZGJmNDJlNDc1YTFlMWVkMTIwYmU5NTc1ODUzMzlkNzAxMzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyY2JiN2U5MjcyZDExOGI0NGIzMDRiZWNmMTVjZmUwNDMzMDAwZDZhM2YxMTE0YjA0MDhkNTQ3ZDk5YTBmNzQifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7554a457e8874cc2be1aa263c9b4f7b8",
+      "statement": "Current production routing defaults are HC_RAG_QUERY_RESPONSE_ARM=current and HC_RAG_SAFETY_CLASSIFIER=llm; the paired routing gates record independent, currently inconclusive evidence rather than an adoption decision.",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L291-L296",
+          "version": "repo-lines-v1:sha256:9483d9b5a55fc9c8bdf993643fa397ea4d66b5c1cd5764f3dbcade95d96745fe:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTZmYjUxZjY5NWZlNmE5MGQ0MDE0MTkzYzZmZGY5YzQ0NDJkYTJlYzE2NjIzNGY3MmQwYmI5OWRmZWYzODg3NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjFhNmVjOGRlZGRkMzBiNDdhNWRiNWQzZGUxYzJkZGJhZWRmMmQxZTYwZWIwYzBlN2U1OTM0YzhjOGJjM2Q2NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZmY2ZmYzMDNlZmM4ZTFkMGM0ODI0NmYzNzY1OWFkYjJlMzgzMDdhM2U0ZGZjZGQ4ZjhhZWIwNTNiNWJiN2ZiMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWVkNDFlOWJjNDRmMWEyODFiYmEwYjE4NjcxOWM5NzY3MTlmYWZlZGRmOWEyOTFjMTFkMDMzZjNkNTZkMmIxNyJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_47721f52c005473dbbfa66e97a479a59",
+      "statement": "The safe local path to run the project from a clean checkout is `make venv`, `make weaviate`, `make ingest`, `make run`, requiring Python 3.11+ (make venv selects Python 3.12) and OPENAI_API_KEY; make ingest passes --delete-all and removes every local Weaviate collection.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L14-L22",
+          "version": "repo-lines-v1:sha256:eb8c92d46b42cd0e3ca4dc7e573a99368f59f94cb784c8207567c989b26e99ea:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODUwNGU1MzYyMjU2MGUxYmQ2M2QxNWYwNjM3YTk3MTA3NDc2M2NiY2NmMDliYWE2YTY4YzBlNmYyZTk1NjAwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzRjZGU3ZDUxYjdlNGY0ZGFmNGUwNjU1OTBiNzkzYmIwYjgwMjE2OWYxNDNlZmUxMWQwZjQ3MGJhMzZjNWMwZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGRjY2E3ODY1Y2M0N2M0YmY2Yzk2MDdmOWNiMWJjZjM1M2E2NTRhOTU0YmI4YjBiMzlmMTBhZWJlZmRhMmFiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTJhYzI1Y2VhNDVjYzZiOWNlNThmMWI1ZGJiNjVkYmFiOTQ2MGY4ZDY4ZGExMzFmZWVhNGNjZDJjMDUyOTQ0OSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3d8d813a07844613ac3647c231b9c63b",
+      "statement": "Model selection is centralized in healthcare_rag/services/models.py and healthcare_rag/services/model_sampling.py; sampling_params() adapts kwargs per model family since GPT-5.x reasoning models reject temperature unless reasoning_effort='none'.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L1-L26",
+          "version": "repo-lines-v1:sha256:b61dd847750fecc168abfa3d1def65552e18cf872771145d894c6a451667e8e1:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MTRjNDg2ZTAxZDliYTQzMzk0Zjc2NGY3YmVkMWRhZmNmYzZmYzg4MGZjNTlhZjY3MmU0N2MzNzYzMThhMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhiMGVhNTBjYTE0Mzk5MWRjNzk2Y2Q3NjJjYTQ4MTkyZWM4OGI2OGM2NjMzZWVhYzkwNDY2YmViNGYwYjFhYTgifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/services/model_sampling.py#L1-L48",
+          "version": "repo-lines-v1:sha256:e159003ca85c0cf26263652b61ba548a70c3b3575bf1c9831721f2ec21937a91:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZkMWIwZWRlNjU4YmFlYzE1MGNlYjJjNDZjNjVjMGJhZDE0OTNhZjA4NDcyNWJkOWVlMDBlNTJkOGJiNTkxZjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e0b7a48451be4c28810700db0a3c7487",
+      "statement": "Prompts and structured-output contracts for graph stages are centralized in healthcare_rag/graph/prompts.py via PromptRegistry, STAGE_FILES, and RESPONSE_MODELS, and rendered through LangChainLLMGateway in healthcare_rag/graph/llm.py.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L29-L57",
+          "version": "repo-lines-v1:sha256:65ea6b0eac3b4f7b284e686c19130354030e1626c7d944270e8a89e87623fc82:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkNGQ3N2EwYTU0MzZiZjIyYjBkOGM3ZmYyMGY3ZmY3N2M0ZjFjYjMyYzZhOGM5MWQ1MDJkODJjYTY2Njc2YjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3MjJlODljNjRmMDFhMWZmMTAwMGE4Y2Q1Njg5MDlhNjQ4N2FjOGQ2M2UyZDE2MTc2ODg1NDZiZmI5NGYwMTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZlNTk2NzIwY2U2MWU1NWU1NDMzNTkzNjgwNTFlZTYwMDViZDRhZDI1NDYzZGY1ODRhNDk5MWJmYjMwOTY5OGYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/prompts.py#L28-L89",
+          "version": "repo-lines-v1:sha256:83e7f0605b63f1f780d1e76f2aea949d116e5706ee477b9d59eb29fb3c1b026b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5NGViNDUxMjUxZWRmNGZkNWQyMjc3Y2ExNjgwNzQ1OGFjY2NkNTc0NDliYjUwZWU1ODM0ZjhkZjU1YzE5NzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDY0ZWM3NTJlMGI5OWY1NGUzZDc4YTRkMzYzYTY0YTdmY2U1NDZjYTcwYjJlMTkzMWM4MjI1ZGQzNTc1MjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3ODQ1Njc1YWEzNWFiMjcyZmI2Y2U4YjU2ZTExNjk4OWRjYzRjNDA2YjRmZWI3MDFmMTVmNDk0MDdmM2JjYTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3ac2d0b0d06c4b28b4941a1d5ea8a215",
+      "statement": "Retrieval arm selection is centralized in healthcare_rag/graph/nodes/retrieve.py's resolve_arm/retrieve_documents, backed by hybrid_search (Weaviate, default), pageindex_search, and pinecone_search implementations in healthcare_rag/processors/.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L34-L99",
+          "version": "repo-lines-v1:sha256:8417315dadae422a73708b45dfb5f7b872a19e670f086a633da34da68a7f9a1c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3YTE2MDBjMzgwODJjYmQ3MjU4ZTExZjZiOGVlNWEzZmIyZDEwZmM4N2Q5MzM5NTkyMzQ4ZDFmYjI3ZjAwMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc2ODkzYmE2NjUwYWNlOTA2YWU5YTNkNmUzMDM1Mzk3YTEzYmM3MzkwNzcwMzIwNGQ5MzEyNzlkMDBiYWIyZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5MTY1N2QwMDkzNzkzZTgyNTEwYjc1NzY4NmZiYjVlM2U2Y2IwOTUyMDRlZmEyNTQ2NWJjOWM0MGM3NzhkYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMwY2QzYWI4NWY0YjQ2YTVhYjUyZWU3ZmQwOWUzMzMzZjA3YTQ0OGFiYTRmYmZhMWIxZmRiZTRkOWRkMjI2ZTcifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/retrieval.py#L64-L64",
+          "version": "repo-lines-v1:sha256:ac711a6b6842071df74791f22bc1bd99ad43f05966cb60da2ecdb0bf3d893a8c:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWM3MTFhNmI2ODQyMDcxZGY3NDc5MWYyMmJjMWJkOTlhZDQzZjA1OTY2Y2I2MGRhMmVjZGIwYmYzZDg5M2E4YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWM3MTFhNmI2ODQyMDcxZGY3NDc5MWYyMmJjMWJkOTlhZDQzZjA1OTY2Y2I2MGRhMmVjZGIwYmYzZDg5M2E4YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDAwNTdlMWY0NGNjZWIwY2YzZWExNTJmYWI5MTZiYzIyZWRiZDFhYzhhMzAwODEwMjYxYjhlNTUwZDZiZGE3NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODBlZTg1MGZkZGY2M2FkNzEwNzk1YjNhOTQ1MmQyY2VkNGQ3MjgyZDUzYzQ0Y2FlMmVmNjQ0NTljZjBmMmYyMiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_79bb2d0d95ca42348dd53ac9a5b220a9",
+      "statement": "Answer structuring and citation validation is owned by AnswerValidator.structure_and_validate_async in healthcare_rag/processors/validation.py, invoked from the validate_answer graph node.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/validation.py#L27-L43",
+          "version": "repo-lines-v1:sha256:ff58d783138a781306396a5bde3d38bcca90fcbc9e0832cca102ac30040958d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3ZTllZTk3NmY2NDAwMmE1OGM3NDU3ZTljYzVjMjE0NjdkNzJjMGY0OWJhMzY3YmEyMGRkOTYyYTQyZWE1MWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhNGU3NjBmNDdlNjE5MTZiM2UxMjdmNjBiYTc3NjYxMzVmZmZkNjNhODQyNjMwMTNmYjVkN2Q2MjY2ZTBkMmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkOWZmNTg5OWViODVmM2QzZTlmNzE2YjViNTc4YjM3NzJhMDYzNmY5ZjM2NTg2MjU4NDg3OWFjZTQ3MTE1N2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4OWExYTg0ZDZmYTlkN2YzZjY5NDMwNzk4NmQ5ZGFkZDhlNmFmNmE2ZTI5NDYwMzk0ZjAxMGU1ZmE2NGU4ZTcifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_b9b92be7783f483798ef0ba08ac781ce",
+      "statement": "The safety gate (SafetyGate in healthcare_rag/processors/safety.py, wired as the safety_gate node) and the RefusalBoundary persisted-refusal state machine in healthcare_rag/processors/refusal_boundary.py enforce medical/PHI refusal behavior before the trusted pipeline runs.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/refusal_boundary.py#L98-L98",
+          "version": "repo-lines-v1:sha256:6a3539ed62d79cec703e899b8a7521b6dda733553082ef5a31f86d56fe978690:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmEzNTM5ZWQ2MmQ3OWNlYzcwM2U4OTliOGE3NTIxYjZkZGE3MzM1NTMwODJlZjVhMzFmODZkNTZmZTk3ODY5MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmEzNTM5ZWQ2MmQ3OWNlYzcwM2U4OTliOGE3NTIxYjZkZGE3MzM1NTMwODJlZjVhMzFmODZkNTZmZTk3ODY5MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTk4YjA2M2Q5YjQ3ZTY1Mzc5NjI1NTcyY2NlMTk3NjY5ZDU3NjdlMTJjMThiZTA3NTY1MmI4Y2Q5ODFjZThkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZmM1ZTBjNmZlNzJhMTFhZWU4NDM2NWQ4NWMwNDlhYTQ2YzAzNmZhNTE3OWFmNjYzOWI0MTU3YzQ5ODEzYjU4YiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/safety.py#L108-L108",
+          "version": "repo-lines-v1:sha256:1a037eca44928af22ef890287a14c849333fe2b6dbd853c0f180a0f3a83fcc79:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWEwMzdlY2E0NDkyOGFmMjJlZjg5MDI4N2ExNGM4NDkzMzNmZTJiNmRiZDg1M2MwZjE4MGEwZjNhODNmY2M3OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWEwMzdlY2E0NDkyOGFmMjJlZjg5MDI4N2ExNGM4NDkzMzNmZTJiNmRiZDg1M2MwZjE4MGEwZjNhODNmY2M3OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTlmZmUyODc4MGJkYWI4MjlhYThlOTc0OTdiNTk5NjIxMDM3ODQ3YmYwN2U3MjIxNDEzMmI3OTU2YzhiZTE4NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODQ3OTgxYjc5Zjg5ZDYzM2IwZTg1NmM3YTZjODczYzI1MDZiNmViMjNlNTFiYmQwYzIwOWFkZjE3MDU2MTMxZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_898423d072864061be7419a464ed5884",
+      "statement": "PHI/PII scrubbing is owned by PrivacySanitizer in healthcare_rag/processors/privacy.py and is invoked before safety classification and at model-authored-query sinks (e.g. scrub_phi in retrieve_documents).",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L85-L88",
+          "version": "repo-lines-v1:sha256:c5d86efa85e29e60eab0c18a4a5cc8701cfb4014b25b52931f4a50ea35135db6:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTgwYmYzZWZmMGVkZjIyZDBkMWNjMmVjNWZkMGY0YjJhODMzNjAyZjNkNmNhZWQ5ZmJkMDk2NDlmMTA4YzY4NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWRhNWM2NmUxN2IxNDUzOTc4MzRiOGM4NTRkYzQxOTNlMjEyNTE4MGE4OTk2YTE0YzMxODgzMzI2YjJlZmJjZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDEwYmYyMjg0NmUxMDUyNjk2NjlhYTQ2MmYwOWNmYjc0NzllZTgzNzhiNTgxZTMzM2FmYWNiMDYxZDkxZGRlMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjc0NDBlMDgwMWEwZTAzNjJmYjNiNmM0Yjc4MTA4YzY2MWNlNmQ2ZjMwZWViMmQ2NjE1OGEzNTU2MGQ2YjNkZCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L121-L121",
+          "version": "repo-lines-v1:sha256:090cf5adc1c306fd374d40f636ea3887e94a82fae5f292d92c37a631a3e7a421:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDkwY2Y1YWRjMWMzMDZmZDM3NGQ0MGY2MzZlYTM4ODdlOTRhODJmYWU1ZjI5MmQ5MmMzN2E2MzFhM2U3YTQyMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDkwY2Y1YWRjMWMzMDZmZDM3NGQ0MGY2MzZlYTM4ODdlOTRhODJmYWU1ZjI5MmQ5MmMzN2E2MzFhM2U3YTQyMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzg5YzI5NjQ4Mjk1YWE4MDJhOGQ1YTZlZmZmNDAzNzdmMzIyYTgzNDdkZmFlMGUyZjFhNzdjZjViNWY4NjY2MyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjdiYTFkNzM0MDkxN2Y0MmIyMzQ5NzAyYmI0MzdkMTY2NWJlMjc0ZWFkYjYzMThiNDkzYzZhMjllMDVkYTg4NiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_16a352a805bb48a987c504ce98df2373",
+      "statement": "The coach graph's medical_lookup tool (return_direct=True) is the coach's only path to a medical answer: it calls rag_relay.relay_question to run the full healthcare RAG graph, and coach_agent.py's relay_medical_answer after_agent hook turns the terminal ToolMessage into the reply verbatim, so the model must never paraphrase or answer a medical question itself.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L263-L267",
+          "version": "repo-lines-v1:sha256:11f6a4375276c4a52452f672591e760bcb54fa28a368bc73326dda3bde18b953:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWNkZjIzYThiODNhNzJmZDUzOTMyYzNiYjVjMDg2ODk3MGRlOWE5OWIwYTBlODY0MWJmYTJiYjhkODJiNGQxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzhlNTlhYWVhOTBiNDc5YzE5MGZhMTQ0OGNkZDk3OTdjYWZhYzk5ODQ4ODExYWFiOTc2YmNkNDAyZDYyYzMwYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmE1ZTI0OWQyYjJmYzE2Y2QxYjZhNWZiMWVmYmZlNjJjOTA2Y2UxZDYxYTRjZDgxMTUyOTMyNTU2ZTVhNzQzZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODM5NjBhNjJkNWIyMjc4YWY1MWVmY2M2MTU1ODc2YzhlZDU5Y2M0ZDEzOGUyYTk2MWI1NzQxZDE5MjFjZjAxYiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L51-L57",
+          "version": "repo-lines-v1:sha256:61f975f1dc3fc543459987d889b608c612c5e592a1a29b99eeb6ac6728dfe7d2:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNGU1YjNmMjBhMDIxNTRkM2Y3ZGE1OWYyOTI4YWVjZjE5MWY4YTdhMjlkMGEzZWE1YjI0MDdmNzBlNGFmYjU4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2JlMzdhYTIyZGE0ZGQxMjAyNDE3NDkzN2M3Y2RjNGVkNmVjOTlkMjcwOTRjODRlZmUwYjcyZGZjMTlmODJjOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGMwM2NlYzlmNDM3ZTQ2NTgxZWRiMDg3NDQ2MDU5ZDE5MTNjMjRjY2Q3ZWQ1YmU2MzhmMjU3YjcxZWY4OWM3ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2E1ODhkOGI3NmRlNThjMGE0MTVmY2Y4NGNhODI4ZGJiYjEwN2FiMzRhZWFjMzI4OTNmMzFlZjhiNzFkMjIyMSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/rag_relay.py#L1-L1",
+          "version": "repo-lines-v1:sha256:eecf0c87af4695c6368b477d22ca59ed2e7e433530eb37760fb381150155e71f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWVjZjBjODdhZjQ2OTVjNjM2OGI0NzdkMjJjYTU5ZWQyZTdlNDMzNTMwZWIzNzc2MGZiMzgxMTUwMTU1ZTcxZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWVjZjBjODdhZjQ2OTVjNjM2OGI0NzdkMjJjYTU5ZWQyZTdlNDMzNTMwZWIzNzc2MGZiMzgxMTUwMTU1ZTcxZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTViMmQwNDBhNzU5MDc1MTc5MDAzOTYyYjEwZWMzZjNkNzBmMTIxMGQ0OGE0ODNkNmE5MmM0NjZiMWY0ZmIyZCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/tools/medical_lookup.py#L10-L11",
+          "version": "repo-lines-v1:sha256:682ed4be06a68f74769d9865917f13832485e8d222e16775a2a8fba463262e67:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNmNjM2YxOWI2ZmU1ZjRhOWQzZWE3ZDE1MjQ3M2NjYmM1MjA0NGRiNWQzNzc4ODAyNjIxZDY3YzJiODMxMWZmNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjY3ZGU2ZGY5YzNkMjBmYTc5MTk5OWRmNWZjMGE4MjMxZGJkNjYyOWQyMjA3MDQwZTIwNmI5MDM2YTMwMmEzOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTQ1ZDNmZTc5ZjdmMWZmMmY0NWMzOTJiY2JiMzZmOTM2NGZmYTczZWQ1ZDhkMGQzNjQ1MTczZTJiNWMxZjZiYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWVjZGViM2ZiZDUyYjUyMDEwZmNmYWM4NGM2MGRjNjhmYmNmMGM1NTUwM2QyZmVkMjlmNGZkZmQ3MjVjYTg3YiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_fc312b6d3ab34f70b0f641c2e00c3721",
+      "statement": "The clean-room OSS Agent Server (server/) exposes a dual storage backend selected by create_storage(): SERVER_STORAGE=memory (default, in-memory, wiped on deploy) or SERVER_STORAGE=postgres (durable via PostgresRegistries against hc_threads/hc_runs/hc_crons tables); production runs Postgres persistence.",
+      "evidence": [
+        {
+          "resource": "repo://AGENTS.md#L57-L57",
+          "version": "repo-lines-v1:sha256:f0d51cec6049c45dd568dd689ddf49a307ba1258ca746bb243083cec2d4be6a5:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjBkNTFjZWM2MDQ5YzQ1ZGQ1NjhkZDY4OWRkZjQ5YTMwN2JhMTI1OGNhNzQ2YmIyNDMwODNjZWMyZDRiZTZhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjBkNTFjZWM2MDQ5YzQ1ZGQ1NjhkZDY4OWRkZjQ5YTMwN2JhMTI1OGNhNzQ2YmIyNDMwODNjZWMyZDRiZTZhNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzc3YmFjZGRiZjIxNDFkNjBkYTAzYjg2NzM4NmQyNGYwMWZjMWMwOGZiNDkxODI4OTIxM2JhMDMyN2Y5OGJhMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmNkZmJlMzkyNDViNmEwYjhlM2Y5NDA2OTE2ZDEyZGY3ZjVlZjg2YjA2Mzk3YzRmZWJjNjE1MDg2YzE1ZmE5MiJ9"
+        },
+        {
+          "resource": "repo://server/registries.py#L311-L311",
+          "version": "repo-lines-v1:sha256:c2b97f8369e3490435fd77d66bc29aa88a4d90cdb7d53ca0d72152e624f9e81e:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzJiOTdmODM2OWUzNDkwNDM1ZmQ3N2Q2NmJjMjlhYTg4YTRkOTBjZGI3ZDUzY2EwZDcyMTUyZTYyNGY5ZTgxZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYzJiOTdmODM2OWUzNDkwNDM1ZmQ3N2Q2NmJjMjlhYTg4YTRkOTBjZGI3ZDUzY2EwZDcyMTUyZTYyNGY5ZTgxZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWE4YjljYzBmYmZkZTZjZmUwZGI2MWUxMGM4YWZhOTM3ODg0OTFlNjllZWJkZGEyMmQ1ZmM5ZTM4OTE4M2UzNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2JkZGQ0OWUzMTA3MjAyNDllZWIwNzM4ZWZiN2NjODBjYTM0Nzc1YmFhNTExMGE1MzMxZmRkZjc1NTdmM2QyYSJ9"
+        },
+        {
+          "resource": "repo://server/storage.py#L84-L84",
+          "version": "repo-lines-v1:sha256:8bf26a6d17f2f1e2ea6813c9085cb8c35b9154d4f59ebe491c0f1c3c522d570f:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGJmMjZhNmQxN2YyZjFlMmVhNjgxM2M5MDg1Y2I4YzM1YjkxNTRkNGY1OWViZTQ5MWMwZjFjM2M1MjJkNTcwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGJmMjZhNmQxN2YyZjFlMmVhNjgxM2M5MDg1Y2I4YzM1YjkxNTRkNGY1OWViZTQ5MWMwZjFjM2M1MjJkNTcwZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjY1Yzc3NDY3MjAzMzA3MzAxNWJiNzU0MTJiYWNkZTQwYjczNzdiNWE0ZmMzNTgxODdlMzA5MTE0NDdiNDQ3YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTUwYTNkYmFkODM5ZGI0OTQwZTY3M2M4ZjQzOWJhMTRlNmIxZWQ3ODRmYmQ2YzQzNjkyMTFiZjYwMzllZDg0OCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_e311d038b60c48858c5c7d62d66a8d21",
+      "statement": "make server-test runs the server unit test suite (tests/server) and make server-test-pg runs the Postgres-gated lane via docker-compose.server.yml; both are the minimal validation commands for server or storage-backend changes.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L138-L145",
+          "version": "repo-lines-v1:sha256:8c18678eb84c47ef43d08ab600d301322b8269f0056410fee97e4ab4cb96c54b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWU2NjQyOGE4OGM0ZjM3ZDU2MGJjZjg5Mzc1OWQ3Yjk3YTNlMTdjMGZjMjA2NmMyOTk2ZTA1MDdlMDg3YjhhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDdiNWMzZjkyNzNjOTY3OTE5OGYyNzYwOWQwMGM4M2UzNWUzODJkZTY1N2ZiZDNhYThmMThlOGFlODlkYjk1MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGI3YWI4MDk4MjhjZThiMmQ1OGIwYjZiYjAzZjMwNzYwOTFmZDk5YzE0ZTM0ZGRiZjQ4NDA2Y2YxMGE2ZWJiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDYxNDNmMWUxYTc2OTZkN2EwNzFiM2ZmMjllZDNhYTZiOGQ4MTUzZDgwNmZkOTRiYzA5MTQ2NjlkZDY1YTVmZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_6dc672f7953d41269d9e25d15c6881b8",
+      "statement": "Release tagging, version bumps, and rollback dispatch are driven by scripts/next_version.py (next_version, classify, latest_release functions) shared between the release GitHub Actions workflow and make next-version.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/release.yml",
+          "version": "repo-file-v1:sha256:ac2537959a2798d2e8117df943497b747cc91b9c5dbe760f5c338d28d322b55a"
+        },
+        {
+          "resource": "repo://scripts/next_version.py#L87-L110",
+          "version": "repo-lines-v1:sha256:ce8505529a369077f2a3b251ad8f8759b05722d4114b839f48c60a301fca7ace:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyNTU1NWQwMzgwZGM5MjgxNDc2MDhlMDM4N2E4ZTAwMGI5MjM5ZmQzODBlOWVlYmEzMTI5OTQ2ZDZjZDEwMjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmZjQ5NjgwM2NmMGI0ZjJlYmRlZGQ2MTQwYWUxM2RkMGFlZDE3YmE1Mzk2NTFkNzM3OGU1MWQ4MzViZjU3OTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhZDA3ZjVkM2FhZGU1MzVhYTExNjQwZjVjZmQ5OTQwMWRhMWY3YzA1MjkwOTQ3MmQ1M2U3OGYyNTNjMTU4MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmYjViM2RiZGQ1NDIzOGE1NGY2MGRhMTU3OTg5YTU4MmZkMTIxZTIxYWY2NWMyYmFhZDYwYTVlM2ZhZGY3YzEifQ"
+        }
+      ]
+    }
+  ],
+  "verification": {
+    "by": "openwiki/0.4.3",
+    "at": "2026-08-30T08:22:08.381Z"
+  }
+}
