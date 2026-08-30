@@ -330,9 +330,12 @@ test("u1 journey: chat, cards, interrupts, reminders, documents, regenerate, fee
       .poll(
         async () => {
           const response = await dep.get("/e2e/feedback");
-          const payload = (await response.json()) as { posts: { score?: unknown }[] };
+          const payload = (await response.json()) as {
+            posts: { score?: unknown; trace_id?: unknown }[];
+          };
           return payload.posts.some(
-            (post) => post.score === 1 && JSON.stringify(post).includes(shared.u1ThreadId),
+            (post) =>
+              post.score === 1 && typeof post.trace_id === "string" && post.trace_id.length > 0,
           );
         },
         { timeout: 30_000, intervals: [1_000] },

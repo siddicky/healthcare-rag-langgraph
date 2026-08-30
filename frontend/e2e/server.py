@@ -75,6 +75,8 @@ ACCOUNTS: Final = {
 PLATFORM_KEY: Final = "platform-secret"
 INTERNAL_TOKEN: Final = "internal-secret"
 SERVICE_KEY: Final = "service-secret"
+FEEDBACK_TRACE_ID: Final = "00000000-0000-4000-8000-00000000e2e1"
+FEEDBACK_SESSION_ID: Final = "00000000-0000-4000-8000-00000000e2e2"
 ANON_KEY: Final = "test-anon-key"
 
 EXTRACT_FIELDS: Final = [
@@ -213,9 +215,25 @@ class FixtureHandler(BaseHTTPRequestHandler):
                 return
             self._json(401, {"message": "Invalid API key"})
             return
-        if parsed.path == "/feedback":
-            # LangSmith list_feedback probe at server startup.
-            self._json(200, [])
+        if parsed.path.startswith("/runs/"):
+            # Trace resolution for /coach/feedback: every model-authored
+            # message id is lc_run--<run_id>; resolve it onto one fixed trace.
+            run_id = parsed.path.removeprefix("/runs/")
+            self._json(
+                200,
+                {
+                    "id": run_id,
+                    "name": "ChatOpenAI",
+                    "run_type": "llm",
+                    "start_time": "2026-01-01T00:00:00Z",
+                    "end_time": "2026-01-01T00:00:01Z",
+                    "trace_id": FEEDBACK_TRACE_ID,
+                    "session_id": FEEDBACK_SESSION_ID,
+                    "inputs": {},
+                    "outputs": {},
+                    "error": None,
+                },
+            )
             return
         if parsed.path == "/e2e/feedback":
             # Hermetic introspection for the Playwright suite: every feedback
@@ -710,9 +728,6 @@ def main() -> int:
         "CORS_ALLOW_ORIGINS": frontend_url,
         "HC_RAG_LLM_MODEL": "gpt-4o-mini",
         "HC_RAG_VALIDATOR_MODEL": "gpt-4o-mini",
-        "LANGSMITH_FEEDBACK_PROJECT_ID": (
-            "00000000-0000-4000-8000-000000000fee"
-        ),
         "COACH_SOCKET_GUARD_MARKER": str(marker_path),
         "LANGGRAPH_API_URL": server_url,
         "HC_RAG_MEMBER_STREAM_PERIMETER": perimeter,
