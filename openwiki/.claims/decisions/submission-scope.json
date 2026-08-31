@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:dbba0da36b8521360d687a6b059cf6f3c86e7d49953177c98fc6fd11722d36dd",
+  "pageVersion": "sha256:556cc5c59a899a71e8bc29c183372ef39de92bf205c3573ab8c1f852b1b8a7de",
   "claims": [
     {
       "id": "claim_55c27f353b314b37a219c5c6ac3792bb",
@@ -339,10 +339,28 @@
           "version": "repo-lines-v1:sha256:3fe5e978e08409411056fca6a10580b172a85b5724a34d0f249bbd043fc8a1fe:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2ZlNWU5NzhlMDg0MDk0MTEwNTZmY2E2YTEwNTgwYjE3MmE4NWI1NzI0YTM0ZDBmMjQ5YmJkMDQzZmM4YTFmZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2ZlNWU5NzhlMDg0MDk0MTEwNTZmY2E2YTEwNTgwYjE3MmE4NWI1NzI0YTM0ZDBmMjQ5YmJkMDQzZmM4YTFmZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWEzNTcwMDQyMjgyZTkyNzYwMmNmNmUyMTM5NDU3M2NhNDJhNGY1MjIwMWYwNWQ4NzE3NzE1NzAzMWFiNzZiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTRlOGVjYzE4Yjc0NGMyNmFmMjQ1ZDBkY2M2MGQ0ZmE3NzA1Yjk2MDBhNzNiMzgzNzJlZmU4YzQxMmE1MTRlOSJ9"
         }
       ]
+    },
+    {
+      "id": "claim_ab016f02fda84e1b96476a221ab13c78",
+      "statement": "The two INCONCLUSIVE routing lanes are deliberately reported with an explicit unmeasured-not-zero framing rather than a forced verdict: the query-response lane's decision record states its comparisons are 'unmeasured, not zero and not no-change' and that 'no result is inferred from source inspection or from a historical report' after judge calibration failed, and the semantic-safety lane's decision record states its comparison 'is therefore unmeasured; no result is inferred from source inspection or historical material' after a dependency blocker, with both lanes kept on current production defaults.",
+      "evidence": [
+        {
+          "resource": "repo://docs/decisions/query-or-respond-vs-current.md#L28-L33",
+          "version": "repo-lines-v1:sha256:ef9da26d2c8cc28854f92cf4c3a8342a2c61753e6b6fd810b8927e73fcb17600:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTY3NzZhNDgzYzFmNGM3MzZmOWU3ZTJjY2RmOTQ2ZmQ4NTcwZWFkN2NmODJmZDA0MDkwZjljMzBmZDI0ZGE4ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzAzYjIwNDUxZjRhMmZkMzIwZjQ1MTM4ODk5NDgwZmI2ZTI5Zjc2MDRkNWM2MTQ2NzhjOTEwZTg3Y2YwZTEwMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTg5ODg2NjBkZTE4NzFkYjM0OWI2YjdiZTJjZDE3MTI5NTdkMTIzZjc0Zjk5YmE4ODU4MzI2ZmEwNjkwNDFmNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMWU1NWJiZTJmODU0MTkxZGY3NDIzMTFjN2UyNTNiNDU2OTYwOTQzMzI5Y2MzNTQ2ODgxMTkyNDg2NWFjNmI2MiJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/routing-experiment-summary.md#L1-L22",
+          "version": "repo-lines-v1:sha256:65c158a75246de77cac5c762e8309b4337b524f0d0232c890675146fbe18b809:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlYTA4YzUwMDBhNDM5NWRmMDRhOTczZmFhY2I0ZGE3OWRkOGVjYThmNmU2ZTJiNWJhYzVmOWMxZDUyZjk3NmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlYTNmMTBiOGQ0YTNmOWNjYzFjOWQyZTkxMzgzZDZiOWZhZWNjZWZlMjk2NjE0NGFmZThlMTFlMTgxNTY0YjcifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/semantic-router-vs-llm-safety.md#L17-L20",
+          "version": "repo-lines-v1:sha256:7f7bfdf02be937f892d7d9ec4e4b3a65565fdc9f63e6d3fd071423b4d6e6ee2f:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTFlYjlkODQ3ODA3NzExZjZmZjY4Y2U0YjBlYmNmODg4ZjYxZDI1NTc4ZjFiOTIyZmViMzdiMWVlNTQyZGI2OCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDlkNTgwNjA0NmYxYmI1YzFhYjg0OGQxZTc5NjdmNGM3NmIwMTljYjZjMDU4ZTg5ZThjYWY5OGI1Yjk4MjFmNCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2NkNjlkZGQzOWZiYmVjNTcyYzg3ZmQ2YzNjMDI2NGQzYWRjNmVjNzViM2NiOGY5M2Q3YWJiOWQzMTEzOWZiOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjhmNjM2NzVlMDEwMmUwNDJjMzQzZDY3ODA1OWRlZGM3MzI1ODczYjAzMTI2OTFmMTQ1ZjUxMjM3MWExZWQ0NiJ9"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

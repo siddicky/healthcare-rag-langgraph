@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:f272845786b6decb7115283573b964cce69669b27d10476484f483a754447527",
+  "pageVersion": "sha256:6fc3dc3681f8231d874f0c4c1003a4922a7de3cbccf53b3df98226ce6be950a7",
   "claims": [
     {
       "id": "claim_bd0e50141af644b5a08919a64c1d12ec",
@@ -285,10 +285,60 @@
           "version": "repo-file-v1:sha256:d67c2783cc410d3a0745c4ebbdbc66ea944982619ea70c49c01665c17b32e088"
         }
       ]
+    },
+    {
+      "id": "claim_1c9373f5bf47423db46aefd89787d3d9",
+      "statement": "The same-turn scoping of catalog DataRefs is enforced structurally by a shared deterministic digest: coach_agent.py's _scope() computes sha256(thread_id|human_msg_id) from the server-derived AgentContext to validate a compose_ui call, while store_data.py's make_envelope() stamps the identical digest as turn_scope_id on every DATA envelope a tool emits for that turn, so validate_composition() only accepts refs whose turn_scope_id and block_id match an envelope actually present in the current request's tool messages.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/agent/coach_agent.py#L80-L94",
+          "version": "repo-lines-v1:sha256:c20f4e1f77226c81a4fcfdf0fb59ad21e22489af79aeace0ff0ac3c1092c2f18:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4NTY0NjgxODIxMmMwZjBhYmIyMTNkOGM3M2E4NDU5YWRkYjY1NTdiNjc5NDY3NmVjZGRmYzA2MjAwYmQwMTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDI0NDU4MmI2ZmIwM2QyM2I4NDE1YWJlY2QzNDZiMGM5ZjQ2NmI2Zjc1MmIwNjgxODljZTdlOWEyZGMzNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMzMGQ3Y2JkZjlhNTdmMDcwYTM1NzhmMWFmZGM2NTJlN2Y0ODhiNzY3NGIzMTc3MDBhMGY1ZDcwNDBiMzNmNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwMzM3NGYzNzA0MzIxNDk5YjYxOWQ1MzhlYjQyMWZjMGZjNGI5YTgzZDA4ZTQxZDhmOWZlZTU4NzI3MGIyYTYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/compose_ui.py#L139-L209",
+          "version": "repo-lines-v1:sha256:f3378e229fbee1f40f9a113ad748badd8fa50940605415f9cdc07db5eca9efb8:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwMWU4YjdkOGMwNjUxZDgzODM3NjAxNDYzZjQ1MDhiOGQ1YjU3ZTZmZTIwYWJhOWQ2YzVmMzdjY2IxNGVjMjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwMzZiYWE3Mzg0Mjk0M2EwZjA5MzU2YjYxNjhlYzBmYWVkMmU5ZTI2NDZiNjhjMjliYzRhNGUzZDFmMDE1NmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2YTU2ZGUxYTZiZmE4MzU4YzJmMWY4MWFhZGY4MDU0ODAzMmY4NWQ0Y2VjMzQ2MzllZDk0YjNiYWYyYmQyNzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NDQwZTk4OTIxZjY2ZDMxYjhjNmJkNDM1Zjc1ZGE0ZDMxODMzODc1NjIwYjk0MTUyOGRiYmFlYTFlYTdjNmMifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/agent/store_data.py#L354-L369",
+          "version": "repo-lines-v1:sha256:397ca688d53788108b5904d4b13c6b19bddf66f3ca160ad673a7b4ded001b1f6:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkOGQzYTY1Y2Y2NDRkM2I0YzFhZTIxYjIyNTI0MjA3ZmNhYWJmYmJmOTU3NGYyNjVjMDBiNzQ5ZjZhNWMxNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmMjRkMWQ5ODk1M2FhN2JkZTU1YjA3ZjUwZDc2YjI2MGFjZTY0NTdjZjFjYTllMzk1NzhkNjMzYWU0YmMxMmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2NzE0YjczYWIxZjhjMWQ2NjcwZTJlNzdhMDliMTMwNWQwNWZkOWY2YWIzMzY1NzczNTc4YTdlM2JjYTI4NjMifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9c5c6fc822494535967cebac8efd3c5b",
+      "statement": "tests/agent/test_route_b.py's test_composition_requires_same_turn_resolved_fact_refs pins the same-turn invariant end to end: a composition whose DataRef targets match the current scope and envelope is valid, the identical tree is rejected when validated against a different turn_scope_id, and it is rejected again when the envelope's underlying value no longer matches what the ref pointer resolves to.",
+      "evidence": [
+        {
+          "resource": "repo://tests/agent/test_route_b.py#L538-L572",
+          "version": "repo-lines-v1:sha256:aed351d0037960c4d830d249b004647caa5fa471bd49e932904b0c01155e0dcd:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5ODgzMmRjMjBmYTcyNTBlMDdhYzViNTRhNmU2MGQ4YTJmODgzMjQyMzc1ZGZlOGM4MWYzNDY5NDRjMzQ1ODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE0YTkyMDRlMWE3NDk0OWRiYzIyNmZiZjQ5MTJlZGQxZTUzNWM3NWIzNzQ3MGVmYWJjMTIyMTgzNmU5ODA4MmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVjZGRjMzAxMGE3YjM2MGUyNTU0MGNlZmFkMGZkMTA2ODI1MzhmYzJhNjRmYmNjMGZjN2IxMzJmNmY3NjhjYWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhYjdiMjcyYWI0ZTI1MTc1YjVmZDI0YzEzY2ZlNTYzNDI1MTRjMDI3OTQ2ZjAzYjUzMDVkZjIwMzM3ODc5ZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_dc6e256c0b4d4d4fa2c7182b13ac0471",
+      "statement": "The backend and frontend DataRef acceptance rules are pinned to one shared fixture, tests/fixtures/catalog_data_refs.json, which both tests/test_catalog_data_ref_fixture.py (validating healthcare_rag.agent.compose_ui.DataRef) and frontend/src/catalog/__tests__/dataRef.fixture.test.ts (validating the frontend's DataRefSchema) parametrize over, so a change to `__ref` acceptance in one stack without the other is caught by a shared, independently diffable table rather than duplicated test logic.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/catalog/__tests__/dataRef.fixture.test.ts",
+          "version": "repo-file-v1:sha256:a3ffce61dd44efcea644595f49f7ddc190ed7f2087af1727d2109d6aeb5f88bf"
+        },
+        {
+          "resource": "repo://tests/fixtures/AGENTS.md#L15-L21",
+          "version": "repo-lines-v1:sha256:3369702b6bc615923be4341bfd46108a90d7c0d31bbfb67845a93443b2bed0fd:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWNjOGQyODU2N2VlYjRlMzA0OGZlZmJlMTZjZjYyMmIzNDNhNjBmNWM1NWJjNGVjYzAzN2Q3OWE2YmU0M2Y3NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAxZjZmMDA1M2FkOWVlYTY4YjBiYjY3MTdhZWM5YzMyZDUzMzBjY2NjMTVmNjk2NWY4YzVmOWU2MjhlYzEzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2RmMmFlZWJhZGI5MDdiZmUxNjJkMmYxMmI0YjhjMTRjODYzNzM1MzBkZTE5OTE3MGZjNzY0OTRhNGNmMzExYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDJiNjUzYmMzY2FiNjkxNjE4YjNjOWZhYzUzMjEyZTQ5MDIzNzA3ZDJiNGNjODkyZDE2NTdmZWYzMDMyNjFiYSJ9"
+        },
+        {
+          "resource": "repo://tests/fixtures/catalog_data_refs.json",
+          "version": "repo-file-v1:sha256:be181f9134a6e150889f31d173d530065c726a4f68ef2fa3ca093524c08562ab"
+        },
+        {
+          "resource": "repo://tests/test_catalog_data_ref_fixture.py",
+          "version": "repo-file-v1:sha256:8906757e3bf4947c7dd174631514e55d9144d444f0de2568d71aa1bee5a800c3"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

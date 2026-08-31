@@ -5,8 +5,10 @@ description: Deterministic dispatch for the coach graph, model-driven Route B to
 tags: [coach, langgraph, routing, safety, catalog]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
+  - id: openwiki-source-bf546f4c82fed31115fcb078
+    resource: repo://frontend/src/catalog/__tests__/dataRef.fixture.test.ts
   - id: openwiki-source-72192e22cbed07e3c286ba8f
     resource: repo://healthcare_rag/agent/__init__.py
   - id: openwiki-source-1023a45f940f1e5eca5e2264
@@ -31,6 +33,8 @@ sources:
     resource: repo://healthcare_rag/agent/state.py
   - id: openwiki-source-41053dbcc53bce885d449e65
     resource: repo://healthcare_rag/agent/static_copy_allowlist.py
+  - id: openwiki-source-930dd98b4086e917d1922504
+    resource: repo://healthcare_rag/agent/store_data.py
   - id: openwiki-source-029ad9418d65d39851d3f024
     resource: repo://healthcare_rag/agent/tools/medical_lookup.py
   - id: openwiki-source-747fe211c57cda1f480279d1
@@ -43,6 +47,13 @@ sources:
     resource: repo://tests/agent/test_reminders.py
   - id: openwiki-source-bd1d4fb105885c214333eced
     resource: repo://tests/agent/test_route_b.py
+  - id: openwiki-source-0b2d0b628c24e1c405312e1e
+    resource: repo://tests/fixtures/AGENTS.md
+  - id: openwiki-source-14b4453dbb4ba99dbb5c7b3d
+    resource: repo://tests/fixtures/catalog_data_refs.json
+  - id: openwiki-source-be0e8f853f7d402165b8d900
+    resource: repo://tests/test_catalog_data_ref_fixture.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # Coach decision routing and data-bound UI
@@ -112,7 +123,9 @@ The layered behavior matters: model prompting selects the tool, whereas middlewa
 
 `compose_ui` is a tool acknowledgement; `validate_composition()` is the server-side rendering authority. A composition may contain only these components: `InjectionTracker`, `MiniCalendar`, `TrendCard`, `ActionCard`, `StatRow`, `ScoreRing`, `Timeline`, `Card`, `Tag`, `Label`, and `Button`. Each component has an exact prop allow-list split between fact-bearing and static props.
 
-Fact-bearing props cannot be literals. They must be `DataRef` objects shaped as `{"__ref":{"turn_scope_id","block_id","pointer"}}` and resolve through a JSON-pointer into a tool-message DATA envelope from the current turn scope. Validation rejects malformed schemas, unknown components or props, absent/wrong-scope blocks, invalid pointers, and values whose resolved JSON type does not match the prop. This makes a tool-generated envelope—not model text—the source of facts rendered by catalog components.
+**Invariant: every fact-bearing prop must resolve from a same-turn tool data envelope.** Fact-bearing props cannot be literals. They must be `DataRef` objects shaped as `{"__ref":{"turn_scope_id","block_id","pointer"}}` and resolve through a JSON pointer into a tool-message DATA envelope produced earlier in the current turn. "Same turn" is enforced structurally, not by trust in the model: `turn_scope_id` is a deterministic `sha256(thread_id|human_msg_id)` digest computed independently on both sides — `_scope()` in `coach_agent.py` derives it from the server-side `AgentContext` for validation, and `make_envelope()` in `store_data.py` stamps the identical digest onto every DATA envelope a tool emits for that turn. `validate_composition()` only accepts a `DataRef` whose `turn_scope_id` matches the validating call's own scope and whose `block_id` names a envelope actually present among the current request's `ToolMessage` contents; it also rejects malformed ref schemas, unknown components/props, invalid JSON pointers, and any resolved value whose JSON type mismatches the prop's declared type. A ref citing a different scope, an earlier turn, or a nonexistent block therefore fails validation even if it is otherwise well-formed — a value cannot be smuggled in as a plausible-looking reference to stale or foreign data. This makes a tool-generated envelope from the same turn, never model text or a prior turn's data, the sole source of facts rendered by catalog components.
+
+The `DataRef` acceptance boundary itself is a cross-stack contract, not a backend-only detail: `tests/fixtures/catalog_data_refs.json` is a shared acceptance table (valid root/nested pointers accepted; a bare literal, a missing `pointer`, and a non-string `pointer` rejected) that both `tests/test_catalog_data_ref_fixture.py` (against the backend's pydantic `DataRef` model in `compose_ui.py`) and `frontend/src/catalog/__tests__/dataRef.fixture.test.ts` (against the frontend's `DataRefSchema`) validate against, so backend and frontend `__ref` acceptance cannot silently diverge.
 
 Static values are constrained too: strings must be registered dispatch IDs, enumerated presentation values, or allowlisted fixed copy without numeric/clinical-looking claims; booleans and recursively safe action objects/lists are allowed, while numeric and null static values are not. `static_copy_allowlist.py` owns the approved labels and dispatch IDs. Adding a component, prop, UI copy, action, or tool envelope is therefore a backend-and-frontend contract change, not a prompt-only change.
 
@@ -121,14 +134,15 @@ On the first invalid `compose_ui` call in a run, `SafeModelResponseMiddleware` r
 ## Boundary-focused tests and change checklist
 
 - `tests/agent/test_coach_gate.py` pins the precedence list, valid versus forged cron wake, attachment preservation, erasure routing, deterministic safety short circuits, and the safe public output shape.
-- `tests/agent/test_route_b.py` pins invalid-composition correction/fallback, same-turn reference resolution, server-derived context behavior, schedule-call limiting, medical relay verbatim behavior and mixed-call dropping, final projection, and parent-thread-scoped child history.
+- `tests/agent/test_route_b.py` pins invalid-composition correction/fallback, same-turn reference resolution (including cross-scope and mutated-value rejection in `test_composition_requires_same_turn_resolved_fact_refs`), server-derived context behavior, schedule-call limiting, medical relay verbatim behavior and mixed-call dropping, final projection, and parent-thread-scoped child history.
+- `tests/test_catalog_data_ref_fixture.py` and `frontend/src/catalog/__tests__/dataRef.fixture.test.ts` both parametrize over `tests/fixtures/catalog_data_refs.json` so the backend and frontend `__ref` acceptance rules are pinned to the same table; add a row there (not a new file) when extending `__ref` acceptance coverage.
 - `tests/agent/test_rag_relay.py` pins relay framing, verbatim child refusal behavior, raw-error suppression/recovery, and the fresh saver/thread behavior of pipeline mode.
 - Document and reminder changes also require `tests/agent/test_documents.py` and `tests/agent/test_reminders.py`, because they are gate-selected deterministic branches rather than catalog compositions.
 
 Run focused checks with:
 
 ```bash
-uv run pytest tests/agent/test_coach_gate.py tests/agent/test_route_b.py tests/agent/test_rag_relay.py tests/agent/test_documents.py tests/agent/test_reminders.py -q
+uv run pytest tests/agent/test_coach_gate.py tests/agent/test_route_b.py tests/agent/test_rag_relay.py tests/agent/test_documents.py tests/agent/test_reminders.py tests/test_catalog_data_ref_fixture.py -q
 make eval-agent
 ```
 

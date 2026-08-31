@@ -5,7 +5,7 @@ description: A source-first operating procedure for safely changing the healthca
 tags: [contributing, ai-assistance, safety, workflow]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-f5a489e5822d87c0b8fc66ef
     resource: repo://.mcp.json
@@ -17,10 +17,18 @@ sources:
     resource: repo://docs/decisions/AGENTS.md
   - id: openwiki-source-088572982f1247ba9c5044ef
     resource: repo://docs/decisions/pinecone-rerank.md
+  - id: openwiki-source-c432ba3114055b79f900c3af
+    resource: repo://docs/decisions/query-or-respond-vs-current.md
+  - id: openwiki-source-8d40eb798e32ee9f7ae885a2
+    resource: repo://docs/decisions/routing-experiment-summary.md
+  - id: openwiki-source-eeb500bb93c4502d3c0fa7c1
+    resource: repo://docs/decisions/semantic-router-vs-llm-safety.md
   - id: openwiki-source-47785666e53135243f71f00b
     resource: repo://evals/AGENTS.md
   - id: openwiki-source-803b138f67b94c5d275ab629
     resource: repo://evals/results/pageindex-vs-weaviate.md
+  - id: openwiki-source-0f36c38d1b9edb6b27e7647a
+    resource: repo://evals/routing_dataset.py
   - id: openwiki-source-e464dbfbded5331ec055dd1a
     resource: repo://healthcare_rag/AGENTS.md
   - id: openwiki-source-012f2c78e3b1446dfc35803f
@@ -33,7 +41,7 @@ sources:
     resource: repo://tests/conftest.py
   - id: openwiki-source-26994038c5fc0eb3624fdb7f
     resource: repo://tests/test_tracing_privacy.py
-generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # AI-assisted contributor workflow
@@ -69,6 +77,7 @@ This ladder narrows the edit first and widens verification only when the changed
 Some files are generated, hand-curated, or destructively rebuilt; editing them casually breaks either reproducibility or the evidence a report is supposed to represent.
 
 - `evals/golden_dataset.json` and `evals/multiturn_dataset.json` are hand-written source-of-truth question/conversation sets, synced to LangSmith with stable uuid5 IDs (`evals/dataset.py`, `evals/multiturn_dataset.py`). An edited row updates the same remote example rather than creating a duplicate — edit it deliberately as an authored regression, not as a quick fixture patch, and re-sync.
+- `evals/routing_dataset.json` and `evals/routing_multiturn_dataset.json` are the same kind of hand-authored, uuid5-synced source-of-truth artifact (`evals/routing_dataset.py`), covering query-routing rows and safety-drift conversations for the routing gate; edit them with the same care as the golden datasets, not as disposable fixtures.
 - `evals/results/` is generated output: committed `.md`/`.json` reports per experiment plus per-question detail and watcher logs. It has no local `AGENTS.md` precisely because it is treated as read-only evidence — regenerate a report by re-running the producing command, never hand-edit it into an apparent result.
 - `data/pageindex_tree_*.json` (built by `make index-pageindex`, an isolated ephemeral environment, ~$0.10) and the checked-in `data/chunks_lipitor.json` / `data/chunks_metformin.json` corpus files are generated/curated ingestion inputs. `make ingest` and `make ingest-pinecone` both pass `--delete-all` to their storage loaders, so treat corpus rebuilding as destructive and follow it with a retrieval check.
 - `frontend/src/design/` is copied verbatim from the design system. Use its classes or update its owning process; do not patch the copied surface directly.
@@ -104,7 +113,7 @@ The server is a behavioral-parity target for LangGraph Agent Server surfaces, no
 Read `docs/decisions/*.md` before proposing a retrieval or routing change; the numbers in the linked `evals/results/*.json`/`.md` reports, not the prose summary, are authoritative:
 
 - **Retrieval arms measured and rejected.** PageIndex tree-search retrieval lost stage 1 of the paired gate against Weaviate hybrid (mean `page_recall` 0.609 vs. 0.681, Δ −0.071 over 71 eligible golden questions), so stage 2 never ran; PageIndex stays an opt-in arm (`HC_RAG_RETRIEVER=pageindex`). Pinecone hybrid retrieval also lost stage 1 (page_recall 0.463 vs. 0.648 reference, later re-measured 0.607 vs. 0.664 as a dense-only diagnostic), and a Weaviate+bge-reranker arm that won stage 1 (+0.050 page_recall) failed stage 2 on quality (correctness Δ −0.051 against a required ≥ +0.03, holdout correctness Δ −0.091) — cost and latency alone were within threshold, but a quality failure is `REJECT`, not tunable away. Both Pinecone-family arms stay opt-in knobs (`HC_RAG_RETRIEVER=pinecone`, `HC_RAG_RERANKER=pinecone`).
-- **Routing candidates never reached measurement — report them as `INCONCLUSIVE`, not as evaluated-and-rejected.** The query-or-respond arm's authored judge calibration missed its own threshold (22 of 24 fixtures; two acceptable greetings scored 0.78 and 0.72 against a 0.80 minimum), so the paired arm comparison never ran. The Semantic Router safety-classifier candidate is blocked by an unsatisfiable dependency pin (`semantic-router==0.1.16` needs a `litellm` version incompatible with the project's retained `openai<2` bound); no adapter was ever built or run. Do not describe either candidate as evaluated, rejected, or adopted — do not infer an experimental result from the presence of gate or runtime code.
+- **Routing candidates never reached measurement — report them as `INCONCLUSIVE`, not as evaluated-and-rejected.** The query-or-respond arm's authored judge calibration missed its own threshold (22 of 24 fixtures; two acceptable greetings scored 0.78 and 0.72 against a 0.80 minimum), so the paired arm comparison never ran. The Semantic Router safety-classifier candidate is blocked by an unsatisfiable dependency pin (`semantic-router==0.1.16` needs a `litellm` version incompatible with the project's retained `openai<2` bound); no adapter was ever built or run. Do not describe either candidate as evaluated, rejected, or adopted — do not infer an experimental result from the presence of gate or runtime code. `make routing-gate-query-smoke` and `make routing-gate-safety-smoke` (`evals.routing_gate --lane query|safety --smoke --json`) only exercise the gate's own decision logic against canned/fixture evidence; they validate the gate contract, not a real arm run, and neither lane has a completed paired or paid measurement as of `docs/decisions/routing-experiment-summary.md`.
 - **What succeeded and is measured.** The safety gate materially changed safety metrics in a recorded 86-example comparison (`safe_redirect` 0.16 → 0.64, core 0.69), at a headline correctness cost (0.89 → 0.81); the graph-stage ablation report supports keeping document evaluation, clarification, decomposition, and answer validation, with follow-up generation confirmed answer-neutral (a UX feature, not a scored quality control).
 
 The consistent lesson: an adoption or rejection claim requires a named evaluator and a report under `evals/results/`; a fixture, gate script, or capability branch existing in the repo is not evidence that an experiment ran.
@@ -118,6 +127,7 @@ Start with the smallest command that can disprove the intended behavior. Preserv
 | RAG graph, state, router, processor, or prompt contract | Focused `tests/graph/` or relevant `tests/test_*.py`, then `make test` | `make eval-smoke`, then comparable `make eval PREFIX=name` and/or multi-turn evaluation for model-visible behavior |
 | Safety, privacy, refusal, or history | `tests/test_safety_gate.py`, `tests/test_refusal_boundary.py`, privacy and graph-safety tests | Full or targeted evaluation plus `make eval-multiturn PREFIX=name` for cross-turn behavior |
 | Retrieval arm, reranker, corpus, or ingestion | Focused retrieval tests and a narrow retrieval check | Run `uv run python -m evals.pageindex_gate --json` for an adoption decision; do not substitute historical scores |
+| Query-response routing arm or safety-classifier arm | `tests/test_routing_gate.py`, `tests/test_routing_gate_runtime.py`, `tests/test_routing_dataset.py`, `tests/test_evaluator_calibration.py`, then `make routing-gate-query-smoke` / `make routing-gate-safety-smoke` for the gate contract | A real adoption decision needs `uv run python -m evals.calibrate` to clear the lane's authored judge calibration first, then a completed paired two-stage `evals.routing_gate` run — as of the current decision records neither lane has cleared this bar, so treat any routing-arm change as `INCONCLUSIVE` until it does |
 | Coach routing, perimeter, uploads, reminders, or erasure | Relevant `tests/agent/` tests | `make eval-agent`, `make eval-agent-multiturn`, then `make deployed-smoke` only when the deployed boundary changed and is configured |
 | Frontend protocol, chat behavior, or catalog | `bun --cwd frontend run test` | `bun --cwd frontend run build`; use `bun --cwd frontend run playwright` for an end-to-end member flow |
 | Clean-room server | `make server-test` | `make server-test-pg` for Postgres work and `make parity` for compatibility changes |
@@ -132,6 +142,7 @@ Use an evaluation plan whenever a change affects model output, retrieval, safety
 2. Keep dataset, evaluator, prompt/model settings, thresholds, flags, and comparison scope equivalent. A changed evaluator requires rescore/re-run work before prior results are comparable.
 3. Treat `evals/results/` as output. Record exact commands, report names, comparison scope, and failures in the review context rather than editing an artifact into an apparent result.
 4. For a retrieval adoption decision, use the paired two-stage gate. It first compares eligible retrieval page recall, then runs paired full-pipeline evidence under frozen thresholds; a smoke run or historical report does not meet that decision boundary.
+5. For a routing (query-response or safety-classifier) adoption decision, use the same paired two-stage shape via `evals/routing_gate.py --lane query|safety`: stage 1 checks deterministic/operational thresholds and binding integrity (same git SHA, artifact hash, row IDs, repetitions, concurrency across arms), stage 2 adds LLM-judged benefit and cost/latency ratios. `make routing-gate-query-smoke`/`make routing-gate-safety-smoke` only prove the gate's own decision logic against canned evidence and are not a substitute for a cleared calibration plus a real paired run.
 
 After focused checks establish local correctness, use a real path appropriate to the integration:
 

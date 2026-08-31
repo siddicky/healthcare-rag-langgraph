@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:04bbdba6af758d954856ee92ce20309f9f5107b9b70326f4fce23cb706a77360",
+  "pageVersion": "sha256:fbdcedbf751653ff2fe11c6d089e0f7c599d481c9ba3ff446c4ca1b8bf7921ad",
   "claims": [
     {
       "id": "claim_838bb3be312a460fbcf70cb8a3cab28f",
@@ -243,14 +243,18 @@
       "statement": "HC_RAG_CHECKPOINT selects the engine-owned checkpointer at initialization: empty or any value not beginning \"sqlite:\" selects InMemorySaver, a \"sqlite:<path>\" value enters an AsyncSqliteSaver context and runs schema setup, and SQLite support requires the graph-sqlite extra or initialization raises RuntimeError with that instruction.",
       "evidence": [
         {
-          "resource": "repo://healthcare_rag/AGENTS.md#L17-L18",
-          "version": "repo-lines-v1:sha256:f68e76c0c324aedbf3b1a258650e91c24ad5731bf408405dc4ad506e358db050:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjFkNDUyYzE2N2YwYmUwODE3Yzc1ZWM4OTA1ZDcwOGEzNTM4ZGRjNGMyMmRhOWUwNzBiNzQyY2IwNTc4MzZlZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzhjZjc0YzYwYTllZGZjN2Y2NTAyZjg2Yzk4YzQzZDk1NmZlZWQ0MGQwZWZkZTdiOTFiNWU5YjdiY2I1MGFlMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2ZjNjQ2NTE2YTMyY2M0Y2ViYTc5ZWM2MDM1NjQ1NDVkZWVhNzE4Mjg5MTJhYjM0MjUyYTI5NjNlZTliZGRkZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjUwMDQyNzVmOTlhNTBlN2JhM2NkMmRhMzVlNDA4MjcxYmQzZjAyYWYzMDZjMWQ3YWQ0OWFhMGMxYzU4N2RhYiJ9"
+          "resource": "repo://healthcare_rag/graph/engine.py#L100-L116",
+          "version": "repo-lines-v1:sha256:aacedb770e2da34806987a7f1980b8de768549a3a5aa83cecd9008683a48d9f5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyMWZkM2I4NGE4YjcxYTVmYjEzZTdhOWU4YzBkZmFjYzdjNTZlNDVlNzU0NDQ0N2E3M2JhMjQ3ODlmOGZjYmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4NzdhMjMwNTEzYjg4ODNiM2IzZmY1MjJlNzhlZDdhMWNiNDUyZDYzNzYxODRlMmZjYTMwNTJkYWFjMWI0MzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ3MDhmMDg3M2EzOWI1ZjcwNDk3ODY2NmQ5M2IyZDM4YTYzNGNlZDU2YzkwYTI1OGZiNTRjZjA1YmEzZWFlNDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxYjM3NmEwMTU1NzM1YjE1NDdiNDhlYmQyMmU1M2NiZGVhNGQxMWM0YmU5ZmI0NGJlNDU2MGEwNWZhYTQ4ZWEifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py#L106-L106",
+          "version": "repo-lines-v1:sha256:9e5d4dd85360f4d5072cc2e7bd0af213513833fc87204217f87c878fbe5a1f3b:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWU1ZDRkZDg1MzYwZjRkNTA3MmNjMmU3YmQwYWYyMTM1MTM4MzNmYzg3MjA0MjE3Zjg3Yzg3OGZiZTVhMWYzYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWU1ZDRkZDg1MzYwZjRkNTA3MmNjMmU3YmQwYWYyMTM1MTM4MzNmYzg3MjA0MjE3Zjg3Yzg3OGZiZTVhMWYzYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTk5NzMzOTlmZjc5MDYxMGY2OTU2MmIxMGZiMjY4ZGYwMDdhOGUzMTYzYTEyZWI1NjNkYjI3OGI5M2M3MmRlNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDExNGRjZDhlMzhjYzE2NmEzY2EwZjk1ZDBmODAyMjI0MWQ0N2U3YTViZTFhNjZjMzYzMWI2ZTk0NDk5ZmEzMiJ9"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

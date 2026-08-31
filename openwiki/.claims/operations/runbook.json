@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:f093b7fa5fc2238a185cabd6aba4af25e15427c9132d5194b082739e91689924",
+  "pageVersion": "sha256:9cb5f6576e88a900f66c993b3e61851658c0fafba519cbdd8000dcf7c2f7b520",
   "claims": [
     {
       "id": "claim_b74b8d9a07af43d19d094ac0a3c0df4c",
@@ -211,10 +211,76 @@
           "version": "repo-lines-v1:sha256:b9d839553b9d3fe5ff1a180c29a5d5c1d676be9a8db32414dbc9cb2333dc2794:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZWMzODhmYmE4MDAyOWM5YzEyODcwZmM0ZTkxMmZiZjQ5OTNlMjgxNDYwZmIzOTU0OGYyOGNkMGI1ZDVjZmFhOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjk0MTZlMDlmNzhiYTMxNmMwMzI1NjgyMTNiODU1ZWU3NTZlNDE1NjVkOTE4ZjA5NTE5YzgxZmQ2MjBmNDA2MCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTNlZDM2MzgzNWQzNWMwNjY2OTE4M2VjNjQzNTVjODcyZGI3MTM5NDEwZGVhMDE0MDRkNmVhNDE2YmY5NDA1MCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzU1MjAzY2VlZmNiMTU1MDkwMTQzYzk1MTUyNmMxMjJiNDJjZjY1NDk1MTg0Mjk4Zjg4ZjVlZjAwMTg2MWFiZSJ9"
         }
       ]
+    },
+    {
+      "id": "claim_9d45a68498384285854e51a562a7f0da",
+      "statement": "The interactive CLI hides implementation detail on initialization failure: `interactive_main()` catches any exception from `build_engine()` and prints only the fixed string `PRIVACY_OR_RUNTIME_INITIALIZATION_FAILED` with a nonzero exit code, without a traceback or the offending config value; this behavior is enforced by a subprocess-based test (`tests/test_cli_interactive.py`) that runs the module end to end and asserts on the exit code, the fixed message, and the absence of both `Traceback` and the injected bad config value.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/cli/interactive.py#L57-L62",
+          "version": "repo-lines-v1:sha256:7cc136e762b1b1c436dbbb33e9600b5bdefc2e56f1a2224b8a41fd2db8d9e40c:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWRhNWM2NmUxN2IxNDUzOTc4MzRiOGM4NTRkYzQxOTNlMjEyNTE4MGE4OTk2YTE0YzMxODgzMzI2YjJlZmJjZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjMwODY2ZTFiY2M1YWI3NmUzZWY1OTAxMmQwYWQzOWE2ODdhYmUwMDIzYjQzOGFjYjExMzBhMTg4MjVlODE5MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzcxNzQwNjhiYWQ1OGMzZTU2YjhiMjhhNzNlOGZhZTkxOTMzYjNlYTQ0OTJiMzViNzNlYzBlZmMzZmQ2NzAxZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2NhMTQ2NDViNDcwZjJkN2NmODJkNmY1ODEyNWQzMDI0YmZiMmNlNDI3YjMyOGFlODMxZDRlMTFiYmE5ZDg1NSJ9"
+        },
+        {
+          "resource": "repo://tests/test_cli_interactive.py#L34-L57",
+          "version": "repo-lines-v1:sha256:2ae375951e6f02453f23c0e87c8a1d3051cc10fc9e60f8ec536201788fa0e044:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgxMDJhODRmNmJhNzdjYmJiMmZiOWRkZDkyNGJjNDQyN2RjOGIyNjQyYjM1MmRkNGFmNTViNTE1NWI0OTBkYmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2ZjRkNDZjYTU0Y2E0MzE0Y2YzOTdkM2IwZDBmMjU5OGNjZTNjMWY4YTAwNzkxNTZlYjA5ZjRmOWM1M2UyZWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI4NDZkZWNlYzZhN2I2MDFmODNhZjhhMzc5YmZhOWY4Mjk4Y2VhYjZjNjdhZmRmNDA2MDEzYmI0ZmM1MmQyNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhYjdiMjcyYWI0ZTI1MTc1YjVmZDI0YzEzY2ZlNTYzNDI1MTRjMDI3OTQ2ZjAzYjUzMDVkZjIwMzM3ODc5ZjkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_82a7d51aad834f2da81f6daca519a968",
+      "statement": "Because the interactive CLI's init-failure message is deliberately generic, diagnosing a startup failure requires checking the two concrete underlying causes directly: `Resources.weaviate()` and `vector_store.connect_to_weaviate()` both raise a `ValueError` when `OPENAI_API_KEY` is unset, and Weaviate connection failures (container not running, still starting, or `WEAVIATE_HOST`/`WEAVIATE_PORT`/`WEAVIATE_GRPC_PORT` mismatched with Compose's `127.0.0.1:8080`/`50051` defaults) surface as connection errors or `weaviate.exceptions.WeaviateStartUpError` from the same code path.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/resources.py#L66-L94",
+          "version": "repo-lines-v1:sha256:d2bd1a9874b6987295ac5a7a7583f8c37d67d830a63c96d4b33d86f572116879:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4ZDExNjZhZjJlZTMwMmNkNzJmNmI3MmZhMzY2MTdkMTY1NWE2YWEyYmRiOTA5NTdkNjgyYzI1YTkzMmZjMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4N2MzZTI4ODk1NGU4OTBkYzI1ZWQ2MDhlNzQzYWYwOGZhMDFmYjk2NzU4NGE3MmEyOTc3ZDlmZmVkZDhhMWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJlMmFkYTQ1ZjA3M2U1Y2E1NzFjMjNjNGM1MzJlNmRhMGY2YmI2MmNiZmI3ZWQyYjNlOWNhMmFkZDc1ZjgyYTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI2ZjBjM2NhZWM0ZWI2Mzg4NzRjODFjOTQ3YWU2NWQ5NzExZmViNDk5YjIxZDgyYjhkMDk0MjI0MjlmYzBjZTYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/settings.py#L46-L46",
+          "version": "repo-lines-v1:sha256:2d2f35423af83935fa32a615bc223cf67d2b688f01537e3f4db4ea5ea6185bd8:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQyZjM1NDIzYWY4MzkzNWZhMzJhNjE1YmMyMjNjZjY3ZDJiNjg4ZjAxNTM3ZTNmNGRiNGVhNWVhNjE4NWJkOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmQyZjM1NDIzYWY4MzkzNWZhMzJhNjE1YmMyMjNjZjY3ZDJiNjg4ZjAxNTM3ZTNmNGRiNGVhNWVhNjE4NWJkOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDA3MTQyYTYxODRjZmM2MTkwOTNiNWRjZTQyMTY4MWFmMDdlYjA2MWM5YzlmMjViYzg5ZTg3ZDU1MDQ2Yjc3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjk0OTgxOTk3ODQ0OTg3NTA5Yzg4NDAzN2NhMzI0Y2QxNzBlOGE4MzBjODQxM2M5YmEyZDE4NDU2N2QwMmY1ZCJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/storage/vector_store.py#L56-L98",
+          "version": "repo-lines-v1:sha256:b8501af626d428e5c55a659f2f4e6c87e922fdd9e21e51d52c0ba3aeb9a16c6d:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyODQ4ZWRjZGI4YmZkNmU2ZTczY2NjYTJkOWViNmY1YmRiYjIwODI0YzYzOTAyNWU5MTkxOWU5MDMxNzNlN2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzYjIyMzQzZTljNzU1OTIzM2RjNDZkY2VhNTg5OTY1OGY2Yzg2YTczMTRmYTQ2MjA5OGYyOTI4YWY2YWQzZjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZiNjc0MDlkZTEyYzhkNjc5MWZkOTg5NGY5ZTVlNTFmMWM4NTRlZGRhZGRlMzlhNTBiY2U1MmYxYjQyMjBkODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlhZTM5ZTE4ZjYyOGRkMDAwNjRlZTljOTc3MWM1MGExN2Y0NWYzYjI5YTQ0NmM3NmU2Mjg2OGRlNjdkZmYyZTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_64d5d26c254a4fa5bb4afdd65a6ad9e8",
+      "statement": "The Compose `healthcare-rag` app service (built by `make container-build`, used by `make container-ingest`/`make container-run`) declares `depends_on: weaviate: condition: service_healthy`, so it will not start until Weaviate's own container healthcheck (an HTTP GET against `/v1/.well-known/ready` every 2s, up to 30 retries, with a 5s start period) succeeds; this is a separate wait mechanism from `make weaviate`'s Makefile-level curl polling loop used for the non-containerized workflow.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L27-L29",
+          "version": "repo-lines-v1:sha256:b696b9db6fa08246131f190efea1252af905f1daecbd3f1218941138ac22cdf4:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGVlZTQ1YzI2ZTA3OWFjYWNiZWU5NGI0ZWEwNWRiZmE2M2U0NTFlOTc1N2U5NzRlYTgxMDZiOWQ3NzkwZjQzYSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmZhZTVmNTRkN2VjYjZmYWRkN2NmZmM5Mzg3MWU0MGI2ZjZkN2JjYmZmZTk4ZTJkNTI5NDQxMzRkZDIzMWY0YSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTkyNWI2OTE1NjE5NjNlNzhhODFjMWUxNWMyMTVlOWI4NmI2N2VjOGRmNjg2OWM1OTBkOWZkZWVhOTFlNGFhZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjFjMjNmZjQ2MDI4OWU4ZDU4NDA4YmQ5Y2YzYTA2NGNhODJiN2Q0ZjZiZDg4NWViMDFmYmE1YTY2NDM3OWU0OSJ9"
+        },
+        {
+          "resource": "repo://docker-compose.yml#L18-L38",
+          "version": "repo-lines-v1:sha256:6084ed3d1125f4abb61bc2da92702b84f08e5cb5d8143b85c1e8987cc17cef6f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE3MWRiNGU4NzVlYjlhNmFmMTQ1NTYzMDU4NjE5NmY3NDIyMjMxMjhiMzYyNTgwMDk4NDlhNjhmODAyY2NmOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYyZTYxNmRkNDBkZGIyNjg1NjM5OGY2Yzk1NThiODIyNjJkMjhjMzk0YzkwNTQwMGU2OWQ5OTMxODYzOGVlZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMDA3ZDc5YjE2YjA4NWYzOTcyNGQzOGQ5ODY1YTI4MmI5YjQ5MjU5MTA0YjE2ODM5NDEyN2Q0ZDgwMzUxYmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhhZWZjMjI0ZmI4ZWZkNTgyZjJjZDc3NzA4YWYyZTk1ZmIyZDAyYWM3MmFiMmY3ZTIyNDg2ODEzYTQ0NTE1ZTIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_e895913f3e994be6877996ce3506bf4d",
+      "statement": "The Compose `healthcare-rag` app service runs with `read_only: true` and only `/tmp` mounted writable via `tmpfs`, so any code path invoked through `container-ingest`/`container-run` that attempts to write outside `/tmp` (e.g. exploratory scratch output) will fail; the non-containerized equivalents (`make ingest`/`make run` against `.venv`) do not have this restriction.",
+      "evidence": [
+        {
+          "resource": "repo://docker-compose.yml#L31-L54",
+          "version": "repo-lines-v1:sha256:93d3e24f733d5652a932e1a4e18e41dc7f0505d449403dc23eafb7d23c67ab31:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzYjc0MTg3MjdlYzVlZmZiZjUzNjBjYzZmNjdkN2ZkOWRjYjEzOGZiYWQwZDdhNmUwZmFjNjgwMmM0NjM3ODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5MGQ3Mzg2ZTkzYzM1OGRhZDEzNzM3NDIyYmZjMTBhYjAzNWVhZmY0M2VhZTAwMGVjYzc2OTkxMTdiNTI2OTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI5MmY2NmU5YjgxOGEzNWU2OTdiMzMzNmVlYmZmMDY2NzBjNmE0MzZjMTExM2IzM2FiOGY4ZjYyMWViZjkyODAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk3ZDAyZGZhZGM2NWQ0ZTRkMGI3NGRhNjVhYTQxOGE4OGU0NmVmMmU4ZGJmM2JhZTkwODA3NDQyZjc3ZTUyYTUifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_7f332ac175e5471d9e17166632f77102",
+      "statement": "`make deployed-smoke-gate` runs the same `scripts/deployed_smoke.py` tool as `make deployed-smoke` but with `--profile gate`, giving a fast, LLM-free subset of the ten-check smoke suite against `LANGGRAPH_DEPLOYMENT_URL`, intended for quick checks where the full smoke's latency/cost is not warranted.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L110-L114",
+          "version": "repo-lines-v1:sha256:edd610aef470892c26bc18f765638f0567680cc0432f8f0faf96ee6b1fc2f075:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWM0MWVhMDgzMTU4OGZiYTk5OTA1NzcxYTNmZmEzNjk3YzJiYjA0YmIyMGE1Mzc4ZDQxZTJiZDQwMzQ3NTg5ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjViM2E0YTE4MzQwODg2ZGE4MmU3YjBjNTNjNDQwMzhkMDA1MTU4ZTJiNzQ3ODU0Y2E5N2VjMzcxYTFkNjdlMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzQ3NmRlM2RiMzkxZjcyMGZiZjU2YjkyYjY0ODlmMDA0ZDg2NjljZjZlMDQ0MjNjYzg1NzMwOThmOThiYTIxOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWQ0NDUwMzliYTliOGUxNzExMjMxMjJmZTljNTA3NTMzMmM5NjM5MjQ2NWZlZWUwM2ZiYjNlMDk5OWZjODg4ZCJ9"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:91fb91af6f9e221997b1774aeb38857157d155174cf64206b560341091a3498b",
+  "pageVersion": "sha256:3a2126c45a87ea37b3db6e873dc266238ff05bad345e8e679a28aba9dfe8a461",
   "claims": [
     {
       "id": "claim_0d02e33e4b2e4b58959785ad2babc3aa",
@@ -295,6 +295,14 @@
         {
           "resource": "repo://docs/decisions/AGENTS.md#L18-L19",
           "version": "repo-lines-v1:sha256:824d688ac666a131d23a19d2269c80096b46e08aaad2615e085af617c79d9b43:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTRkMDNhM2Q5NGI3OGVhMTA1MzY2NWRjY2U3OTczYWJmNGRkZTE2MTFkOGJkZDRhYjg4Yjg1ODE4ZmNkZmE4NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjc4NDdhMTk0NTFmNDNkNGRmMDE0NWMzNDU1NTZhMjVkMjdkYmQ4YWQxYThlYWNkZGFlNmQ0NmQ0NzlkZGZkYiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2YxOTYyOWQ1MTJlNjdjYWM2ZDgxYTAxNmY2NDk2ODZjZGExN2M4OTczMTNmYmJhOTE3NzZmMWMyMTljMTJhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTZkMDgxNDg4ZGRjYTc0MGNlMjc0YmFkODUyNjUyNjUxMzM1N2NkMzI0NTdiZmYwNTkzMGM1NjJkMmEwNWI5YSJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/query-or-respond-vs-current.md#L1-L28",
+          "version": "repo-lines-v1:sha256:9d111919051f3741af14d8d816da9d0e367112e042363466649ebf78b7446fae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5MWFlOGI2ZDBkMGZmOGY5Mzc4YWNjOTJkODAzMzA0YjBjYWZkNTMzNDY1NzQyMmUyM2E5ZmNlMTc2Mjk3MTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2Nzc2YTQ4M2MxZjRjNzM2ZjllN2UyY2NkZjk0NmZkODU3MGVhZDdjZjgyZmQwNDA5MGY5YzMwZmQyNGRhOGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkMWFmOTgyZjMzNDZkYjFkMGVhOTlhNzNhZDYxMWU2YjcxNzRhYjM2MDFiMTk2OTI3NTkyZTZjODE0M2QzZTgifQ"
+        },
+        {
+          "resource": "repo://docs/decisions/semantic-router-vs-llm-safety.md#L1-L20",
+          "version": "repo-lines-v1:sha256:6c9a5dfe223eb979128457452e56d21d343ba6c874887ef6955abd969a9ba764:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYThjNjhiMjZlNmUzODE0MjBmMGMxNDIyNjIxMTA5YmYwNGY2OTU1YTgxM2NhZmQwYzhjOWUyOTU1MzljNzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ZDU4MDYwNDZmMWJiNWMxYWI4NDhkMWU3OTY3ZjRjNzZiMDE5Y2I2YzA1OGU4OWU4Y2FmOThiNWI5ODIxZjQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI4ZjYzNjc1ZTAxMDJlMDQyYzM0M2Q2NzgwNTlkZWRjNzMyNTg3M2IwMzEyNjkxZjE0NWY1MTIzNzFhMWVkNDYifQ"
         }
       ]
     },
@@ -415,10 +423,42 @@
           "version": "repo-lines-v1:sha256:a742ed7d99bbe595012c9a469dd031062265b70ec0e10c064a44f3bb96523f5a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQ3OGQ4ZTc0NmZlMWVkNjg3MmNlYmEwYjdmMjRiNWQxOWM1Njg5NDYxMWMxMGNhYTZmNDEzMTI4ODcyNjFhNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzU3ZDQ3MWFiMDMyZTNjYWFmYTYzNzY1ZjFiOTAwYzJkNWM3YmRlZjFjZTc0MmZmNGY5MWE3ZDVjNWIzNjU5ZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYmFlYjAzOTg4ZDUyNDQzMjZmNjhjZjVkOGYyYzU3Y2I4MzZkYTE2OTgzZTU1OGI3MTdkZTE4MWY4MjUyZTY1NiJ9"
         }
       ]
+    },
+    {
+      "id": "claim_2adf48a281844bab8528de0c99dc78c1",
+      "statement": "evals/routing_dataset.json and evals/routing_multiturn_dataset.json are hand-authored, uuid5-synced source-of-truth artifacts (loaded/synced by evals/routing_dataset.py) covering query-routing rows and safety-drift routing conversations for the routing gate, and must be edited with the same deliberateness as the golden/multiturn datasets rather than as disposable fixtures.",
+      "evidence": [
+        {
+          "resource": "repo://evals/AGENTS.md#L52-L74",
+          "version": "repo-lines-v1:sha256:dd37c83f04738fd44e0997781ec00ff12556d0dba2953ad1d802c635a94d8950:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5Njc0NjQyYTBmZWM0NzZkMTM0ZWVlN2EyYTA1NTZmNTRjYzVmMzJlNmNlNzQzNjU3M2Q4MjRkYzc2YWE3NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYmZiMjk5MzE0YjlkMThlN2JmZmEwODk2Y2FiZDc4NDk5YmJlYzMwZmQ0NjIyOTI1ZGU4ZDA2YmZlODQwOGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1OThiMDZiMDMyMjU4ZTM3NWViZGJlMGFjOWE2ZGQyMzYzMGIwY2U1YmI3YjhjYTRlZTI5MGRjOTY4NmFhOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2NTA3MzViYjY0MTM0ODUyNzEyZDdkMzQ5YjVmMGQ3ODJlYjc2ZDczNGUxMzcyYmExY2U4YjlkMGU0YTFjMDEifQ"
+        },
+        {
+          "resource": "repo://evals/routing_dataset.py#L79-L79",
+          "version": "repo-lines-v1:sha256:acb44707e15a1c496ad29767dbc63f359bb8933fa6af1cc0d7ffe120ec17e7a2:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWNiNDQ3MDdlMTVhMWM0OTZhZDI5NzY3ZGJjNjNmMzU5YmI4OTMzZmE2YWYxY2MwZDdmZmUxMjBlYzE3ZTdhMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWNiNDQ3MDdlMTVhMWM0OTZhZDI5NzY3ZGJjNjNmMzU5YmI4OTMzZmE2YWYxY2MwZDdmZmUxMjBlYzE3ZTdhMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzE2ZTMwNjc0ZWIzMDU3MTY2NjEzMzJlNzQyY2ZmNTliMmUwMTc5ZWRiYzNmZGUxZTdkOGM1MmFlNmU2NWNmMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTYwMmM2NjA0Y2MwNTkyYjg3YjZiZmZmYzgyZDQ5ZGEzNTkyMTlmNzNiYWJlYzFkMDgwOTZmNWFiNWEzNTgzZCJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3303de1125e440118e1b909f9279b4c3",
+      "statement": "`make routing-gate-query-smoke` and `make routing-gate-safety-smoke` run `evals.routing_gate --lane query|safety --smoke --json`, which validates only the gate's own decision logic against canned/fixture evidence; a real routing-arm adoption decision instead requires clearing the lane's authored judge calibration via `evals.calibrate` and then completing the paired two-stage `evals/routing_gate.py` run, which neither the query-response nor the semantic-safety lane has done as of the current decision records.",
+      "evidence": [
+        {
+          "resource": "repo://Makefile#L119-L123",
+          "version": "repo-lines-v1:sha256:2dc6c10c255aa7b7f1d179cf36088aea286ec84c1e0475622c3b3f7522f5fc02:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWE5OWY3YTk2ZWMxZjM5MjNlOWE4ZTk1M2ZiMzY2YWU2YzI5NGZlODhiMzA5MmIwYWQ5Y2I3Y2E5MDkxMGMzNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWVmNzBjMTBlODdlMzdjMTg2ZjhjNTY5YjkwZDViNTE1Y2EwMWY2MzcxZGIxYTgzZDFlYjNmZmU3Zjc1OWFhMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiN2M0N2VmNTZiNjVkMTRjYjYwODkwMGU3ODhkYzYzMzVjNWU0MWQ5N2FhOWY0NzE1ZmUwMmY2Mjk4ZmE4ODExMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QyNTM0YWFiMzBlOGJkNTgwOTM2MWEwNDJiZTExNDYzYmQ5YzRhMzQyZmEwN2E3OTk0NTYyNDZkMjg1Mzk4YSJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/routing-experiment-summary.md#L1-L22",
+          "version": "repo-lines-v1:sha256:65c158a75246de77cac5c762e8309b4337b524f0d0232c890675146fbe18b809:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlYTA4YzUwMDBhNDM5NWRmMDRhOTczZmFhY2I0ZGE3OWRkOGVjYThmNmU2ZTJiNWJhYzVmOWMxZDUyZjk3NmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlYTNmMTBiOGQ0YTNmOWNjYzFjOWQyZTkxMzgzZDZiOWZhZWNjZWZlMjk2NjE0NGFmZThlMTFlMTgxNTY0YjcifQ"
+        },
+        {
+          "resource": "repo://evals/AGENTS.md#L52-L74",
+          "version": "repo-lines-v1:sha256:dd37c83f04738fd44e0997781ec00ff12556d0dba2953ad1d802c635a94d8950:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5Njc0NjQyYTBmZWM0NzZkMTM0ZWVlN2EyYTA1NTZmNTRjYzVmMzJlNmNlNzQzNjU3M2Q4MjRkYzc2YWE3NGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYmZiMjk5MzE0YjlkMThlN2JmZmEwODk2Y2FiZDc4NDk5YmJlYzMwZmQ0NjIyOTI1ZGU4ZDA2YmZlODQwOGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1OThiMDZiMDMyMjU4ZTM3NWViZGJlMGFjOWE2ZGQyMzYzMGIwY2U1YmI3YjhjYTRlZTI5MGRjOTY4NmFhOWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2NTA3MzViYjY0MTM0ODUyNzEyZDdkMzQ5YjVmMGQ3ODJlYjc2ZDczNGUxMzcyYmExY2U4YjlkMGU0YTFjMDEifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

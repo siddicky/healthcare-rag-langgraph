@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:fb695071b60bb69421d9c92b6277a10a96865f453e2a36a128ee3affd357d5c5",
+  "pageVersion": "sha256:0259eb3d7f735805449f82cd0ac878b4ffbfb0df2a2ac4198109b63346e579d4",
   "claims": [
     {
       "id": "claim_4704cac4f796451596db2e51d9f17866",
@@ -236,11 +236,15 @@
     },
     {
       "id": "claim_0c2ca1d0dc1d47b2bc1f25c28e3e2651",
-      "statement": "History entering the tool router is projected through _project_history/scrub_router_text (human/ai string content only, each message scrubbed and size-checked) before being bound into the router's prompt, and tests/graph/test_query_or_respond_privacy.py asserts PHI canaries never appear in the bound prompt or truncated history.",
+      "statement": "History entering the tool router is projected through project_history/scrub_router_text (human/ai string content only, each message scrubbed and size-checked) before trim_messages truncates it and before it is bound into the router's prompt, and the trailing current query is scrubbed the same way; tests/graph/test_query_or_respond_privacy.py asserts PHI canaries never appear in the bound prompt or truncated history.",
       "evidence": [
         {
-          "resource": "repo://healthcare_rag/graph/query_response.py#L52-L111",
-          "version": "repo-lines-v1:sha256:9fd338d5702d44b5c407a71d524fbc5558f6d38aab9e7201b4e61390e03351fc:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwOWNmNTliMGExOGVlYmUzMTJiNTQ4ODQzMGVjZTkzOGFhY2Y4ZjhhZmZiMjU1OGNmMjc3ZmY4MzExYjlhY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlkYWEzMzVhY2I1MDg2YjRjNzI2Y2U2YmQwZTgxNGNhZDNlMWJlZjM2MTIyYzc4MWVkMTY3MjZmNzU5NGI4M2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjODIyZDE0MmE5MzQxZmFkMDY4NTViNWUyOGQyMTcyOTA0NTU0Y2Q2OTU4YTk4OWViMThhMWU3MDExYjk2NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzYzE3MjhjMzQ4Yzc0NTk2ZTg4ZjcxMDFkNzljNzRkZTEyN2E5ODM1MGY2OTgyMjIxNjZlZGM1ZjI0OTUxYWUifQ"
+          "resource": "repo://healthcare_rag/graph/llm.py#L164-L190",
+          "version": "repo-lines-v1:sha256:d0ed9fcc393ed6f51e68d5b7a0141bf656e3c1f3e2a4d3c75a11faeb56f6b500:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiNWVmMWY4OWU0MTRjY2E0YzMxNTNhZmJiNWEwMjcxOGU0OTZkNjBmYTFjN2ZlYTljNjk2ZmMzNDQ5YWI4ODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZmOWJmZDJhZmFmMmFhYjc3YmU3OTJjYWIwNjI0MWZkOGEyZjE0ZjM5NjVhYzc4ZmI1NjA3NDNlZTE0Yzk1YTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIyMDU1NGU5NzJkYjdkNWE5ZGZjYWMxMGM4MzZjNTQzNjBhMDA1NzYxNmMxNDZkMzMxODg2MWFjZmRjYThjMWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFhYjk3MWM3NjRmNzlhNDE1ZDQwZmU1NDlhYWViMDNlZjk0ZTUwZThlODcxNmQ4NWYxMGY5ZjdkZmExZjRkZGYifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/query_response.py#L52-L68",
+          "version": "repo-lines-v1:sha256:910a1bca52b8ba8e1fa9897516174d66434d23d9e68f568620d9221741d2c0b2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwOWNmNTliMGExOGVlYmUzMTJiNTQ4ODQzMGVjZTkzOGFhY2Y4ZjhhZmZiMjU1OGNmMjc3ZmY4MzExYjlhY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MWI0MGFjNDZmZWMzY2QxNDA3YThhMWJhZGI3YTBiMGEzY2JhYjU3MjMyY2RhODBjYzU5YTMwODdmZWIzNzQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjODIyZDE0MmE5MzQxZmFkMDY4NTViNWUyOGQyMTcyOTA0NTU0Y2Q2OTU4YTk4OWViMThhMWU3MDExYjk2NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjcwYjk3OWFkNjllMmI0ZDNkNTZlN2U4MTBhZjU1OGJiY2M1OWVmNjdlYjgyZTQ0ZGY1ZGMyM2NiMDc1ODhmOWEifQ"
         },
         {
           "resource": "repo://tests/graph/test_query_or_respond_privacy.py#L12-L61",
@@ -281,10 +285,24 @@
           "version": "repo-lines-v1:sha256:299e44494c8a226787347bb4170f440d37b0c283cf87ffae6673860e11a6925f:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNTJmMzFmODBhZmUxOGY0ZGNkOTE3YTlmYWY5MGM5OGVhMjNhNDhjZTgxOGNiZDQzNTRkYWZmYmI5NTg4MTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllZjNiYTlkMmFmNzYxMThjMzVlZGNkNWU2YTgzMzIzOTczMjdhYjU5Yzg3Mzc1NTMxNWI0N2NhYzRlNGQ1MzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwZmY2NDY3MmNhMmRlNDlhMWRlNWMyOTdiYTk4OTFlNWQzYWFlNjQ3NDc1NzkxYjY1OTYxMTRlMzI1ZGJkMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
+    },
+    {
+      "id": "claim_a11bda14a72c4b9c87ce91f08e03af28",
+      "statement": "The complete set of data categories that must never reach a model provider, log, trace, or persisted state unredacted comprises personal names, contact details (email/phone/postal code/address), government and financial identifiers (SIN/SSN/ITIN/credit card/bank number/driver license/passport/MBI/NPI/medical license), network identifiers (IP/MAC/crypto address/URL), biographic dates, and healthcare/administrative record numbers; clinical codes and dosing information are deliberately exempt since they are the content the system answers with.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/processors/privacy.py#L42-L52",
+          "version": "repo-lines-v1:sha256:123423e7cf1ecdf8ac21db4cb04e21c9e1b42769bb15f55f3b4d8ed584f1b64b:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwYmQ4MWVmYTk5MjE2MTM2ZmFhYWVhNGUzNGNmOWE5ZGU4ZGRjZTM5Yjk3N2FhMWVkMWRmYjc0Njk2NDBmNGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwODgwNDgzMmVkN2VhMjZiMGNmN2MyYmQ1NTE0YjA1ZGQxMDU2ZmNiNTkzMDdkNTRlYmM4ZmE1OTQ0NTkzMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjMmFlNWM1MTQyNWQxNDY1YmQ5NzAyMjZmNDE2YTU5YWU5ZDdlZjRkODQ1NmQ4ZWI4MzgwNGEyMGJiNTQ0MzUifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/privacy_patterns.py#L25-L119",
+          "version": "repo-lines-v1:sha256:7dee561f1aba2d524fa2cae73fc2eb2b21fcfa3817b2e73d3472ce32dbc01d25:eyJzZWxlY3RlZExpbmVDb3VudCI6OTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NzE1YmM1NThkOTAwOWFhMjM5ZjNhMTRmZjIxNzA0YzQ4MzhkYzRmYzE4MDI2MzgzMjNkZTUyZWU0OThlMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU4NTBjZjliZWFlY2Y4NjAwZDM2NDY3OGUyNGFiOTEyZmY0OGJhYjc0ZDc3MjVkYmQ1ZGNlZDhjYjhmMjU4NmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3MTQ4ZDc2OTc2N2FkNTMxNTJjODY5NTQxMGRjMmFiYjljOTY2YWNjYmFlYTIxYjZiMGQwOWUwZDhmNmFmNzQifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

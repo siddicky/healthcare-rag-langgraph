@@ -13,7 +13,7 @@ openwiki:
   validation_commands: [make test, make eval-nojudge PREFIX=safety-change]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-3f718dfc0cae53689e49b15c
     resource: repo://docs/baseline-report.md
@@ -59,7 +59,7 @@ sources:
     resource: repo://tests/graph/test_graph_safety.py
   - id: openwiki-source-b34f91069d13fb538ebfbd6f
     resource: repo://tests/test_safety_gate.py
-generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # Healthcare and privacy safety posture
@@ -115,6 +115,12 @@ only recognizes cue-bearing re-asks of the same topic — a cue-less re-ask is a
 trial (known limit L4; `healthcare_rag/processors/refusal_boundary.py`; full mechanism in
 [runtime safety gate](gate.md#refusal-boundaries-persisted-refusals-and-deterministic-replay)).
 
+On an LLM classification-call failure the gate falls back to `category="ambiguous"`, which is
+**not** a refusal category, so the turn runs the normal pipeline for that safeguard layer with
+only the deterministic pre-checks still able to force a refusal that turn; PHI scrubbing is
+unaffected because it never depends on the LLM call
+(`healthcare_rag/processors/safety.py`, `tests/graph/test_graph_safety.py`).
+
 ## What personal/sensitive data must never be collected, retained, logged, or sent to providers
 
 The invariant is: **the scrubbed query is what reaches retrieval, prompts, logs, traces, and
@@ -153,6 +159,14 @@ fields, generic PII), and a clinical-code preserve carve-out, replacing matches 
   phone formats); identifiers in other formats are not guaranteed to be recognized. Model-reported
   `phi_spans` from the safety classifier are read for metadata only and are never given authority
   to mutate text — only the deterministic sanitizer output does that.
+* **The CLI renders a preliminary raw answer** between generation and validation
+  (`healthcare_rag/cli/interactive.py`); any consumer surfacing streamed output inherits this
+  pre-validation exposure. The gate's short-circuit path still sets the monitor event immediately,
+  so refusals do not stall the UI.
+* **Ablation switches exist and must never reach production.** `HC_RAG_DISABLE_STAGES=validate`
+  returns the unvalidated plain answer, and `HC_RAG_SAFETY_GATE=false` / `HC_RAG_DISABLE_STAGES=safety`
+  turns classification off (identifier scrubbing remains active regardless). Both are ablation
+  machinery for measurement, never a supported production setting.
 
 ## Measured before/after impact
 
@@ -236,6 +250,9 @@ versioned golden/multi-turn examples with explicit expected behaviour.
 
 ## Known gaps and boundaries (explicit, not implied coverage)
 
+These are stated separately from the enforcement mechanisms above precisely because they are not
+covered, or are only partially covered, by current code and tests:
+
 * **The classifier can be wrong.** It is a model at temperature 0; the deterministic pre-checks
   are a floor, not a fence. Red flags require first-person phrasing, so third-person emergency
   reports depend entirely on the LLM classification succeeding and choosing correctly. On an LLM
@@ -273,3 +290,8 @@ versioned golden/multi-turn examples with explicit expected behaviour.
   `HC_RAG_QUERY_RESPONSE_ARM=current` and `HC_RAG_SAFETY_CLASSIFIER=llm`. See [routing
   gates](../observability/routing-evals.md) for the full status of both lanes — neither lane's
   calibration or dependency status should be read as a broader statement about gate quality.
+* **The system does not claim clinical-decision capability or regulatory compliance.** Per the
+  [engineering decision record](../decisions/submission-scope.md), the sanitizer's recognizer
+  inventory is documented as a heuristic coverage inventory, not a compliance claim, and the
+  entire safety and privacy posture on this page is earned only against the two configured
+  monographs, not a general clinical or multi-tenant deployment.

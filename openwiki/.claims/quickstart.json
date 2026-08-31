@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:b22f7a1f686b4f8d60d7ad98b2636c5e4d259e3dc5dcbf3eec9942391421f7d2",
+  "pageVersion": "sha256:7cc71e3cc5b2810ec448c2f79d13cf43dd97a266ac1bc0bd2c0e30b87ba99770",
   "claims": [
     {
       "id": "claim_13e8d9f28f2249638f15907553b95894",
@@ -67,6 +67,10 @@
         {
           "resource": "repo://AGENTS.md#L14-L22",
           "version": "repo-lines-v1:sha256:eb8c92d46b42cd0e3ca4dc7e573a99368f59f94cb784c8207567c989b26e99ea:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODUwNGU1MzYyMjU2MGUxYmQ2M2QxNWYwNjM3YTk3MTA3NDc2M2NiY2NmMDliYWE2YTY4YzBlNmYyZTk1NjAwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNzRjZGU3ZDUxYjdlNGY0ZGFmNGUwNjU1OTBiNzkzYmIwYjgwMjE2OWYxNDNlZmUxMWQwZjQ3MGJhMzZjNWMwZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGRjY2E3ODY1Y2M0N2M0YmY2Yzk2MDdmOWNiMWJjZjM1M2E2NTRhOTU0YmI4YjBiMzlmMTBhZWJlZmRhMmFiZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTJhYzI1Y2VhNDVjYzZiOWNlNThmMWI1ZGJiNjVkYmFiOTQ2MGY4ZDY4ZGExMzFmZWVhNGNjZDJjMDUyOTQ0OSJ9"
+        },
+        {
+          "resource": "repo://Makefile#L23-L34",
+          "version": "repo-lines-v1:sha256:4fcc40fecb7ef92cc41229605c5ba477230fb4e0ce9a740f2b9326c6fe0c22c4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA1M2ZjMmQzZWQzMGI0NWFlMzQ1ZWZhZTE1NmM4NDA2MDdkYTkxOTU4MTQ1Nzg1MDNkNzY4ZTA5ODQ1YzQ3MjkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZmFlMzdlY2YyZTA5YzU5ZjhjMDhhNzUwM2U4NWVkYzNmNDJjYWU0NTU1NWZlZTFjOWMzMDY1ZTU3YjVlNjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEyODgxYWZkMGJjOWFkYzQyNmUzZWRlYzhmNzI0MzUwOGFjZjhhYjA0NjIxZGYzYzM2MzYzNjVlN2M2MjIzOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxOTViODViYTkxM2QxYmUzNTRkYTk2MmI5YTMzZjZhM2Q1NWE5ODhmYjYxM2M5OWJiM2QxMmQwOTlmNmUxYmIifQ"
         }
       ]
     },
@@ -213,10 +217,34 @@
           "version": "repo-lines-v1:sha256:ce8505529a369077f2a3b251ad8f8759b05722d4114b839f48c60a301fca7ace:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyNTU1NWQwMzgwZGM5MjgxNDc2MDhlMDM4N2E4ZTAwMGI5MjM5ZmQzODBlOWVlYmEzMTI5OTQ2ZDZjZDEwMjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmZjQ5NjgwM2NmMGI0ZjJlYmRlZGQ2MTQwYWUxM2RkMGFlZDE3YmE1Mzk2NTFkNzM3OGU1MWQ4MzViZjU3OTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhZDA3ZjVkM2FhZGU1MzVhYTExNjQwZjVjZmQ5OTQwMWRhMWY3YzA1MjkwOTQ3MmQ1M2U3OGYyNTNjMTU4MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmYjViM2RiZGQ1NDIzOGE1NGY2MGRhMTU3OTg5YTU4MmZkMTIxZTIxYWY2NWMyYmFhZDYwYTVlM2ZhZGY3YzEifQ"
         }
       ]
+    },
+    {
+      "id": "claim_8f553c92de934713899bb6963bcbcf44",
+      "statement": "langgraph.json declares exactly two deployable graphs, 'healthcare_rag' (healthcare_rag/graph/__init__.py:graph) and 'coach' (healthcare_rag/agent/__init__.py:coach), each with its own auth module and HTTP app, and disables both MCP and A2A endpoints.",
+      "evidence": [
+        {
+          "resource": "repo://langgraph.json#L1-L24",
+          "version": "repo-lines-v1:sha256:849f61e467b0e7e0328ef34bdb2033d061211a7732e6e5ed2d5a18c8867a519f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkNWNkMmZiNGYzZGY4ODQ1MTUyNTViMzk1MjNmMmY4YjU0NzJiZWVhOWY1NjZmZmNhMjA0ZGI4MDI1NjEwNDEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlMGQ0YmFkZmYwNjA3MmZhYmJkYzU2MWNlNDhhZWIzODdjNjExYWY4MDUxMzBiMDA3ZGI4OTc4NWNmZjY2ZDYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3a2cac499fde4729a4423d5ce2f77551",
+      "statement": "The public healthcare_rag graph runs a fixed node sequence after the safety gate: clarify_query and extract_conversation_context run in parallel into decompose_query, which fans out to retrieve_documents, merges via merge_retrievals, evaluates via evaluate_retrieval (which may loop back to retrieve_documents once for gap-filling), generates an answer, validates it, optionally produces follow-ups, and finalizes; the safety gate can short-circuit straight to finalize.",
+      "evidence": [
+        {
+          "resource": "repo://README.md#L82-L119",
+          "version": "repo-lines-v1:sha256:93bc9969bf1c7e2a2d919c8468163150848850ac11726c690a094624a5c35b98:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjMzdkMjVlM2FiMDEzMDNhMDhjOTExNzJjYjQ1YjcxMjA0OWEyZmRhZDcxNjcyZDMzMWIyODUyOTIwMTE5OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhN2JkYjRhNjVlODkyNzllYWQ0MjFiNTA1OWE2MGIyOWUwZWZlZDRjZThmMzU5ZmNmNGQxMzE3M2IzZjM1OTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhZWE3MmYwMmUwZjlkMGJlZTRlYzUyYmMyY2Q1MjRjNjhmN2ViMTM3Y2Q4NmIwNGQ3YjEyYWQ3N2ExZjkzYjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3MGY3ZDY1MmU5ZmY1MGY5OWRmNGRmNjVhMDY0MDJiMWQyZWZkNzkwNWNkYTc5NDA1NmQ0YzFiMTgwMGFhMTQifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L60-L134",
+          "version": "repo-lines-v1:sha256:1e9cf97799a1fe13e86c32cea2591f71b994cc2a400058a74e01e92fa92650d9:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmNjczYzZjZDM4NTI0NTA1MzA4MzViMTBhNWVmZWIwMzUxOTE3ZTBjODc3Yzk3MmEwZDdiOGE0OWYxZGM1OTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlNTdiMWM4Y2FjYzgyZGQwZGRiMGYyZWJkMDg5MTlkNjgzZTdkZTdlZmRlMjZmYzc1NzE3NjUwZDg0M2YxMTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxN2ZhY2E3MzVkNTllMjM4ZDVkODI3Yjc4ODIyZTg1NzAxMmJkYzFhMDA4ZWUzNGVhYzRmYmE2MDUwZTI1MzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

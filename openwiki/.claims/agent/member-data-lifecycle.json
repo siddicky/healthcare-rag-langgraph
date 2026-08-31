@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:86b4ed1dacc6b607da1251a63cde29bd2c878c9c06120d497fac5ca153ed4c03",
+  "pageVersion": "sha256:3b2953739d009d94cb8e5d42ce3b734c08d85b35aae355cd37979e8387d2f620",
   "claims": [
     {
       "id": "claim_65711f5b1a6e49798a1a745a7f698b12",
@@ -436,25 +436,37 @@
     },
     {
       "id": "claim_518f4bdd3f8d4e168a758eb081534234",
-      "statement": "scripts/forget_member.py implements phase two of erasure: it waits for the erase run to reach stream EOF or a non-busy thread status (wait_until_terminal), verifies the erase_confirmation_v1 marker from the stream or current thread state, snapshots every owned thread id before deleting any (snapshot_thread_ids), deletes sorted non-current threads, and deletes the marker-bearing current thread last (delete_snapshot).",
+      "statement": "scripts/forget_member.py implements phase two of erasure using the HTTP client and helpers factored into scripts/forget_member_api.py: it waits for the erase run to reach stream EOF or a non-busy thread status (wait_until_terminal), verifies the erase_confirmation_v1 marker from the stream or current thread state (has_erase_marker), snapshots every owned thread id before deleting any (snapshot_thread_ids), deletes sorted non-current threads, and deletes the marker-bearing current thread last (delete_snapshot).",
       "evidence": [
         {
-          "resource": "repo://scripts/forget_member.py#L48-L84",
-          "version": "repo-lines-v1:sha256:cea7bf230b5139956dbf038fcc67c66b3b0ac1f9419bc4c08c39a28c71a35a4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2OTU3ZjNlZTQzNzk0OGFlYmQ4YjFkNDkxMTY1YmM4ODZkN2FkMDdkYTYxZWQyN2Q0NmRiYmY2ZWFjODUyNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNmY0ZGViNjFlN2JlYjAyZTA2ZTcyZjBlZmYxZDk2Nzk1YTg3MDVkMDFmN2IxMjhjYzg5NTRhZDMwOWFmMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0OGUzYmNjMDFkNDNmYTMzODkwMzFkNjEwYWI5YWU2NGVhYmY3YTM1YzAwMjY1NjRiODBkZjAzZDY1Mzc1NzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlMzY2ZTAzMmM2MzBiZWExMDhkYmQ4Y2E3ZjUwZjhkYzMwY2ZhOGQzZjMzOWI5Y2UwYTMxNDYwODA3MTQ2YzQifQ"
+          "resource": "repo://scripts/forget_member.py#L48-L105",
+          "version": "repo-lines-v1:sha256:cd8f9597440a2ea57de3656bbca51eb4b65522143bf2ebb8af727c29c1b596c7:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2OTU3ZjNlZTQzNzk0OGFlYmQ4YjFkNDkxMTY1YmM4ODZkN2FkMDdkYTYxZWQyN2Q0NmRiYmY2ZWFjODUyNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNjBkYjhlOTVjYzA2MjBlMGQ3ODAyNDA3ZWE5ZmU0ZDlkZTEyMjVhMGVmMjU3ZDY2YjYwMTcwZmE1MzIwOGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0OGUzYmNjMDFkNDNmYTMzODkwMzFkNjEwYWI5YWU2NGVhYmY3YTM1YzAwMjY1NjRiODBkZjAzZDY1Mzc1NzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0OGQ3NDgzZDA2MGYxNzIyZTI0NTM2ODg4MzM0MjU2YjU0OTBlOGJiZTg2OTgyMDY3NmNhOWVhZjM1MDljYzkifQ"
+        },
+        {
+          "resource": "repo://scripts/forget_member_api.py#L131-L156",
+          "version": "repo-lines-v1:sha256:3fb8830a56fe55265b161a0ade8c15857e7812774a834068dc8d96b4050df4b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ4YWE5YmE4NDk0OGQ1NjA2NDk5OGY2YTk4YjkzZDEwNzAzZDIyNTY0MWZmY2QyNDUyNjU4NTc1MjA0MTRmYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUxMDEzMzNhMGVhMGExMGM0YzBhMTVkMWViZDhmZWFhMGM4NGYzNTA5ZjFhOTYzMzAwNThmYmI3ZDg5MGUyMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZiYTNhMzgzOWFlZDYyZTBlZmQ3YjIxZjEzYWQ1MjY3YzA0ZjM1Mjg0NTk2OTczODUzMjQxMjk5ZTlmNjIwY2EifQ"
+        },
+        {
+          "resource": "repo://scripts/forget_member_api.py#L86-L96",
+          "version": "repo-lines-v1:sha256:9a9968a8c7068d724894d3e088079ebdeb96cc71efe7c8bf93146d9f2590c7d5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE5MzFjMGM5OTAwZTgwOWIwYmE5MWE5YWU3ZTAwNjQ3ZmZkNTJhY2UyMmJjNmQ3NTFjYTQyZjYzMzQ2ZTYzNzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1YmM0NzExZWNjYTA0NTBhZmM4MzI3NzlhODg2NzZhN2M2OTYwZmEzZGE1YWY0MTBlZTAyZDFlMDE1MTU5MWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2YTkyMThkMjM5MGQxYmViMmUyN2JiMTZkZjRkOGUyMGMwMmNlMTM2NTgyY2E3Nzg2MzdlMjEwM2RjYTVmZjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4OWMyOTY0ODI5NWFhODAyYThkNWE2ZWZmZjQwMzc3ZjMyMmE4MzQ3ZGZhZTBlMmYxYTc3Y2Y1YjVmODY2NjMifQ"
         }
       ]
     },
     {
       "id": "claim_e34d390e37a44c13bc290b89d45581ce",
-      "statement": "In scripts/forget_member.py, a missing erase marker, a polling timeout while the erase run stays busy, or a thread deletion failure stops the procedure (raising ErasureFailed or DeleteFailed) before all threads are removed; because the current thread is deleted last, an unfinished run leaves the marker-bearing thread as a retry boundary.",
+      "statement": "In the phase-two erasure procedure, a missing erase marker, a polling timeout while the erase run stays busy, or a thread deletion failure stops the procedure (raising ErasureFailed or DeleteFailed) before all threads are removed; because the current thread is deleted last, an unfinished run leaves the marker-bearing thread as a retry boundary.",
       "evidence": [
         {
-          "resource": "repo://scripts/forget_member.py#L48-L84",
-          "version": "repo-lines-v1:sha256:cea7bf230b5139956dbf038fcc67c66b3b0ac1f9419bc4c08c39a28c71a35a4c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2OTU3ZjNlZTQzNzk0OGFlYmQ4YjFkNDkxMTY1YmM4ODZkN2FkMDdkYTYxZWQyN2Q0NmRiYmY2ZWFjODUyNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNmY0ZGViNjFlN2JlYjAyZTA2ZTcyZjBlZmYxZDk2Nzk1YTg3MDVkMDFmN2IxMjhjYzg5NTRhZDMwOWFmMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0OGUzYmNjMDFkNDNmYTMzODkwMzFkNjEwYWI5YWU2NGVhYmY3YTM1YzAwMjY1NjRiODBkZjAzZDY1Mzc1NzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlMzY2ZTAzMmM2MzBiZWExMDhkYmQ4Y2E3ZjUwZjhkYzMwY2ZhOGQzZjMzOWI5Y2UwYTMxNDYwODA3MTQ2YzQifQ"
+          "resource": "repo://scripts/forget_member.py#L48-L105",
+          "version": "repo-lines-v1:sha256:cd8f9597440a2ea57de3656bbca51eb4b65522143bf2ebb8af727c29c1b596c7:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2OTU3ZjNlZTQzNzk0OGFlYmQ4YjFkNDkxMTY1YmM4ODZkN2FkMDdkYTYxZWQyN2Q0NmRiYmY2ZWFjODUyNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdlNjBkYjhlOTVjYzA2MjBlMGQ3ODAyNDA3ZWE5ZmU0ZDlkZTEyMjVhMGVmMjU3ZDY2YjYwMTcwZmE1MzIwOGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA0OGUzYmNjMDFkNDNmYTMzODkwMzFkNjEwYWI5YWU2NGVhYmY3YTM1YzAwMjY1NjRiODBkZjAzZDY1Mzc1NzMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0OGQ3NDgzZDA2MGYxNzIyZTI0NTM2ODg4MzM0MjU2YjU0OTBlOGJiZTg2OTgyMDY3NmNhOWVhZjM1MDljYzkifQ"
         },
         {
-          "resource": "repo://tests/test_forget_member.py#L36-L39",
-          "version": "repo-lines-v1:sha256:4378a59d1b541618e13febe6a27301a435a6c1fee675106538803254ec7e3c52:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODRiZWE3NGU4YjIyMDFhY2Y4MTAxYjZkMTIzYWNjMjc5MWIzYzZhOWJkNjc1YWZjNGI1YmE0MTY0MmY3OGE1YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDhjYThlZmIxYTdkZjc0NzQ3ZTE1ZWY1NDdhYTllYWJkYTVlYzk4MTUzODA4MzEyZmYwZDQwYzc3MWQzMzQ0YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzM0ZmU3OTJkNWE2ZmQwODJmYzk0NWE3ZTVmNmY1MWYwNTI3MGJlZDU3OWNiMTQ0NTkxYmRiM2M4Y2E1MmFkNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDU2NGNlYTk4ODAyMjlhZDEzODlmMWVhOGY2ZmEyM2MzMDM1MzNiZmUwODg3ZGY1MjVlYjZiMmIxNDFiOGVhYiJ9"
+          "resource": "repo://scripts/forget_member_api.py#L26-L51",
+          "version": "repo-lines-v1:sha256:cef5b46ca20c4604e1bf815fc3c003c21f0656668dcea9ff958c0ec121b35789:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlM2ZiMWU1OGZiYzkwNDc5NGQ1MDczMTRmYTkxYzlmMmYxOThjODhkM2ZmMzk1ZTAwODI4OTAxYzM3ZGM5MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkMmY5YzcyNWYyNjM1OWJlM2Q0ZTQ1OWFhNjZkYzYwNjQzYmYxZGJlYTJiMjZhMWVmMGRiN2Y3YzQ3ODZiN2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZjkzMDgzYzE5NzEyMWI5ODI3MDBiYThhZmFiZDE3MjJjZjFkM2U3NDA0NTA5ZTgwZWZhMjcyNDdmNjJmMDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzZDNhMTc3ZDI4OWIwNTcwOTY5Y2IzOTliNmQzMDNmOGExYWU2NTQ2NTZkZGNhMzNiNTVmNDgyYzFkMmEzYjEifQ"
+        },
+        {
+          "resource": "repo://tests/test_forget_member.py#L85-L93",
+          "version": "repo-lines-v1:sha256:d8d5985b8bb712b64104fb8d0c2ad62c4f2cc298a64525a5679657697b55f095:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDI1MDk4ZGRlZmIzMDJhOWVmZGJiMTgzMzAyNmFkZTkzNzQ3NjA4ZTRkOGUzZGNiZDIyZjIwYzI0YjEzYjcyZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmIwZWVmMGE4YjBiODA1YmIwODllZWEwYmE1OTkxMDY5Yzk3YmRkZmFiODVjMTVkMzM0OTYyOWZiMTBiZjQyOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjlhNTQxMjJiYzE4YzllZjVjZDI5MzAwZWZmMGU4NmZhNTZjMDhkNmJlMWVmNzE0OGM0OTY4NWNhZmE0YThiMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
         }
       ]
     },
@@ -497,6 +509,6 @@
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

@@ -5,7 +5,7 @@ description: Evidence-based record of why safety work was paired with production
 tags: [decisions, scope, safety, production, evaluation]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-3f718dfc0cae53689e49b15c
     resource: repo://docs/baseline-report.md
@@ -25,7 +25,7 @@ sources:
     resource: repo://docs/decisions/semantic-router-vs-llm-safety.md
   - id: openwiki-source-4ab4e92e28196bf577454906
     resource: repo://docs/writeup.md
-generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # Engineering decisions, evidence, and remaining scope
@@ -100,7 +100,7 @@ The system does **not** claim clinical-decision capability or HIPAA compliance. 
 
 Behavior-affecting changes are expected to carry before/after evaluation evidence in `evals/results/`; safety and multi-turn categories are explicit regression surfaces. Source and tests take precedence over unverified brief items. The project supplies centralized runtime, model, privacy, and safety conventions in `AGENTS.md`, repeatable Make targets for offline tests and evaluations, and focused graph, safety, routing-gate, and server-parity suites. This is the repository's practical contract for safe AI-assisted changes, not a substitute for review.
 
-For an experiment or decision to be interpretable, preserve its evaluator, configuration, dataset/provenance, and report. The retrieval decision records illustrate the rule: PageIndex stopped after a failed retrieval-only gate; Pinecone and reranker outcomes were evaluated against frozen gates; routing candidates that did not reach measurement are reported as **inconclusive**, not as wins, losses, or zero deltas (`repo://docs/decisions/AGENTS.md#L22-L28`, `repo://docs/decisions/routing-experiment-summary.md#L1-L21`).
+For an experiment or decision to be interpretable, preserve its evaluator, configuration, dataset/provenance, and report. The retrieval decision records illustrate the rule: PageIndex stopped after a failed retrieval-only gate; Pinecone and reranker outcomes were evaluated against frozen gates; routing candidates that did not reach measurement are reported as **inconclusive**, not as wins, losses, or zero deltas (`repo://docs/decisions/routing-experiment-summary.md#L1-L21`).
 
 **Measured: reporting discipline was itself tested and twice found wanting, then corrected on the record.** A claim that a `cryptography` upgrade had un-skipped two conditional tests was retracted after the real cause (an unrelated CI fix) was found; a reported count of 1,632 passing tests was found to depend on one test reading a 956K untracked directory that existed only on the author's machine, so any clean checkout failed (`repo://docs/writeup.md#L56-L58`, `repo://docs/writeup.md#L208-L220`). Both retractions are recorded rather than silently fixed, which is the standard this page also applies to itself: claims here cite a named report or record, not a restated number.
 
@@ -128,6 +128,8 @@ The runner-up trade-off, recorded in the same section, was giving up the specula
 
 **Decision: no compliance or clinical-decision claim is made.** Safe Harbor coverage (15 of 18 categories) is recorded as an inventory of what the sanitizer covers, not a HIPAA compliance certification, and the product is scoped as Canadian-context information support rather than a clinical decision system (`repo://docs/writeup.md#L50`, `repo://docs/baseline-report.md#L93-L97`).
 
+**Decision: the two routing candidates were deliberately left at INCONCLUSIVE rather than forced to a verdict, and reported with an explicit unmeasured-not-zero framing.** Both candidate arms in `evals/routing_gate.py` — `query-or-respond`'s `tool+llm` arm and Semantic Router's `current+semantic_router` arm — reached a blocking condition before any paired or paid comparison could run, and each decision record states plainly what that means rather than substituting an inferred result. The query-response lane's own record states the comparison "is therefore **unmeasured**, not zero and not no-change," and that "no result is inferred from source inspection or from a historical report" (`repo://docs/decisions/query-or-respond-vs-current.md#L28-L33`). The semantic-safety lane's record states its comparison "is therefore **unmeasured**; no result is inferred from source inspection or historical material" (`repo://docs/decisions/semantic-router-vs-llm-safety.md#L17-L20`). The consolidated summary keeps both lanes on the current production defaults (`HC_RAG_QUERY_RESPONSE_ARM=current`, `HC_RAG_SAFETY_CLASSIFIER=llm`) precisely because neither has cleared the calibration or dependency gate that would make a comparison interpretable (`repo://docs/decisions/routing-experiment-summary.md#L1-L22`). This is scope deliberately left incomplete: the gates, adapters, and arm definitions exist and are exercised by smoke tests, but that implemented capability is not evidence that either hypothesis has been tested.
+
 Unchanged scope is otherwise a monograph-grounded assistant, not a broad clinical service. Durable server records do not make live runs, queues, or streams durable, and explicit deployment/release controls do not erase the need for human incident judgment.
 
 ## What deserves a second pass or another week
@@ -141,3 +143,4 @@ Unchanged scope is otherwise a monograph-grounded assistant, not a broad clinica
 - Evaluation: the judge remains phrasing-sensitive on refusal-heavy transcripts; the stated practice is to keep adding calibration cases whenever a judge flip is root-caused to phrasing (`repo://docs/writeup.md#L84`).
 - Cost: pull the validator lever with a smaller or batched-verification model, but never remove the stage outright, since removing it reopens a false-premise gap (`repo://docs/writeup.md#L128`).
 - Resilience: no alert channel has been chosen for the existing LangSmith error-rate and latency signals (`repo://docs/writeup.md#L134`).
+- Routing: unblocking the two INCONCLUSIVE lanes requires re-clearing the query-judge calibration threshold (or revising the authored greeting fixtures under separate review) and resolving the `semantic-router`/`litellm`/`python-dotenv`/`openai` dependency conflict under a separately authorized plan; neither step had been started as of the decision records (`repo://docs/decisions/query-or-respond-vs-current.md#L44-L46`, `repo://docs/decisions/semantic-router-vs-llm-safety.md#L33-L34`).

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:f8c9f7ce787a5d54bc69c1d93911c164105d08b8ebac5db2bc4421ecb174fcdb",
+  "pageVersion": "sha256:e410f0a63e066a2a42424bb15adfcde3e90501c8aced96bd894c941c7f5b64d1",
   "claims": [
     {
       "id": "claim_a52b822638534d79a0b38766b43b27ae",
@@ -289,10 +289,46 @@
           "version": "repo-lines-v1:sha256:b6e79f1daefa76cf94e8fd0e5e41b2879c39efd38b479fee7d724b863405c0a0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyOTkzY2I2NjMwNWQ5ZDViYWUzYzdlMWRiNTQ3MDUzOTRlZDQzZDc1YmIwYjZkNzE2OWMzNmVjYTk0MGRkYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjNGRlNTRlN2QxZjUyZWIyMWVmOWU0MTdlMmIxNzZjY2RjMWYzOWViNjc5MDAzZDRlNTViNjc4MmZjOTllY2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljYWM5ZjRkYTdhZTBmYjE5OGY2YjMwYmY0NTM4MjAxZGI0MzgyZTNiM2U1YWI2NmQ5ODZmOTRmMGU2OTliZTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI0MzEzODZiOGViYjNiNDc4NTZjZTUyMTcyZDZiMDU2NGRmOTZmYjliYzM2ZTQwOTI5MjUyNTRjMWJjYzI2MjEifQ"
         }
       ]
+    },
+    {
+      "id": "claim_8fe9f8bb7ff1403293941b5ceb31095b",
+      "statement": "Every retrieval arm mirrors hybrid_search's function signature and returns the same QueryResultList/QueryDocument shape (page_numbers, chunk id_ metadata) over the same contextualized chunks each collection ingests, so routing, merge/union, gap-fill, citation rendering, and the chunk_recall/page_recall evaluators are entirely arm-independent and never branch on which backend produced a result.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/retrieve.py#L34-L57",
+          "version": "repo-lines-v1:sha256:1a7a1f4848e0a2d30661c2e2ff8ef4f3aeb9ad9a4f494a99653402fc9024ba84:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3YTE2MDBjMzgwODJjYmQ3MjU4ZTExZjZiOGVlNWEzZmIyZDEwZmM4N2Q5MzM5NTkyMzQ4ZDFmYjI3ZjAwMWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NzE0ZWRmMDdlMGRmNjI3ZmJjYWZlNzgzZTRmYWZjZDQ5YzYyMTZiYjBhOGM5MDI3ZGNhZmQwMDU0NzM5ZGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5MTY1N2QwMDkzNzkzZTgyNTEwYjc1NzY4NmZiYjVlM2U2Y2IwOTUyMDRlZmEyNTQ2NWJjOWM0MGM3NzhkYWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNzVkNGNlY2M1NDBkMjJhNjZhMjY3MWE1YTc1M2M4M2EyNzdjMWQyY2MyNTQ3MGEwYmE2ZjliYjk0MmU0NDkifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pageindex_retrieval.py#L115-L178",
+          "version": "repo-lines-v1:sha256:c0d60b0ca9d103aaf6b057952ec68da0122b451d6819bf709c1578cf1d08a09c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMGQ0YTdiYTVjYWU5M2ZhNTk0NzcwNzI5MzU1ZGUzMmQ5ZjJkYzczNmM2Y2ExYzYyYTY3NDIyMjM0NGFkOGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwYzM1YWNjMDYzOGQ2YjFlNjc2YzI4OTMzZjI2OGI2YjI2YzE1OGIzZjkxN2YwMjk0Nzk3MDcyMDk3OTEwMmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhYTVkNTVlY2UwMDBhMDQ4ZmZmZmI0YzJiZTk3MjJlNmQ0ODJlNjJlYWUzZWQ1YTkwODc2ODU3NDUxN2E4ZDEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5ZWNlMzIyYTY2MDIwMzJjYTBkNDFiNGQ5N2M3Y2Y1ZTgzZmE2NTVkNDBiYTE2OGQ2MDk1NmYwZTQ3YjNkZWIifQ"
+        },
+        {
+          "resource": "repo://healthcare_rag/processors/pinecone_retrieval.py#L95-L126",
+          "version": "repo-lines-v1:sha256:8cf0b7e96464ffd74966b1f93659c3ae455bb48a6664437a114332e413beedd7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY2MWUzYmRkYWI0YTk4NDk0ZTBjMjYzOGRiMjY5MmVhMWUwOTgxMmFhZmEyN2Y4NGFjNzE4ZTgyNTVhYTMwNzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI0YjcxNDAwNzAwNDY1MjQ5MTFiYWRhZWNhNGM1NDUyM2ZlODE2ZDU3NDk4NmE0MmZhZjM0MmNiMDkzODY2MmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhZjIxMWY5Y2ZmNTBkOWIyNzIyZWY3YjQxMzgyYTU4Njk1ZDdiYTM5MTlmMzFjZTBlNDMwYWM5YWI3NWFjZGYifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_3840e2969591499bb6ac84da077e0285",
+      "statement": "The retrieval-arm gate's page_recall stage is deterministic (no LLM judge) but the routing LLM feeding it is not: the unchanged Weaviate reference scored 0.681/0.648/0.664 page_recall across three same-day stage-1 runs (~±0.02 nondeterminism), so the gate always pairs against a fresh same-session reference rather than a historical number and treats stage-1 deltas below ~0.03 as noise; the stage-2 judged correctness comparison is separately bounded by docs/baseline-report.md's ≤0.05 single-run noise allowance (n≈44) and the pinecone-rerank decision record's ±0.07 judge-noise band, neither of which reverses the reranker's rejection.",
+      "evidence": [
+        {
+          "resource": "repo://docs/baseline-report.md#L1-L7",
+          "version": "repo-lines-v1:sha256:83389934282f129af47dc46e643d3bd66dc1863aba12ff16ac22b4d5d18b5b32:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDU4MDk3ODYxOTI0NDcxYTAwNmQ5ZTNmYTMyMmM1ZTdiZDUyYmIzMTM3ODIxMmIyNmViZmI0ZGY2MDJjZTVmMyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMmM5YTQ4NWQ4YjI5MGNkM2NhZmJhM2JjMjc2ODBkNjUzYTY5ZWM2ZTA4ZDMxZjg0YTkzYzc2NWNhMmFiOGE4ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTgyZjkxYmY2ZjFiNTQ4ZWFhY2VhOGI4MzRhZWNhZjdlNmQ0NzMxYjMwOTdkNmMwYmE1NDJmMjZhNThjYTVkMiJ9"
+        },
+        {
+          "resource": "repo://docs/decisions/pinecone-rerank.md#L48-L51",
+          "version": "repo-lines-v1:sha256:4a43181341bcdc40c9eb29a4e66ba6a2cb10e148cb2bb2d79bbd7eac358bb0a3:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2U0MGNkNTEzM2E5ZjI0ZmIyYThiMDM1ODdkNGVkZGU2MTE1MDZhMTJmMjAwM2U3MzYzZDNlZmJlMjc0ZDE3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYWJhZGU4NjQ4ZmM0NjdhMmQ3MmUyZDc1MWY3ZTAxM2NmODA5NWQ0NjVkNWU4ZDBkOTY4OGI0OTFlNGZiZmM0NiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGNiZGVjZTI4YjA5Mjk2NzM2ZDliZmQ3OWVlYzM4OGE2NDQzOTczYzFiMTg1Y2E1ZDFjNDIyMGU5NzMzMWNlMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYjNlNTZiYmIwZGE3NzBjZTBmYjJiM2M5YjVjZDg1NzJiZmRlMjJiN2U1NmU0MjcxMzE0MjIxYTVkODQxZDZhYyJ9"
+        },
+        {
+          "resource": "repo://docs/retrieval-experiments.md#L77-L83",
+          "version": "repo-lines-v1:sha256:b7dff07ccf571764107f0e8add84e5079c11284022816004efe54b861b39c9e8:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYjhhMGQwMzI2YjJkZTc0MjVlNzk0MGFhODJiNjI4ODQzYTE2NjdiNTc4YzQzNThkYzZiMzQ3OGM5ZDUxNTk2ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2Y3MzZhZWM1ZWZlNjUzZTk2MjkzNDAwNGQ1ZGI0YzA3YTQzMTA3OTllZTY4Yzk0NjZiMThiZjY1MTRkZGY4MiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2ZiNzQ3MjljMTYyNTM3MmYzNmY0N2RlMmZhMDU3MzA5NWUyNmI3ODk4MzMzZWIzYzA5YTliNDhhZmY5ZDgyYyJ9"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

@@ -13,7 +13,7 @@ openwiki:
   validation_commands: [".venv/bin/python -m pytest -q tests/test_privacy_sanitizer.py", ".venv/bin/python -m pytest -q tests/graph/test_graph_privacy.py tests/graph/test_graph_privacy_persistence.py tests/test_tracing_privacy.py"]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-a2af6a18b0e13bd45c23642a
     resource: repo://healthcare_rag/agent/memory.py
@@ -31,6 +31,8 @@ sources:
     resource: repo://healthcare_rag/graph/engine.py
   - id: openwiki-source-b388431f48da5cc47cbb2ee7
     resource: repo://healthcare_rag/graph/history.py
+  - id: openwiki-source-7772f43efa9811bd36483e17
+    resource: repo://healthcare_rag/graph/llm.py
   - id: openwiki-source-13a4df04285e450e70482893
     resource: repo://healthcare_rag/graph/nodes/generate.py
   - id: openwiki-source-56b79b6d8262f2037cd8bd60
@@ -67,7 +69,7 @@ sources:
     resource: repo://tests/test_redact_smoke_log.py
   - id: openwiki-source-26994038c5fc0eb3624fdb7f
     resource: repo://tests/test_tracing_privacy.py
-generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # Privacy sanitizer and PHI/PII scrubbing
@@ -109,6 +111,19 @@ spans (`union_spans`; overlapping *different* kinds collapse to one
    codes (RxCUI, NDC, DIN, ATC, LOINC, SNOMED, ICD(-10), CPT, CCI, HCPCS,
    device model) from redaction so dosing/code answers survive scrubbing
    intact even when they sit next to an identifier match.
+
+In short, the following must never reach a model provider, a log, a trace, or
+persisted graph/checkpoint state in unredacted form: personal names (cued
+single tokens or free multi-token names), contact details (email, phone,
+postal code, street address), government/financial identifiers (SIN, SSN,
+ITIN, credit card, bank number, driver license, passport, MBI, NPI, medical
+license), network identifiers (IP, MAC, crypto address, URL), biographic
+dates (DOB, admission/discharge/appointment/visit/encounter dates), and
+healthcare/administrative record numbers (health card, MRN, patient account,
+claim, prior authorization, prescription, referral, accession/specimen/lab
+order, encounter, device serial, vehicle/plate identifiers). Clinical codes
+and dosing information themselves are deliberately exempt from this list —
+they are the content the system exists to answer with.
 
 Returns `PrivacyScan(clean_text, kinds)`; each redaction leaves a
 `[REDACTED_<KIND>]` token (or `[REDACTED_IDENTIFIER]` when different kinds of
@@ -215,11 +230,14 @@ denied with reason:
 Only a clean pass returns `(scrubbed_content, None)`; denials return empty
 content plus the reason, which the gateway maps to a `fallback_reason`
 (`QueryOrRespondDecision`, `graph/query_response.py`). History entering the
-tool router is also projected through `_project_history` (human/ai string
+tool router is also projected through `project_history` (human/ai string
 content only, each message scrubbed and size-checked via
-`scrub_router_text`). `tests/graph/test_direct_output_policy.py` locks the
-denial matrix (action/target instruction transformations, unit/dose leaks,
-allowed social/capability phrasing); `tests/graph/test_query_or_respond_privacy.py`
+`scrub_router_text`) before `trim_messages` truncates it, and the current
+query is scrubbed the same way before being bound as the trailing
+`HumanMessage` (`graph/llm.py#LangChainLLMGateway.aquery_or_respond`).
+`tests/graph/test_direct_output_policy.py` locks the denial matrix
+(action/target instruction transformations, unit/dose leaks, allowed
+social/capability phrasing); `tests/graph/test_query_or_respond_privacy.py`
 asserts the router's bound prompt and history never contain PHI canaries.
 
 ## Deployment note

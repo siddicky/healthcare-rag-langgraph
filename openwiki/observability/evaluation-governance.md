@@ -5,7 +5,7 @@ description: How dataset/evaluator/config equivalence, git-cleanliness seals, pr
 tags: [evaluations, governance, integrity, parity, provenance, regression]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-a7582f0a04ee78ccd7a76339
     resource: repo://evals/agent_parity.py
