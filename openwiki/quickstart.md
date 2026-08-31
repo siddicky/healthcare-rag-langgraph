@@ -5,7 +5,7 @@ description: Source-grounded navigation for the healthcare RAG, coach product, s
 tags: [overview, navigation, rag]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-4d1d392666be6dfdd7a91a2e
     resource: repo://.github/workflows/release.yml

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:b145b25400892f6bce3ebc6a6d457e35c5b99cd88573f2e326b6ef4d96f49da9",
+  "pageVersion": "sha256:93059229aea3d520836ae542cff8eead93af14591ab121c182c35b5d87fc68fe",
   "claims": [
     {
       "id": "claim_99f2fa65f0ca4a42a53337db04b2b9dd",
@@ -257,10 +257,24 @@
           "version": "repo-lines-v1:sha256:d621ef68b70908c5c42a2129e07028cc58b180c35e867faad47c368282611f37:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhOTk3OGFiMDQ1NzQ0MTZmMThkNTM2ZDFkMDkzNWQ4MTJmNGM0ODM3OGRkMDdiMTYwZTU2ZmZiM2I4YWE2ZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzN2ExMGI2ZGZmOWRiNDAwY2ZlMzM2Yzc3OTI0NTYwYjA4MWQwNTY5Y2I4OWFiZGI0MThjOTQ4NGVmMTI4NTYifQ"
         }
       ]
+    },
+    {
+      "id": "claim_68a3cea45091482a816ac01400cdc98a",
+      "statement": "tests/graph/test_route_tools.py pins two LangChainLLMGateway mechanics: aroute_tools binds exactly one tool per name in GraphSettings.collection_names (via build_routing_tools) rather than a fixed tool set, and chat_model's per-(tier, model, temperature, reasoning_effort) client caching lets concurrent astructured calls for the same stage/temperature run in parallel instead of serializing on a shared client.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/llm.py#L58-L162",
+          "version": "repo-lines-v1:sha256:55c6a1671e3fe75c3ec4c60fda2f78a7d9247a9ac3e89763ce304cc85dd47942:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwMDM1OGI5NTY1MjE3ODM0ZjhiM2YzYzM3ODQ5ZmIzZmM5MmI0NWM5YWEzNjU4Y2ZhMTg2N2M4MDBiNjkwMGYxIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJkZDlhYWQ5NTdiN2M0Zjg4ODA5MTY0YWRjNmJiMjUyODc0Nzc5NjYyZTZjMTdkNWE3ZjA3ODdiYWZmZmY1YjVkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzMTQ2NWFjYmVkZTdlZTA4NzVhYjdlZjEyN2JhMmUwZjkwMmI3NjcyMWViODQ5N2I5ODNkMDkxNTQ3OTQxODQ1IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzODRmZDY0ZTBjMWZkNTgyN2M1MGEwYzcwYzQ4NzA2Njg1OTQ0MGI5MTkwNWIyZDliZTJhMjQwOWE5MTI1Y2VkIn0"
+        },
+        {
+          "resource": "repo://tests/graph/test_route_tools.py#L1-L94",
+          "version": "repo-lines-v1:sha256:5148eb97cc897e044fd99992f02515b2f5cdec7b256ef23db64719c0cb1b79d0:eyJzZWxlY3RlZExpbmVDb3VudCI6OTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMTg1MGMwNmE4MDExOTZkZGExYTBmOTc5MGZkOTIwNmI4YjU5NDk1YzY2NjQwODdmY2ZhMjkyYzYxOTYyMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlYWVkYWFhMzljNzYyNDg1ZWU4ZWU4NDgwNzkyYWJmM2YxM2Y3OWExOTJjNjFkMWI2YjczM2RkZjVjODBiYzciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1NmM3MzZlNTUyYjJmYmY3NmNlNjBkOTNiMTNlOTcxNDUwMjhmYTA5YWFhNzBlODRjMTE1ZWUxNDQwZGIzOTEifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

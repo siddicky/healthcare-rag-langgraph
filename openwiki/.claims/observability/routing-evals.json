@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:4c09af31966def1239f900738d1a36baaefb86377f629a7e92555abe2744fa88",
+  "pageVersion": "sha256:17d158537feb4fdf11fb8e8475603fe2c23e594d9e9966a3d4a6c8282a438db5",
   "claims": [
     {
       "id": "claim_727681a854a1452baff696a47b6c652e",
@@ -216,21 +216,39 @@
     },
     {
       "id": "claim_07cdd7cc51ed48428612813a8dccf197",
-      "statement": "Only the --smoke (canned evidence via _smoke_query/_smoke_safety) and --fixture invocation paths currently exercise the gate's verdict logic end to end; make routing-gate-query-smoke and make routing-gate-safety-smoke run these as cheap contract checks.",
+      "statement": "evals/routing_gate.py has three CLI paths: --smoke and --fixture evaluate the verdict logic directly against fixed evidence; the default path calls run_gate/SubprocessRoutingGateRunner, which spawns evals.routing_arm_runner per required arm in the fixed lane order. All three paths, including the subprocess protocol, are exercised by tests/test_routing_gate.py and tests/test_routing_gate_runtime.py, but the non-smoke path is only tested against fake runners/adapters, never the production default.",
       "evidence": [
         {
-          "resource": "repo://evals/routing_gate.py#L49-L57",
-          "version": "repo-lines-v1:sha256:a6091389235cedc5b16525a3386b9b0c4f2e11959e7eadec2b675e0420e5ba31:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDZmNTA3MGJiZjM0YTViNWJjOGU0ZjI1Y2I3M2JlYTAxOTkwMzQ1Y2Q2NWQzOTliN2I4NzA1ZDcyZTUxM2M0NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTk4YjA2M2Q5YjQ3ZTY1Mzc5NjI1NTcyY2NlMTk3NjY5ZDU3NjdlMTJjMThiZTA3NTY1MmI4Y2Q5ODFjZThkNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiY2FkYTQ5YWUyMjRhOTc5YTc2YjI3NDNiM2RiOTAwOWViM2ExMmUxZWNmNzM1NmQxZDU5Y2Q2N2I5MjM3NTVhZiJ9"
+          "resource": "repo://evals/routing_gate.py#L200-L232",
+          "version": "repo-lines-v1:sha256:03f0e8c5f1f2d59a6dddbdf93555cdf1666f10b4900197764ca61f4a214d09ba:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmMWU4ZDg3NWFhZmY3M2RiOTljZDY2MTMyYzMwMWY5OGFmMWUwOTU0YzJlMzQ0ZjFiYWE4ODQ1NzVlNGUyYmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlkZGM4OTM3NTAxN2YxODU1OWFmNDA4Njc2MzUyZDYyYWI0MDY1ODQxM2JhMTAyZWM1MmNmYTlkNjVkMWJjOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyMzY2NGRlYTBjMWM2ZDYzMzY2MzVhMzM1MDM3ZTk3MDU0YWFjMGE0YWQ2MGQxMmU4ZjRmMWJlZjYyYzgwNWIifQ"
         },
         {
-          "resource": "repo://tests/test_routing_gate_runtime.py#L13-L14",
-          "version": "repo-lines-v1:sha256:e5dbaca4e149bc56edfbaff23b69c1cda70a2f0e13ab224f255074195b0b841a:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiM2QzOTM3ZDIwZGNmZTAzMTJjNGQ1YmI3NmUxNzQ1NTNlMGYxZjcyMzFmZjcwMjc2Y2NiOTk5MDljMjY1YzZlNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGIwZDkwODNlMGQ5ZGI0N2U3M2Y4YjQ0N2Y1MDc2YTExZWIyMzRiODJjMmRhOTVkYTA0ODFiZjE5ZjQwYTMxZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjc3M2ZlZTU3Y2YxODYyZmU3NWU0OTIyNDgzNTdkZmY3YmY4MTUxMWIxZWM0N2EzMWM5NmRmOGQ0MGJkYzQ4NiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTY4MGIwZjI5MjhhYzBkYmYzZGQ0YTMxZDVjMTZlOTE5OGEyOWE2MDg2ZDM5Y2ZiNTdjMjBmNjBiZTMzYTY1ZCJ9"
+          "resource": "repo://tests/routing_gate_runner_cases.py#L113-L199",
+          "version": "repo-lines-v1:sha256:601b8e16e45bd172f19013518650d1665d4e7b1f12e6099654e264edc6239a88:eyJzZWxlY3RlZExpbmVDb3VudCI6ODcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiMGVmYmFmMjFlY2NjMjA0MTgyZWE4NDNlODNiYTRiNWRmNmQyNjBmYTQ2MDFjOTllZjkzYjg3OTFjMWYwZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkZDNiNDlmZDU3NTY0YjQ3ZjhlNmE0MWE1MGJkNDBiYjRkN2RlYjUwNDI2ZWMwYmJiZTExZTdjYjI0OTg2ZGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImViZWM4MmE5NmMxZDFiZDRjZDJkMDFmNWVhNDQ2NjFhODEyMDFmOGQ0ZmI5ZDhiNWVlMDZiNTk5MWY2ZmY1ODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxZTNjMWQ0ZDJlODg1NzIyYTNkMDhmNjI0ZDU2ODk3YTBmN2JmNjM2NWYyNDI5NGIzYmEwNGMyNWEzYjU0M2MifQ"
+        },
+        {
+          "resource": "repo://tests/test_routing_gate_runtime.py#L13-L59",
+          "version": "repo-lines-v1:sha256:5349f7547a2130570e0a0539b7564ca8c75f6a345bdf2adc202e1dbeda910623:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNkMzkzN2QyMGRjZmUwMzEyYzRkNWJiNzZlMTc0NTUzZTBmMWY3MjMxZmY3MDI3NmNjYjk5OTA5YzI2NWM2ZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3NzNmZWU1N2NmMTg2MmZlNzVlNDkyMjQ4MzU3ZGZmN2JmODE1MTFiMWVjNDdhMzFjOTZkZjhkNDBiZGM0ODYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MTRiNGM5NGUzYzA5ZjVmNTMyYzg1NGJjMWRhM2FkMmZhZTUwNzUyY2E3ZWQ4MGU3M2IxYjI5Njk0MDY5ODkifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_73f6fd083fcf4bb1bcd0ff1221925274",
+      "statement": "The production default routing arm adapter, evals/routing_arm_runtime.py:run_arm, loads the non-calibration measurement rows via load_bundle and then unconditionally raises RunnerError for every arm and stage before any measurement is produced; this is an implemented placeholder capability, not evidence that either routing lane's INCONCLUSIVE outcome derives from a runner or runtime failure.",
+      "evidence": [
+        {
+          "resource": "repo://evals/routing_arm_runtime.py#L1-L18",
+          "version": "repo-lines-v1:sha256:efeb9df97c83ca42d05cd00bbbffb9635abce85ff72afac51cd0307eb85c545e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUzODRiZmRiMmRmMzgwYjY1NTdjYzdhNzFkMTY4OTE0MTViY2NhYTg3Njk5NDA2ZTIzNmY3NTJjNjQxNTM4OWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://evals/routing_gate_subprocess.py#L29-L74",
+          "version": "repo-lines-v1:sha256:06a66e896fb8ecbf49439789042f8b25c19ad60035c79d2bd8263b54b4ab401a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxNjZhYjU4OWI1ZjllNGFjYjBkZWNjZDllMTQ5MTZmYWQyZjE3NDY0ZDljOGJlNjFiZjE4ZTRlZTgyYmRlMGMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlZGFmODI0MTFhZGRjNTAxZTQ0MWVlOGJiZjMwZDQ4OGE2YjNkYTNmMjE2ZjY0NWY3NTQ1MDk3NjE0MmViMDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3YjUzZDc2OGJlYWJjOWRlYWEyOTNmYmU1ODliMjgxYWI2YjJiZmQ0ZTlmNmQ1MTQ0NzExYmY0ZDI3YTRlMDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
         }
       ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

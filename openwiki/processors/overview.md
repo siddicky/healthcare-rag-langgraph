@@ -13,7 +13,7 @@ openwiki:
   validation_commands: [make test, make eval-smoke]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-7772f43efa9811bd36483e17
     resource: repo://healthcare_rag/graph/llm.py
@@ -53,7 +53,9 @@ sources:
     resource: repo://healthcare_rag/services/models.py
   - id: openwiki-source-d8dde265b5997a8bbd4365ec
     resource: repo://tests/graph/test_prompt_fidelity.py
-generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
+  - id: openwiki-source-9ebb324918e46efe9e8fd948
+    resource: repo://tests/graph/test_route_tools.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # Graph stages, prompts, and models
@@ -94,6 +96,8 @@ flowchart TD
 | `validate_answer` | `validate_answer` (`nodes/generate.py`) | `answer_structuring.yaml.j2` | `CitedAnswerResult` (via `AnswerValidator`) | **validator**, 0.0; quote-match threshold 85. See [validation](validation.md) |
 | `generate_follow_ups` | `generate_follow_ups` (`nodes/generate.py`) | `follow_up_questions.yaml.j2` | `FollowUpQuestions` | default, 0.3; runs only with a validated answer and a `user_id`; a gateway exception is caught locally and falls back to an empty list |
 | `pageindex_select` | `retrieve_documents` (pageindex arm; `select_nodes` in `processors/pageindex_retrieval.py`) | `pageindex_select.yaml.j2` | `PageIndexSelection` | default, unset; only when `HC_RAG_RETRIEVER=pageindex`; fail-soft to an empty selection, capped at `HC_RAG_PAGEINDEX_MAX_NODES` |
+
+`tests/graph/test_route_tools.py` pins two gateway mechanics beyond fidelity: `aroute_tools` binds one tool per name in `GraphSettings.collection_names` (via `build_routing_tools`) rather than a fixed tool list, and `chat_model`'s per-`(tier, model, temperature, reasoning_effort)` caching lets two concurrent `astructured` calls against the same stage/temperature run in parallel instead of serializing on a shared client.
 
 The `safety_gate` LLM call is one layer of a two-layer decision: `processors/safety.py::SafetyGate.assess` OR-s the LLM's `SafetyAssessment.category` with deterministic regex pre-checks (`red_flag_terms`, `injection_flags`, `identifier_recall_requested`) that can only escalate the outcome (emergency > injection > identifier-recall), never relax it; if the LLM call fails, the deterministic layer alone decides. `SafetyGate.evaluate` then picks a `SafetyDecision` (short-circuit template, or `kind="none"` to run the normal pipeline); a detected prompt-injection attempt gets one recursive re-evaluation pass over the residual text after stripping the injected instruction, so a single turn can cost up to two LLM calls. The node wiring is split across `nodes/safety.py` (the `safety_gate` `Command`-returning node, deterministic pre-checks, refusal-boundary short-circuit), `nodes/safety_classifier.py` (`LangChainSafetyGate`, the concrete `_llm_assess` implementation binding the gateway), and `nodes/safety_finalize.py` (`finalize`, the terminal node that assembles the visible answer from `safety_response`/`direct_response`/`validated`+`follow_ups` and scrubs PHI one last time).
 

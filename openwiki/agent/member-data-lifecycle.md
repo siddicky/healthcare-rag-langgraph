@@ -5,7 +5,7 @@ description: Member-scoped persistence, upload review, remote reminder schedulin
 tags: [data-lifecycle, member-data, uploads, reminders, erasure, privacy]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-faa079c1bbcbbd7fc775792b
     resource: repo://healthcare_rag/agent/cleanup.py
@@ -23,6 +23,8 @@ sources:
     resource: repo://healthcare_rag/agent/store_data.py
   - id: openwiki-source-d8db4a9191137d5f500b3381
     resource: repo://healthcare_rag/agent/uploads.py
+  - id: openwiki-source-f4adc10b1b412d8bea16a3c8
+    resource: repo://scripts/forget_member_api.py
   - id: openwiki-source-3d57b619c01e53697b4a3392
     resource: repo://scripts/forget_member.py
   - id: openwiki-source-c70608235131d10003b8921c
@@ -33,6 +35,7 @@ sources:
     resource: repo://tests/agent/test_store_data.py
   - id: openwiki-source-c57c4d160e1183c60543228b
     resource: repo://tests/test_forget_member.py
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # Member data lifecycle, reminders, uploads, and erasure
@@ -95,7 +98,7 @@ A recognized erasure request is routed by the model-free coach gate to `erase_my
 
 The graph emits `erase_confirmation_v1` only when both remote cleanup routines report exact-zero remaining resources. If remote cleanup reports incomplete after the store deletion, no confirmation is emitted, so the external phase cannot start; exceptions still clear the gate and surface as a failed graph run. The marker is therefore a completion latch, not merely an acknowledgement of intent.
 
-The `scripts/forget_member.py` member-side procedure is phase two. It waits for the erase run to reach EOF or a non-busy status, verifies the marker from the stream or current thread state, snapshots every owned thread before deleting any, deletes sorted non-current threads, and deletes the marker-bearing current thread last. Any missing marker, polling timeout, or deletion failure stops the procedure; because the current thread remains until last, the marker gives a retry boundary.
+The `scripts/forget_member.py` member-side procedure is phase two, with its HTTP client, response models, and marker-detection helper factored into `scripts/forget_member_api.py` (`HTTPMemberAPI`, `has_erase_marker`, `sign_in`, and the `ConfigurationError`/`ErasureFailed`/`DeleteFailed` exceptions). The orchestration creates a fresh thread, streams the erase turn, waits for the run to reach EOF or a non-busy thread status (`wait_until_terminal`), and verifies the `erase_confirmation_v1` marker from the stream or current thread state before deleting anything. It then snapshots every owned thread id (`snapshot_thread_ids`, paginating over `/threads/search`), deletes sorted non-current threads, and deletes the marker-bearing current thread last (`delete_snapshot`). Any missing marker, polling timeout while the run stays busy, or a non-2xx/404 thread-delete response stops the procedure (raising `ErasureFailed` or `DeleteFailed`); because the current thread remains until last, the marker gives a retry boundary.
 
 ## Configuration and focused tests
 

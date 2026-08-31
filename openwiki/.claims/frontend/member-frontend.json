@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:3f245c0b139faebc4df27b1ff65e3aa22128d793c219627326b7358ff5bed880",
+  "pageVersion": "sha256:8216f3a8610004852875c53849101ed5c46dabc8d9b9f4c0410677ab0ca3c3f3",
   "claims": [
     {
       "id": "claim_bbfdfc5501454ca49727661a021299aa",
@@ -409,10 +409,38 @@
           "version": "repo-file-v1:sha256:a3d1b736283cd2e1af0ed39231b3a1df19b8cc69c2af44f00e4486690de6f3b3"
         }
       ]
+    },
+    {
+      "id": "claim_fc96986484084dc8a316eb485216d4b4",
+      "statement": "The CopilotKit provider's Authorization header is a module-level cache in `src/lib/copilotkit-auth.ts` (`refreshCopilotKitAuthorization()` populates it, `copilotKitHeaders()` reads it synchronously); the controller re-refreshes it immediately before every run, resume, and reconnect (`useCoachStream.ts`), unlike `coachApi.ts`'s direct calls which fetch a fresh Supabase token on every request.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/app/chat/page.tsx",
+          "version": "repo-file-v1:sha256:b1dab486d86983ee717f06b0842075956671108ef9ac75b664fea7a16ec36c47"
+        },
+        {
+          "resource": "repo://frontend/src/chat/useCoachStream.ts#L492-L591",
+          "version": "repo-lines-v1:sha256:1025f4e55805f2ba43a06f1cc68702792f158232a0563b4a0fe2a3c2589e56aa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyZTc2ZWI5MjUyZjk4ODU5ODk1ZTYxZWRkYWExM2Q2MDY5ODE0ZmZjYjE3MTBkYWNiZmVkMzc4MjA3MDdlNjZjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIxZjBjZGI5NzJhN2JmYjdlZDI0NmY5ZmY2NzIzODVlNTVmNDk2OGZjMTEwNDNkYzViNjg0ZDUxZGZhMzFkYmNiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI0NDBkYWIxNzNjMWJiMDk4ZTg4MzhkZTQ5ZGZjZGNjYzIwNjM3ZTRiMDRlOGI1ODk3OWVkYjEwMjlhOGI3OTIzIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI5MjA0MGUwOTVhOTRlMmFkYTc0ZTQyMWYzNzE4NzUxYTkxYTgxMGJmZDY2ZjQ4ZjRlOTM5YzdiNzQ4MGViNjcwIn0"
+        },
+        {
+          "resource": "repo://frontend/src/lib/copilotkit-auth.ts",
+          "version": "repo-file-v1:sha256:d4c09257d74a93c9036e37ed7af9668ba050b930d4e99bf972b23700637b747a"
+        }
+      ]
+    },
+    {
+      "id": "claim_613f8b58ffaf47b885d2fe3b62282024",
+      "statement": "A coach run waits up to a 15-second readiness deadline (`waitForReady()` in `useCoachStream.ts`) for the CopilotKit core to finish asynchronously registering its agent after `/info` sync before submitting, because a send issued while the core is still swapping its provisional agent for the registered one must wait rather than fail the turn.",
+      "evidence": [
+        {
+          "resource": "repo://frontend/src/chat/useCoachStream.ts#L473-L523",
+          "version": "repo-lines-v1:sha256:ddd197fc9505362f3dab90b3e15cc3ececb96912a1647e0cc94888632c303676:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4NzI2ODg5MjNhMWU1NjA1YjNlMGI1NGE4YWIyZmUxYWFhZjIyZTZiMmE3MzA0NTU1OWYxNWI5OGI1YzMxMjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1ZWYwMWJjMDhkYmMzYjYzZTRlNzVlYTNkMjZhNWI5NDE4OTE4NzdlMjdhZDg5MTMyOWM4NDExZDdkOGRjNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY0OThhMjQzMjI4ZjBmYTRkZWQ2YzU5ZjVhMTU4ZWIzYmFkZWI5YzFhOTY3OGE3MzhlZTllZjY2OTRmZjA0MGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM1ODE4ZDIxNjMzZjZjOTgxZjdkZGE4ZDIyZDM0N2YzNWFkYWRjZjVhNjg4Y2E2NDQzMTU5ZmY4YTVjMWY2OTQifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

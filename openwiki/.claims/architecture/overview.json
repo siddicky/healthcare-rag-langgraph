@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:4e6bac8910f7ee913507768e0b0cb00a7942f802ff71bf49f716d837bfa661e3",
+  "pageVersion": "sha256:027dcda24970522d025f9aae6488cc1b4db7bcc6652a115b2f5166a2bea72d3b",
   "claims": [
     {
       "id": "claim_eb96a970568c4b779448329629560c2c",
@@ -22,8 +22,12 @@
     },
     {
       "id": "claim_1a13666f728845ce880a1e9fe45c6800",
-      "statement": "healthcare_rag/orch/ is not part of the current architecture: it was removed during the Phase 2 port (commit 3435caf), and build_engine() documents the LangGraph engine as the only runtime since that cleanup.",
+      "statement": "healthcare_rag/orch/ is not part of the current architecture: it was removed (along with pipeline/, storage/history.py, services/llm.py, and other legacy plumbing) during the Phase 2 port (commit 3435caf, followed by a parity re-measurement tagged parity-final at f83bf2f), and build_engine() documents the LangGraph engine as the only runtime since that cleanup.",
       "evidence": [
+        {
+          "resource": "repo://docs/journey.json#L253-L253",
+          "version": "repo-lines-v1:sha256:e000de798dbea4438a0285f078d17a6517ecec7084da283e09dc20cb1e0116e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTAwMGRlNzk4ZGJlYTQ0MzhhMDI4NWYwNzhkMTdhNjUxN2VjZWM3MDg0ZGEyODNlMDlkYzIwY2IxZTAxMTZlOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTAwMGRlNzk4ZGJlYTQ0MzhhMDI4NWYwNzhkMTdhNjUxN2VjZWM3MDg0ZGEyODNlMDlkYzIwY2IxZTAxMTZlOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTU4M2JiZjcxOTE0YjlhMjE1MzRjODRlOTMzZjFjOGVlYjg0MjE5MmY3OWQ4MjVhOGMyM2ViNzcxOWViNzEzNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjNhZmRiNTE4ODBmNzliMDIyYjYxYzM2YTg0MTY0YWY2N2YxNWVlMzYyZjViZGZiZmVlNmY0Yjg1NzFiMDgwYSJ9"
+        },
         {
           "resource": "repo://healthcare_rag/graph/engine.py#L242-L245",
           "version": "repo-lines-v1:sha256:7338b309de903b3afdc1fceebd7d463e467827304a3ddc2b372f399b8478686f:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYThhZTJmNzA3NzAzYjBhZjU1YzgxODUyODQyZGQxYjQ1MGJkNmEzMGY3Yjg5NmNmNmFmOGVmYmIwN2JiMjM4MiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDIyOWM1OWFlOGRkYjAyZWI1MjYxNDc5YTk5Y2VjZTM5MzUzZjZlYTQ2NjFmZTRmMzhlODM2ZDUwZWU2NWM0OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMWZkYzE0MzU5NWRkMzYxZGYwNDM4YTZkMDU3N2E4YzI5ODAxZjJhM2RkMGJmNjBkOGU5YjBhNzg3MTZjNDZlZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
@@ -60,7 +64,7 @@
     },
     {
       "id": "claim_e498baa00d294ddbb5ddd94788e2f623",
-      "statement": "Canonical NODE_* constants and router target Literal aliases are pinned against the nodes' Command annotations and the compiled graph's edges by tests/graph/test_router_typing.py, and the full compiled topology is pinned against the committed docs/graph.mmd artifact by tests/graph/test_graph_build.py, preventing dynamic routes from silently drifting from the declared topology.",
+      "statement": "Canonical NODE_* constants and router target Literal aliases are pinned against the nodes' Command annotations and the compiled graph's edges by tests/graph/test_router_typing.py, and the full compiled topology of the public graph is pinned byte-for-byte against the committed docs/graph.mmd artifact by test_compiled_graph_mermaid_matches_committed_artifact in tests/graph/test_graph_build.py, preventing dynamic routes and the documented diagram from silently drifting from the declared topology.",
       "evidence": [
         {
           "resource": "repo://docs/graph.mmd",
@@ -178,11 +182,11 @@
     },
     {
       "id": "claim_4588b1f5cb0649a9959ecaaa3da1c661",
-      "statement": "finalize renders refusals with notices, preserves direct answers, or renders a validated answer with notices, scrubbing answer and follow-ups again at this output boundary, and appends a scrubbed Human/AI message pair to checkpoint history with a shared ISO-8601 timestamp only when there is a nonempty answer.",
+      "statement": "finalize renders refusals with notices, preserves direct answers, or renders a validated answer with notices, scrubbing answer and follow-ups again at this output boundary, and appends a scrubbed Human/AI message pair to checkpoint history with a shared ISO-8601 timestamp only when the rendered answer string is nonempty (the update's messages key is set only inside an 'if answer:' guard), so a turn producing an empty answer leaves that turn's checkpoint history untouched.",
       "evidence": [
         {
-          "resource": "repo://healthcare_rag/graph/nodes/safety_finalize.py",
-          "version": "repo-file-v1:sha256:fa7905c241fba2a741ab217e9b7867c272ce26e420360df2460c29b9bc5b5d9c"
+          "resource": "repo://healthcare_rag/graph/nodes/safety_finalize.py#L62-L70",
+          "version": "repo-lines-v1:sha256:22effc416047317f0125b34bb2ea4d0c753adc5070e329fad5a8f1aeee564d26:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTk1MWM0NzFkMDQ2NGE5OWQ4ZTcyMmRjMGVhYTRmY2ZjN2U4MzZkOWRmNGQ3ZGVhOWRjYmVlOWIyZDAxNjM5NiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmFhZThhMGNhNzZmOThmN2I3ZGM3OTg0OTUxZDYzZTU3ZGIzYzY0NTU3OWNhNTFiYWQ2YTUzOWQ2MTRlZGJiZSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYzZkZWZiMTI0NGIwZDZlNDA5Yjk0NjlkNTMxMzk4ODRkNzBlNzUyOGJhY2RmZGZjZDUwZjNkOWNmOGU2YTFmNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjEsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzZhNTk2MDU5NTU2Y2Y2N2Q4OGI3MGNiNjVjOWYxNTA4MGRmNjg3MjMyYzNhY2I5MjIxYjhhNTliYzE4Mjk3ZSJ9"
         }
       ]
     },
@@ -319,10 +323,42 @@
           "version": "repo-lines-v1:sha256:2e197ad66d07d06849ad2c612cb2f0c4c1c6694c7cdfd692c4a85629a4213a34:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjUyZWZhOTBmOTMxMDRmYzIzNzM0MTZhYTkzMzdiZGMzNTZmZTJkN2Y4ZDY5NTA3YjI5M2ZhZGRjZjJjNzExMTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc3NDkyMzBmOGM0ZGJhMDUwYjcxYzgyYTRkMzg4MTQ0ZmE3OWVhMjBkMWI2Y2RlYWU1MWM1ZmFkMjUxYTE0MzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiY2MwM2FhNDEzOTQwY2IyOTc0ZTE2Y2QxMjVlODc5NDUwMDliZTY1N2RkM2JmYWUwNmZhMGI5Mzk1NTc3NmEifQ"
         }
       ]
+    },
+    {
+      "id": "claim_6cf0c90dc1f345b4972c6986f225b596",
+      "statement": "GraphEngine is an async context manager: entering (__aenter__) lazily triggers _initialize(), which compiles the graph exactly once and stores it on self.compiled, while exiting (__aexit__) calls aclose(), which tears down any SQLite checkpoint context manager and closes the shared resource bundle.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L235-L239",
+          "version": "repo-lines-v1:sha256:04b813b068fa29a51d73d0dfa69a02822b2d42132311c7d66fa0cb8e6a59c9c5:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTEwYWNjNWE4ODYxZThlN2NlYWY0YzJlYmVkZTgyMDI2NWEzNDViMWVjZmE1YTI3NTI5OTNkNTQ0ZTE5NDA0YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOWYxYjE1MzJlODU1YjIzMjY2OWMyNmE1ODM4NzA2Mzk5ZjhhMTk2ZWE0MjExOWU4MGNlOWU3ZWZiZTZiOTUyNyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDI0ZDNhZTMzYWM4NjVlOTExYzhhYzVkNzU1ZDlmMjE2NDExZjQwNGI5ODFjYTg2NGE3YjFmZGNjZGRmMGFiZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjNhMTM4NjJhY2MzNzM4MjdjMWQ0NmNiYzEwYzg1ODVkYjlmNWNlNzZjNGE1YzY4NDUyYzY4YzQxMmY2NTYyYSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/engine.py#L91-L99",
+          "version": "repo-lines-v1:sha256:5b34c1fb0d3765afb0c4660f75a3985f9564b39a14ff152198c5f1729a33cb7c:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTc0NTg2MDdkN2NjMjQ4N2ViMDg2ZWM1OGExZDlkMTMxMjQ3MTEyZWQ1ZTZlMTlmZTM0NzY0ZTliOGI0MWE3MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTA5MDJjM2U0ZWNmYjk2M2UxMTZkMDk0OTQ5N2FlYzNkZGFjN2Y2ZTIxM2FjYTI0NDgxNDZhM2U2MmNkMWVlNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOWFhODliMDBhNzkxMzgxYzBhMTEwYTE2ZDU0MDcyYjQyOWQ1YmRkZDFiY2U2YzUzYTc4YzYwMGMxZDM3ZGE2YSJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_644f9d0507f24f08a5e78d1fdd215697",
+      "statement": "The generate_query_or_respond node registered in build.py under the node name 'generate_query_or_respond' is implemented by the route_query_or_respond wrapper in nodes/query_or_respond.py, which calls the generate_query_or_respond function for its state update and then computes Command(update=update, goto=route_after_query_or_respond(...)) against the merged post-update state, following the same update-then-route-on-new-state pattern as safety_gate, decompose_query, merge_retrievals, and evaluate_retrieval.",
+      "evidence": [
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L123-L127",
+          "version": "repo-lines-v1:sha256:4df4c3ecc4b7246b7d056273bc39e58c494cb1e978f397e8b60bb79148ae5346:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWJiMmE1YmIzYzllOTcwMjk2Yjg4NDMwYmE4MDkzYzM4OWVjMjQ5MDQ0ZDhiYTZmMTE4NjY1M2JmYTg4Nzc3NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzBjMWYxODhmMTQyZWQ3YTgyNDY4MGIyMDcxNzJjNTUxOWJjNjE0YTQ4ZmRhN2NmMTY3ZWRiOGRkZjc5OTU2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjAxNjZkYWNkZGM3MWFmN2M0NjlkMzEwZGU4Njk5YTdhMmI4OWNlYzg5NTU1MjZiODNmMGMwZjJiNzExZTYyMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTEwYzA0YzFjZjIxNDkxMDdjNGYxZTI4Y2Y1MDg2MzkxOGU3MDA1NzJmZGJhOTEyMGNhYzE3NWFjN2QwZGZhMSJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/build.py#L26-L26",
+          "version": "repo-lines-v1:sha256:611a839082d11994fe24e7d01d3eab84a0a460edcc98b74d3a6e007fe98b95f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjExYTgzOTA4MmQxMTk5NGZlMjRlN2QwMWQzZWFiODRhMGE0NjBlZGNjOThiNzRkM2E2ZTAwN2ZlOThiOTVmMiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNjExYTgzOTA4MmQxMTk5NGZlMjRlN2QwMWQzZWFiODRhMGE0NjBlZGNjOThiNzRkM2E2ZTAwN2ZlOThiOTVmMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmUyYzZkNjNjYzk4NDlhNGJhZDQzOTFiYzg0ZTViNWFkZTJiMGFiMzc5MmUxNWJkYWI2ZTdmY2NjZmYzMDUwNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODI2YTA2ZTcwZjkxMGYwZWRiYTFlMWU4YmQ5MzdmZjkzZDYxMDBjZmVmMmU3OTJkZDI4MTcxOGUwNjgxODQ1YiJ9"
+        },
+        {
+          "resource": "repo://healthcare_rag/graph/nodes/query_or_respond.py#L117-L120",
+          "version": "repo-lines-v1:sha256:bb63cd7999cca9faef430220a05699f980799f1664f770a9974ee8e67cc682a4:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOTFjMGFkZjhhYTdkNTU5OTQxZmUxNTBlYmU5M2YwZGUxYWRhMjhiMThkNmNkNjNhNTczYjlhNWNkYzc2YTg1MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjFjZWUyOTRkYjI2ODY1NGY0Zjc2MzE0MGEyY2Y0NGZlNDAwZGIwMjM3OWQ5ZmIwMjZiOTEwNGU1MGY5OGI3NCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNGZiZDAwOTMxNGJjMjcwODQxNjczNGEwMmFlNWZmMzlhMWU0OGEwNTBiZTkxZjQzYjJmYWE5MjAwMmM2MmJmYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

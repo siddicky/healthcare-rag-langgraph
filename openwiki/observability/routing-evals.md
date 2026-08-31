@@ -13,7 +13,7 @@ openwiki:
   validation_commands: [uv run python -m evals.routing_gate --lane query --smoke --json, uv run python -m evals.routing_gate --lane safety --smoke --json, uv run python -m evals.calibrate]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-c432ba3114055b79f900c3af
     resource: repo://docs/decisions/query-or-respond-vs-current.md
@@ -31,6 +31,8 @@ sources:
     resource: repo://evals/results/semantic-safety.md
   - id: openwiki-source-f1baf7b9ec16cbea5911f62e
     resource: repo://evals/routing_arm_runner.py
+  - id: openwiki-source-51f439a52b0b07e44235d53c
+    resource: repo://evals/routing_arm_runtime.py
   - id: openwiki-source-285eb8f326f2f6c6b60f7a0f
     resource: repo://evals/routing_calibration.py
   - id: openwiki-source-0f36c38d1b9edb6b27e7647a
@@ -39,17 +41,21 @@ sources:
     resource: repo://evals/routing_gate_checks.py
   - id: openwiki-source-f8e9225f5ad075fd4ea2c07d
     resource: repo://evals/routing_gate_runner.py
+  - id: openwiki-source-8b955ac16e38a7251b9a6254
+    resource: repo://evals/routing_gate_subprocess.py
   - id: openwiki-source-2a8923ee8ab7b6df85bdd99a
     resource: repo://evals/routing_gate_verdicts.py
   - id: openwiki-source-7bd2de2912eb4a7c184e2bae
     resource: repo://evals/routing_gate.py
   - id: openwiki-source-5cb5596a75e4b03cac193709
     resource: repo://evals/routing_judges.py
+  - id: openwiki-source-35e425470ad757bbfee99b8b
+    resource: repo://tests/routing_gate_runner_cases.py
   - id: openwiki-source-224657c16bb01b4bcbdaeb38
     resource: repo://tests/test_routing_gate_runtime.py
   - id: openwiki-source-08de1c2aef66e1aa6dd26910
     resource: repo://tests/test_routing_gate.py
-generated: { by: "openwiki/0.4.3", at: "2026-08-30T08:22:08.381Z" }
+generated: { by: "openwiki/0.4.3", at: "2026-08-31T08:29:16.011Z" }
 ---
 
 # Routing gates — query and safety lanes
@@ -164,13 +170,28 @@ query-arm run; resolve the `semantic-router`/`litellm`/`python-dotenv`/`openai` 
 conflict under a separately authorized plan before attempting a semantic adapter, calibration,
 or run. Neither step has been started.
 
-Only `--smoke` (canned evidence, `_smoke_query`/`_smoke_safety`) and `--fixture` paths currently
-exercise the verdict logic. Cheap contract checks:
+`--smoke` (canned evidence, `_smoke_query`/`_smoke_safety`) and `--fixture` are the two
+CLI paths that evaluate the verdict logic directly against fixed evidence, without invoking any
+runner. Cheap contract checks:
 
 ```bash
 make routing-gate-query-smoke   # evals.routing_gate --lane query  --smoke --json
 make routing-gate-safety-smoke  # evals.routing_gate --lane safety --smoke --json
 ```
+
+The third CLI path — neither `--smoke` nor `--fixture` — calls `run_gate`, which drives
+`SubprocessRoutingGateRunner` to spawn `evals.routing_arm_runner` once per required arm and
+collect its JSON result. This path, including its exact-arm-order and stage-1/stage-2 sequencing
+behavior, cross-phase binding checks, and report publication, is covered by
+`tests/test_routing_gate_runtime.py` — but only against test doubles (an in-process `FakeRunner`,
+or the real subprocess protocol pointed at `tests.fake_routing_arm_adapter:run_arm` via
+`HC_RAG_ROUTING_ARM_ADAPTER`), never against the production default adapter. The production
+default, `evals/routing_arm_runtime.py:run_arm`, loads the non-calibration measurement rows and
+then unconditionally raises `RunnerError` before returning any measurement, for every arm and
+stage; this is an implemented capability (a placeholder runtime, one stage short of a real paired
+run) and an untested hypothesis about what a completed run would show — it is not itself a query
+or safety measurement, and neither lane's INCONCLUSIVE status is caused by or otherwise
+attributable to this placeholder.
 
 ## Datasets, judges, reports (implemented capability)
 

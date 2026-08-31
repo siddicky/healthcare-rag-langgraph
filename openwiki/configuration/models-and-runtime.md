@@ -5,7 +5,7 @@ description: Environment-derived controls for model selection, compatible sampli
 tags: [configuration, models, runtime, operations]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-3f718dfc0cae53689e49b15c
     resource: repo://docs/baseline-report.md

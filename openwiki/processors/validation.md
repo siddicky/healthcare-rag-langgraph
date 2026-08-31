@@ -13,7 +13,7 @@ openwiki:
   validation_commands: [make test]
 verified:
   - by: openwiki/0.4.3
-    at: 2026-08-30T08:22:08.381Z
+    at: 2026-08-31T08:29:16.011Z
 sources:
   - id: openwiki-source-13a4df04285e450e70482893
     resource: repo://healthcare_rag/graph/nodes/generate.py

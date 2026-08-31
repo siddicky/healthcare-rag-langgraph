@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:865f73de4e7a23d807becfb8e7f7979c04c2a03527af13248ff12eca317fb367",
+  "pageVersion": "sha256:c47c537d060b0f12df329771627348b7435c5f24ca962d3c8c6919b8ac241e20",
   "claims": [
     {
       "id": "claim_fd7ad8e53b32411ebd52b928345ee14e",
@@ -389,10 +389,24 @@
           "version": "repo-lines-v1:sha256:a03eb14629e88b73cc1fdf625de02714fdec6648c071c8eacede25f94b9a0ab2:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4ZTRmODBiNzZjZmNhMzQ2Y2RkNjE4NjlmYWM2NTY4MDA2M2IyZWJkYWJjOTE3NjAyYWJiMDVlNGJiZTFiNDAifQ"
         }
       ]
+    },
+    {
+      "id": "claim_b46efcb7683a444bbf06690cf1cf13ac",
+      "statement": "A compare.py or rescore.py read of two historical evals/results/*.json reports is only a quick heuristic look, not a valid before/after comparison, because it does not itself verify matching dataset revision, evaluator/judge/model configuration, or scored population; a comparison only counts as valid once it also satisfies the equivalence, population, and git-cleanliness rules owned by evaluation-governance.md (matching Metadata, matching population, git_dirty == False, and an unmodified pinned baseline for the sealed pipeline gate).",
+      "evidence": [
+        {
+          "resource": "repo://evals/compare.py#L18-L75",
+          "version": "repo-lines-v1:sha256:f18a1520f5875c227a7251461f8a1de50d83cb9ae5f908bd59782c3621a6e958:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxNjRkZDFmN2Y0ODA3YWE2ODMzNTVkYmUxYTIzMTE1NWUzMTAxYjczZmQ2OWU1NzU2MzEyZTA2MzU1MDNjYTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjMGIzNmFmZGU0Y2NlNDQxNDYxYzZiNzQwMTFiZmFkNjI5NGUyZDZkZjcyZTM3ZDJiNmI1ZmE3MzRhNTFjMDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNjdjZmI3MWZjYmRhYjcxMDdkOWE1ZTU2ZDA4ZDhlNDgxNWZkYTIyODZjMGEwMDcyYzg2ZjhkZGFkYzI3NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0OGQ3NDgzZDA2MGYxNzIyZTI0NTM2ODg4MzM0MjU2YjU0OTBlOGJiZTg2OTgyMDY3NmNhOWVhZjM1MDljYzkifQ"
+        },
+        {
+          "resource": "repo://evals/report.py#L1-L61",
+          "version": "repo-lines-v1:sha256:aeac660de1111263fccf30dde83870a563d0720db10788d1b2d9f5599c5d297c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzMDNlY2RkNGE0ZDEwZjE5YzczZmQ0MmZkMTI0MzdmZDMzNTRhODI2ODE2MDVkYTUyNTVhOTdhMzkwNjhkYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY5NDE2ZTA5Zjc4YmEzMTZjMDMyNTY4MjEzYjg1NWVlNzU2ZTQxNTY1ZDkxOGYwOTUxOWM4MWZkNjIwZjQwNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE1NmJjOGZkMWZkM2VhMTgzZDIxNGU3ZmY4M2E0OTAyYjE1MzY4NjBiYzJlMmRiNTRlMTM1MmJiZDQ3N2E4ZTQifQ"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }

@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "pageVersion": "sha256:5ef9c96b7a8846389a780be88f0b343749c214ce7338b3b25d3f77930aafc0af",
+  "pageVersion": "sha256:a96107d3dca8e9870ef23814b5fb49d1f48eb9989be8ba4dd891b63251ad1519",
   "claims": [
     {
       "id": "claim_f08df77b40b842e0a2417c860e9e2a6e",
@@ -305,10 +305,60 @@
           "version": "repo-file-v1:sha256:a47c5599c8f2b9fc4586bdf743aa30230cd77f89014ed9ab96e4d6a5d9a32f0e"
         }
       ]
+    },
+    {
+      "id": "claim_6a4b0934a13d4e4cbd8624c0a91d7582",
+      "statement": "Fly's GET /ok health check is dependency-free and fast by design and only returns 200 once server/app.py's ReadinessState.is_ready() is true, meaning every registered lifespan check (graph load, cron scheduler start, storage init) has flipped; deploy/fly.prod.toml's [[http_service.checks]] targets exactly this endpoint, so a stuck readiness check keeps the Fly machine failing health checks rather than serving half-initialized traffic.",
+      "evidence": [
+        {
+          "resource": "repo://deploy/fly.prod.toml#L43-L54",
+          "version": "repo-lines-v1:sha256:fca5f001010754fe926efa0640c1c648e9ad6bc5bae91459baeed06a91ded8de:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1MjkzMGI2ZTk4NzliOWExOWZlNmZiMTViYmVjZDQxYjJiNTg2MmZhZTQ2ODc4ZDVjYTYwODE3MmIwNzJiNzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjViMWI0NjQ0YjM3NjliMzg5ZmIyNTFmMzJkMzIxZjc1M2YzNjAzOWIwMmI0NmU4YjYwNzcxMzIyYjI0Mjg0ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExZDc3OTdkYzA2Mzg0NmMwNDM2ZjVkNTQ1YzRiZTUyYjIyYmQ4NzNiYjczNjMxY2IwODU1YjMzNzZlZmNmYzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+        },
+        {
+          "resource": "repo://server/app.py#L45-L65",
+          "version": "repo-lines-v1:sha256:960860d7c492e8ca02d244509cce7dc055032e281bfa9cd07e9450ed4c2becbd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmZDZhMzFjMDhjYjA4MTJjZGUwNGM1ODdlOTdmNzAxY2Y4Y2JhNjAzMjlhNDBiNDQzNGNmOTJhMDk2ZTFmN2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwMWYzNWE0NmI1YzY5OTMyNDNhZjM3MzgxYzk3OTljMTZlNzk5YzEwMTU0YTEzZTM1ZDUyMGU1ZDY4NmQxODkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU3Yzk3YWZkZGIyYzY3YTJjMjUzNzU4NTBiOTEzODg3OTc1NTkyNmU4N2U2YWMxMjIzN2JkNzYxN2FiY2EyN2IifQ"
+        },
+        {
+          "resource": "repo://server/routes/AGENTS.md#L15-L20",
+          "version": "repo-lines-v1:sha256:5ee804319f05c2f07720a50a9db6f793d69845941d623ff1bcdc68c417b30b5b:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMjY0MjcxNDcyMmVlNGE3NDRmYTcxZmM0Y2JjMTlmYzM5MGMyMTE1NjViNzkyZWNhYWFkZTZiMmM2OTNkNWI5MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDkyYjQyNGI1NGNmOWE1MTkxY2Y3NjNiMWMwYTY0OWFiMzg3YzFlYzUwMjlhYzE0YzYzZTQ2ZjI0OGMwMDhiOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODRlMDI2NGJkODI3OGI2ZGRmYTZlY2QwYzRmODhkYjMzNDU5MGViYjJhNWEzZjhkNjUzOGEwYTI3NjM5NWFjZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTY1YTFlM2E3ZGU0NjM4Yjc0M2Q2OGIzZjMyZmIzZTIyMzQ5YjNiMDlhMDg3NzE3MmNiN2ZiYzZmNDQwMDk5ZiJ9"
+        }
+      ]
+    },
+    {
+      "id": "claim_3d25f3e2a0854d72ab92ddbec5c029b6",
+      "statement": "The Postgres and in-memory storage backends differ in run-record privacy at rest, not just durability: server/config.py requires DATABASE_URI/DATABASE_URL whenever SERVER_STORAGE=postgres (set automatically by Fly's `postgres attach`, never by hand), and the Postgres backend redacts raw run input/command to [redacted] at rest while the in-memory backend echoes them, so code must not assume either guaranteed wipe-on-restart or guaranteed survival of raw input across backends.",
+      "evidence": [
+        {
+          "resource": "repo://server/AGENTS.md#L60-L60",
+          "version": "repo-lines-v1:sha256:ba2e453e48eaac749bd6f54ceca9026f27db83d5a8b16330dc9120f515c1c193:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYmEyZTQ1M2U0OGVhYWM3NDliZDZmNTRjZWNhOTAyNmYyN2RiODNkNWE4YjE2MzMwZGM5MTIwZjUxNWMxYzE5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmEyZTQ1M2U0OGVhYWM3NDliZDZmNTRjZWNhOTAyNmYyN2RiODNkNWE4YjE2MzMwZGM5MTIwZjUxNWMxYzE5MyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGRmNjZkY2ViYmRlOTI0YTM4NTAwMWJkZjRkODI2NzNhZDcwYTNmYzg4ZDRiNzg4Y2RhOWIwYWFlMmI5NDljZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjVkZDgzZWU3MjE4MmIzNzIwN2E2N2E5OGU2MmRkZmZkNDAwNWFiYmY0ZmNlZGU2NGI3ZDM3OGNmM2QwY2NkNyJ9"
+        },
+        {
+          "resource": "repo://server/config.py#L51-L67",
+          "version": "repo-lines-v1:sha256:ebfcc7d5cc27defff2ce2fe47ed704cd808d71ceb01629ea2181b92a7d163f80:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjYjFhNGM3ODVjYjMyNDA1ZGVkZDgxNDM0NjhjYWY4OGE1NGU3YTM2OWNlYTk2NWVhMTFlMmFmZTBhZGQxNzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzOWEzZThjNTYxNmIyMTVhMzBiOTE2YTg0NjgxZjY3NzZjY2VmOTM0NmM4YTM5ODc1MDNlZjM1YjNhNjk3MTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiNDc0MmY1OGVkMTI0YjMwMTMyMDhmNDllZDAxMzJmMTM1NmUwMTkyYjZmM2QyMzZlNzdjNjE2MjZhNmM3OGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkYjMwMDY5ZTY2YWU1YTQ0ZDlmODVmZmExYjg3NTNkMTI5OGFhMjhiMDU5NjY3ODk1NTQ0YzY3ZGI5Yjc2MGIifQ"
+        }
+      ]
+    },
+    {
+      "id": "claim_9ab67068683c4ed9a34c512784b45c45",
+      "statement": "Several deployment facts are described in docs/deploy.md and the Fly TOML comments but are not asserted by any hermetic CI test, because they depend on live infrastructure state that hermetic tests cannot observe: the actual Postgres cluster provisioning and its 2026-08-24 sign-off, whether GitHub Environment 'production' protection rules are currently configured as deploy.yml expects at runtime (the workflow re-checks and fails closed on every run, but no hermetic test pins the environment's live configuration), whether all required Fly/GitHub secrets are actually seeded, and whether the member stream perimeter v2 frontend build matches the server's flipped value at any given deployed instant.",
+      "evidence": [
+        {
+          "resource": "repo://.github/workflows/deploy.yml#L138-L253",
+          "version": "repo-lines-v1:sha256:a7234184e6f5caac8a4e5e3de630250f25a5a1aea2b6724b4fd4144c7be0c8f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJjY2I1YTQwNzk3NDdlYmIwZDRiOWY0ZmVhOGY3MmQxN2UxM2Y2MGJiOTg1ODZmYTRhMjRjMjRhMjdkYWViNGI2IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NmIxZmIzZjlhNDgyNmMzY2VhMjFiOTM2MDQxZTIwZDM1MjY1NWQyNWJhZmUwOWE0MDg0NzY5MzA4OWFmZDA2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2ZjYzMDk1YzIwNzY3MzI3NzZkMDRiZmJkMmMwN2Y1M2I1YmE5ZjNkZDc1NGNmNzNiYjdmOGQxM2JlODA1ZDQyIn0"
+        },
+        {
+          "resource": "repo://docs/deploy.md#L10-L109",
+          "version": "repo-lines-v1:sha256:5fc54006530959cc8b9424a94c178d4cb2b46d95b229fb7ddba4d09fd48943d9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI1ZGM4ZWY0Njg0OTlmMDU5NWY2ODlkNmM2MDg5YTA0Y2IyZDFjNGFjNDM1NzA3ODY1MzNhMzUzYjYyZjI1YjI3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3ZDVhNjUyODQwYjY0OTVlODRkZmJjNmVhOTU4NjkzZGVhYjkzOGVmOGIyMjUyMzA4ZjE4NzQ2NWVmNmJjNGViIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwMDFmMmVjMTc1OTNjMTA1NGViNDYzNjdkODQ1M2VmMjRhMTczY2U5NmI3MTE3ZDkxZjlhNjhkNDRmZWY4YjAxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwMDFmMmVjMTc1OTNjMTA1NGViNDYzNjdkODQ1M2VmMjRhMTczY2U5NmI3MTE3ZDkxZjlhNjhkNDRmZWY4YjAxIn0"
+        },
+        {
+          "resource": "repo://tests/test_deploy_workflow.py",
+          "version": "repo-file-v1:sha256:ec5a4e3ceb52102361e0069f9d4df9e851a6fbf20269ecd7249d4c9c6d05c1b6"
+        }
+      ]
     }
   ],
   "verification": {
     "by": "openwiki/0.4.3",
-    "at": "2026-08-30T08:22:08.381Z"
+    "at": "2026-08-31T08:29:16.011Z"
   }
 }
